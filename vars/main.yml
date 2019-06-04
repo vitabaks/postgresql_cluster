@@ -135,15 +135,14 @@ pgbouncer_users:
 
 
 # System variables
-proxy_env:
-  http_proxy: http://192.168.152.9:3128
-  https_proxy: http://192.168.152.9:3128
+proxy_env: []
+#  http_proxy: http://10.128.64.9:3128
+#  https_proxy: http://10.128.64.9:3128
 
 ntp_enabled: 'false' # specify 'true' if you want to install and configure the ntp service
 ntp_servers: []
-#  - "10.255.254.44"
-#  - "10.255.254.45"
-#  - "192.168.152.1"
+#  - "10.128.64.44"
+#  - "10.128.64.45"
 
 timezone: []
 #timezone: "Europe/Moscow"
