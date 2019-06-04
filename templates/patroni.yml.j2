@@ -1,0 +1,166 @@
+#jinja2: trim_blocks:True,lstrip_blocks:True
+
+scope: {{ patroni_cluster_name }}
+name: {{ ansible_hostname }}
+namespace: /service/
+
+restapi:
+  listen: {{ ansible_ssh_host }}:8008
+  connect_address: {{ ansible_ssh_host }}:8008
+#  certfile: /etc/ssl/certs/ssl-cert-snakeoil.pem
+#  keyfile: /etc/ssl/private/ssl-cert-snakeoil.key
+#  authentication:
+#    username: username
+#    password: password
+
+{% if dcs_exists == 'false' and dcs_type == 'etcd' %}
+etcd:
+  hosts: {% for host in groups['postgres-cluster'] %}{{ hostvars[host]['inventory_hostname'] }}:2379{% if not loop.last %},{% endif %}{% endfor %}
+{% endif %}
+{% if dcs_exists == 'true' and dcs_type == 'etcd' %}
+etcd:
+  hosts: {% for etcd_hosts in patroni_etcd_hosts %}{{etcd_hosts.host}}:{{etcd_hosts.port}}{% if not loop.last %},{% endif %}{% endfor %}
+{% endif %}
+
+
+bootstrap:
+  # this section will be written into Etcd:/<namespace>/<scope>/config after initializing new cluster
+  # and all other cluster members will use it as a `global configuration`
+  dcs:
+    ttl: 30
+    loop_wait: 10
+    retry_timeout: 10
+    maximum_lag_on_failover: 1048576
+    master_start_timeout: 300
+    synchronous_mode: {{ synchronous_mode |d(false, true) |lower }}
+    synchronous_mode_strict: false
+    #standby_cluster:
+      #host: 127.0.0.1
+      #port: 1111
+      #primary_slot_name: patroni 
+    postgresql:
+      use_pg_rewind: true
+      use_slots: true
+      parameters:
+      {% for parameter in postgresql_parameters %}
+        {{ parameter.option }}: {{ parameter.value }}
+      {% endfor %}
+        hot_standby: "on"
+        wal_log_hints: "on"
+        shared_preload_libraries: 'pg_stat_statements,auto_explain'
+        pg_stat_statements.max: 10000
+        pg_stat_statements.track: 'all'
+        pg_stat_statements.save: off
+        auto_explain.log_min_duration: '10s'
+        auto_explain.log_analyze: 'true'
+        auto_explain.log_buffers: 'true'
+        auto_explain.log_timing: 'false'
+        auto_explain.log_triggers: 'true'
+        auto_explain.log_verbose: 'true'
+        auto_explain.log_nested_statements: 'true'
+        track_io_timing: on
+        log_lock_waits: on
+        log_temp_files: 0
+        track_activities: on
+        track_counts: on
+        track_functions: all
+        log_checkpoints: on
+        logging_collector: on
+        log_directory: '{{ postgresql_log_dir }}'
+        log_filename: 'postgresql-%a.log'
+        log_truncate_on_rotation: on
+        log_rotation_age: 1d
+        log_rotation_size: 0
+        log_line_prefix: '%t [%p-%l] %r %q%u@%d '
+ 
+ #      recovery_conf:
+#        restore_command: cp ../wal_archive/%f %p
+ 
+  # some desired options for 'initdb'
+{% if postgresql_exists == 'true' %}
+#  initdb:  # Note: It needs to be a list (some options need values, others are switches)
+#  - encoding: UTF8
+#  - data-checksums
+{% endif %}
+{% if postgresql_exists == 'false' %}
+  initdb:  # Note: It needs to be a list (some options need values, others are switches)
+  - encoding: {{ postgresql_encoding }}
+  - locale: {{ postgresql_locale }}
+  {% if postgresql_data_checksums == 'true' %}
+  - data-checksums
+  {% endif %}
+{% endif %}
+ 
+  pg_hba:  # Add following lines to pg_hba.conf after running 'initdb'
+  - host replication {{ patroni_replication_username }} 127.0.0.1/32 md5
+  - host all all 0.0.0.0/0 md5
+
+ # Additional script to be launched after initial cluster creation (will be passed the connection URL as parameter)
+# post_init: /usr/local/bin/setup_cluster.sh
+ 
+  # Some additional users which needs to be created after initializing new cluster
+#  users:
+#    admin:
+#      password: admin-pass
+#      options:
+#        - createrole
+#        - createdb
+
+  
+postgresql:
+  listen: 0.0.0.0:{{ postgresql_port }}
+  connect_address: {{ ansible_ssh_host }}:{{ postgresql_port }}
+  use_unix_socket: true
+  data_dir: {{ postgresql_data_dir }}
+  bin_dir: {{ postgresql_bin_dir }}
+  config_dir: {{ postgresql_conf_dir }}
+  pgpass: {{ postgresql_pgpass }}
+  authentication:
+    replication:
+      username: {{ patroni_replication_username }}
+      password: {{ patroni_replication_password }}
+    superuser:
+      username: {{ patroni_superuser_username }}
+      password: {{ patroni_superuser_password }}
+#    rewind:  # Has no effect on postgres 10 and lower
+#      username: rewind_user
+#      password: rewind_password
+  parameters:
+    unix_socket_directories: {{ postgresql_unix_socket_dir }}
+    stats_temp_directory: /var/lib/pgsql_stats_tmp
+ 
+#  callbacks:
+#    on_start:
+#    on_stop:
+#    on_restart:
+#    on_reload:
+#    on_role_change:
+ 
+  create_replica_methods:
+#   - pgbackrest
+#   - wal_e
+   - basebackup
+# pgbackrest:
+#   command: /usr/bin/pgbackrest --stanza=<Stanza_Name> --delta restore
+#   keep_data: True
+#   no_params: True
+#  wal_e
+#    command: patroni_wale_restore
+#    no_master: 1
+#    envdir: /etc/wal_e/envdir
+#    use_iam: 1
+  basebackup:
+    max-rate: '100M'
+ 
+ #watchdog:
+#  mode: automatic # Allowed values: off, automatic, required
+#  device: /dev/watchdog
+#  safety_margin: 5
+ 
+tags:
+    nofailover: false
+    noloadbalance: false
+    clonefrom: false
+    nosync: false
+# specify a node to replicate from. This can be used to implement a cascading replication.
+#    replicatefrom: (node name)

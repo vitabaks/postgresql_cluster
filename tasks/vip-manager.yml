@@ -1,0 +1,44 @@
+---
+
+- name: vip-manager | copy binary file to /usr/bin/
+  copy:
+    src: files/vip-manager
+    dest: /usr/bin/
+    owner: root
+    group: root
+    mode: u+x,g+x,o+x
+  tags: [ vip_manager, vip_manager_install ]
+
+- name: vip-manager | generate conf file "/etc/patroni/vip.conf"
+  template:
+    src: templates/vip.conf.j2
+    dest: /etc/patroni/vip.conf
+    owner: postgres
+    group: postgres
+    mode: 0644
+  tags: [ vip_manager, vip_manager_conf ]
+
+- name: vip-manager | copy systemd service file
+  template:
+    src: templates/vip-manager.service.j2
+    dest: /etc/systemd/system/vip-manager.service
+    owner: postgres
+    group: postgres
+    mode: 0644
+  tags: [ vip_manager, vip_manager_conf, vip_manager_systemd ]
+
+- name: vip-manager | restart systemd service
+  systemd:
+    daemon_reload: yes
+    name: vip-manager
+    state: restarted
+    enabled: yes
+
+- name: wait for the cluster ip address (VIP) "{{ cluster_vip }}" is running
+  wait_for:
+    host: "{{ cluster_vip}}"
+    port: "{{ ansible_ssh_port }}"
+    state: started
+    timeout: 60
+    delay: 2
+

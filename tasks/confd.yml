@@ -1,0 +1,61 @@
+---
+
+- name: confd | download and copy "confd" binary file to /usr/local/bin/
+  get_url:
+    url: https://github.com/kelseyhightower/confd/releases/download/v0.16.0/confd-0.16.0-linux-amd64
+    dest: /usr/local/bin/confd
+    mode: u+x,g+x,o+x
+    timeout: 30
+  when: (proxy_env is not defined) or (proxy_env | length < 1)
+  tags: [ get_confd, confd ]
+
+- name: confd | download and copy "confd" binary file to /usr/local/bin (behind a proxy)
+  get_url:
+    url: https://github.com/kelseyhightower/confd/releases/download/v0.16.0/confd-0.16.0-linux-amd64
+    dest: /usr/local/bin/confd
+    mode: u+x,g+x,o+x
+    timeout: 30
+  environment:
+    "{{proxy_env}}"
+  when: proxy_env | length > 0
+  tags: [ get_confd, confd ]
+
+- name: confd | create conf directories
+  file:
+    path: "{{ item }}"
+    state: directory
+  with_items:
+    - /etc/confd/conf.d
+    - /etc/confd/templates
+  tags: [ confd_dir, confd_conf, confd ]
+
+- name: confd | generate conf file "/etc/confd/confd.toml"
+  template:
+    src: templates/confd.toml.j2
+    dest: /etc/confd/confd.toml
+  tags: [ confd_toml, confd_conf, confd ]
+
+- name: confd | generate conf file "/etc/confd/conf.d/haproxy.toml"
+  template:
+    src: templates/haproxy.toml.j2
+    dest: /etc/confd/conf.d/haproxy.toml
+  tags: [ haproxy_toml, confd_conf, confd ]
+
+- name: confd | generate template "/etc/confd/templates/haproxy.tmpl"
+  template:
+    src: templates/haproxy.tmpl.j2
+    dest: /etc/confd/templates/haproxy.tmpl
+  tags: [ haproxy_tmpl, confd_conf ,confd ]
+
+- name: confd | copy systemd service file
+  template:
+    src: templates/confd.service.j2
+    dest: /etc/systemd/system/confd.service
+  tags: [ confd_service, confd ]
+
+- name: confd | restart systemd service
+  systemd:
+    daemon_reload: yes
+    name: confd
+    enabled: yes
+    state: restarted

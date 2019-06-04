@@ -1,0 +1,42 @@
+---
+
+- name: ntp | install package 
+  package: 
+    name: ntp
+    state: present
+    update_cache: yes
+  when: (proxy_env is not defined) or (proxy_env | length < 1) 
+  tags: [ ntp_install, ntp ]
+
+- name: ntp | install package (behind a proxy)
+  package:
+    name: ntp
+    state: present
+    update_cache: yes
+  environment:
+    "{{proxy_env}}"
+  when: proxy_env | length > 0
+  tags: [ ntp_install, ntp ]
+
+- name: ntp | copy the ntp.conf template file
+  template:
+    src: ntp.conf.j2
+    dest: /etc/ntp.conf
+  tags: [ ntp_conf, ntp ]
+
+  # Debian
+- name: ntp | restart systemd service
+  systemd:
+    name: ntp
+    enabled: yes
+    state: restarted
+  when: ansible_os_family == "Debian"
+  
+  # RedHat
+- name: ntp | restart systemd service
+  systemd:
+    name: ntpd
+    enabled: yes
+    state: restarted
+  when: ansible_os_family == "RedHat"
+

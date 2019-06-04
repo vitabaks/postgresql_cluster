@@ -1,0 +1,136 @@
+#!/bin/bash
+# iptables firewall for common LAMP servers.
+#
+# This file should be located at /etc/firewall.bash, and is meant to work with
+# Jeff Geerling's firewall init script.
+#
+# Common port reference:
+#   22: SSH
+#   25: SMTP
+#   80: HTTP
+#   123: NTP
+#   443: HTTPS
+#   2222: SSH alternate
+#   4949: Munin
+#   6082: Varnish admin
+#   8080: HTTP alternate (often used with Tomcat)
+#   8983: Tomcat HTTP
+#   8443: Tomcat HTTPS
+#   9000: SonarQube
+#
+# @author Jeff Geerling
+
+# No spoofing.
+if [ -e /proc/sys/net/ipv4/conf/all/rp_filter ]
+then
+for filter in /proc/sys/net/ipv4/conf/*/rp_filter
+do
+echo 1 > $filter
+done
+fi
+
+# Completely reset the firewall by removing all rules and chains.
+iptables -P INPUT ACCEPT
+iptables -P FORWARD ACCEPT
+iptables -P OUTPUT ACCEPT
+iptables -t nat -F
+iptables -t mangle -F
+iptables -F
+iptables -X
+
+# Accept traffic from loopback interface (localhost).
+iptables -A INPUT -i lo -j ACCEPT
+
+# Forwarded ports.
+{# Add a rule for each forwarded port #}
+{% for forwarded_port in firewall_forwarded_tcp_ports %}
+iptables -t nat -I PREROUTING -p tcp --dport {{ forwarded_port.src }} -j REDIRECT --to-port {{ forwarded_port.dest }}
+iptables -t nat -I OUTPUT -p tcp -o lo --dport {{ forwarded_port.src }} -j REDIRECT --to-port {{ forwarded_port.dest }}
+{% endfor %}
+{% for forwarded_port in firewall_forwarded_udp_ports %}
+iptables -t nat -I PREROUTING -p udp --dport {{ forwarded_port.src }} -j REDIRECT --to-port {{ forwarded_port.dest }}
+iptables -t nat -I OUTPUT -p udp -o lo --dport {{ forwarded_port.src }} -j REDIRECT --to-port {{ forwarded_port.dest }}
+{% endfor %}
+
+# Open ports.
+{# Add a rule for each open port #}
+{% for port in firewall_allowed_tcp_ports %}
+iptables -A INPUT -p tcp -m tcp --dport {{ port }} -j ACCEPT
+{% endfor %}
+{% for port in firewall_allowed_udp_ports %}
+iptables -A INPUT -p udp -m udp --dport {{ port }} -j ACCEPT
+{% endfor %}
+
+# Accept icmp ping requests.
+iptables -A INPUT -p icmp -j ACCEPT
+
+# Allow NTP traffic for time synchronization.
+iptables -A OUTPUT -p udp --dport 123 -j ACCEPT
+iptables -A INPUT -p udp --sport 123 -j ACCEPT
+
+# Additional custom rules.
+{% for rule in firewall_additional_rules %}
+{{ rule }}
+{% endfor %}
+
+# Allow established connections:
+iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+# Log EVERYTHING (ONLY for Debug).
+# iptables -A INPUT -j LOG
+
+{% if firewall_log_dropped_packets %}
+# Log other incoming requests (all of which are dropped) at 15/minute max.
+iptables -A INPUT -m limit --limit 15/minute -j LOG --log-level 7 --log-prefix "Dropped by firewall: "
+{% endif %}
+
+# Drop all other traffic.
+iptables -A INPUT -j DROP
+
+
+# Configure IPv6 if ip6tables is present.
+if [ -x "$(which ip6tables 2>/dev/null)" ]; then
+
+  # Remove all rules and chains.
+  ip6tables -F
+  ip6tables -X
+
+  # Accept traffic from loopback interface (localhost).
+  ip6tables -A INPUT -i lo -j ACCEPT
+
+  # Open ports.
+  {# Add a rule for each open port #}
+  {% for port in firewall_allowed_tcp_ports %}
+  ip6tables -A INPUT -p tcp -m tcp --dport {{ port }} -j ACCEPT
+  {% endfor %}
+  {% for port in firewall_allowed_udp_ports %}
+  ip6tables -A INPUT -p udp -m udp --dport {{ port }} -j ACCEPT
+  {% endfor %}
+
+  # Accept icmp ping requests.
+  ip6tables -A INPUT -p icmp -j ACCEPT
+
+  # Allow NTP traffic for time synchronization.
+  ip6tables -A OUTPUT -p udp --dport 123 -j ACCEPT
+  ip6tables -A INPUT -p udp --sport 123 -j ACCEPT
+
+  # Additional custom rules.
+  {% for rule in firewall_ip6_additional_rules %}
+  {{ rule }}
+  {% endfor %}
+
+  # Allow established connections:
+  ip6tables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+  # Log EVERYTHING (ONLY for Debug).
+  # ip6tables -A INPUT -j LOG
+
+  {% if firewall_log_dropped_packets %}
+  # Log other incoming requests (all of which are dropped) at 15/minute max.
+  ip6tables -A INPUT -m limit --limit 15/minute -j LOG --log-level 7 --log-prefix "Dropped by firewall: "
+  {% endif %}
+
+  # Drop all other traffic.
+  ip6tables -A INPUT -j DROP
+
+fi

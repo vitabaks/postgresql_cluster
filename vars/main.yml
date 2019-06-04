@@ -1,0 +1,243 @@
+---
+
+# Cluster variables
+
+cluster_vip: "10.128.64.145" # for client access to databases in the cluster
+vip_interface: "{{ ansible_default_ipv4.interface }}"
+
+patroni_cluster_name: "postgres-cluster"  # specify the cluster name
+synchronous_mode: 'false'  # or 'true' for enable synchronous database replication
+
+patroni_superuser_username: "postgres"
+patroni_superuser_password: "postgres-pass" # please change password
+patroni_replication_username: "replicator"
+patroni_replication_password: "replicator-pass" # please change password
+
+patroni_install_version: "latest"  # or specific version (example 1.5.6)
+
+with_haproxy_load_balancing: 'false' # or 'true' if you want to install and configure the load-balancing (based on haproxy+confd+keepalived)
+# by default used the virtual ip address (cluster_vip) only on the server with the role of master (based on vip-manager)
+haproxy_major: "1.8"  # if variable "with_haproxy_load_balancing=true"
+haproxy_version: "1.8.20"  # version to build from source
+
+
+# DCS (Distributed Consensus Store)
+dcs_exists: 'false' # or 'true' if you do not want to install and configure the etcd cluster
+dcs_type: "etcd"
+
+ # if variable "dcs_exists=false"
+etcd_ver: "v3.3.13" # version for deploy etcd cluster
+etcd_data_dir: "/var/lib/etcd"
+
+ # if variable "dcs_exists=true" and "dcs_type=etcd" specify ip-address your etcd cluster in the "patroni_etcd_hosts" variable
+ # example (use existing cluster of 3 nodes)
+patroni_etcd_hosts: []
+#  - { host: "10.128.64.140", port: "2379" }
+#  - { host: "10.128.64.142", port: "2379" }
+#  - { host: "10.128.64.143", port: "2379" }
+
+ # more options you can specify in the templates/patroni.yml.j2
+ # documentation:
+ # https://patroni.readthedocs.io/en/latest/SETTINGS.html#etcd
+ # https://patroni.readthedocs.io/en/latest/SETTINGS.html#consul
+ # https://patroni.readthedocs.io/en/latest/SETTINGS.html#zookeeper
+
+
+# PostgreSQL variables
+postgresql_version: "11"
+# postgresql_data_dir: see vars/Debian.yml or vars/RedHat.yml
+postgresql_port: "5432"
+postgresql_encoding: "UTF8"       # for bootstrap only (initdb)
+postgresql_locale: "en_US.UTF-8"  # for bootstrap only (initdb)
+postgresql_data_checksums: 'true' # for bootstrap only (initdb)
+
+# (optional) list of users to be created (if not already exists)
+postgresql_users: []
+#  - { name: "mydb-user", password: "mydb-user-pass" }
+
+# (optional) list of databases to be created (if not already exists)
+postgresql_databases: []
+#  - { db: "mydatabase", encoding: "UTF8", lc_collate: "ru_RU.UTF-8", lc_ctype: "ru_RU.UTF-8", owner: "mydb-user" }
+#  - { db: "mydatabase2", encoding: "UTF8", lc_collate: "ru_RU.UTF-8", lc_ctype: "ru_RU.UTF-8", owner: "mydb-user" }
+
+# (optional) list of database extensions to be created (if not already exists)
+postgresql_extensions: []
+#  - { ext: "pg_stat_statements", db: "postgres"   }
+#  - { ext: "pg_stat_statements", db: "mydatabase" }
+#  - { ext: "dblink",             db: "mydatabase" }
+#  - { ext: "pg_repack",          db: "mydatabase" }  # postgresql-<version>-repack package is required
+#  - { ext: "pg_stat_kcache",     db: "mydatabase" }  # postgresql-<version>-pg-stat-kcache package is required
+
+
+ # postgresql parameters to bootstrap dcs (more in templates/patroni.yml.j2)
+  # these parameters for example!
+postgresql_parameters:
+  - { option: "max_connections",                     value: "100"     }
+  - { option: "superuser_reserved_connections",      value: "5"       }
+  - { option: "huge_pages",                          value: "try"     } # or "on" if you set "vm_nr_hugepages" in kernel parameters
+  - { option: "shared_buffers",                      value: "512MB"   } # please change this value
+  - { option: "effective_cache_size",                value: "4GB"     } # please change this value
+  - { option: "work_mem",                            value: "128MB"   } # please change this value
+  - { option: "maintenance_work_mem",                value: "256MB"   } # please change this value
+  - { option: "checkpoint_timeout",                  value: "15min"   }
+  - { option: "checkpoint_completion_target",        value: "0.9"     }
+  - { option: "min_wal_size",                        value: "2GB"     } # for PostgreSQL 9.5 and above (for 9.4 use "checkpoint_segments")
+  - { option: "max_wal_size",                        value: "4GB"     } # for PostgreSQL 9.5 and above (for 9.4 use "checkpoint_segments")
+  - { option: "wal_buffers",                         value: "32MB"    }
+  - { option: "default_statistics_target",           value: "1000"    }
+  - { option: "random_page_cost",                    value: "4"       }
+  - { option: "effective_io_concurrency",            value: "2"       }
+  - { option: "autovacuum",                          value: "on"      }
+  - { option: "autovacuum_max_workers",              value: "5"       }
+  - { option: "autovacuum_vacuum_scale_factor",      value: "0.01"    }
+  - { option: "autovacuum_analyze_scale_factor",     value: "0.02"    }
+  - { option: "autovacuum_naptime",                  value: "1s"      }
+  - { option: "max_files_per_process",               value: "4096"    }
+  - { option: "archive_mode",                        value: "on"      }
+  - { option: "archive_timeout",                     value: "1800s"   }
+  - { option: "archive_command",                     value: "cd ."    }
+  - { option: "wal_level",                           value: "replica" } # "replica" for PostgreSQL 9.6 and above (for 9.4, 9.5 use "hot_standby")
+  - { option: "wal_keep_segments",                   value: "130"     }
+  - { option: "max_wal_senders",                     value: "10"      }
+  - { option: "max_replication_slots",               value: "10"      }
+#  - { option: "idle_in_transaction_session_timeout", value: "600000"  } # for PostgreSQL 9.6 and above
+#  - { option: "max_worker_processes",                value: "24"      }
+#  - { option: "max_parallel_workers",                value: "12"      } # for PostgreSQL 10 and above
+#  - { option: "max_parallel_workers_per_gather",     value: "4"       } # for PostgreSQL 9.6 and above
+
+
+ # specify additional hosts that will be added to the pg_hba.conf
+postgresql_pg_hba:
+  - { type: "local", database: "all",       user: "postgres",  address: "",               method: "trust" } # "local=trust" required for ansible modules "postgresql_(user,db,ext)"
+  - { type: "local", database: "all",       user: "all",       address: "",               method: "peer"  }
+  - { type: "host",  database: "all",       user: "all",       address: "127.0.0.1/32",   method: "md5"   }
+  - { type: "host",  database: "all",       user: "all",       address: "::1/128",        method: "md5"   }
+#  - { type: "host", database: "mydatabase", user: "mydb-user", address: "192.168.0.0/24", method: "md5"   }
+
+
+# PgBouncer parameters (more options in templates/pgbouncer.ini.j2)
+install_pgbouncer: 'true'  # or 'false' if you do not want to install and configure the pgbouncer service
+pgbouncer_conf_dir: "/etc/pgbouncer"
+pgbouncer_log_dir: "/var/log/pgbouncer"
+pgbouncer_listen_address: '0.0.0.0'
+pgbouncer_listen_port: 6432
+max_client_conn: 10000
+max_db_connections: 1000
+
+pgbouncer_pools:
+  - { name: "postgres", dbname: "postgres", pool_parameters: "" }
+#  - { name: "mydatabase", dbname: "mydatabase", pool_parameters: "pool_size=20 pool_mode=transaction" }
+
+pgbouncer_users:
+  - { username: "{{ patroni_superuser_username }}", password: "{{ patroni_superuser_password }}" }
+#  - { username: "mydb-user", password: "mydb-user-pass" }
+
+
+
+# System variables
+proxy_env:
+  http_proxy: http://192.168.152.9:3128
+  https_proxy: http://192.168.152.9:3128
+
+ntp_enabled: 'false' # specify 'true' if you want to install and configure the ntp service
+ntp_servers: []
+#  - "10.255.254.44"
+#  - "10.255.254.45"
+#  - "192.168.152.1"
+
+timezone: []
+#timezone: "Europe/Moscow"
+
+locales:
+  - { language_country: "en_US", encoding: "UTF-8" }
+  - { language_country: "ru_RU", encoding: "UTF-8" }
+#  - { language_country: "ru_RU", encoding: "CP1251" }
+
+
+# Kernel parameters
+ # these parameters for example! Specify kernel options for your system
+sysctl_conf:
+  - { name: "vm.swappiness",                  value: "1",         state: "present" }
+  - { name: "vm.min_free_kbytes",             value: "102400",    state: "present" }
+  - { name: "vm.dirty_expire_centisecs",      value: "1000",      state: "present" }
+  - { name: "vm.dirty_background_bytes",      value: "67108864",  state: "present" }
+  - { name: "vm.dirty_bytes",                 value: "536870912", state: "present" }
+#  - { name: "vm.nr_hugepages",                value: "9510",      state: "present" } # example "9510"=18GB
+  - { name: "vm.zone_reclaim_mode",           value: "0",         state: "present" }
+  - { name: "kernel.numa_balancing",          value: "0",         state: "present" }
+  - { name: "kernel.sched_migration_cost_ns", value: "5000000",   state: "present" }
+  - { name: "kernel.sched_autogroup_enabled", value: "0",         state: "present" }
+  - { name: "net.ipv4.ip_nonlocal_bind",      value: "1",         state: "present" }
+  - { name: "net.ipv4.ip_forward",            value: "1",         state: "present" }
+  
+
+# Transparent Huge Pages
+disable_thp: 'true' # or 'false'
+
+
+# Max open file limit
+set_limits: 'true' # or 'false'
+limits_user: "postgres"
+soft_nofile: 65536
+hard_nofile: 200000
+
+
+# I/O Scheduler
+set_scheduler: 'false' # or 'true'
+scheduler:  # "cfq", "deadline", "noop", "blkmq"
+  - { sched: "deadline" , nr_requests: "1024", device: "sda" }
+#  - { sched: "noop" , nr_requests: "1024", device: "sdb" }
+
+  # cfq - for desktop systems and slow SATA drives
+  # deadline - for SAS drives (recommended for databases)
+  # noop - recommended for SSD drives
+  # blkmq - recommended for NVMe SSD drives (for kernel 4.10+)
+
+
+# SSH Keys
+enable_SSH_Key_based_authentication: 'true' # or 'false'
+ssh_key_user: "postgres"
+ssh_key_state: "present"
+ssh_known_hosts: "{{ groups['postgres-cluster'] }}"
+
+
+# Firewall (ansible-role-firewall)
+ # https://github.com/geerlingguy/ansible-role-firewall
+firewall_enabled_at_boot: true
+
+firewall_allowed_tcp_ports:
+  - "{{ ansible_ssh_port }}"
+  - "{{ postgresql_port }}"
+  - "{{ pgbouncer_listen_port }}"
+  - "2379" # ETCD port
+  - "2380" # ETCD port
+  - "8008" # Patroni REST API port
+  - "5000" # HAProxy (read/write) master
+  - "5001" # HAProxy (read only) all replicas
+  - "5002" # HAProxy (read only) synchronous replica only
+  - "5003" # HAProxy (read only) asynchronous replicas only
+  - "7000" # HAProxy stats
+
+firewall_additional_rules:
+  - "iptables -p vrrp -A INPUT -j ACCEPT"  # Keepalived (vrrp)
+  - "iptables -p vrrp -A OUTPUT -j ACCEPT" # Keepalived (vrrp)
+
+ # disable firewalld (installed by default on RHEL/CentOS) or ufw (installed by default on Ubuntu)
+firewall_disable_firewalld: true
+firewall_disable_ufw: true
+
+
+#-------------------------------------------#
+# "Check system" variables
+os_valid_distributions:
+  - RedHat
+  - CentOS
+  - Ubuntu
+  - Debian
+
+os_minimum_versions:
+  RedHat: 7
+  CentOS: 7
+  Ubuntu: 16.04
+  Debian: 8
+

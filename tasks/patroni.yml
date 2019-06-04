@@ -1,0 +1,441 @@
+---
+# Patroni setup and configuration
+
+- import_tasks: tasks/pip.yml
+  tags: [ patroni, patroni_install, pip ]
+
+
+- name: Patroni | copy patroni requirements.txt file
+  copy:
+    src: files/requirements.txt
+    dest: /tmp/requirements.txt
+  tags: [ patroni, patroni_install ]
+
+- block:
+    - name: Patroni | install setuptools
+      pip:
+        name: setuptools
+        state: latest
+        executable: pip3
+        extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
+
+    - name: Patroni | install requirements
+      pip:
+        requirements: /tmp/requirements.txt
+        executable: pip3
+        extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
+      environment:
+        PATH: "{{ postgresql_bin_dir }}:{{ ansible_env.PATH }}"
+
+    - name: Patroni | install patroni
+      pip:
+        name: patroni
+        state: latest
+        executable: pip3
+        extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
+      when: patroni_install_version == "latest"
+
+    - name: "Patroni | install patroni {{ patroni_install_version }}"
+      pip:
+        name: "patroni=={{ patroni_install_version }}"
+        extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
+        executable: pip3
+      when: patroni_install_version != "latest"
+
+      # "RequestsDependencyWarning: urllib3 (1.25.2) doesn't match a supported version!"
+    - name: Patroni | make sure urllib3 version <1.25 (behind a proxy)
+      pip:
+        name: urllib3<1.25
+        executable: pip3
+        extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
+  when: (proxy_env is not defined) or (proxy_env | length < 1)
+  tags: [ patroni, patroni_install ]
+
+- block:
+    - name: Patroni | install setuptools (behind a proxy)
+      pip:
+        name: setuptools
+        state: latest
+        executable: pip3
+        extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
+
+    - name: Patroni | install requirements (behind a proxy)
+      pip:
+        requirements: /tmp/requirements.txt
+        executable: pip3
+        extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
+      environment:
+        PATH: "{{ postgresql_bin_dir }}:{{ ansible_env.PATH }}"
+
+    - name: Patroni | install patroni (behind a proxy)
+      pip:
+        name: patroni
+        state: latest
+        executable: pip3
+        extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
+      when: patroni_install_version == "latest"
+
+    - name: "Patroni | install patroni {{ patroni_install_version }} (behind a proxy)"
+      pip:
+        name: "patroni=={{ patroni_install_version }}"
+        executable: pip3
+        extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
+      when: patroni_install_version != "latest"
+
+      # "RequestsDependencyWarning: urllib3 (1.25.2) doesn't match a supported version!"
+    - name: Patroni | make sure urllib3 version <1.25 (behind a proxy)
+      pip:
+        name: urllib3<1.25
+        executable: pip3
+        extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
+  environment:
+    "{{proxy_env}}"
+  when: proxy_env | length > 0
+  tags: [ patroni, patroni_install ]
+
+- name: Patroni | create conf directory
+  file:
+    path: /etc/patroni
+    state: directory
+  tags: [ patroni, patroni_conf ]
+
+- name: Patroni | generate conf file "/etc/patroni/patroni.yml"
+  template:
+    src: templates/patroni.yml.j2
+    dest: /etc/patroni/patroni.yml
+    owner: postgres
+    group: postgres
+    mode: 0640
+  tags: [ patroni, patroni_conf ]
+
+- name: Patroni | copy systemd service file "/etc/systemd/system/patroni.service"
+  template:
+    src: templates/patroni.service.j2
+    dest: /etc/systemd/system/patroni.service
+    owner: postgres
+    group: postgres
+    mode: 0644
+  tags: [ patroni, patroni_conf, patroni_service ]
+
+
+- name: Patroni | Prepare PostgreSQL | create statistics directory (if not already exists)
+  file:
+    path: /var/lib/pgsql_stats_tmp
+    state: directory
+    mode: 01777
+  tags: [ patroni, pgsql_stats_tmp ]
+
+- name: Patroni | Prepare PostgreSQL | mount the statistics directory in memory (tmpfs)
+  mount:
+    path: /var/lib/pgsql_stats_tmp
+    src: tmpfs
+    fstype: tmpfs
+    opts: "size=1024m,uid=postgres,gid=postgres"
+    state: mounted
+  tags: [ patroni, pgsql_stats_tmp ]
+
+- name: Patroni | Prepare PostgreSQL | make sure the postgresql log directory "{{ postgresql_log_dir }}" exists
+  file:
+    path: "{{ postgresql_log_dir }}"
+    owner: postgres
+    group: postgres
+    state: directory
+    mode: 0700
+
+
+ # when postgresql exists (master)
+- block:
+    - name: Patroni | Prepare PostgreSQL | check that data directory "{{ postgresql_data_dir }}" is initialized on Master
+      stat:
+        path: "{{ postgresql_data_dir }}/PG_VERSION"
+      register: pgdata_initialized
+    - fail:
+        msg: "Whoops! data directory {{ postgresql_data_dir }} is not initialized"
+      when: not pgdata_initialized.stat.exists
+      tags: [ patroni, patroni_check_init ]
+
+    - name: Patroni | Prepare PostgreSQL | check PostgreSQL is started and accepting connections
+      become: yes
+      become_user: postgres
+      command: "{{ postgresql_bin_dir }}/pg_isready -p {{ postgresql_port }}"
+      register: pg_isready_result
+      failed_when: pg_isready_result.rc != 0
+      tags: patroni
+
+    - name: Patroni | Prepare PostgreSQL | generate pg_hba.conf on Master
+      template:
+        src: templates/pg_hba.conf.j2
+        dest: "{{ postgresql_conf_dir }}/pg_hba.conf"
+        owner: postgres
+        group: postgres
+        mode: 0640
+
+      # "Debian"
+    - name: Patroni | Prepare PostgreSQL | reload for apply the pg_hba.conf
+      become: yes
+      become_user: postgres
+      command: "/usr/bin/pg_ctlcluster {{ postgresql_version }} {{ postgresql_cluster_name }} reload"
+      register: pg_ctlcluster_result
+      failed_when: pg_ctlcluster_result.rc != 0
+      when: ansible_os_family == "Debian"
+
+      # "RedHat"
+    - name: Patroni | Prepare PostgreSQL | reload for apply the pg_hba.conf
+      become: yes
+      become_user: postgres
+      command: "{{ postgresql_bin_dir }}/pg_ctl reload -D {{ postgresql_data_dir }}"
+      register: pg_ctlcluster_result
+      failed_when: pg_ctlcluster_result.rc != 0
+      when: ansible_os_family == "RedHat"
+
+    - name: Patroni | Prepare PostgreSQL | make sure the user "{{ patroni_superuser_username }}" are present, and password does not differ from the specified
+      postgresql_user:
+        db: postgres
+        name: "{{ patroni_superuser_username }}"
+        password: "{{ patroni_superuser_password }}"
+        encrypted: yes
+        role_attr_flags: "SUPERUSER"
+        login_unix_socket: "{{ postgresql_unix_socket_dir }}"
+        port: "{{ postgresql_port }}"
+        state: present
+      become: yes
+      become_user: postgres
+
+    - name: Patroni | Prepare PostgreSQL | make sure the user "{{ patroni_replication_username }}" are present, and password does not differ from the specified
+      postgresql_user:
+        db: postgres
+        name: "{{ patroni_replication_username }}"
+        password: "{{ patroni_replication_password }}"
+        encrypted: yes
+        role_attr_flags: "LOGIN,REPLICATION"
+        login_unix_socket: "{{ postgresql_unix_socket_dir }}"
+        port: "{{ postgresql_port }}"
+        state: present
+      become: yes
+      become_user: postgres
+
+    - name: Patroni | Prepare PostgreSQL | perform CHECKPOINT before stopping postgresql
+      become: yes
+      become_user: postgres
+      command: "{{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -c 'CHECKPOINT'"
+      register: checkpoint_result
+      failed_when: checkpoint_result.rc != 0
+
+      # "Debian"
+    - name: Patroni | Prepare PostgreSQL | stop PostgreSQL (will be managed by patroni)
+      become: yes
+      become_user: postgres
+      command: "/usr/bin/pg_ctlcluster {{ postgresql_version }} {{ postgresql_cluster_name }} stop -m fast"
+      register: stop_result
+      until: stop_result.rc == 0
+      retries: 10
+      delay: 30
+      when: ansible_os_family == "Debian"
+
+      # "RedHat"
+    - name: Patroni | Prepare PostgreSQL | stop PostgreSQL (will be managed by patroni)
+      become: yes
+      become_user: postgres
+      command: "{{ postgresql_bin_dir }}/pg_ctl stop -D {{ postgresql_data_dir }} -m fast"
+      register: stop_result
+      until: stop_result.rc == 0
+      retries: 30
+      delay: 10
+      when: ansible_os_family == "RedHat"
+
+      # "Debian"
+    - name: Patroni | Prepare PostgreSQL | check PostgreSQL is stopped
+      become: yes
+      become_user: postgres
+      command: "/usr/bin/pg_ctlcluster {{ postgresql_version }} {{ postgresql_cluster_name }} status"
+      register: pg_ctlcluster_result
+      failed_when: pg_ctlcluster_result.rc != 3
+      when: ansible_os_family == "Debian"
+
+      # "RedHat"
+    - name: Patroni | Prepare PostgreSQL | check PostgreSQL is stopped
+      become: yes
+      become_user: postgres
+      command: "{{ postgresql_bin_dir }}/pg_ctl status -D {{ postgresql_data_dir }}"
+      register: pg_ctlcluster_result
+      failed_when: pg_ctlcluster_result.rc != 3
+      when: ansible_os_family == "RedHat"
+
+  when: is_master == "true" and postgresql_exists == "true"
+  tags: [ patroni, patroni_start_master ]
+ # when postgresql exists (master)
+
+
+ # wheh postgresql NOT exists
+- block:
+    - name: Patroni | Prepare PostgreSQL | make sure PostgreSQL data directory "{{ postgresql_data_dir }}" exists
+      file:
+        path: "{{ postgresql_data_dir }}"
+        owner: postgres
+        group: postgres
+        state: directory
+        mode: 0700
+
+    - name: Patroni | Prepare PostgreSQL | check that data directory "{{ postgresql_data_dir }}" is not initialized
+      stat:
+        path: "{{ postgresql_data_dir }}/PG_VERSION"
+      register: pgdata_initialized
+    - fail:
+        msg: "Whoops! data directory {{ postgresql_data_dir }} is already initialized"
+      when: pgdata_initialized.stat.exists
+      tags: [ patroni, patroni_check_init ]
+
+      # "Debian" only
+      # patroni bootstrap failure is possible if the postgresql config files are missing
+    - name: Patroni | Prepare PostgreSQL | generate default postgresql config files
+      become: yes
+      become_user: postgres
+      command: "/usr/bin/pg_createcluster {{ postgresql_version }} {{postgresql_cluster_name }} -d {{ postgresql_data_dir }} -p {{ postgresql_port }} -e {{ postgresql_encoding }} --locale {{ postgresql_locale }}"
+      register: pg_createcluster_result
+      failed_when: pg_createcluster_result.rc != 0
+      when: ansible_os_family == "Debian"
+
+    - name: Patroni | Prepare PostgreSQL | make sure the data directory "{{ postgresql_data_dir }}" is empty on Master
+      file:
+        path: "{{ postgresql_data_dir }}"
+        state: "{{ item }}"
+        owner: postgres
+        group: postgres
+        mode: 0700
+      with_items:
+        - absent
+        - directory
+      when: is_master == "true"
+  when: postgresql_exists != "true" 
+  tags: patroni
+ # wheh postgresql NOT exists
+
+
+# start patroni on master
+- block: 
+    - name: Patroni | start patroni service on the Master server
+      systemd:
+        daemon_reload: yes
+        name: patroni
+        state: started
+        enabled: yes
+
+    - name: Patroni | wait for port 8008 to become open on the host
+      wait_for:
+        port: 8008
+        host: "{{ ansible_ssh_host }}"
+        state: started
+        timeout: 120
+        delay: 10
+      ignore_errors: no
+
+    - name: Patroni | check PostgreSQL is started and accepting connections on Master
+      become: yes
+      become_user: postgres
+      command: "{{ postgresql_bin_dir }}/pg_isready -p {{ postgresql_port }}"
+      register: pg_isready_result
+      until: pg_isready_result.rc == 0
+      retries: 30
+      delay: 10
+      ignore_errors: no
+
+    - name: Patroni | PostgreSQL Cluster status
+      command: patronictl -c /etc/patroni/patroni.yml list
+      register: patronictl_result
+    - debug:
+        var: patronictl_result.stdout_lines
+  when: is_master == "true"
+  tags: [ patroni, patroni_start_master ]
+
+  
+# pg_hba (using a templates/pg_hba.conf.j2)
+- block:
+    - name: Patroni | Prepare PostgreSQL | generate pg_hba.conf
+      template:
+        src: templates/pg_hba.conf.j2
+        dest: "{{ postgresql_conf_dir }}/pg_hba.conf"
+        owner: postgres
+        group: postgres
+        mode: 0640
+
+      # "Debian"
+    - name: Patroni | Prepare PostgreSQL | reload for apply the pg_hba.conf
+      become: yes
+      become_user: postgres
+      command: "/usr/bin/pg_ctlcluster {{ postgresql_version }} {{ postgresql_cluster_name }} reload"
+      register: pg_ctlcluster_result
+      failed_when: pg_ctlcluster_result.rc != 0
+      when: ansible_os_family == "Debian" and is_master == "true"
+
+      # "RedHat"
+    - name: Patroni | Prepare PostgreSQL | reload for apply the pg_hba.conf
+      become: yes
+      become_user: postgres
+      command: "{{ postgresql_bin_dir }}/pg_ctl reload -D {{ postgresql_data_dir }}"
+      register: pg_ctlcluster_result
+      failed_when: pg_ctlcluster_result.rc != 0
+      when: ansible_os_family == "RedHat" and is_master == "true"
+  tags: [ patroni, pg_hba_generate ]
+
+
+# start patroni on replica
+- block:
+    - name: Patroni | Prepare PostgreSQL | make sure the data directory "{{ postgresql_data_dir }}" is empty on Replica
+      file:
+        path: "{{ postgresql_data_dir }}"
+        state: "{{ item }}"
+        owner: postgres
+        group: postgres
+        mode: 0700
+      with_items:
+        - absent
+        - directory
+
+    - name: Patroni | start patroni service on Replica servers
+      systemd:
+        daemon_reload: yes
+        name: patroni
+        state: started
+        enabled: yes
+     
+    - name: Patroni | wait for port 8008 to become open on the host
+      wait_for:
+        port: 8008
+        host: "{{ ansible_ssh_host }}"
+        state: started
+        timeout: 120
+        delay: 10
+      ignore_errors: no
+  when: is_master != "true"
+  tags: [patroni, patroni_start_replica]
+
+
+# disable postgresql from autostart
+  # "Debian"
+- name: Patroni | turning off postgresql autostart from config "start.conf" (will be managed by patroni)
+  copy:
+    dest: "{{ postgresql_conf_dir }}/start.conf"
+    content: "manual"
+    owner: postgres
+    group: postgres
+    mode: 0644
+  when: ansible_os_family == "Debian"
+  tags: [ patroni, postgresql_disable ]
+
+- name: Patroni | disable "postgresql@{{ postgresql_version }}-{{ postgresql_cluster_name }}" service
+  systemd:
+    name: "postgresql@{{ postgresql_version }}-{{ postgresql_cluster_name }}"
+    enabled: no
+    daemon_reload: yes
+  when: ansible_os_family == "Debian"
+  tags: [ patroni, postgresql_disable ]
+
+  # "RedHat"
+- name: Patroni | disable "postgresql-{{ postgresql_version }}" service (will be managed by patroni)
+  systemd:
+    name: "postgresql-{{ postgresql_version }}"
+    enabled: no
+    daemon_reload: yes
+  when: ansible_os_family == "RedHat"
+  tags: [ patroni, postgresql_disable ]
+

@@ -1,0 +1,28 @@
+# This is example inventory file!
+# Please specify the ip addresses and connection settings for your environment
+
+# "postgresql_exists='true'" if PostgreSQL is already exists and runing
+# "hostname=" variable is optional (used to change the server name)
+
+[master]
+10.128.64.140 postgresql_exists='false' hostname=pgnode01
+
+[replica]
+10.128.64.142 hostname=pgnode02
+10.128.64.143 hostname=pgnode03
+
+
+[postgres-cluster:children]
+master
+replica
+
+
+# Connection settings
+[all:vars]
+ansible_connection='ssh'
+ansible_ssh_port='22'
+ansible_user='root'
+ansible_ssh_pass='testpas'  # "sshpass" package is required for use "ansible_ssh_pass"
+#ansible_ssh_private_key_file=
+# ansible_python_interpreter='/usr/bin/python3'  # is required for use python3
+

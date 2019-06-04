@@ -1,0 +1,232 @@
+---
+
+- block:
+    - name: "haproxy | download HAProxy {{haproxy_version}} source files"
+      become: yes
+      become_user: root
+      unarchive:
+        src: http://www.haproxy.org/download/{{haproxy_major}}/src/haproxy-{{haproxy_version}}.tar.gz
+        dest: /tmp/
+        remote_src: yes
+
+    - name: "haproxy | download lua-5.3.5 source files"
+      become: yes
+      become_user: root
+      unarchive:
+        src: https://www.lua.org/ftp/lua-5.3.5.tar.gz
+        dest: /tmp/
+        remote_src: yes
+      tags: lua
+
+      # "Debian"
+    - name: haproxy | Install the prerequisites packages to compile HAProxy
+      apt:
+        update_cache: yes
+        name: "{{ packages }}"
+        state: present
+      vars:
+        packages:
+        - unzip
+        - gzip
+        - build-essential
+        - libc6-dev
+        - libpcre3-dev
+        - liblua5.3-dev
+        - libreadline-dev
+        - zlib1g-dev
+        - libsystemd-dev
+        - ca-certificates
+        - libssl-dev
+      when: ansible_os_family == "Debian"
+
+      # "RedHat"
+    - name: haproxy | Install the prerequisites packages to compile HAProxy
+      yum:
+        update_cache: yes
+        name: "{{ packages }}"
+        state: present
+      vars:
+        packages:
+        - unzip
+        - gzip
+        - "@Development tools"
+        - pcre-devel
+        - zlib-devel
+        - readline-devel
+        - openssl
+        - openssl-devel
+        - openssl-libs
+        - systemd-devel
+      when: ansible_os_family == "RedHat"
+  when: (proxy_env is not defined) or (proxy_env | length < 1)
+
+# with proxy
+- block:
+    - name: "haproxy | download HAProxy {{haproxy_version}} source files (behind a proxy)"
+      become: yes
+      become_user: root
+      unarchive:
+        src: http://www.haproxy.org/download/{{haproxy_major}}/src/haproxy-{{haproxy_version}}.tar.gz
+        dest: /tmp/
+        remote_src: yes
+      environment:
+        "{{proxy_env}}"
+
+    - name: "haproxy | download lua-5.3.5 source files (behind a proxy)"
+      become: yes
+      become_user: root
+      unarchive:
+        src: https://www.lua.org/ftp/lua-5.3.5.tar.gz
+        dest: /tmp/
+        remote_src: yes
+      environment:
+        "{{proxy_env}}"
+      tags: lua
+
+      # "Debian"
+    - name: haproxy | install the prerequisites packages to compile HAProxy (behind a proxy)
+      apt:
+        update_cache: yes
+        name: "{{ packages }}"
+        state: present
+      vars:
+        packages:
+        - unzip
+        - gzip
+        - build-essential
+        - libc6-dev
+        - libpcre3-dev
+        - liblua5.3-dev
+        - libreadline-dev
+        - zlib1g-dev
+        - libsystemd-dev
+        - ca-certificates
+        - libssl-dev
+      environment:
+        "{{proxy_env}}"
+      when: ansible_os_family == "Debian"
+
+      # "RedHat"
+    - name: haproxy | install the prerequisites packages to compile HAProxy (behind a proxy)
+      yum:
+        update_cache: yes
+        name: "{{ packages }}"
+        state: present
+      vars:
+        packages:
+        - unzip
+        - gzip
+        - "@Development tools"
+        - pcre-devel
+        - zlib-devel
+        - readline-devel
+        - openssl
+        - openssl-devel
+        - openssl-libs
+        - systemd-devel
+      environment:
+        "{{proxy_env}}"
+      when: ansible_os_family == "RedHat"
+  when: proxy_env | length > 0
+
+
+- name: haproxy | add haproxy group
+  group:
+    name: haproxy
+    state: present
+
+- name: haproxy | add haproxy user
+  user:
+    name: haproxy
+    comment: "HAProxy user"
+    group: haproxy
+    shell: /usr/sbin/nologin
+   
+- name: haproxy | create directories
+  file:
+    dest: "{{ item }}"
+    state: directory
+    owner: haproxy
+    group: haproxy
+  with_items:
+    - /etc/haproxy
+    - /var/run/haproxy
+    - /var/lib/haproxy/dev
+
+# The version of Lua in the CentOS 7 repositories is too old for HAProxy
+- name: haproxy | build and install lua-5.3.5 (required for HAProxy)
+  become: yes
+  become_user: root
+  shell: "make INSTALL_TOP=/opt/lua-5.3.5 linux install"
+  args:
+    chdir: /tmp/lua-5.3.5
+  tags: lua
+
+# https://github.com/haproxy/haproxy/blob/master/INSTALL
+- name: haproxy | build HAProxy
+  become: yes
+  become_user: root
+  make:
+    chdir: "/tmp/haproxy-{{haproxy_version}}"
+    params:
+      TARGET: linux2628
+      USE_GETADDRINFO: 1
+      USE_ZLIB: 1
+      USE_REGPARM: 1
+      USE_OPENSSL: 1
+      USE_LIBCRYPT: 1
+      USE_SYSTEMD: 1
+      USE_PCRE: 1
+      USE_NS: 1
+      USE_TFO: 1
+      USE_LUA: 1
+      LUA_INC: /opt/lua-5.3.5/include
+      LUA_LIB: /opt/lua-5.3.5/lib
+
+- name: haproxy | install HAProxy
+  become: yes
+  become_user: root
+  make:
+    chdir: "/tmp/haproxy-{{haproxy_version}}"
+    target: install
+
+
+- name: haproxy | create systemd service file
+  template:
+    src: templates/haproxy.service.j2
+    dest: /etc/systemd/system/haproxy.service
+    owner: haproxy
+    group: haproxy
+
+- name: haproxy | generate conf file "/etc/haproxy/haproxy.cfg"
+  template:
+    src: templates/haproxy.cfg.j2
+    dest: /etc/haproxy/haproxy.cfg
+  tags: [ haproxy_conf, haproxy ]
+
+- name: haproxy | restart systemd service
+  systemd:
+    daemon_reload: yes
+    name: haproxy
+    enabled: yes
+    state: restarted
+
+- name: haproxy | wait for port 5000 to become open on the host
+  wait_for:
+    port: 5000
+    host: 127.0.0.1
+    state: started
+    timeout: 120
+    delay: 10
+  ignore_errors: no
+
+
+ # for automate the haproxy configuration (optional)
+- import_tasks: tasks/confd.yml
+  when: dcs_type == "etcd"
+  tags: confd
+
+  # virtual ip address (and haproxy health checking)
+- import_tasks: tasks/keepalived.yml
+  tags: [ keepalived, haproxy ]
+

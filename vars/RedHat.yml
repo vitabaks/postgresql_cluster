@@ -1,0 +1,50 @@
+---
+# Vars for RedHat based distributions
+
+# PostgreSQL variables
+postgresql_cluster_name: "data"
+postgresql_data_dir: "/var/lib/pgsql/{{ postgresql_version }}/{{ postgresql_cluster_name }}"
+postgresql_conf_dir: "{{ postgresql_data_dir }}"
+postgresql_bin_dir: "/usr/pgsql-{{ postgresql_version }}/bin"
+postgresql_log_dir: "/var/log/postgresql"
+postgresql_unix_socket_dir: "/var/run/postgresql"
+postgresql_pgpass: /var/lib/pgsql/.pgpass
+
+postgresql_version_terse: "{{ postgresql_version | replace('.', '') }}"
+
+
+# Repository (optional)
+yum_repository: []
+#  - name: "repo name"
+#    description: "repo description"
+#    baseurl: "https://repo.url"
+#    gpgkey: "https://key.url"
+
+# postgresql repository will be installed from the package "pgdg-redhat-repo-latest.noarch.rpm" (tasks/packages.yml)
+
+# Packages
+system_packages:
+  - { name: "epel-release",      state: "present" }  # epel repository
+  - { name: "sudo",              state: "present" }
+  - { name: "vim",               state: "present" }
+  - { name: "curl",              state: "present" }
+  - { name: "less",              state: "present" }
+  - { name: "python",            state: "present" }
+  - { name: "python-devel",      state: "present" }
+  - { name: "python-psycopg2",   state: "present" }
+  - { name: "python-setuptools", state: "present" }  # setuptools is required for use the ansible pip module
+  - { name: "python36",          state: "present" }
+  - { name: "python36-devel",    state: "present" }
+  - { name: "gcc",               state: "present" }
+  - { name: "unzip",             state: "present" }
+  - { name: "gzip",              state: "present" }
+  - { name: "jq",                state: "present" }
+  - { name: "iptables",          state: "present" }
+
+postgresql_packages:
+  - { name: "postgresql{{ postgresql_version_terse }}",         state: "present" }
+  - { name: "postgresql{{ postgresql_version_terse }}-server",  state: "present" }
+  - { name: "postgresql{{ postgresql_version_terse }}-contrib", state: "present" }
+  - { name: "postgresql{{ postgresql_version_terse }}-devel",   state: "present" }  # is required to build psycopg2 (for patroni)
+#  - { name: "pg_repack{{ postgresql_version_terse }}",          state: "present" }  # optional (for ext pg-repack)
+

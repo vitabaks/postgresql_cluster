@@ -1,0 +1,27 @@
+global_defs {
+   router_id ocp_vrrp
+}
+ 
+vrrp_script haproxy_check {
+   script "/bin/kill -0 `cat /var/run/haproxy/haproxy.pid`"
+   interval 2
+   weight 2
+}
+ 
+vrrp_instance VI_1 {
+   interface {{ vip_interface }}
+   virtual_router_id 32
+   priority  100
+   advert_int 3
+   state  BACKUP
+   virtual_ipaddress {
+       {{ cluster_vip  }}
+   }
+   track_script {
+       haproxy_check
+   }
+   authentication {
+      auth_type PASS
+      auth_pass 1ce24b6e
+   }
+}

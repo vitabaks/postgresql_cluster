@@ -1,0 +1,94 @@
+---
+
+- name: PgBouncer | install package
+  package:
+    update_cache: yes
+    state: present
+    name: pgbouncer
+  when: (proxy_env is not defined) or (proxy_env | length < 1)
+  tags: [ pgbouncer_install, pgbouncer ]
+
+- name: PgBouncer | install package (behind a proxy)
+  package:
+    update_cache: yes
+    state: present
+    name: pgbouncer
+  environment:
+    "{{proxy_env}}"
+  when: proxy_env | length > 0
+  tags: [ pgbouncer_install, pgbouncer ]
+
+- name: PgBouncer | ensure config directory "{{ pgbouncer_conf_dir }}" exist
+  file:
+    path: "{{ pgbouncer_conf_dir }}"
+    state: directory
+    owner: postgres
+    group: postgres
+    mode: 0750
+  tags: [ pgbouncer_conf, pgbouncer ]
+
+- name: PgBouncer | copy systemd service file
+  template:
+    src: templates/pgbouncer.service.j2
+    dest: /etc/systemd/system/pgbouncer.service
+    owner: postgres
+    group: postgres
+    mode: 0644
+  tags: [ pgbouncer_systemd, pgbouncer ]
+
+- name: PgBouncer | stop and disable standard init script
+  service:
+    name: pgbouncer
+    state: stopped
+    enabled: no
+
+- name: PgBouncer | enable log rotation with logrotate
+  copy:
+    content: |
+      /var/log/pgbouncer/pgbouncer.log {
+             daily
+             rotate 7
+             copytruncate
+             delaycompress
+             compress
+             notifempty
+             missingok
+             su root root
+      }
+    dest: /etc/logrotate.d/pgbouncer
+  tags: [ pgbouncer_logrotate, pgbouncer ]
+
+- name: PgBouncer | configure pgbouncer.ini
+  template:
+    src: templates/pgbouncer.ini.j2
+    dest: "{{ pgbouncer_conf_dir }}/pgbouncer.ini"
+    owner: postgres
+    group: postgres
+    mode: 0640
+  tags: [ pgbouncer_conf, pgbouncer ]
+
+- name: PgBouncer | configure userlist.txt
+  template:
+    src: templates/userlist.txt.j2
+    dest: "{{ pgbouncer_conf_dir }}/userlist.txt"
+    owner: postgres
+    group: postgres
+    mode: 0640
+  tags: [ pgbouncer_conf, pgbouncer ]
+
+- name: PgBouncer | restart systemd service
+  systemd:
+    daemon_reload: yes
+    name: pgbouncer
+    enabled: yes
+    state: restarted
+
+- name: PgBouncer | wait for port "{{ pgbouncer_listen_port }}" to become open on the host
+  wait_for:
+    port: "{{ pgbouncer_listen_port }}"
+    host: "{{ ansible_ssh_host }}"
+    state: started
+    timeout: 300
+    delay: 5
+  ignore_errors: no
+

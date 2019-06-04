@@ -1,0 +1,7 @@
+---
+
+- name: sudo | add postgres user to the /etc/sudoers.d/postgres
+  copy:
+    dest: "/etc/sudoers.d/postgres"
+    content: "postgres  ALL=(ALL)  NOPASSWD: ALL"
+  tags: sudo

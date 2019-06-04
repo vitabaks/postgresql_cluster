@@ -1,0 +1,26 @@
+---
+dependencies: []
+
+galaxy_info:
+  author: geerlingguy
+  description: Simple iptables firewall for most Unix-like systems.
+  company: "Midwestern Mac, LLC"
+  license: "license (BSD, MIT)"
+  min_ansible_version: 2.4
+  platforms:
+    - name: EL
+      versions:
+        - all
+    - name: Debian
+      versions:
+        - all
+    - name: Ubuntu
+      versions:
+        - all
+  galaxy_tags:
+    - networking
+    - system
+    - security
+    - firewall
+    - iptables
+    - tcp

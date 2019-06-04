@@ -1,0 +1,13 @@
+[Unit]
+Description=Сonfiguration management tool - confd
+After=network.target
+After=etcd.service
+  
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/confd
+TimeoutSec=30
+Restart=on-failure
+  
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,21 @@
+---
+
+  # Debian
+- name: Generate locales "{% for set in locales %}{{set.language_country}}.{{set.encoding}}{% if not loop.last %},{% endif %}{% endfor %}"
+  become: yes
+  locale_gen:
+    name: "{{item.language_country}}.{{item.encoding}}"
+    state: present
+  with_items:
+    - "{{ locales }}"
+  when: ansible_os_family == "Debian"
+
+  # RedHat
+- name: Generate locales "{% for set in locales %}{{set.language_country}}.{{set.encoding}}{% if not loop.last %},{% endif %}{% endfor %}"
+  become: yes
+  command: localedef -c -i {{item.language_country}} -f {{item.encoding}} {{item.language_country}}.{{item.encoding}}
+  changed_when: false
+  with_items:
+    - "{{ locales }}"
+  when: ansible_os_family == "RedHat"
+

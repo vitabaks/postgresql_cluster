@@ -1,0 +1,16 @@
+---
+# login_unix_socket requires ansible version 2.8 and higher
+
+- name: PostgreSQL extensions | add extensions to the databases
+  become: yes
+  become_user: postgres
+  postgresql_ext:
+    db: "{{ item.db }}"
+    name: "{{ item.ext }}"
+#    login_unix_socket: "{{ postgresql_unix_socket_dir }}"
+    port: "{{ postgresql_port }}"
+    state: present
+  ignore_errors: yes
+  with_items:
+    - "{{ postgresql_extensions }}"
+  when: postgresql_extensions is defined and postgresql_extensions | length > 0

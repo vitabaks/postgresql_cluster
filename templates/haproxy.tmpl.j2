@@ -1,0 +1,93 @@
+global
+    maxconn 10000
+    log /dev/log    local0
+    log /dev/log    local1 notice
+    chroot /var/lib/haproxy
+    stats socket /run/haproxy/admin.sock mode 660 level admin expose-fd listeners
+    stats timeout 30s
+    user haproxy
+    group haproxy
+    daemon
+  
+defaults
+    mode               tcp
+    log                global
+    retries            2
+    timeout queue      5s
+    timeout connect    5s
+    timeout client     60m
+    timeout server     60m
+    timeout check      15s
+     
+listen stats
+    mode http
+    bind 0.0.0.0:7000
+    stats enable
+    stats uri /
+ 
+listen master
+    bind 0.0.0.0:5000
+    option tcplog
+    option httpchk OPTIONS /master
+    http-check expect status 200
+    default-server inter 3s fastinter 1s fall 3 rise 4 on-marked-down shutdown-sessions
+{% if install_pgbouncer == "true" %}
+{% raw %}{{range gets "/members/*"}} server {{base .Key}} {{$data := json .Value}}{{base (replace (index (split (index (split $data.conn_url ":") 1) "/") 2) "@" "/" -1)}}:{% endraw %}{{ pgbouncer_listen_port }}{% raw %} check port {{index (split (index (split $data.api_url "/") 2) ":") 1}}
+{{end}}{% endraw %}
+{% endif %}
+{% if ( install_pgbouncer is not defined ) or ( install_pgbouncer != "true" ) or ( install_pgbouncer | length < 0 ) %}
+{% raw %}{{range gets "/members/*"}} server {{base .Key}} {{$data := json .Value}}{{base (replace (index (split $data.conn_url "/") 2) "@" "/" -1)}} check port {{index (split (index (split $data.api_url "/") 2) ":") 1}}
+{{end}}{% endraw %}
+{% endif %}
+
+
+listen replicas
+    bind 0.0.0.0:5001
+    option tcplog
+    option httpchk OPTIONS /replica
+    balance roundrobin
+    http-check expect status 200
+    default-server inter 3s fastinter 1s fall 3 rise 2 on-marked-down shutdown-sessions
+{% if install_pgbouncer == "true" %}
+{% raw %}{{range gets "/members/*"}} server {{base .Key}} {{$data := json .Value}}{{base (replace (index (split (index (split $data.conn_url ":") 1) "/") 2) "@" "/" -1)}}:{% endraw %}{{ pgbouncer_listen_port }}{% raw %} check port {{index (split (index (split $data.api_url "/") 2) ":") 1}}
+{{end}}{% endraw %}
+{% endif %}
+{% if ( install_pgbouncer is not defined ) or ( install_pgbouncer != "true" ) or ( install_pgbouncer | length < 0 ) %}
+{% raw %}{{range gets "/members/*"}} server {{base .Key}} {{$data := json .Value}}{{base (replace (index (split $data.conn_url "/") 2) "@" "/" -1)}} check port {{index (split (index (split $data.api_url "/") 2) ":") 1}}
+{{end}}{% endraw %}
+{% endif %}
+
+
+listen replicas_sync
+    bind 0.0.0.0:5002
+    option tcplog
+    option httpchk OPTIONS /sync
+    balance roundrobin
+    http-check expect status 200
+    default-server inter 3s fastinter 1s fall 3 rise 2 on-marked-down shutdown-sessions
+{% if install_pgbouncer == "true" %}
+{% raw %}{{range gets "/members/*"}} server {{base .Key}} {{$data := json .Value}}{{base (replace (index (split (index (split $data.conn_url ":") 1) "/") 2) "@" "/" -1)}}:{% endraw %}{{ pgbouncer_listen_port }}{% raw %} check port {{index (split (index (split $data.api_url "/") 2) ":") 1}}
+{{end}}{% endraw %}
+{% endif %}
+{% if ( install_pgbouncer is not defined ) or ( install_pgbouncer != "true" ) or ( install_pgbouncer | length < 0 ) %}
+{% raw %}{{range gets "/members/*"}} server {{base .Key}} {{$data := json .Value}}{{base (replace (index (split $data.conn_url "/") 2) "@" "/" -1)}} check port {{index (split (index (split $data.api_url "/") 2) ":") 1}}
+{{end}}{% endraw %}
+{% endif %}
+
+
+listen replicas_async
+    bind 0.0.0.0:5003
+    option tcplog
+    option httpchk OPTIONS /async
+    balance roundrobin
+    http-check expect status 200
+    default-server inter 3s fastinter 1s fall 3 rise 2 on-marked-down shutdown-sessions
+{% if install_pgbouncer == "true" %}
+{% raw %}{{range gets "/members/*"}} server {{base .Key}} {{$data := json .Value}}{{base (replace (index (split (index (split $data.conn_url ":") 1) "/") 2) "@" "/" -1)}}:{% endraw %}{{ pgbouncer_listen_port }}{% raw %} check port {{index (split (index (split $data.api_url "/") 2) ":") 1}}
+{{end}}{% endraw %}
+{% endif %}
+{% if ( install_pgbouncer is not defined ) or ( install_pgbouncer != "true" ) or ( install_pgbouncer | length < 0 ) %}
+{% raw %}{{range gets "/members/*"}} server {{base .Key}} {{$data := json .Value}}{{base (replace (index (split $data.conn_url "/") 2) "@" "/" -1)}} check port {{index (split (index (split $data.api_url "/") 2) ":") 1}}
+{{end}}{% endraw %}
+{% endif %}
+

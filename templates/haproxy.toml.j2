@@ -1,0 +1,11 @@
+[template]
+prefix = "/service/{{ patroni_cluster_name }}"
+src = "haproxy.tmpl"
+dest = "/etc/haproxy/haproxy.cfg"
+ 
+check_cmd = "/usr/local/sbin/haproxy -c -f {% raw %}{{ .src }}{% endraw %}"
+reload_cmd = "/bin/systemctl reload haproxy"
+ 
+keys = [
+    "/members/",
+]

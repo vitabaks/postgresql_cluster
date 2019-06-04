@@ -1,0 +1,73 @@
+---
+
+- name: etcd cluster | download and extract "etcd" into /tmp
+  unarchive:
+    src: https://github.com/etcd-io/etcd/releases/download/{{ etcd_ver }}/etcd-{{ etcd_ver }}-linux-amd64.tar.gz
+    dest: /tmp/
+    remote_src: yes
+  when: (proxy_env is not defined) or (proxy_env | length < 1)
+
+- name: etcd cluster | download and extract "etcd" into /tmp (behind a proxy)
+  unarchive:
+    src: https://github.com/etcd-io/etcd/releases/download/{{ etcd_ver }}/etcd-{{ etcd_ver }}-linux-amd64.tar.gz
+    dest: /tmp/
+    remote_src: yes
+  environment:
+    "{{proxy_env}}"
+  when: proxy_env | length > 0
+
+- name: etcd cluster | copy "etcd" and "etcdctl" binary files to /usr/local/bin/
+  copy:
+    src: "/tmp/etcd-{{ etcd_ver }}-linux-amd64/{{ item }}"
+    dest: /usr/local/bin/
+    mode: u+x,g+x,o+x
+    remote_src: yes
+  with_items:
+    - etcd
+    - etcdctl
+
+- name: etcd cluster | create etcd conf directory
+  file:
+    path: /etc/etcd
+    state: directory
+
+- name: etcd cluster | generate conf file "/etc/etcd/etcd.conf"
+  template:
+    src: templates/etcd.conf.j2
+    dest: /etc/etcd/etcd.conf
+  tags: etcd_conf
+
+- name: etcd cluster | add etcd user
+  user:
+    name: etcd
+    shell: /usr/sbin/nologin
+    home: "{{ etcd_data_dir }}"
+
+- name: etcd cluster | copy systemd service file
+  template:
+    src: templates/etcd.service.j2
+    dest: /etc/systemd/system/etcd.service
+
+- name: etcd cluster | enable and start systemd service
+  systemd:
+    daemon_reload: yes
+    name: etcd
+    enabled: yes
+    state: started
+
+- name: etcd cluster | wait for port 2379 to become open on the host
+  wait_for:
+    port: 2379
+    host: 127.0.0.1
+    state: started
+    timeout: 120
+    delay: 10
+  ignore_errors: no
+
+- block:
+    - name: etcd cluster | check etcd endpoints health
+      shell: ETCDCTL_API=3 etcdctl endpoint health
+      register: etcd_health_result
+    - debug:
+        var: etcd_health_result.stdout_lines
+  tags: etcd_status

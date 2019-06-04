@@ -1,0 +1,53 @@
+---
+
+- name: keepalived | install packages
+  package:
+    name: keepalived
+    state: present
+    update_cache: yes
+  when: (proxy_env is not defined) or (proxy_env | length < 1)
+  tags: [ keepalived_install, keepalived ]
+
+- name: keepalived | install packages (behind a proxy)
+  package:
+    name: keepalived
+    state: present
+    update_cache: yes
+  environment:
+    "{{proxy_env}}"
+  when: proxy_env | length > 0
+  tags: [ keepalived_install, keepalived ]
+
+- name: keepalived | make sure the kernel parameters "net.ipv4.ip_nonlocal_bind", "net.ipv4.ip_forward" are enabled
+  sysctl:
+    name: "{{ item }}"
+    value: "1"
+    sysctl_set: "yes"
+    state: "present"
+    reload: "yes"
+  with_items:
+    - "net.ipv4.ip_nonlocal_bind"
+    - "net.ipv4.ip_forward"
+  tags: [ keepalived_conf, keepalived ]
+
+- name: keepalived | generate conf file "/etc/keepalived/keepalived.conf"
+  template:
+    src: templates/keepalived.conf.j2
+    dest: /etc/keepalived/keepalived.conf
+  tags: [ keepalived_conf, keepalived ]
+
+- name: keepalived | restart systemd service
+  systemd:
+    daemon_reload: yes
+    name: keepalived
+    enabled: yes
+    state: restarted
+
+- name: wait for the cluster ip address (VIP) "{{ cluster_vip }}" is running
+  wait_for:
+    host: "{{ cluster_vip}}"
+    port: "{{ ansible_ssh_port }}"
+    state: started
+    timeout: 60
+    delay: 2
+

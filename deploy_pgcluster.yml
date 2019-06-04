@@ -1,0 +1,73 @@
+---
+
+- name: Deploy PostgreSQL High-Availability Cluster (based on "Patroni" and "DCS(etcd)")
+  hosts: postgres-cluster
+  become: true
+  become_method: sudo
+  any_errors_fatal: true
+  gather_facts: true
+  vars_files: 
+    - vars/main.yml
+    - "vars/{{ ansible_os_family }}.yml"
+
+
+  pre_tasks:
+    - import_tasks: tasks/check_system.yml
+
+    - import_tasks: tasks/add-repository.yml
+      tags: [ add_repo, configure ]
+
+    - import_tasks: tasks/packages.yml
+      tags: [ install_packages, install_postgres ]
+
+    - import_tasks: tasks/sudo.yml
+      tags: [ sudo, postgres_sudo, configure ]
+
+    - import_tasks: tasks/configure.yml
+      tags: configure
+      
+  roles:
+    - role: ansible-role-firewall
+      tags: firewall
+
+  tasks:
+    - meta: flush_handlers
+    
+    - import_tasks: tasks/etcd.yml
+      when: dcs_exists == "false" and dcs_type == "etcd"
+      tags: [ etcd, etcd_cluster ]
+
+    - import_tasks: tasks/patroni.yml
+      tags: patroni
+
+    - import_tasks: tasks/pgbouncer.yml
+      when: install_pgbouncer == "true"
+      tags: pgbouncer
+
+    - import_tasks: tasks/haproxy.yml
+      when: with_haproxy_load_balancing == "true" and cluster_vip | length > 0
+      tags: [ haproxy, load_balancing ]
+
+    - import_tasks: tasks/vip-manager.yml
+      when: with_haproxy_load_balancing != "true" and cluster_vip | length > 0
+      tags: [ vip, vip_manager ]
+
+    # optional
+    - import_tasks: tasks/postgresql-users.yml
+      when: is_master == "true" and postgresql_users | length > 0
+      tags: postgresql_users
+
+    - import_tasks: tasks/postgresql-databases.yml
+      when: is_master == "true" and postgresql_databases | length > 0
+      tags: postgresql_databases
+
+    - import_tasks: tasks/postgresql-extensions.yml
+      when: is_master == "true" and postgresql_extensions | length > 0
+      tags: postgresql_extensions
+
+    # finish (info)
+    - import_tasks: tasks/deploy_finish.yml
+      tags: [ cluster_info, cluster_status ]
+
+      
+

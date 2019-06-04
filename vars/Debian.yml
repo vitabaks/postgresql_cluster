@@ -1,0 +1,51 @@
+---
+# Vars for Debian based distributions
+
+# PostgreSQL variables
+postgresql_cluster_name: "main"
+postgresql_data_dir: "/var/lib/postgresql/{{ postgresql_version }}/{{ postgresql_cluster_name }}"
+postgresql_conf_dir: "/etc/postgresql/{{ postgresql_version }}/{{ postgresql_cluster_name }}"
+postgresql_bin_dir: "/usr/lib/postgresql/{{ postgresql_version }}/bin"
+postgresql_log_dir: "/var/log/postgresql"
+postgresql_unix_socket_dir: "/var/run/postgresql"
+postgresql_pgpass: /var/lib/postgresql/.pgpass
+
+postgresql_version_terse: "{{ postgresql_version | replace('.', '') }}"
+
+
+# Repository
+apt_repository_keys:
+  - key: "https://www.postgresql.org/media/keys/ACCC4CF8.asc" # postgresql repository apt key
+apt_repository:
+  - repo: "deb http://apt.postgresql.org/pub/repos/apt/ {{ ansible_distribution_release }}-pgdg main" # postgresql apt repository
+#  - repo: "deb http://deb.debian.org/debian/ {{ ansible_distribution_release }} main"                        # debian repo (optional)
+#  - repo: "deb http://deb.debian.org/debian/ {{ ansible_distribution_release }}-updates main"                # debian repo (optional)
+#  - repo: "deb http://security.debian.org/debian-security/ {{ ansible_distribution_release }}/updates main"  # debian repo (optional)
+
+
+# Packages
+system_packages:
+  - { name: "sudo",              state: "present" }
+  - { name: "vim",               state: "present" }
+  - { name: "curl",              state: "present" }
+  - { name: "less",              state: "present" }
+  - { name: "python",            state: "present" }
+  - { name: "python-dev",        state: "present" }
+  - { name: "python-psycopg2",   state: "present" }
+  - { name: "python-setuptools", state: "present" }  # setuptools is required for use the ansible pip module
+  - { name: "python3",           state: "present" }
+  - { name: "python3-dev",       state: "present" }
+  - { name: "libpq-dev",         state: "present" }
+  - { name: "gcc",               state: "present" }
+  - { name: "unzip",             state: "present" }
+  - { name: "gzip",              state: "present" }
+  - { name: "jq",                state: "present" }
+  - { name: "iptables",          state: "present" }
+
+postgresql_packages:
+  - { name: "postgresql-{{ postgresql_version }}",            state: "present" }
+  - { name: "postgresql-client-{{ postgresql_version }}",     state: "present" }
+  - { name: "postgresql-server-dev-{{ postgresql_version }}", state: "present" } # is required to build psycopg2 (for patroni)
+  - { name: "postgresql-contrib-{{ postgresql_version }}",    state: "present" }
+#  - { name: "postgresql-{{ postgresql_version }}-repack", state: "present" }  # optional (for ext pg-repack)
+
