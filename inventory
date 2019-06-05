@@ -12,7 +12,7 @@
 10.128.64.143 hostname=pgnode03
 
 
-[postgres-cluster:children]
+[postgres_cluster:children]
 master
 replica
 

@@ -3,7 +3,7 @@ interval = 10
 watch = true
 nodes = [
 {% if dcs_exists == 'false' and dcs_type == 'etcd' %}
-  {% for host in groups['postgres-cluster'] %}
+  {% for host in groups['postgres_cluster'] %}
   "http://{{ hostvars[host]['inventory_hostname'] }}:2379",
   {% endfor %}
 {% endif %}

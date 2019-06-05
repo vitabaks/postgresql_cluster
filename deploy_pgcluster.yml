@@ -1,7 +1,7 @@
 ---
 
 - name: Deploy PostgreSQL High-Availability Cluster (based on "Patroni" and "DCS(etcd)")
-  hosts: postgres-cluster
+  hosts: postgres_cluster
   become: true
   become_method: sudo
   any_errors_fatal: true

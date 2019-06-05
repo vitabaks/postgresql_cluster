@@ -18,7 +18,7 @@ VIP_TYPE="etcd"
 
 # Endpoint
 {% if dcs_exists == 'false' and dcs_type == 'etcd' %}
-VIP_ENDPOINT="{% for host in groups['postgres-cluster'] %}http://{{ hostvars[host]['inventory_hostname'] }}:2379{% if not loop.last %},{% endif %}{% endfor %}"
+VIP_ENDPOINT="{% for host in groups['postgres_cluster'] %}http://{{ hostvars[host]['inventory_hostname'] }}:2379{% if not loop.last %},{% endif %}{% endfor %}"
 {% endif %}
 {% if dcs_exists == 'true' and dcs_type == 'etcd' %}
 VIP_ENDPOINT="{% for etcd_hosts in patroni_etcd_hosts %}http://{{etcd_hosts.host}}:{{etcd_hosts.port}}{% if not loop.last %},{% endif %}{% endfor %}"

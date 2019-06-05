@@ -197,7 +197,7 @@ scheduler:  # "cfq", "deadline", "noop", "blkmq"
 enable_SSH_Key_based_authentication: 'true' # or 'false'
 ssh_key_user: "postgres"
 ssh_key_state: "present"
-ssh_known_hosts: "{{ groups['postgres-cluster'] }}"
+ssh_known_hosts: "{{ groups['postgres_cluster'] }}"
 
 
 # Firewall (ansible-role-firewall)

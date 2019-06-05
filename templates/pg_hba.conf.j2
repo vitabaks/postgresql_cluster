@@ -87,12 +87,12 @@
 {% for client in postgresql_pg_hba %}
   {{ client.type.ljust(10) |default('host') }}{{ client.database.ljust(25) |default('all') }}{{ client.user.ljust(25) |default('all') }}{{ client.address.ljust(25) |default('') }}{{ client.method |default('md5') }}
 {% endfor %}
-{% for patroni in groups['postgres-cluster'] %}
+{% for patroni in groups['postgres_cluster'] %}
   host      all                      all                      {{ hostvars[patroni]['inventory_hostname'] }}/32         md5
 {% endfor %}
 # Allow replication connections from localhost, by a user with the
 # replication privilege.
   host      replication              {{ patroni_replication_username }}               127.0.0.1/32             md5
-{% for host in groups['postgres-cluster'] %}
+{% for host in groups['postgres_cluster'] %}
   host      replication              {{ patroni_replication_username }}               {{ hostvars[host]['inventory_hostname'] }}/32         md5
 {% endfor %}
