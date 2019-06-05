@@ -1,5 +1,5 @@
 psycopg2>=2.8
-urllib3>=1.19.1,!=1.21,<1.25
+urllib3>=1.24.2,<1.25
 boto
 PyYAML
 requests
