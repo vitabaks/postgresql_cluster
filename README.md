@@ -15,6 +15,8 @@ You have two options available for deployment ("Type A" and "Type B"):
 ### [Type A] PostgreSQL High-Availability with Load Balancing
 ![TypeA](https://github.com/vitabaks/postgresql_cluster/blob/master/TypeA.png)
 
+>> To use this scheme, specify `with_haproxy_load_balancing: 'true'` in variable file vars/main.yml
+
 This scheme provides the ability to distribute the load on reading. This also allows us to scale out the cluster (with read-only replicas).
 
 - port 5000 (read / write) master
@@ -25,8 +27,6 @@ This scheme provides the ability to distribute the load on reading. This also al
 - port 5003 (read only) asynchronous replicas only
 
 :heavy_exclamation_mark: Your application must have support sending read requests to a custom port (ex 5001), and write requests (ex 5000).
-
-
 
 ##### Components of high availability:
 [**Patroni**](https://github.com/zalando/patroni) is a template for you to create your own customized, high-availability solution using Python and - for maximum accessibility - a distributed configuration store like ZooKeeper, etcd, Consul or Kubernetes. Used for automate the management of PostgreSQL instances and auto failover.
@@ -49,10 +49,11 @@ In our configuration keepalived checks the status of the HAProxy service and in 
 ### [Type B] PostgreSQL High-Availability only
 ![TypeB](https://github.com/vitabaks/postgresql_cluster/blob/master/TypeB.png)
 
-This is simple scheme without load balancing.
+This is simple scheme without load balancing `Used by default`
+
 To provide a single entry point (VIP) for databases access is used "vip-manager".
 
-[**vip-manager**](https://github.com/cybertec-postgresql/vip-manager) manages a virtual IP (VIP) based on state kept in etcd or Consul. Is written in Go. Author: Cybertec Schönig & Schönig GmbH https://www.cybertec-postgresql.com
+[**vip-manager**](https://github.com/cybertec-postgresql/vip-manager) manages a virtual IP (VIP) based on state kept in etcd or Consul. Is written in Go.  :copyright:  Cybertec Schönig & Schönig GmbH https://www.cybertec-postgresql.com
 
 
 
