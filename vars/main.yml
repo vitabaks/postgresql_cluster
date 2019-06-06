@@ -15,6 +15,8 @@ patroni_replication_password: "replicator-pass" # please change password
 
 patroni_install_version: "latest"  # or specific version (example 1.5.6)
 
+
+# Load Balancing
 with_haproxy_load_balancing: 'false' # or 'true' if you want to install and configure the load-balancing (based on haproxy+confd+keepalived)
 # by default used the virtual ip address (cluster_vip) only on the server with the role of master (based on vip-manager)
 haproxy_major: "1.8"  # if variable "with_haproxy_load_balancing=true"
@@ -54,20 +56,27 @@ postgresql_data_checksums: 'true' # for bootstrap only (initdb)
 # (optional) list of users to be created (if not already exists)
 postgresql_users: []
 #  - { name: "mydb-user", password: "mydb-user-pass" }
+#  - { name: "", password: "" }
+#  - { name: "", password: "" }
+#  - { name: "", password: "" }
 
 # (optional) list of databases to be created (if not already exists)
 postgresql_databases: []
 #  - { db: "mydatabase", encoding: "UTF8", lc_collate: "ru_RU.UTF-8", lc_ctype: "ru_RU.UTF-8", owner: "mydb-user" }
-#  - { db: "mydatabase2", encoding: "UTF8", lc_collate: "ru_RU.UTF-8", lc_ctype: "ru_RU.UTF-8", owner: "mydb-user" }
+#  - { db: "", encoding: "UTF8", lc_collate: "en_US.UTF-8", lc_ctype: "en_US.UTF-8", owner: "" }
+#  - { db: "", encoding: "UTF8", lc_collate: "en_US.UTF-8", lc_ctype: "en_US.UTF-8", owner: "" }
 
 # (optional) list of database extensions to be created (if not already exists)
 postgresql_extensions: []
 #  - { ext: "pg_stat_statements", db: "postgres"   }
 #  - { ext: "pg_stat_statements", db: "mydatabase" }
-#  - { ext: "dblink",             db: "mydatabase" }
-#  - { ext: "pg_repack",          db: "mydatabase" }  # postgresql-<version>-repack package is required
-#  - { ext: "pg_stat_kcache",     db: "mydatabase" }  # postgresql-<version>-pg-stat-kcache package is required
-
+#  - { ext: "pg_stat_statements", db: "" }
+#  - { ext: "pg_stat_statements", db: "" }
+#  - { ext: "pg_repack",          db: "" }  # postgresql-<version>-repack package is required
+#  - { ext: "pg_stat_kcache",     db: "" }  # postgresql-<version>-pg-stat-kcache package is required
+#  - { ext: "",     db: "" }
+#  - { ext: "",     db: "" }
+#  - { ext: "",     db: "" }
 
  # postgresql parameters to bootstrap dcs (more in templates/patroni.yml.j2)
   # these parameters for example!
@@ -104,6 +113,8 @@ postgresql_parameters:
 #  - { option: "max_worker_processes",                value: "24"      }
 #  - { option: "max_parallel_workers",                value: "12"      } # for PostgreSQL 10 and above
 #  - { option: "max_parallel_workers_per_gather",     value: "4"       } # for PostgreSQL 9.6 and above
+#  - { option: "",                                    value: ""        }
+#  - { option: "",                                    value: ""        }
 
 
  # specify additional hosts that will be added to the pg_hba.conf
@@ -127,11 +138,15 @@ max_db_connections: 1000
 pgbouncer_pools:
   - { name: "postgres", dbname: "postgres", pool_parameters: "" }
 #  - { name: "mydatabase", dbname: "mydatabase", pool_parameters: "pool_size=20 pool_mode=transaction" }
+#  - { name: "", dbname: "", pool_parameters: "" }
+#  - { name: "", dbname: "", pool_parameters: "" }
 
 pgbouncer_users:
   - { username: "{{ patroni_superuser_username }}", password: "{{ patroni_superuser_password }}" }
 #  - { username: "mydb-user", password: "mydb-user-pass" }
-
+#  - { username: "", password: "" }
+#  - { username: "", password: "" }
+#  - { username: "", password: "" }
 
 
 # System variables
@@ -150,7 +165,7 @@ timezone: []
 locales:
   - { language_country: "en_US", encoding: "UTF-8" }
   - { language_country: "ru_RU", encoding: "UTF-8" }
-#  - { language_country: "ru_RU", encoding: "CP1251" }
+#  - { language_country: "", encoding: "" }
 
 
 # Kernel parameters
@@ -168,7 +183,10 @@ sysctl_conf:
   - { name: "kernel.sched_autogroup_enabled", value: "0",         state: "present" }
   - { name: "net.ipv4.ip_nonlocal_bind",      value: "1",         state: "present" }
   - { name: "net.ipv4.ip_forward",            value: "1",         state: "present" }
-  
+#  - { name: "",            value: "",         state: "" }
+#  - { name: "",            value: "",         state: "" }
+#  - { name: "",            value: "",         state: "" }
+
 
 # Transparent Huge Pages
 disable_thp: 'true' # or 'false'
@@ -186,6 +204,7 @@ set_scheduler: 'false' # or 'true'
 scheduler:  # "cfq", "deadline", "noop", "blkmq"
   - { sched: "deadline" , nr_requests: "1024", device: "sda" }
 #  - { sched: "noop" , nr_requests: "1024", device: "sdb" }
+#  - { sched: "" , nr_requests: "1024", device: "" }
 
   # cfq - for desktop systems and slow SATA drives
   # deadline - for SAS drives (recommended for databases)
@@ -239,4 +258,3 @@ os_minimum_versions:
   CentOS: 7
   Ubuntu: 16.04
   Debian: 8
-
