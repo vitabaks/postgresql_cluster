@@ -24,7 +24,7 @@ This scheme provides the ability to distribute the load on reading. This also al
 - port 5002 (read only) synchronous replica only
 - port 5003 (read only) asynchronous replicas only
 
-:heavy_exclamation_mark: Your application have support sending read requests to a custom port (ex 5001), and write requests (ex 5000).
+:heavy_exclamation_mark: Your application must have support sending read requests to a custom port (ex 5001), and write requests (ex 5000).
 
 
 
