@@ -15,7 +15,7 @@ You have two options available for deployment ("Type A" and "Type B"):
 ### [Type A] PostgreSQL High-Availability with Load Balancing
 ![TypeA](https://github.com/vitabaks/postgresql_cluster/blob/master/TypeA.png)
 
->> To use this scheme, specify `with_haproxy_load_balancing: 'true'` in variable file vars/main.yml
+> To use this scheme, specify `with_haproxy_load_balancing: 'true'` in variable file vars/main.yml
 
 This scheme provides the ability to distribute the load on reading. This also allows us to scale out the cluster (with read-only replicas).
 
