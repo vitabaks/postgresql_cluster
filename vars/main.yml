@@ -78,16 +78,16 @@ postgresql_extensions: []
 #  - { ext: "",     db: "" }
 #  - { ext: "",     db: "" }
 
- # postgresql parameters to bootstrap dcs (more in templates/patroni.yml.j2)
-  # these parameters for example!
+ # postgresql parameters to bootstrap dcs (more parameters in templates/patroni.yml.j2)
+  # these are the parameters for an example!
 postgresql_parameters:
   - { option: "max_connections",                     value: "100"     }
   - { option: "superuser_reserved_connections",      value: "5"       }
   - { option: "huge_pages",                          value: "try"     } # or "on" if you set "vm_nr_hugepages" in kernel parameters
   - { option: "shared_buffers",                      value: "512MB"   } # please change this value
-  - { option: "effective_cache_size",                value: "4GB"     } # please change this value
   - { option: "work_mem",                            value: "128MB"   } # please change this value
   - { option: "maintenance_work_mem",                value: "256MB"   } # please change this value
+  - { option: "effective_cache_size",                value: "4GB"     } # please change this value
   - { option: "checkpoint_timeout",                  value: "15min"   }
   - { option: "checkpoint_completion_target",        value: "0.9"     }
   - { option: "min_wal_size",                        value: "2GB"     } # for PostgreSQL 9.5 and above (for 9.4 use "checkpoint_segments")
@@ -96,7 +96,8 @@ postgresql_parameters:
   - { option: "default_statistics_target",           value: "1000"    }
   - { option: "random_page_cost",                    value: "4"       }
   - { option: "effective_io_concurrency",            value: "2"       }
-  - { option: "autovacuum",                          value: "on"      }
+  - { option: "synchronous_commit",                  value: "on"      } # or 'off' if you can you lose single transactions in case of a crash
+  - { option: "autovacuum",                          value: "on"      } # never turn off the autovacuum!
   - { option: "autovacuum_max_workers",              value: "5"       }
   - { option: "autovacuum_vacuum_scale_factor",      value: "0.01"    }
   - { option: "autovacuum_analyze_scale_factor",     value: "0.02"    }
@@ -104,7 +105,7 @@ postgresql_parameters:
   - { option: "max_files_per_process",               value: "4096"    }
   - { option: "archive_mode",                        value: "on"      }
   - { option: "archive_timeout",                     value: "1800s"   }
-  - { option: "archive_command",                     value: "cd ."    }
+  - { option: "archive_command",                     value: "cd ."    } # not doing anything yet with WAL-s
   - { option: "wal_level",                           value: "replica" } # "replica" for PostgreSQL 9.6 and above (for 9.4, 9.5 use "hot_standby")
   - { option: "wal_keep_segments",                   value: "130"     }
   - { option: "max_wal_senders",                     value: "10"      }
@@ -113,6 +114,11 @@ postgresql_parameters:
 #  - { option: "max_worker_processes",                value: "24"      }
 #  - { option: "max_parallel_workers",                value: "12"      } # for PostgreSQL 10 and above
 #  - { option: "max_parallel_workers_per_gather",     value: "4"       } # for PostgreSQL 9.6 and above
+#  - { option: "max_parallel_maintenance_workers",    value: "2"       } # for PostgreSQL 11 and above
+#  - { option: "hot_standby_feedback",                value: "on"      } # for "synchronous_mode"
+#  - { option: "max_standby_streaming_delay",         value: "30s"     }
+#  - { option: "wal_receiver_status_interval",        value: "10s"     }
+#  - { option: "old_snapshot_threshold",              value: "60min"   } # for PostgreSQL 9.6 and above (1min-60d)
 #  - { option: "",                                    value: ""        }
 #  - { option: "",                                    value: ""        }
 
