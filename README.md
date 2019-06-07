@@ -120,13 +120,19 @@ Ansible ([What is Ansible](https://www.ansible.com/resources/videos/quick-start-
 `ansible-playbook deploy_pgcluster.yml`
 
 ---
+### Maintenance
+- [Tutorial: Management of High-Availability PostgreSQL clusters with Patroni](https://pgconf.ru/en/2018/108567)
+- [Patroni documentation](https://patroni.readthedocs.io/en/latest/)
+- [etcd operations guide](https://etcd.io/docs/v3.3.12/op-guide/)
 
+
+---
 #### Variables
 *coming soon...*
 
 See the vars/[main.yml](./vars/main.yml) file for details.
 
----
+
 #### License
 Licensed under the MIT License. See the [LICENSE](./LICENSE) file for details.
 
