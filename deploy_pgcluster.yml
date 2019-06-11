@@ -22,10 +22,7 @@
 
     - import_tasks: tasks/sudo.yml
       tags: [ sudo, postgres_sudo, configure ]
-
-    - import_tasks: tasks/configure.yml
-      tags: configure
-      
+     
   roles:
     - role: ansible-role-firewall
       tags: firewall
@@ -33,6 +30,9 @@
   tasks:
     - meta: flush_handlers
     
+    - import_tasks: tasks/configure.yml
+      tags: configure
+
     - import_tasks: tasks/etcd.yml
       when: dcs_exists == "false" and dcs_type == "etcd"
       tags: [ etcd, etcd_cluster ]

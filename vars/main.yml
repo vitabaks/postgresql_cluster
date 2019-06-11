@@ -189,7 +189,7 @@ sysctl_conf:
   - { name: "kernel.sched_autogroup_enabled", value: "0",         state: "present" }
   - { name: "net.ipv4.ip_nonlocal_bind",      value: "1",         state: "present" }
   - { name: "net.ipv4.ip_forward",            value: "1",         state: "present" }
-#  - { name: "",            value: "",         state: "" }
+  - { name: "net.netfilter.nf_conntrack_max", value: "1048576",   state: "present" }
 #  - { name: "",            value: "",         state: "" }
 #  - { name: "",            value: "",         state: "" }
 
