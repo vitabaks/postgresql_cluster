@@ -69,7 +69,7 @@ RedHat and Debian based distros (x86_64)
 - Ubuntu: 16.04
 - Debian: 8
 
-:white_check_mark: tested, works fine: `Debian 9, Ubuntu 18.04, CentOS 7`
+:white_check_mark: tested, works fine: `Debian 9, Ubuntu 18.04, CentOS 7.6`
 
 ###### PostgreSQL versions: 
 all supported PostgreSQL versions
@@ -119,8 +119,15 @@ Ansible ([What is Ansible](https://www.ansible.com/resources/videos/quick-start-
 
 `ansible-playbook deploy_pgcluster.yml`
 
+[![asciicast](https://asciinema.org/a/251019.svg)](https://asciinema.org/a/251019?speed=5)
+
 ---
+
 ### Maintenance
+Please note that the original design goal of this playbook was more concerned with the initial deploiment of a PostgreSQL HA Cluster and so it does not currently concern itself with performing ongoing maintenance of a cluster.
+
+You should learn each component of the cluster for its further maintenance.
+
 - [Tutorial: Management of High-Availability PostgreSQL clusters with Patroni](https://pgconf.ru/en/2018/108567)
 - [Patroni documentation](https://patroni.readthedocs.io/en/latest/)
 - [etcd operations guide](https://etcd.io/docs/v3.3.12/op-guide/)
