@@ -11,6 +11,6 @@
     port: "{{ postgresql_port }}"
     state: present
   ignore_errors: yes
-  with_items: 
+  with_items:
     - "{{ postgresql_users }}"
   when: postgresql_users is defined and postgresql_users | length > 0

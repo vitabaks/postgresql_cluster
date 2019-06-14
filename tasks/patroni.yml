@@ -306,13 +306,13 @@
         - absent
         - directory
       when: is_master == "true"
-  when: postgresql_exists != "true" 
+  when: postgresql_exists != "true"
   tags: patroni
  # wheh postgresql NOT exists
 
 
 # start patroni on master
-- block: 
+- block:
     - name: Patroni | start patroni service on the Master server
       systemd:
         daemon_reload: yes
@@ -347,7 +347,7 @@
   when: is_master == "true"
   tags: [ patroni, patroni_start_master ]
 
-  
+
 # pg_hba (using a templates/pg_hba.conf.j2)
 - block:
     - name: Patroni | Prepare PostgreSQL | generate pg_hba.conf
@@ -397,7 +397,7 @@
         name: patroni
         state: started
         enabled: yes
-     
+
     - name: Patroni | wait for port 8008 to become open on the host
       wait_for:
         port: 8008

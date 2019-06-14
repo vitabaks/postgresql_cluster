@@ -1,5 +1,5 @@
 ---
-  
+
 - block:
     - name: PostgreSQL Cluster health
       command: patronictl -c /etc/patroni/patroni.yml list
@@ -25,7 +25,7 @@
 - block:
     - name: PostgreSQL Cluster connection info
       debug:
-        msg: 
+        msg:
           - +------------------------------------------------+
           - address (VIP) {{ cluster_vip }}
           - port 5000 (read/write) master

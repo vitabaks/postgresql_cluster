@@ -143,7 +143,7 @@
     comment: "HAProxy user"
     group: haproxy
     shell: /usr/sbin/nologin
-   
+
 - name: haproxy | create directories
   file:
     dest: "{{ item }}"

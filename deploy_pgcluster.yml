@@ -6,7 +6,7 @@
   become_method: sudo
   any_errors_fatal: true
   gather_facts: true
-  vars_files: 
+  vars_files:
     - vars/main.yml
     - "vars/{{ ansible_os_family }}.yml"
 
@@ -22,14 +22,14 @@
 
     - import_tasks: tasks/sudo.yml
       tags: [ sudo, postgres_sudo, configure ]
-     
+
   roles:
     - role: ansible-role-firewall
       tags: firewall
 
   tasks:
     - meta: flush_handlers
-    
+
     - import_tasks: tasks/configure.yml
       tags: configure
 
@@ -68,6 +68,4 @@
     # finish (info)
     - import_tasks: tasks/deploy_finish.yml
       tags: [ cluster_info, cluster_status ]
-
-      
 

@@ -1,11 +1,11 @@
 ---
 
-- name: ntp | install package 
-  package: 
+- name: ntp | install package
+  package:
     name: ntp
     state: present
     update_cache: yes
-  when: (proxy_env is not defined) or (proxy_env | length < 1) 
+  when: (proxy_env is not defined) or (proxy_env | length < 1)
   tags: [ ntp_install, ntp ]
 
 - name: ntp | install package (behind a proxy)
@@ -31,7 +31,7 @@
     enabled: yes
     state: restarted
   when: ansible_os_family == "Debian"
-  
+
   # RedHat
 - name: ntp | restart systemd service
   systemd:
