@@ -1,11 +1,11 @@
 ---
 
 - block:
-    - name: "haproxy | download HAProxy {{haproxy_version}} source files"
+    - name: "haproxy | download HAProxy {{ haproxy_version }} source files"
       become: yes
       become_user: root
       unarchive:
-        src: http://www.haproxy.org/download/{{haproxy_major}}/src/haproxy-{{haproxy_version}}.tar.gz
+        src: http://www.haproxy.org/download/{{ haproxy_major }}/src/haproxy-{{ haproxy_version }}.tar.gz
         dest: /tmp/
         remote_src: yes
 
@@ -63,15 +63,15 @@
 
 # with proxy
 - block:
-    - name: "haproxy | download HAProxy {{haproxy_version}} source files (behind a proxy)"
+    - name: "haproxy | download HAProxy {{ haproxy_version }} source files (behind a proxy)"
       become: yes
       become_user: root
       unarchive:
-        src: http://www.haproxy.org/download/{{haproxy_major}}/src/haproxy-{{haproxy_version}}.tar.gz
+        src: http://www.haproxy.org/download/{{ haproxy_major }}/src/haproxy-{{ haproxy_version }}.tar.gz
         dest: /tmp/
         remote_src: yes
       environment:
-        "{{proxy_env}}"
+        "{{ proxy_env }}"
 
     - name: "haproxy | download lua-5.3.5 source files (behind a proxy)"
       become: yes
@@ -82,7 +82,7 @@
         remote_src: yes
         validate_certs: no
       environment:
-        "{{proxy_env}}"
+        "{{ proxy_env }}"
       tags: lua
 
       # "Debian"
@@ -105,7 +105,7 @@
         - ca-certificates
         - libssl-dev
       environment:
-        "{{proxy_env}}"
+        "{{ proxy_env }}"
       when: ansible_os_family == "Debian"
 
       # "RedHat"
@@ -127,7 +127,7 @@
         - openssl-libs
         - systemd-devel
       environment:
-        "{{proxy_env}}"
+        "{{ proxy_env }}"
       when: ansible_os_family == "RedHat"
   when: proxy_env | length > 0
 
@@ -169,7 +169,7 @@
   become: yes
   become_user: root
   make:
-    chdir: "/tmp/haproxy-{{haproxy_version}}"
+    chdir: "/tmp/haproxy-{{ haproxy_version }}"
     params:
       TARGET: linux2628
       USE_GETADDRINFO: 1
@@ -189,7 +189,7 @@
   become: yes
   become_user: root
   make:
-    chdir: "/tmp/haproxy-{{haproxy_version}}"
+    chdir: "/tmp/haproxy-{{ haproxy_version }}"
     target: install
 
 

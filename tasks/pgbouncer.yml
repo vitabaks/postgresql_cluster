@@ -14,7 +14,7 @@
     state: present
     name: pgbouncer
   environment:
-    "{{proxy_env}}"
+    "{{ proxy_env }}"
   when: proxy_env | length > 0
   tags: [ pgbouncer_install, pgbouncer ]
 

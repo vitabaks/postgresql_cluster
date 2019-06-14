@@ -19,7 +19,7 @@
       with_items:
         - "{{ system_packages }}"
       environment:
-        "{{proxy_env}}"
+        "{{ proxy_env }}"
       when: proxy_env | length > 0
   when: ansible_os_family == "Debian"
   tags: install_packages
@@ -39,7 +39,7 @@
         state: present
         update_cache: yes
       environment:
-        "{{proxy_env}}"
+        "{{ proxy_env }}"
       when: proxy_env | length > 0
 
     - name: disable initializing of a default postgresql cluster
@@ -70,7 +70,7 @@
       with_items:
          - "{{ postgresql_packages }}"
       environment:
-        "{{proxy_env}}"
+        "{{ proxy_env }}"
       when: proxy_env | length > 0
   when: postgresql_exists != "true" and ansible_os_family == "Debian"
   tags: [ install_packages, install_postgres ]
@@ -96,7 +96,7 @@
       with_items:
         - "{{ system_packages }}"
       environment:
-        "{{proxy_env}}"
+        "{{ proxy_env }}"
       when: proxy_env | length > 0
   when: ansible_os_family == "RedHat"
   tags: install_packages
@@ -118,7 +118,7 @@
         timeout: 30
         validate_certs: no
       environment:
-        "{{proxy_env}}"
+        "{{ proxy_env }}"
       when: proxy_env | length > 0
 
     - name: install | PostgreSQL repository
@@ -143,7 +143,7 @@
       with_items:
          - "{{ postgresql_packages }}"
       environment:
-        "{{proxy_env}}"
+        "{{ proxy_env }}"
       when: proxy_env | length > 0
   when: postgresql_exists != "true" and ansible_os_family == "RedHat"
   tags: [install_packages, install_postgres]

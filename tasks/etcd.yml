@@ -15,7 +15,7 @@
     remote_src: yes
     validate_certs: no
   environment:
-    "{{proxy_env}}"
+    "{{ proxy_env }}"
   when: proxy_env | length > 0
 
 - name: etcd cluster | copy "etcd" and "etcdctl" binary files to /usr/local/bin/

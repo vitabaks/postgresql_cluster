@@ -14,7 +14,7 @@
     state: present
     update_cache: yes
   environment:
-    "{{proxy_env}}"
+    "{{ proxy_env }}"
   when: proxy_env | length > 0
   tags: [ keepalived_install, keepalived ]
 
@@ -45,7 +45,7 @@
 
 - name: wait for the cluster ip address (VIP) "{{ cluster_vip }}" is running
   wait_for:
-    host: "{{ cluster_vip}}"
+    host: "{{ cluster_vip }}"
     port: "{{ ansible_ssh_port }}"
     state: started
     timeout: 60

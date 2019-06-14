@@ -89,7 +89,7 @@
         executable: pip3
         extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
   environment:
-    "{{proxy_env}}"
+    "{{ proxy_env }}"
   when: proxy_env | length > 0
   tags: [ patroni, patroni_install ]
 
@@ -290,7 +290,7 @@
     - name: Patroni | Prepare PostgreSQL | generate default postgresql config files
       become: yes
       become_user: postgres
-      command: "/usr/bin/pg_createcluster {{ postgresql_version }} {{postgresql_cluster_name }} -d {{ postgresql_data_dir }} -p {{ postgresql_port }} -e {{ postgresql_encoding }} --locale {{ postgresql_locale }}"
+      command: "/usr/bin/pg_createcluster {{ postgresql_version }} {{ postgresql_cluster_name }} -d {{ postgresql_data_dir }} -p {{ postgresql_port }} -e {{ postgresql_encoding }} --locale {{ postgresql_locale }}"
       register: pg_createcluster_result
       failed_when: pg_createcluster_result.rc != 0
       when: ansible_os_family == "Debian"

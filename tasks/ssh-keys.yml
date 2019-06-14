@@ -17,7 +17,7 @@
 - name: ssh-keys | fetch key files from remote servers to ansible server
   fetch: 
     src: "~{{ ssh_key_user }}/.ssh/id_rsa.pub"
-    dest: "files/{{ansible_hostname}}-id_rsa.pub"
+    dest: "files/{{ ansible_hostname }}-id_rsa.pub"
     flat: yes
 
 - name: ssh-keys | copy key files and add to authorized_keys

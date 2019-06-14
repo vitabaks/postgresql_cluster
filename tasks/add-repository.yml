@@ -24,7 +24,7 @@
         state: present
       with_items: "{{ apt_repository_keys }}"
       environment:
-        "{{proxy_env}}"
+        "{{ proxy_env }}"
       when: proxy_env | length > 0
 
     - name: Add repository (behind a proxy)
@@ -34,7 +34,7 @@
         update_cache: yes
       with_items: "{{ apt_repository }}"
       environment:
-        "{{proxy_env}}"
+        "{{ proxy_env }}"
       when: proxy_env | length > 0
 
   when: ansible_os_family == "Debian"
@@ -60,7 +60,7 @@
         gpgkey: "{{ item.gpgkey }}"
       with_items: "{{ yum_repository }}"
       environment:
-        "{{proxy_env}}"
+        "{{ proxy_env }}"
       when: (yum_repository length > 0) and (proxy_env | length > 0)
 
   when: ansible_os_family == "RedHat"

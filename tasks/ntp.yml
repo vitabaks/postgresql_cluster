@@ -14,7 +14,7 @@
     state: present
     update_cache: yes
   environment:
-    "{{proxy_env}}"
+    "{{ proxy_env }}"
   when: proxy_env | length > 0
   tags: [ ntp_install, ntp ]
 

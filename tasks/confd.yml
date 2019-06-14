@@ -18,7 +18,7 @@
     timeout: 30
     validate_certs: no
   environment:
-    "{{proxy_env}}"
+    "{{ proxy_env }}"
   when: proxy_env | length > 0
   tags: [ get_confd, confd ]
 
