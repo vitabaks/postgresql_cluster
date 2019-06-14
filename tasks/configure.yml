@@ -1,7 +1,7 @@
 ---
 
 # Hostname
-- import_tasks: tasks/hostname.yml
+- import_tasks: ../tasks/hostname.yml
   when: hostname is defined and hostname | length > 0
   ignore_errors: yes
   tags: [ hostname, configure ]
@@ -88,25 +88,25 @@
 
 
 # Locales
-- import_tasks: tasks/locales.yml
+- import_tasks: ../tasks/locales.yml
   when: locales is defined and locales | length > 0
   ignore_errors: yes
   tags: [ locales, configure ]
 
 # TimeZone
-- import_tasks: tasks/timezone.yml
+- import_tasks: ../tasks/timezone.yml
   when: timezone is defined and timezone | length > 0
   ignore_errors: yes
   tags: [ timezone, configure ]
 
 # NTP
-- import_tasks: tasks/ntp.yml
+- import_tasks: ../tasks/ntp.yml
   when: ntp_enabled is defined and ntp_enabled == "true"
   ignore_errors: yes
   tags: [ ntp, configure ]
 
 # SSH Keys
-- import_tasks: tasks/ssh-keys.yml
+- import_tasks: ../tasks/ssh-keys.yml
   when: enable_SSH_Key_based_authentication is defined and enable_SSH_Key_based_authentication == "true"
   ignore_errors: yes
   tags: [ ssh_keys, configure ]

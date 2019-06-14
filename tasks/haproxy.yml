@@ -224,11 +224,11 @@
 
 
  # for automate the haproxy configuration (optional)
-- import_tasks: tasks/confd.yml
+- import_tasks: ../tasks/confd.yml
   when: dcs_type == "etcd"
   tags: confd
 
   # virtual ip address (and haproxy health checking)
-- import_tasks: tasks/keepalived.yml
+- import_tasks: ../tasks/keepalived.yml
   tags: [ keepalived, haproxy ]
 

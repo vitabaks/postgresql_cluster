@@ -1,7 +1,7 @@
 ---
 # Patroni setup and configuration
 
-- import_tasks: tasks/pip.yml
+- import_tasks: ../tasks/pip.yml
   tags: [ patroni, patroni_install, pip ]
 
 
