@@ -16,6 +16,7 @@
         src: https://www.lua.org/ftp/lua-5.3.5.tar.gz
         dest: /tmp/
         remote_src: yes
+        validate_certs: no
       tags: lua
 
       # "Debian"
@@ -79,6 +80,7 @@
         src: https://www.lua.org/ftp/lua-5.3.5.tar.gz
         dest: /tmp/
         remote_src: yes
+        validate_certs: no
       environment:
         "{{proxy_env}}"
       tags: lua

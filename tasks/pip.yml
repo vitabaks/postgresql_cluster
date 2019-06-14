@@ -9,6 +9,7 @@
         url: https://bootstrap.pypa.io/get-pip.py
         dest: /tmp/
         timeout: 30
+        validate_certs: no
       when: (proxy_env is not defined) or (proxy_env | length < 1)
 
     - name: pip | install pip
@@ -27,6 +28,7 @@
         url: https://bootstrap.pypa.io/get-pip.py
         dest: /tmp/
         timeout: 30
+        validate_certs: no
       environment:
         "{{proxy_env}}"
       when: proxy_env | length > 0

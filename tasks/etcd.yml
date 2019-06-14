@@ -5,6 +5,7 @@
     src: https://github.com/etcd-io/etcd/releases/download/{{ etcd_ver }}/etcd-{{ etcd_ver }}-linux-amd64.tar.gz
     dest: /tmp/
     remote_src: yes
+    validate_certs: no
   when: (proxy_env is not defined) or (proxy_env | length < 1)
 
 - name: etcd cluster | download and extract "etcd" into /tmp (behind a proxy)
@@ -12,6 +13,7 @@
     src: https://github.com/etcd-io/etcd/releases/download/{{ etcd_ver }}/etcd-{{ etcd_ver }}-linux-amd64.tar.gz
     dest: /tmp/
     remote_src: yes
+    validate_certs: no
   environment:
     "{{proxy_env}}"
   when: proxy_env | length > 0
