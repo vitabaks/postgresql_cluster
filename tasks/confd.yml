@@ -61,3 +61,4 @@
     name: confd
     enabled: yes
     state: restarted
+  tags: [ confd_restart, confd ]

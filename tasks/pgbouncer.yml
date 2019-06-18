@@ -34,13 +34,14 @@
     owner: postgres
     group: postgres
     mode: 0644
-  tags: [ pgbouncer_systemd, pgbouncer ]
+  tags: [ pgbouncer_service, pgbouncer ]
 
 - name: PgBouncer | stop and disable standard init script
   service:
     name: pgbouncer
     state: stopped
     enabled: no
+  tags: [ pgbouncer_service, pgbouncer ]
 
 - name: PgBouncer | enable log rotation with logrotate
   copy:
@@ -82,6 +83,7 @@
     name: pgbouncer
     enabled: yes
     state: restarted
+  tags: [ pgbouncer_restart, pgbouncer ]
 
 - name: PgBouncer | wait for port "{{ pgbouncer_listen_port }}" to become open on the host
   wait_for:
@@ -91,4 +93,4 @@
     timeout: 300
     delay: 5
   ignore_errors: no
-
+  tags: [ pgbouncer_restart, pgbouncer ]

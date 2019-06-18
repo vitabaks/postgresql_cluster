@@ -42,6 +42,7 @@
     name: keepalived
     enabled: yes
     state: restarted
+  tags: [ keepalived_restart, keepalived ]
 
 - name: wait for the cluster ip address (VIP) "{{ cluster_vip }}" is running
   wait_for:
@@ -50,4 +51,4 @@
     state: started
     timeout: 60
     delay: 2
-
+  tags: [ keepalived_restart, keepalived ]

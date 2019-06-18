@@ -41,7 +41,7 @@
       WantedBy=basic.target
   when: disable_thp is defined and disable_thp == "true"
   ignore_errors: yes
-  tags: disable_thp
+  tags: [ disable_thp, configure ]
 
 - name: Disable Transparent Huge Pages | start disable-transparent-huge-pages service
   systemd:

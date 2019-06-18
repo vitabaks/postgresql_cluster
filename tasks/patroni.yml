@@ -141,7 +141,7 @@
     group: postgres
     state: directory
     mode: 0700
-
+  tags: patroni
 
  # when postgresql exists (master)
 - block:

@@ -1,0 +1,69 @@
+
+## Available tags
+
+- add_repo
+- install_packages
+- - install_postgres
+- sudo
+- - postgres_sudo
+- firewall
+- configure
+- - hostname
+- - sysctl, kernel
+- - disable_thp
+- - limits
+- - scheduler
+- - locales
+- - timezone
+- - ntp
+- - - ntp_install
+- - - ntp_conf
+- - ssh_keys
+- etcd
+- - etcd_cluster
+- - etcd_status
+- patroni
+- - pip
+- - patroni_install
+- - patroni_conf
+- - - patroni_service
+- - pgsql_stats_tmp
+- - pg_hba_generate
+- - patroni_start_master
+- - patroni_start_replica
+- - postgresql_disable
+- pgbouncer
+- - pgbouncer_install
+- - pgbouncer_conf
+- - pgbouncer_service
+- - pgbouncer_logrotate
+- - pgbouncer_restart
+- load_balancing
+- - haproxy
+- - - haproxy_conf
+- - confd
+- - - get_confd
+- - - confd_conf
+- - - - confd_toml
+- - - - haproxy_toml
+- - - - haproxy_tmpl
+- - - confd_service
+- - - confd_restart
+- - keepalived
+- - - keepalived_install
+- - - keepalived_conf
+- - - keepalived_restart
+- vip_manager
+- - vip_manager_install
+- - vip_manager_conf
+- - vip_manager_service
+- - vip_manager_restart
+- postgresql_users
+- postgresql_databases
+- postgresql_extensions
+- cluster_info
+- - patroni_status
+- - databases, db_list
+- - conn_info
+- - vip_owner
+- - vip_status

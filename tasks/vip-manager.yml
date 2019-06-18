@@ -25,7 +25,7 @@
     owner: postgres
     group: postgres
     mode: 0644
-  tags: [ vip_manager, vip_manager_conf, vip_manager_systemd ]
+  tags: [ vip_manager, vip_manager_conf, vip_manager_service ]
 
 - name: vip-manager | restart systemd service
   systemd:
@@ -33,6 +33,7 @@
     name: vip-manager
     state: restarted
     enabled: yes
+  tags: [ vip_manager, vip_manager_restart ]
 
 - name: wait for the cluster ip address (VIP) "{{ cluster_vip }}" is running
   wait_for:
@@ -41,4 +42,4 @@
     state: started
     timeout: 60
     delay: 2
-
+  tags: [ vip_manager, vip_manager_restart ]

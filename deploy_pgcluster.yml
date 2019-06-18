@@ -15,13 +15,13 @@
     - import_tasks: tasks/check_system.yml
 
     - import_tasks: tasks/add-repository.yml
-      tags: [ add_repo, configure ]
+      tags: [ add_repo ]
 
     - import_tasks: tasks/packages.yml
-      tags: [ install_packages, install_postgres ]
+      tags: [ install_packages ]
 
     - import_tasks: tasks/sudo.yml
-      tags: [ sudo, postgres_sudo, configure ]
+      tags: [ sudo, postgres_sudo ]
 
   roles:
     - role: ansible-role-firewall

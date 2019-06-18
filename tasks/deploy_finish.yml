@@ -84,6 +84,5 @@
     - debug:
         msg: Cluster ip address (VIP) {{ cluster_vip }} is running on server "{{ ansible_hostname }}"
       when: man_ip is defined and man_ip == cluster_vip
-  tags: [ vip_owner, vip_status, vip_manager ]
-
+  tags: [ vip_owner, vip_status ]
 

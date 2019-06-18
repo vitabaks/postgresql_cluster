@@ -230,5 +230,5 @@
 
   # virtual ip address (and haproxy health checking)
 - import_tasks: ../tasks/keepalived.yml
-  tags: [ keepalived, haproxy ]
+  tags: keepalived
 
