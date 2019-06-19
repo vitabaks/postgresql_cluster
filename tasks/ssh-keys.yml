@@ -35,6 +35,8 @@
   register: ssh_known_host_results
 
 - name: known_hosts | for each host, add/update the public key in the "~{{ ssh_key_user }}/.ssh/known_hosts"
+  become: yes
+  become_user: "{{ ssh_key_user }}"
   known_hosts:
     name: "{{ item.item }}"
     key: "{{ item.stdout }}"
