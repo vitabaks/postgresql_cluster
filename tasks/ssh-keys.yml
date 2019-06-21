@@ -19,6 +19,7 @@
     src: "~{{ ssh_key_user }}/.ssh/id_rsa.pub"
     dest: "files/{{ ansible_hostname }}-id_rsa.pub"
     flat: yes
+  changed_when: false
 
 - name: ssh-keys | copy key files and add to authorized_keys
   authorized_key:
@@ -33,7 +34,8 @@
   shell: "ssh-keyscan -trsa -p {{ ansible_ssh_port }} {{ item }}"
   with_items: "{{ ssh_known_hosts }}"
   register: ssh_known_host_results
-
+  changed_when: false
+  
 - name: known_hosts | for each host, add/update the public key in the "~{{ ssh_key_user }}/.ssh/known_hosts"
   become: yes
   become_user: "{{ ssh_key_user }}"
