@@ -60,7 +60,7 @@ To provide a single entry point (VIP) for databases access is used "vip-manager"
 
 
 ---
-#### Compatibility
+## Compatibility
 RedHat and Debian based distros (x86_64)
 
 ###### Minimum OS versions:
@@ -79,12 +79,12 @@ all supported PostgreSQL versions
 ###### Ansible version 
 This has been tested on Ansible 2.7.10 and higher.
 
-#### Requirements
+## Requirements
 Ansible ([What is Ansible](https://www.ansible.com/resources/videos/quick-start-video)?)
 
 ---
 
-### Quick start
+## Quick start
 0. [Install Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) to the managed machine
 ###### My recommendation: latest releases via [Pip](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html#latest-releases-via-pip)
 
@@ -123,7 +123,7 @@ Ansible ([What is Ansible](https://www.ansible.com/resources/videos/quick-start-
 
 ---
 
-### Maintenance
+## Maintenance
 Please note that the original design goal of this playbook was more concerned with the initial deploiment of a PostgreSQL HA Cluster and so it does not currently concern itself with performing ongoing maintenance of a cluster.
 
 You should learn each component of the cluster for its further maintenance.
@@ -134,19 +134,18 @@ You should learn each component of the cluster for its further maintenance.
 
 
 ---
-#### Variables
+## Variables
 *coming soon...*
 
 See the vars/[main.yml](./vars/main.yml) file for details.
 
 
-#### License
+## License
 Licensed under the MIT License. See the [LICENSE](./LICENSE) file for details.
 
-
-#### Author
+## Author
 Vitaliy Kukharik (PostgreSQL DBA) vitabaks@gmail.com
 
 
-#### Feedback, bug-reports, requests, ...
+## Feedback, bug-reports, requests, ...
 Are [welcome](https://github.com/vitabaks/postgresql_cluster/issues)!
