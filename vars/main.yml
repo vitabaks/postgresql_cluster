@@ -21,6 +21,7 @@ with_haproxy_load_balancing: 'false' # or 'true' if you want to install and conf
 # by default used the virtual ip address (cluster_vip) only on the server with the role of master (based on vip-manager)
 haproxy_major: "1.8"  # if variable "with_haproxy_load_balancing=true"
 haproxy_version: "1.8.20"  # version to build from source
+keepalived_virtual_router_id: "133"  # specify a unique virtual_router_id
 
 
 # DCS (Distributed Consensus Store)

@@ -10,9 +10,9 @@ vrrp_script haproxy_check {
  
 vrrp_instance VI_1 {
    interface {{ vip_interface }}
-   virtual_router_id 32
+   virtual_router_id {{ keepalived_virtual_router_id }}
    priority  100
-   advert_int 3
+   advert_int 2
    state  BACKUP
    virtual_ipaddress {
        {{ cluster_vip  }}
