@@ -1,0 +1,17 @@
+---
+
+- name: Set I/O Scheduler | for device "{% for set in scheduler %}{{ set.device }}{% if not loop.last %},{% endif %}{% endfor %}" | create systemd service file
+  template:
+    src: templates/io-scheduler.service.j2
+    dest: /etc/systemd/system/io-scheduler.service
+  register: io_scheduler_result
+  tags: [ scheduler, io_scheduler ]
+
+- name: Set I/O Scheduler | start io-scheduler service
+  systemd:
+    daemon_reload: yes
+    name: io-scheduler
+    state: restarted
+    enabled: yes
+  when: io_scheduler_result.changed
+  tags: [ scheduler, io_scheduler ]

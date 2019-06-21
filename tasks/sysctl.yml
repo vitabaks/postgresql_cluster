@@ -1,0 +1,12 @@
+---
+
+- name: sysctl | Setting Kernel Parameters
+  sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    sysctl_set: "yes"
+    state: "{{ item.state |default('present') }}"
+    reload: "yes"
+  with_items:
+    - "{{ sysctl_conf }}"
+  tags: [ sysctl, kernel ]

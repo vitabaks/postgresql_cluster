@@ -1,0 +1,31 @@
+---
+
+- name: Disable Transparent Huge Pages | create systemd service "disable-transparent-huge-pages.service"
+  blockinfile:
+    path: /etc/systemd/system/disable-transparent-huge-pages.service
+    create: yes
+    block: |
+      [Unit]
+      Description=Disable Transparent Huge Pages
+      DefaultDependencies=no
+      After=sysinit.target local-fs.target
+      Before=basic.target
+
+      [Service]
+      Type=oneshot
+      ExecStart=/bin/bash -c 'echo never > /sys/kernel/mm/transparent_hugepage/enabled'
+      ExecStart=/bin/bash -c 'echo never > /sys/kernel/mm/transparent_hugepage/defrag'
+
+      [Install]
+      WantedBy=basic.target
+  register: transparent_huge_pages_result
+  tags: [ disable_thp, transparent_huge_pages ]
+
+- name: Disable Transparent Huge Pages | start disable-transparent-huge-pages service
+  systemd:
+    daemon_reload: yes
+    name: disable-transparent-huge-pages
+    state: restarted
+    enabled: yes
+  when: transparent_huge_pages_result.changed
+  tags: [ disable_thp, transparent_huge_pages ]
