@@ -55,13 +55,7 @@
 
 
 # limits
-- name: Increase the max open file limit for "{{ limits_user }}" (soft nofile "{{ soft_nofile }}", hard nofile "{{ hard_nofile }}")
-  lineinfile:
-    path: /etc/security/limits.conf
-    line: |
-      {{ limits_user }} soft nofile {{ soft_nofile }}
-      {{ limits_user }} hard nofile {{ hard_nofile }}
-    state: present
+- import_tasks: ../tasks/pam_limits.yml
   when: set_limits is defined and set_limits == "true"
   ignore_errors: yes
   tags: [ limits, configure ]
