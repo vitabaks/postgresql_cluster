@@ -3,6 +3,7 @@
 - name: Change hostname
   hostname:
     name: "{{ hostname }}"
+  register: hostname_result
 
 - name: Change hostname in /etc/hosts
   lineinfile:
@@ -14,3 +15,4 @@
   with_items:
    - { regexp: '^127\.0\.0\.1[ \t]+localhost', line: '127.0.0.1 localhost {{ ansible_hostname }}' }
    - { regexp: '^{{ ansible_default_ipv4.address }}.+$', line: '{{ ansible_default_ipv4.address }} {{ ansible_hostname }}' }
+  when: hostname_result.changed
