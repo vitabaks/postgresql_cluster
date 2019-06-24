@@ -208,15 +208,21 @@ hard_nofile: 200000
 
 # I/O Scheduler
 set_scheduler: 'false' # or 'true'
-scheduler:  # "cfq", "deadline", "noop", "blkmq"
+scheduler:
   - { sched: "deadline" , nr_requests: "1024", device: "sda" }
 #  - { sched: "noop" , nr_requests: "1024", device: "sdb" }
 #  - { sched: "" , nr_requests: "1024", device: "" }
 
-  # cfq - for desktop systems and slow SATA drives
-  # deadline - for SAS drives (recommended for databases)
-  # noop - recommended for SSD drives
-  # blkmq - recommended for NVMe SSD drives (for kernel 4.10+)
+# Non-multiqueue I/O schedulers:
+  # cfq         - for desktop systems and slow SATA drives
+  # deadline    - for SAS drives (recommended for databases)
+  # noop        - for SSD drives
+# Multiqueue I/O schedulers (blk-mq):
+## (Recommend the use of blk-mq in environments that support it. For Fast SSD Storage and Linux kernel 4.12+)
+  # mq-deadline - (recommended for databases)
+  # none        - (ideal for fast random I/O devices such as NVMe)
+  # bfq         - (avoid for databases)
+  # kyber
 
 
 # SSH Keys
