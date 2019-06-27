@@ -28,11 +28,12 @@ keepalived_virtual_router_id: "133"  # specify a unique virtual_router_id
 dcs_exists: 'false' # or 'true' if you do not want to install and configure the etcd cluster
 dcs_type: "etcd"
 
- # if variable "dcs_exists=false"
+ # if variable "dcs_exists=false" and "dcs_type=etcd":
 etcd_ver: "v3.3.13" # version for deploy etcd cluster
 etcd_data_dir: "/var/lib/etcd"
+etcd_cluster_name: "etcdCluster" # ETCD_INITIAL_CLUSTER_TOKEN
 
- # if variable "dcs_exists=true" and "dcs_type=etcd" specify ip-address your etcd cluster in the "patroni_etcd_hosts" variable
+ # if variable "dcs_exists=true" and "dcs_type=etcd" - specify ip-address your etcd cluster in the "patroni_etcd_hosts" variable
  # example (use existing cluster of 3 nodes)
 patroni_etcd_hosts: []
 #  - { host: "10.128.64.140", port: "2379" }
