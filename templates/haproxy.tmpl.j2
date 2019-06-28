@@ -1,5 +1,5 @@
 global
-    maxconn 10000
+    maxconn 100000
     log /dev/log    local0
     log /dev/log    local1 notice
     chroot /var/lib/haproxy
@@ -27,6 +27,7 @@ listen stats
  
 listen master
     bind 0.0.0.0:5000
+    maxconn 10000
     option tcplog
     option httpchk OPTIONS /master
     http-check expect status 200
@@ -43,6 +44,7 @@ listen master
 
 listen replicas
     bind 0.0.0.0:5001
+    maxconn 10000
     option tcplog
     option httpchk OPTIONS /replica
     balance roundrobin
@@ -60,6 +62,7 @@ listen replicas
 
 listen replicas_sync
     bind 0.0.0.0:5002
+    maxconn 10000
     option tcplog
     option httpchk OPTIONS /sync
     balance roundrobin
@@ -77,6 +80,7 @@ listen replicas_sync
 
 listen replicas_async
     bind 0.0.0.0:5003
+    maxconn 10000
     option tcplog
     option httpchk OPTIONS /async
     balance roundrobin
