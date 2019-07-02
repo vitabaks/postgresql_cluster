@@ -96,8 +96,9 @@ postgresql_parameters:
   - { option: "max_wal_size",                        value: "4GB"     } # for PostgreSQL 9.5 and above (for 9.4 use "checkpoint_segments")
   - { option: "wal_buffers",                         value: "32MB"    }
   - { option: "default_statistics_target",           value: "1000"    }
-  - { option: "random_page_cost",                    value: "4"       }
-  - { option: "effective_io_concurrency",            value: "2"       }
+  - { option: "seq_page_cost",                       value: "1"       }
+  - { option: "random_page_cost",                    value: "4"       } # "1.1" for SSD storage. Also, if your databases fits in shared_buffers
+  - { option: "effective_io_concurrency",            value: "2"       } # "200" for SSD storage
   - { option: "synchronous_commit",                  value: "on"      } # or 'off' if you can you lose single transactions in case of a crash
   - { option: "autovacuum",                          value: "on"      } # never turn off the autovacuum!
   - { option: "autovacuum_max_workers",              value: "5"       }
