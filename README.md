@@ -131,6 +131,7 @@ You should learn each component of the cluster for its further maintenance.
 - [Tutorial: Management of High-Availability PostgreSQL clusters with Patroni](https://pgconf.ru/en/2018/108567)
 - [Patroni documentation](https://patroni.readthedocs.io/en/latest/)
 - [etcd operations guide](https://etcd.io/docs/v3.3.12/op-guide/)
+- - [etcd disaster recovery](https://etcd.io/docs/v3.3.12/op-guide/recovery/#restoring-a-cluster) :point_left: :bangbang:
 
 
 ---
