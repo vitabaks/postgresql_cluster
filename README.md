@@ -123,6 +123,10 @@ Ansible ([What is Ansible](https://www.ansible.com/resources/videos/quick-start-
 
 ---
 
+## Variables
+See the vars/[main.yml](./vars/main.yml) file for details.
+
+
 ## Maintenance
 Please note that the original design goal of this playbook was more concerned with the initial deploiment of a PostgreSQL HA Cluster and so it does not currently concern itself with performing ongoing maintenance of a cluster.
 
@@ -131,15 +135,27 @@ You should learn each component of the cluster for its further maintenance.
 - [Tutorial: Management of High-Availability PostgreSQL clusters with Patroni](https://pgconf.ru/en/2018/108567)
 - [Patroni documentation](https://patroni.readthedocs.io/en/latest/)
 - [etcd operations guide](https://etcd.io/docs/v3.3.12/op-guide/)
-- - [etcd disaster recovery](https://etcd.io/docs/v3.3.12/op-guide/recovery/#restoring-a-cluster) :point_left: :bangbang:
 
+## Disaster Recovery
+> Involves a set of policies, tools and procedures to enable the recovery or continuation of vital technology infrastructure and systems following a natural or human-induced disaster.
+
+A high availability cluster provides an automatic failover mechanism, and does not cover all disaster recovery scenarios.
+You must take care of backing up your data yourself.
+##### etcd
+> Patroni nodes are dumping the state of the DCS options to disk upon for every change of the configuration into the file patroni.dynamic.json located in the Postgres data directory. The master (patroni leader) is allowed to restore these options from the on-disk dump if these are completely absent from the DCS or if they are invalid.
+
+However, I recommend that you read the disaster recovery guide for the etcd cluster:
+- [etcd disaster recovery](https://etcd.io/docs/v3.3.12/op-guide/recovery)
+
+##### PostgreSQL (databases)
+I can recommend the following backup and restore tools:
+* [pgbackrest](https://github.com/pgbackrest/pgbackrest)
+* [pg_probackup](https://github.com/postgrespro/pg_probackup)
+* [wal-g](https://github.com/wal-g/wal-g)
+
+Do not forget to validate your backups (for example [pgbackrest auto](https://github.com/vitabaks/pgbackrest_auto)).
 
 ---
-## Variables
-*coming soon...*
-
-See the vars/[main.yml](./vars/main.yml) file for details.
-
 
 ## License
 Licensed under the MIT License. See the [LICENSE](./LICENSE) file for details.
