@@ -29,7 +29,7 @@ dcs_exists: 'false' # or 'true' if you do not want to install and configure the 
 dcs_type: "etcd"
 
  # if variable "dcs_exists=false" and "dcs_type=etcd":
-etcd_ver: "v3.3.13" # version for deploy etcd cluster
+etcd_ver: "v3.3.15" # version for deploy etcd cluster
 etcd_data_dir: "/var/lib/etcd"
 etcd_cluster_name: "etcdCluster" # ETCD_INITIAL_CLUSTER_TOKEN
 
