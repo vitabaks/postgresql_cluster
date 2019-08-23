@@ -67,9 +67,11 @@
   ignore_errors: no
 
 - block:
-    - name: etcd cluster | check etcd endpoints health
-      shell: ETCDCTL_API=3 etcdctl endpoint health
+    - name: etcd cluster health
+      command: /usr/local/bin/etcdctl cluster-health
       register: etcd_health_result
     - debug:
         var: etcd_health_result.stdout_lines
+  when: is_master == "true"
+  ignore_errors: yes
   tags: etcd_status
