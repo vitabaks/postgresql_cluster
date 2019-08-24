@@ -16,13 +16,13 @@
       pip:
         name: setuptools
         state: latest
-        executable: pip3
+        executable: /usr/local/bin/pip3
         extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
 
     - name: Patroni | install requirements
       pip:
         requirements: /tmp/requirements.txt
-        executable: pip3
+        executable: /usr/local/bin/pip3
         extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
       environment:
         PATH: "{{ postgresql_bin_dir }}:{{ ansible_env.PATH }}"
@@ -31,7 +31,7 @@
       pip:
         name: patroni
         state: latest
-        executable: pip3
+        executable: /usr/local/bin/pip3
         extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
       when: patroni_install_version == "latest"
 
@@ -39,14 +39,14 @@
       pip:
         name: "patroni=={{ patroni_install_version }}"
         extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
-        executable: pip3
+        executable: /usr/local/bin/pip3
       when: patroni_install_version != "latest"
 
       # "RequestsDependencyWarning: urllib3 (1.25.2) doesn't match a supported version!"
-    - name: Patroni | make sure urllib3 version <1.25 (behind a proxy)
+    - name: Patroni | make sure urllib3 version <1.25
       pip:
         name: urllib3<1.25
-        executable: pip3
+        executable: /usr/local/bin/pip3
         extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
   when: (proxy_env is not defined) or (proxy_env | length < 1)
   tags: [ patroni, patroni_install ]
@@ -56,13 +56,13 @@
       pip:
         name: setuptools
         state: latest
-        executable: pip3
+        executable: /usr/local/bin/pip3
         extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
 
     - name: Patroni | install requirements (behind a proxy)
       pip:
         requirements: /tmp/requirements.txt
-        executable: pip3
+        executable: /usr/local/bin/pip3
         extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
       environment:
         PATH: "{{ postgresql_bin_dir }}:{{ ansible_env.PATH }}"
@@ -71,14 +71,14 @@
       pip:
         name: patroni
         state: latest
-        executable: pip3
+        executable: /usr/local/bin/pip3
         extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
       when: patroni_install_version == "latest"
 
     - name: "Patroni | install patroni {{ patroni_install_version }} (behind a proxy)"
       pip:
         name: "patroni=={{ patroni_install_version }}"
-        executable: pip3
+        executable: /usr/local/bin/pip3
         extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
       when: patroni_install_version != "latest"
 
@@ -86,7 +86,7 @@
     - name: Patroni | make sure urllib3 version <1.25 (behind a proxy)
       pip:
         name: urllib3<1.25
-        executable: pip3
+        executable: /usr/local/bin/pip3
         extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
   environment:
     "{{ proxy_env }}"
@@ -340,7 +340,9 @@
       ignore_errors: no
 
     - name: Patroni | PostgreSQL Cluster status
-      command: patronictl -c /etc/patroni/patroni.yml list
+      become: yes
+      become_user: postgres
+      command: /usr/local/bin/patronictl -c /etc/patroni/patroni.yml list
       register: patronictl_result
     - debug:
         var: patronictl_result.stdout_lines

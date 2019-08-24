@@ -80,6 +80,8 @@ all supported PostgreSQL versions
 This has been tested on Ansible 2.7.10 and higher.
 
 ## Requirements
+This playbook requires root privileges or sudo.
+
 Ansible ([What is Ansible](https://www.ansible.com/resources/videos/quick-start-video)?)
 
 ---

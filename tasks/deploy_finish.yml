@@ -2,7 +2,9 @@
 
 - block:
     - name: PostgreSQL Cluster health
-      command: patronictl -c /etc/patroni/patroni.yml list
+      become: yes
+      become_user: postgres
+      command: /usr/local/bin/patronictl -c /etc/patroni/patroni.yml list
       register: patronictl_result
     - debug:
         var: patronictl_result.stdout_lines
