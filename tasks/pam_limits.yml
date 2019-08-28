@@ -6,7 +6,7 @@
     limit_type: "{{ item.limit_type }}"
     limit_item: "{{ item.limit_item }}"
     value: "{{ item.value }}"
-  with_items:
+  loop:
     - { limit_type: 'soft', limit_item: 'nofile', value: "{{ soft_nofile }}" }
     - { limit_type: 'hard', limit_item: 'nofile', value: "{{ hard_nofile }}" }
   tags: [ limits, pam_limits ]

@@ -3,19 +3,7 @@
 - name: keepalived | install packages
   package:
     name: keepalived
-    state: present
-    update_cache: yes
-  when: (proxy_env is not defined) or (proxy_env | length < 1)
-  tags: [ keepalived_install, keepalived ]
-
-- name: keepalived | install packages (behind a proxy)
-  package:
-    name: keepalived
-    state: present
-    update_cache: yes
-  environment:
-    "{{ proxy_env }}"
-  when: proxy_env | length > 0
+  environment: "{{ proxy_env | default(omit) }}"
   tags: [ keepalived_install, keepalived ]
 
 - name: keepalived | make sure the kernel parameters "net.ipv4.ip_nonlocal_bind", "net.ipv4.ip_forward" are enabled
@@ -25,7 +13,7 @@
     sysctl_set: "yes"
     state: "present"
     reload: "yes"
-  with_items:
+  loop:
     - "net.ipv4.ip_nonlocal_bind"
     - "net.ipv4.ip_forward"
   tags: [ keepalived_conf, keepalived ]

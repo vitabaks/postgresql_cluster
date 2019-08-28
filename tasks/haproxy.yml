@@ -21,10 +21,8 @@
 
       # "Debian"
     - name: haproxy | Install the prerequisites packages to compile HAProxy
-      apt:
-        update_cache: yes
+      package:
         name: "{{ packages }}"
-        state: present
       vars:
         packages:
         - unzip
@@ -42,10 +40,8 @@
 
       # "RedHat"
     - name: haproxy | Install the prerequisites packages to compile HAProxy
-      yum:
-        update_cache: yes
+      package:
         name: "{{ packages }}"
-        state: present
       vars:
         packages:
         - unzip
@@ -59,78 +55,7 @@
         - openssl-libs
         - systemd-devel
       when: ansible_os_family == "RedHat"
-  when: (proxy_env is not defined) or (proxy_env | length < 1)
-
-# with proxy
-- block:
-    - name: "haproxy | download HAProxy {{ haproxy_version }} source files (behind a proxy)"
-      become: yes
-      become_user: root
-      unarchive:
-        src: http://www.haproxy.org/download/{{ haproxy_major }}/src/haproxy-{{ haproxy_version }}.tar.gz
-        dest: /tmp/
-        remote_src: yes
-      environment:
-        "{{ proxy_env }}"
-
-    - name: "haproxy | download lua-5.3.5 source files (behind a proxy)"
-      become: yes
-      become_user: root
-      unarchive:
-        src: https://www.lua.org/ftp/lua-5.3.5.tar.gz
-        dest: /tmp/
-        remote_src: yes
-        validate_certs: no
-      environment:
-        "{{ proxy_env }}"
-      tags: lua
-
-      # "Debian"
-    - name: haproxy | install the prerequisites packages to compile HAProxy (behind a proxy)
-      apt:
-        update_cache: yes
-        name: "{{ packages }}"
-        state: present
-      vars:
-        packages:
-        - unzip
-        - gzip
-        - build-essential
-        - libc6-dev
-        - libpcre3-dev
-        - liblua5.3-dev
-        - libreadline-dev
-        - zlib1g-dev
-        - libsystemd-dev
-        - ca-certificates
-        - libssl-dev
-      environment:
-        "{{ proxy_env }}"
-      when: ansible_os_family == "Debian"
-
-      # "RedHat"
-    - name: haproxy | install the prerequisites packages to compile HAProxy (behind a proxy)
-      yum:
-        update_cache: yes
-        name: "{{ packages }}"
-        state: present
-      vars:
-        packages:
-        - unzip
-        - gzip
-        - "@Development tools"
-        - pcre-devel
-        - zlib-devel
-        - readline-devel
-        - openssl
-        - openssl-devel
-        - openssl-libs
-        - systemd-devel
-      environment:
-        "{{ proxy_env }}"
-      when: ansible_os_family == "RedHat"
-  when: proxy_env | length > 0
-
+  environment: "{{ proxy_env | default(omit) }}"
 
 - name: haproxy | add haproxy group
   group:
@@ -150,7 +75,7 @@
     state: directory
     owner: haproxy
     group: haproxy
-  with_items:
+  loop:
     - /etc/haproxy
     - /var/run/haproxy
     - /var/lib/haproxy/dev
@@ -231,4 +156,3 @@
   # virtual ip address (and haproxy health checking)
 - import_tasks: ../tasks/keepalived.yml
   tags: keepalived
-

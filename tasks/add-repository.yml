@@ -6,40 +6,17 @@
       apt_key:
         url: "{{ item.key }}"
         state: present
-      with_items: "{{ apt_repository_keys }}"
-      when: (proxy_env is not defined) or (proxy_env | length < 1)
+      loop: "{{ apt_repository_keys }}"
 
     - name: Add repository
       apt_repository:
         repo: "{{ item.repo }}"
         state: present
         update_cache: yes
-      with_items: "{{ apt_repository }}"
-      when: (proxy_env is not defined) or (proxy_env | length < 1)
-
-
-    - name: Add repository apt-key (behind a proxy)
-      apt_key:
-        url: "{{ item.key }}"
-        state: present
-      with_items: "{{ apt_repository_keys }}"
-      environment:
-        "{{ proxy_env }}"
-      when: proxy_env | length > 0
-
-    - name: Add repository (behind a proxy)
-      apt_repository:
-        repo: "{{ item.repo }}"
-        state: present
-        update_cache: yes
-      with_items: "{{ apt_repository }}"
-      environment:
-        "{{ proxy_env }}"
-      when: proxy_env | length > 0
-
+      loop: "{{ apt_repository }}"
+  environment: "{{ proxy_env | default(omit) }}"
   when: ansible_os_family == "Debian"
   tags: add_repo
-
 
 # RedHat CentOS
 - block:
@@ -49,20 +26,32 @@
         description: "{{ item.description }}"
         baseurl: "{{ item.baseurl }}"
         gpgkey: "{{ item.gpgkey }}"
-      with_items: "{{ yum_repository }}"
-      when: (yum_repository length > 0) and (proxy_env is not defined or proxy_env | length < 1)
+      loop: "{{ yum_repository | flatten(1) }}"
+      when: yum_repository length > 0
 
-    - name: Add repository (behind a proxy)
-      yum_repository:
-        name: "{{ item.name }}"
-        description: "{{ item.description }}"
-        baseurl: "{{ item.baseurl }}"
-        gpgkey: "{{ item.gpgkey }}"
-      with_items: "{{ yum_repository }}"
-      environment:
-        "{{ proxy_env }}"
-      when: (yum_repository length > 0) and (proxy_env | length > 0)
+    # Install Epel Repository
+    - name: Install | EPEL Repository
+      package:
+        name: epel-release
+      when: install_epel_repo == "true"
+      tags: install_epel_repo
 
+    # Install PostgreSQL Repository
+    - name: install | get pgdg-redhat-repo-latest.noarch.rpm
+      get_url:
+        url: "https://download.postgresql.org/pub/repos/yum/reporpms/EL-{{ ansible_distribution_major_version }}-x86_64/pgdg-redhat-repo-latest.noarch.rpm"
+        dest: /tmp/
+        timeout: 30
+        validate_certs: no
+      when: install_postgresql_repo == "true"
+      tags: install_postgresql_repo
+
+    - name: install | PostgreSQL repository
+      package:
+        name: /tmp/pgdg-redhat-repo-latest.noarch.rpm
+        state: present
+      when: install_postgresql_repo == "true"
+      tags: install_postgresql_repo
+  environment: "{{ proxy_env | default(omit) }}"
   when: ansible_os_family == "RedHat"
   tags: add_repo
-

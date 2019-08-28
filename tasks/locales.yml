@@ -6,8 +6,7 @@
   locale_gen:
     name: "{{ item.language_country }}.{{ item.encoding }}"
     state: present
-  with_items:
-    - "{{ locales }}"
+  loop: "{{ locales | flatten(1) }}"
   when: ansible_os_family == "Debian"
 
   # RedHat
@@ -15,7 +14,5 @@
   become: yes
   command: localedef -c -i {{ item.language_country }} -f {{ item.encoding }} {{ item.language_country }}.{{ item.encoding }}
   changed_when: false
-  with_items:
-    - "{{ locales }}"
+  loop: "{{ locales | flatten(1) }}"
   when: ansible_os_family == "RedHat"
-

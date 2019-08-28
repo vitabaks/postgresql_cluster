@@ -14,6 +14,5 @@
     template: "template0"
     state: present
   ignore_errors: yes
-  with_items:
-    - "{{ postgresql_databases }}"
+  loop: "{{ postgresql_databases | flatten(1) }}"
   when: postgresql_databases is defined and postgresql_databases | length > 0

@@ -10,34 +10,10 @@
         dest: /tmp/
         timeout: 30
         validate_certs: no
-      when: (proxy_env is not defined) or (proxy_env | length < 1)
 
     - name: pip | install pip
       command: python3 get-pip.py --trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org
       args:
         chdir: /tmp/
-  when: (proxy_env is not defined) or (proxy_env | length < 1)
-  tags: [ pip_install, pip ]
-
-
-# behind a proxy
-- block:
-
-    - name: pip | get-pip.py (behind a proxy)
-      get_url:
-        url: https://bootstrap.pypa.io/get-pip.py
-        dest: /tmp/
-        timeout: 30
-        validate_certs: no
-      environment:
-        "{{ proxy_env }}"
-      when: proxy_env | length > 0
-
-    - name: pip | install pip (behind a proxy)
-      command: python3 get-pip.py --trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org
-      args:
-        chdir: /tmp/
-      environment:
-        "{{ proxy_env }}"
-  when: proxy_env | length > 0
+  environment: "{{ proxy_env | default(omit) }}"
   tags: [ pip_install, pip ]

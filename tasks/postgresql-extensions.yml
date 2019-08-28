@@ -11,6 +11,5 @@
     port: "{{ postgresql_port }}"
     state: present
   ignore_errors: yes
-  with_items:
-    - "{{ postgresql_extensions }}"
+  loop: "{{ postgresql_extensions | flatten(1) }}"
   when: postgresql_extensions is defined and postgresql_extensions | length > 0

@@ -1,46 +1,20 @@
 ---
 
-  # Packages | Debian
-- block:
-    - name: Install | system packages
-      apt:
-        name: "{{ item.name }}"
-        state: "{{ item.state }}"
-        update_cache: yes
-      with_items:
-        - "{{ system_packages }}"
-      when: (proxy_env is not defined) or (proxy_env | length < 1)
-
-    - name: Install | system packages (behind a proxy)
-      apt:
-        name: "{{ item.name }}"
-        state: "{{ item.state }}"
-        update_cache: yes
-      with_items:
-        - "{{ system_packages }}"
-      environment:
-        "{{ proxy_env }}"
-      when: proxy_env | length > 0
-  when: ansible_os_family == "Debian"
+# Install Packages
+- name: Install | system packages
+  package:
+    name: "{{ item }}"
+  loop: "{{ system_packages }}"
+  environment: "{{ proxy_env | default(omit) }}"
   tags: install_packages
 
-# PostgreSQL packages | Debian
+# PostgreSQL prepare for install (for Debian based only)
 - block:
     - name: Install | ensure postgresql database-cluster manager package
-      apt:
+      package:
         name: postgresql-common
         state: present
-        update_cache: yes
-      when: (proxy_env is not defined) or (proxy_env | length < 1)
-
-    - name: Install | ensure postgresql database-cluster manager package (behind a proxy)
-      apt:
-        name: postgresql-common
-        state: present
-        update_cache: yes
-      environment:
-        "{{ proxy_env }}"
-      when: proxy_env | length > 0
+      environment: "{{ proxy_env | default(omit) }}"
 
     - name: disable initializing of a default postgresql cluster
       replace:
@@ -52,99 +26,14 @@
       file:
         dest: /etc/logrotate.d/postgresql-common
         state: absent
+  when: ansible_os_family == "Debian"
+  tags: install_postgres
 
-    - name: Install | PostgreSQL packages
-      apt:
-        name: "{{ item.name }}"
-        state: "{{ item.state }}"
-        update_cache: yes
-      with_items:
-        - "{{ postgresql_packages }}"
-      when: (proxy_env is not defined) or (proxy_env | length < 1)
-
-    - name: Install | PostgreSQL packages (behind a proxy)
-      apt:
-        name: "{{ item.name }}"
-        state: "{{ item.state }}"
-        update_cache: yes
-      with_items:
-         - "{{ postgresql_packages }}"
-      environment:
-        "{{ proxy_env }}"
-      when: proxy_env | length > 0
-  when: postgresql_exists != "true" and ansible_os_family == "Debian"
-  tags: [ install_packages, install_postgres ]
-
-
-
-  # Packages | RedHat
-- block:
-    - name: Install | system packages
-      yum:
-        name: "{{ item.name }}"
-        state: "{{ item.state }}"
-        update_cache: yes
-      with_items:
-        - "{{ system_packages }}"
-      when: (proxy_env is not defined) or (proxy_env | length < 1)
-
-    - name: Install | system packages (behind a proxy)
-      yum:
-        name: "{{ item.name }}"
-        state: "{{ item.state }}"
-        update_cache: yes
-      with_items:
-        - "{{ system_packages }}"
-      environment:
-        "{{ proxy_env }}"
-      when: proxy_env | length > 0
-  when: ansible_os_family == "RedHat"
-  tags: install_packages
-
-# PostgreSQL packages | RedHat
-- block:
-    - name: install | get pgdg-redhat-repo-latest.noarch.rpm
-      get_url:
-        url: "https://download.postgresql.org/pub/repos/yum/reporpms/EL-{{ ansible_distribution_major_version }}-x86_64/pgdg-redhat-repo-latest.noarch.rpm"
-        dest: /tmp/
-        timeout: 30
-        validate_certs: no
-      when: (proxy_env is not defined) or (proxy_env | length < 1)
-
-    - name: install | get pgdg-redhat-repo-latest.noarch.rpm (behind a proxy)
-      get_url:
-        url: "https://download.postgresql.org/pub/repos/yum/reporpms/EL-{{ ansible_distribution_major_version }}-x86_64/pgdg-redhat-repo-latest.noarch.rpm"
-        dest: /tmp/
-        timeout: 30
-        validate_certs: no
-      environment:
-        "{{ proxy_env }}"
-      when: proxy_env | length > 0
-
-    - name: install | PostgreSQL repository
-      yum:
-        name: /tmp/pgdg-redhat-repo-latest.noarch.rpm
-        state: present
-
-    - name: Install | PostgreSQL packages
-      yum:
-        name: "{{ item.name }}"
-        state: "{{ item.state }}"
-        update_cache: yes
-      with_items:
-        - "{{ postgresql_packages }}"
-      when: (proxy_env is not defined) or (proxy_env | length < 1)
-
-    - name: Install | PostgreSQL packages (behind a proxy)
-      yum:
-        name: "{{ item.name }}"
-        state: "{{ item.state }}"
-        update_cache: yes
-      with_items:
-         - "{{ postgresql_packages }}"
-      environment:
-        "{{ proxy_env }}"
-      when: proxy_env | length > 0
-  when: postgresql_exists != "true" and ansible_os_family == "RedHat"
-  tags: [install_packages, install_postgres]
-
+# Install PostgreSQL
+- name: Install | PostgreSQL packages
+  package:
+    name: "{{ item }}"
+  loop: "{{ postgresql_packages }}"
+  environment: "{{ proxy_env | default(omit) }}"
+  when: postgresql_exists != "true"
+  tags: install_postgres

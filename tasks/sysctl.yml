@@ -5,8 +5,7 @@
     name: "{{ item.name }}"
     value: "{{ item.value }}"
     sysctl_set: "yes"
-    state: "{{ item.state |default('present') }}"
+    state: "present"
     reload: "yes"
-  with_items:
-    - "{{ sysctl_conf }}"
+  loop: "{{ sysctl_conf | flatten(1) }}"
   tags: [ sysctl, kernel ]

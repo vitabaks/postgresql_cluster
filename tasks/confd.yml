@@ -7,26 +7,14 @@
     mode: u+x,g+x,o+x
     timeout: 30
     validate_certs: no
-  when: (proxy_env is not defined) or (proxy_env | length < 1)
-  tags: [ get_confd, confd ]
-
-- name: confd | download and copy "confd" binary file to /usr/local/bin (behind a proxy)
-  get_url:
-    url: https://github.com/kelseyhightower/confd/releases/download/v0.16.0/confd-0.16.0-linux-amd64
-    dest: /usr/local/bin/confd
-    mode: u+x,g+x,o+x
-    timeout: 30
-    validate_certs: no
-  environment:
-    "{{ proxy_env }}"
-  when: proxy_env | length > 0
+  environment: "{{ proxy_env | default(omit) }}"
   tags: [ get_confd, confd ]
 
 - name: confd | create conf directories
   file:
     path: "{{ item }}"
     state: directory
-  with_items:
+  loop:
     - /etc/confd/conf.d
     - /etc/confd/templates
   tags: [ confd_dir, confd_conf, confd ]

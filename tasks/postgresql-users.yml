@@ -11,6 +11,5 @@
     port: "{{ postgresql_port }}"
     state: present
   ignore_errors: yes
-  with_items:
-    - "{{ postgresql_users }}"
+  loop: "{{ postgresql_users | flatten(1) }}"
   when: postgresql_users is defined and postgresql_users | length > 0

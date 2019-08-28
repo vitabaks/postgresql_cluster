@@ -38,8 +38,8 @@
     - name: "Patroni | install patroni {{ patroni_install_version }}"
       pip:
         name: "patroni=={{ patroni_install_version }}"
-        extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
         executable: /usr/local/bin/pip3
+        extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
       when: patroni_install_version != "latest"
 
       # "RequestsDependencyWarning: urllib3 (1.25.2) doesn't match a supported version!"
@@ -48,49 +48,7 @@
         name: urllib3<1.25
         executable: /usr/local/bin/pip3
         extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
-  when: (proxy_env is not defined) or (proxy_env | length < 1)
-  tags: [ patroni, patroni_install ]
-
-- block:
-    - name: Patroni | install setuptools (behind a proxy)
-      pip:
-        name: setuptools
-        state: latest
-        executable: /usr/local/bin/pip3
-        extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
-
-    - name: Patroni | install requirements (behind a proxy)
-      pip:
-        requirements: /tmp/requirements.txt
-        executable: /usr/local/bin/pip3
-        extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
-      environment:
-        PATH: "{{ postgresql_bin_dir }}:{{ ansible_env.PATH }}"
-
-    - name: Patroni | install patroni (behind a proxy)
-      pip:
-        name: patroni
-        state: latest
-        executable: /usr/local/bin/pip3
-        extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
-      when: patroni_install_version == "latest"
-
-    - name: "Patroni | install patroni {{ patroni_install_version }} (behind a proxy)"
-      pip:
-        name: "patroni=={{ patroni_install_version }}"
-        executable: /usr/local/bin/pip3
-        extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
-      when: patroni_install_version != "latest"
-
-      # "RequestsDependencyWarning: urllib3 (1.25.2) doesn't match a supported version!"
-    - name: Patroni | make sure urllib3 version <1.25 (behind a proxy)
-      pip:
-        name: urllib3<1.25
-        executable: /usr/local/bin/pip3
-        extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
-  environment:
-    "{{ proxy_env }}"
-  when: proxy_env | length > 0
+  environment: "{{ proxy_env | default(omit) }}"
   tags: [ patroni, patroni_install ]
 
 - name: Patroni | create conf directory
@@ -302,7 +260,7 @@
         owner: postgres
         group: postgres
         mode: 0700
-      with_items:
+      loop:
         - absent
         - directory
       when: is_master == "true"
@@ -389,7 +347,7 @@
         owner: postgres
         group: postgres
         mode: 0700
-      with_items:
+      loop:
         - absent
         - directory
 
@@ -440,4 +398,3 @@
     daemon_reload: yes
   when: ansible_os_family == "RedHat"
   tags: [ patroni, postgresql_disable ]
-

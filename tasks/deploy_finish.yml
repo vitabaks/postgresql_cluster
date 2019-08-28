@@ -76,15 +76,13 @@
   ignore_errors: yes
   tags: conn_info
 
-
 - block:
     - name: Virtual IP Address (VIP) info
       set_fact:
         man_ip: "{{ item }}"
-      with_items: "{{ ansible_all_ipv4_addresses }}"
+      loop: "{{ ansible_all_ipv4_addresses }}"
       when: item == cluster_vip
     - debug:
         msg: Cluster ip address (VIP) {{ cluster_vip }} is running on server "{{ ansible_hostname }}"
       when: man_ip is defined and man_ip == cluster_vip
   tags: [ vip_owner, vip_status ]
-

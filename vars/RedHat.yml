@@ -20,31 +20,31 @@ yum_repository: []
 #    baseurl: "https://repo.url"
 #    gpgkey: "https://key.url"
 
-# postgresql repository will be installed from the package "pgdg-redhat-repo-latest.noarch.rpm" (tasks/packages.yml)
+install_epel_repo: 'true'
+install_postgresql_repo: 'true' # postgresql repository will be installed from the package "pgdg-redhat-repo-latest.noarch.rpm" (tasks/add-repository.yml)
 
 # Packages
 system_packages:
-  - { name: "epel-release",      state: "present" }  # epel repository
-  - { name: "sudo",              state: "present" }
-  - { name: "vim",               state: "present" }
-  - { name: "curl",              state: "present" }
-  - { name: "less",              state: "present" }
-  - { name: "python",            state: "present" }
-  - { name: "python-devel",      state: "present" }
-  - { name: "python-psycopg2",   state: "present" }
-  - { name: "python-setuptools", state: "present" }  # setuptools is required for use the ansible pip module
-  - { name: "python36",          state: "present" }
-  - { name: "python36-devel",    state: "present" }
-  - { name: "gcc",               state: "present" }
-  - { name: "unzip",             state: "present" }
-  - { name: "gzip",              state: "present" }
-  - { name: "jq",                state: "present" }
-  - { name: "iptables",          state: "present" }
+  - sudo
+  - vim
+  - curl
+  - less
+  - python
+  - python-devel
+  - python-psycopg2
+  - python-setuptools
+  - python36
+  - python36-devel
+  - gcc
+  - unzip
+  - gzip
+  - jq
+  - iptables
 
 postgresql_packages:
-  - { name: "postgresql{{ postgresql_version_terse }}",         state: "present" }
-  - { name: "postgresql{{ postgresql_version_terse }}-server",  state: "present" }
-  - { name: "postgresql{{ postgresql_version_terse }}-contrib", state: "present" }
-  - { name: "postgresql{{ postgresql_version_terse }}-devel",   state: "present" }  # is required to build psycopg2 (for patroni)
-#  - { name: "pg_repack{{ postgresql_version_terse }}",          state: "present" }  # optional (for ext pg-repack)
+  - postgresql{{ postgresql_version_terse }}
+  - postgresql{{ postgresql_version_terse }}-server
+  - postgresql{{ postgresql_version_terse }}-contrib
+  - postgresql{{ postgresql_version_terse }}-devel
+#  - pg_repack{{ postgresql_version_terse }}
 

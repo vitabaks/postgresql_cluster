@@ -2,20 +2,8 @@
 
 - name: PgBouncer | install package
   package:
-    update_cache: yes
-    state: present
     name: pgbouncer
-  when: (proxy_env is not defined) or (proxy_env | length < 1)
-  tags: [ pgbouncer_install, pgbouncer ]
-
-- name: PgBouncer | install package (behind a proxy)
-  package:
-    update_cache: yes
-    state: present
-    name: pgbouncer
-  environment:
-    "{{ proxy_env }}"
-  when: proxy_env | length > 0
+  environment: "{{ proxy_env | default(omit) }}"
   tags: [ pgbouncer_install, pgbouncer ]
 
 - name: PgBouncer | ensure config directory "{{ pgbouncer_conf_dir }}" exist

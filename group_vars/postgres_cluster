@@ -1,0 +1,14 @@
+---
+# "Check system" variables
+
+os_valid_distributions:
+  - RedHat
+  - CentOS
+  - Ubuntu
+  - Debian
+
+os_minimum_versions:
+  RedHat: 7
+  CentOS: 7
+  Ubuntu: 16.04
+  Debian: 8

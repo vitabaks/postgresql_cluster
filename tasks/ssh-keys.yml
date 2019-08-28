@@ -28,14 +28,13 @@
     key: "{{ lookup('pipe','cat files/*id_rsa.pub') }}"
     exclusive: no
 
-
 # known_hosts
 - name: known_hosts | for each host, scan for its ssh public key
   shell: "ssh-keyscan -trsa -p {{ ansible_ssh_port }} {{ item }}"
-  with_items: "{{ ssh_known_hosts }}"
+  loop: "{{ ssh_known_hosts }}"
   register: ssh_known_host_results
   changed_when: false
-  
+
 - name: known_hosts | for each host, add/update the public key in the "~{{ ssh_key_user }}/.ssh/known_hosts"
   become: yes
   become_user: "{{ ssh_key_user }}"
@@ -44,4 +43,4 @@
     key: "{{ item.stdout }}"
     path: "~{{ ssh_key_user }}/.ssh/known_hosts"
   no_log: True
-  with_items: "{{ ssh_known_host_results.results }}"
+  loop: "{{ ssh_known_host_results.results }}"

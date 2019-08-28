@@ -25,27 +25,27 @@ apt_repository:
 
 # Packages
 system_packages:
-  - { name: "sudo",              state: "present" }
-  - { name: "vim",               state: "present" }
-  - { name: "curl",              state: "present" }
-  - { name: "less",              state: "present" }
-  - { name: "python",            state: "present" }
-  - { name: "python-dev",        state: "present" }
-  - { name: "python-psycopg2",   state: "present" }
-  - { name: "python-setuptools", state: "present" }  # setuptools is required for use the ansible pip module
-  - { name: "python3",           state: "present" }
-  - { name: "python3-dev",       state: "present" }
-  - { name: "libpq-dev",         state: "present" }
-  - { name: "gcc",               state: "present" }
-  - { name: "unzip",             state: "present" }
-  - { name: "gzip",              state: "present" }
-  - { name: "jq",                state: "present" }
-  - { name: "iptables",          state: "present" }
+  - sudo
+  - vim
+  - curl
+  - less
+  - python
+  - python-dev
+  - python-psycopg2
+  - python-setuptools
+  - python3
+  - python3-dev
+  - libpq-dev
+  - gcc
+  - unzip
+  - gzip
+  - jq
+  - iptables
 
 postgresql_packages:
-  - { name: "postgresql-{{ postgresql_version }}",            state: "present" }
-  - { name: "postgresql-client-{{ postgresql_version }}",     state: "present" }
-  - { name: "postgresql-server-dev-{{ postgresql_version }}", state: "present" } # is required to build psycopg2 (for patroni)
-  - { name: "postgresql-contrib-{{ postgresql_version }}",    state: "present" }
-#  - { name: "postgresql-{{ postgresql_version }}-repack", state: "present" }  # optional (for ext pg-repack)
+  - postgresql-{{ postgresql_version }}
+  - postgresql-client-{{ postgresql_version }}
+  - postgresql-server-dev-{{ postgresql_version }}
+  - postgresql-contrib-{{ postgresql_version }}
+#  - postgresql-{{ postgresql_version }}-repack"
 
