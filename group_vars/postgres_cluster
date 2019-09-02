@@ -4,11 +4,13 @@
 os_valid_distributions:
   - RedHat
   - CentOS
+  - OracleLinux
   - Ubuntu
   - Debian
 
 os_minimum_versions:
   RedHat: 7
   CentOS: 7
+  OracleLinux: 7
   Ubuntu: 16.04
   Debian: 8
