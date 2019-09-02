@@ -30,9 +30,19 @@
       when: yum_repository length > 0
 
     # Install Epel Repository
-    - name: Install | EPEL Repository
+    - name: "install | get epel-release-latest-{{ ansible_distribution_major_version }}.noarch.rpm"
+      get_url:
+        url: "http://dl.fedoraproject.org/pub/epel/epel-release-latest-{{ ansible_distribution_major_version }}.noarch.rpm"
+        dest: /tmp/
+        timeout: 30
+        validate_certs: no
+      when: install_epel_repo == "true"
+      tags: install_epel_repo
+
+    - name: install | EPEL repository
       package:
-        name: epel-release
+        name: "/tmp/epel-release-latest-{{ ansible_distribution_major_version }}.noarch.rpm"
+        state: present
       when: install_epel_repo == "true"
       tags: install_epel_repo
 
