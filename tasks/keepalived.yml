@@ -3,7 +3,7 @@
 - name: keepalived | install packages
   package:
     name: keepalived
-  environment: "{{ proxy_env | default(omit) }}"
+  environment: '{{ proxy_env | default({}) }}'
   tags: [ keepalived_install, keepalived ]
 
 - name: keepalived | make sure the kernel parameters "net.ipv4.ip_nonlocal_bind", "net.ipv4.ip_forward" are enabled

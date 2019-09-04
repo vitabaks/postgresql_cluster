@@ -48,7 +48,7 @@
         name: urllib3<1.25
         executable: /usr/local/bin/pip3
         extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
-  environment: "{{ proxy_env | default(omit) }}"
+  environment: '{{ proxy_env | default({}) }}'
   tags: [ patroni, patroni_install ]
 
 - name: Patroni | create conf directory

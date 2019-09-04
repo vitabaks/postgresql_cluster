@@ -5,7 +5,7 @@
   package:
     name: "{{ item }}"
   loop: "{{ system_packages }}"
-  environment: "{{ proxy_env | default(omit) }}"
+  environment: '{{ proxy_env | default({}) }}'
   tags: install_packages
 
 # PostgreSQL prepare for install (for Debian based only)
@@ -14,7 +14,7 @@
       package:
         name: postgresql-common
         state: present
-      environment: "{{ proxy_env | default(omit) }}"
+      environment: '{{ proxy_env | default({}) }}'
 
     - name: disable initializing of a default postgresql cluster
       replace:
@@ -34,6 +34,6 @@
   package:
     name: "{{ item }}"
   loop: "{{ postgresql_packages }}"
-  environment: "{{ proxy_env | default(omit) }}"
+  environment: '{{ proxy_env | default({}) }}'
   when: postgresql_exists != "true"
   tags: install_postgres

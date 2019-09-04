@@ -3,7 +3,7 @@
 - name: PgBouncer | install package
   package:
     name: pgbouncer
-  environment: "{{ proxy_env | default(omit) }}"
+  environment: '{{ proxy_env | default({}) }}'
   tags: [ pgbouncer_install, pgbouncer ]
 
 - name: PgBouncer | ensure config directory "{{ pgbouncer_conf_dir }}" exist

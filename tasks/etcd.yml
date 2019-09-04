@@ -6,7 +6,7 @@
     dest: /tmp/
     remote_src: yes
     validate_certs: no
-  environment: "{{ proxy_env | default(omit) }}"
+  environment: '{{ proxy_env | default({}) }}'
 
 - name: etcd cluster | copy "etcd" and "etcdctl" binary files to /usr/local/bin/
   copy:

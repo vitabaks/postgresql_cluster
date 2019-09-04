@@ -55,7 +55,7 @@
         - openssl-libs
         - systemd-devel
       when: ansible_os_family == "RedHat"
-  environment: "{{ proxy_env | default(omit) }}"
+  environment: '{{ proxy_env | default({}) }}'
 
 - name: haproxy | add haproxy group
   group:

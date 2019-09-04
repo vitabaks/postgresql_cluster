@@ -1,4 +1,10 @@
 ---
+# Proxy variables (for offline installation)
+proxy_env: {}
+#  http_proxy: http://10.128.64.9:3128
+#  https_proxy: http://10.128.64.9:3128
+
+# -------------------------------------------
 
 # Cluster variables
 cluster_vip: "10.128.64.145" # for client access to databases in the cluster
@@ -158,10 +164,6 @@ pgbouncer_users:
 
 
 # System variables
-proxy_env: []
-#  http_proxy: http://10.128.64.9:3128
-#  https_proxy: http://10.128.64.9:3128
-
 ntp_enabled: 'false' # specify 'true' if you want to install and configure the ntp service
 ntp_servers: []
 #  - "10.128.64.44"

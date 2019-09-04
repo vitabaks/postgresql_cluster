@@ -15,5 +15,5 @@
       command: python3 get-pip.py --trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org
       args:
         chdir: /tmp/
-  environment: "{{ proxy_env | default(omit) }}"
+  environment: '{{ proxy_env | default({}) }}'
   tags: [ pip_install, pip ]

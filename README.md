@@ -108,14 +108,22 @@ Ansible ([What is Ansible](https://www.ansible.com/resources/videos/quick-start-
 
 4. Edit the variable file vars/[main.yml](./vars/main.yml)
 
+`vim vars/main.yml`
+
 ###### Minimum set of variables: 
+- `proxy_env` (for offline installation)
+
+example:
+```
+proxy_env:
+  http_proxy: http://proxy_server_ip:port
+  https_proxy: http://proxy_server_ip:port
+```
 - `cluster_vip`
 - `patroni_cluster_name`
 - `with_haproxy_load_balancing` `'true'` (Type A) or `'false'`/default (Type B)
 - `postgresql_version`
-- `proxy_env` (if required)
 
-`vim vars/main.yml`
 
 5. Run playbook:
 
