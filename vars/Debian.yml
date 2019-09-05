@@ -41,6 +41,7 @@ system_packages:
   - gzip
   - jq
   - iptables
+  - acl
 
 postgresql_packages:
   - postgresql-{{ postgresql_version }}
