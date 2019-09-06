@@ -5,8 +5,8 @@ name: {{ ansible_hostname }}
 namespace: /service/
 
 restapi:
-  listen: {{ ansible_ssh_host }}:8008
-  connect_address: {{ ansible_ssh_host }}:8008
+  listen: {{ hostvars[inventory_hostname]['inventory_hostname'] }}:8008
+  connect_address: {{ hostvars[inventory_hostname]['inventory_hostname'] }}:8008
 #  certfile: /etc/ssl/certs/ssl-cert-snakeoil.pem
 #  keyfile: /etc/ssl/private/ssl-cert-snakeoil.key
 #  authentication:
@@ -108,8 +108,13 @@ bootstrap:
 
   
 postgresql:
-  listen: 0.0.0.0:{{ postgresql_port }}
-  connect_address: {{ ansible_ssh_host }}:{{ postgresql_port }}
+{% if with_haproxy_load_balancing == "true" or install_pgbouncer == "true" %}
+  listen: {{ hostvars[inventory_hostname]['inventory_hostname'] }},127.0.0.1:{{ postgresql_port }}
+{% endif %}
+{% if with_haproxy_load_balancing != "true" and install_pgbouncer != "true" %}
+  listen: {{ hostvars[inventory_hostname]['inventory_hostname'] }},{{ cluster_vip }},127.0.0.1:{{ postgresql_port }}
+{% endif %}
+  connect_address: {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ postgresql_port }}
   use_unix_socket: true
   data_dir: {{ postgresql_data_dir }}
   bin_dir: {{ postgresql_bin_dir }}

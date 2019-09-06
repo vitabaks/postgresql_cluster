@@ -21,12 +21,12 @@ defaults
      
 listen stats
     mode http
-    bind 0.0.0.0:7000
+    bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:7000
     stats enable
     stats uri /
  
 listen master
-    bind 0.0.0.0:5000
+    bind {{ cluster_vip }}:5000
     maxconn 10000
     option tcplog
     option httpchk OPTIONS /master
@@ -43,7 +43,7 @@ listen master
 
 
 listen replicas
-    bind 0.0.0.0:5001
+    bind {{ cluster_vip }}:5001
     maxconn 10000
     option tcplog
     option httpchk OPTIONS /replica
@@ -61,7 +61,7 @@ listen replicas
 
 
 listen replicas_sync
-    bind 0.0.0.0:5002
+    bind {{ cluster_vip }}:5002
     maxconn 10000
     option tcplog
     option httpchk OPTIONS /sync
@@ -79,7 +79,7 @@ listen replicas_sync
 
 
 listen replicas_async
-    bind 0.0.0.0:5003
+    bind {{ cluster_vip }}:5003
     maxconn 10000
     option tcplog
     option httpchk OPTIONS /async

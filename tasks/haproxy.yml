@@ -138,10 +138,10 @@
     enabled: yes
     state: restarted
 
-- name: haproxy | wait for port 5000 to become open on the host
+- name: haproxy | check HAProxy is started and accepting connections
   wait_for:
-    port: 5000
-    host: 127.0.0.1
+    port: 7000
+    host: "{{ hostvars[inventory_hostname]['inventory_hostname'] }}"
     state: started
     timeout: 120
     delay: 10

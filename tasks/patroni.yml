@@ -281,7 +281,7 @@
     - name: Patroni | wait for port 8008 to become open on the host
       wait_for:
         port: 8008
-        host: "{{ ansible_ssh_host }}"
+        host: "{{ hostvars[inventory_hostname]['inventory_hostname'] }}"
         state: started
         timeout: 120
         delay: 10
@@ -361,7 +361,7 @@
     - name: Patroni | wait for port 8008 to become open on the host
       wait_for:
         port: 8008
-        host: "{{ ansible_ssh_host }}"
+        host: "{{ hostvars[inventory_hostname]['inventory_hostname'] }}"
         state: started
         timeout: 120
         delay: 10
