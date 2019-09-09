@@ -85,11 +85,12 @@ postgresql_extensions: []
 #  - { ext: "",     db: "" }
 #  - { ext: "",     db: "" }
 
- # postgresql parameters to bootstrap dcs (more parameters in templates/patroni.yml.j2)
-  # these are the parameters for an example!
+ # postgresql parameters to bootstrap dcs (are parameters for example)
 postgresql_parameters:
   - { option: "max_connections",                     value: "100"     }
   - { option: "superuser_reserved_connections",      value: "5"       }
+  - { option: "max_locks_per_transaction",           value: "64"      } # raise this value (ex. 512) if you have queries that touch many different tables (partitioning)
+  - { option: "max_prepared_transactions",           value: "0"       }
   - { option: "huge_pages",                          value: "try"     } # or "on" if you set "vm_nr_hugepages" in kernel parameters
   - { option: "shared_buffers",                      value: "512MB"   } # please change this value
   - { option: "work_mem",                            value: "128MB"   } # please change this value
@@ -109,6 +110,8 @@ postgresql_parameters:
   - { option: "autovacuum_max_workers",              value: "5"       }
   - { option: "autovacuum_vacuum_scale_factor",      value: "0.01"    }
   - { option: "autovacuum_analyze_scale_factor",     value: "0.02"    }
+  - { option: "autovacuum_vacuum_cost_limit",        value: "200"     } # or 500/1000
+  - { option: "autovacuum_vacuum_cost_delay",        value: "20"      }
   - { option: "autovacuum_naptime",                  value: "1s"      }
   - { option: "max_files_per_process",               value: "4096"    }
   - { option: "archive_mode",                        value: "on"      }
@@ -118,6 +121,33 @@ postgresql_parameters:
   - { option: "wal_keep_segments",                   value: "130"     }
   - { option: "max_wal_senders",                     value: "10"      }
   - { option: "max_replication_slots",               value: "10"      }
+  - { option: "hot_standby",                         value: "on"      }
+  - { option: "wal_log_hints",                       value: "on"      }
+  - { option: "shared_preload_libraries",            value: "pg_stat_statements,auto_explain" }
+  - { option: "pg_stat_statements.max",              value: "10000"   }
+  - { option: "pg_stat_statements.track",            value: "all"     }
+  - { option: "pg_stat_statements.save",             value: "off"     }
+  - { option: "auto_explain.log_min_duration",       value: "10s"     } # 10 sec (by default). Decrease this value if necessary
+  - { option: "auto_explain.log_analyze",            value: "true"    }
+  - { option: "auto_explain.log_buffers",            value: "true"    }
+  - { option: "auto_explain.log_timing",             value: "false"   }
+  - { option: "auto_explain.log_triggers",           value: "true"    }
+  - { option: "auto_explain.log_verbose",            value: "true"    }
+  - { option: "auto_explain.log_nested_statements",  value: "true"    }
+  - { option: "track_io_timing",                     value: "on"      }
+  - { option: "log_lock_waits",                      value: "on"      }
+  - { option: "log_temp_files",                      value: "0"       }
+  - { option: "track_activities",                    value: "on"      }
+  - { option: "track_counts",                        value: "on"      }
+  - { option: "track_functions",                     value: "all"     }
+  - { option: "log_checkpoints",                     value: "on"      }
+  - { option: "logging_collector",                   value: "on"      }
+  - { option: "log_truncate_on_rotation",            value: "on"      }
+  - { option: "log_rotation_age",                    value: "1d"      }
+  - { option: "log_rotation_size",                   value: "0"       }
+  - { option: "log_line_prefix",                     value: "'%t [%p-%l] %r %q%u@%d '" }
+  - { option: "log_filename",                        value: "'postgresql-%a.log'"      }
+  - { option: "log_directory",                       value: "{{ postgresql_log_dir }}" }
 #  - { option: "idle_in_transaction_session_timeout", value: "600000"  } # for PostgreSQL 9.6 and above
 #  - { option: "max_worker_processes",                value: "24"      }
 #  - { option: "max_parallel_workers",                value: "12"      } # for PostgreSQL 10 and above

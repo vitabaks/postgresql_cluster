@@ -45,33 +45,6 @@ bootstrap:
       {% for parameter in postgresql_parameters %}
         {{ parameter.option }}: {{ parameter.value }}
       {% endfor %}
-        hot_standby: "on"
-        wal_log_hints: "on"
-        shared_preload_libraries: 'pg_stat_statements,auto_explain'
-        pg_stat_statements.max: 10000
-        pg_stat_statements.track: 'all'
-        pg_stat_statements.save: off
-        auto_explain.log_min_duration: '10s'
-        auto_explain.log_analyze: 'true'
-        auto_explain.log_buffers: 'true'
-        auto_explain.log_timing: 'false'
-        auto_explain.log_triggers: 'true'
-        auto_explain.log_verbose: 'true'
-        auto_explain.log_nested_statements: 'true'
-        track_io_timing: on
-        log_lock_waits: on
-        log_temp_files: 0
-        track_activities: on
-        track_counts: on
-        track_functions: all
-        log_checkpoints: on
-        logging_collector: on
-        log_directory: '{{ postgresql_log_dir }}'
-        log_filename: 'postgresql-%a.log'
-        log_truncate_on_rotation: on
-        log_rotation_age: 1d
-        log_rotation_size: 0
-        log_line_prefix: '%t [%p-%l] %r %q%u@%d '
  
  #      recovery_conf:
 #        restore_command: cp ../wal_archive/%f %p
