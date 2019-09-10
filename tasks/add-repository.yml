@@ -27,7 +27,7 @@
         baseurl: "{{ item.baseurl }}"
         gpgkey: "{{ item.gpgkey }}"
       loop: "{{ yum_repository | flatten(1) }}"
-      when: yum_repository length > 0
+      when: yum_repository | length > 0
 
     # Install Epel Repository
     - name: "install | get epel-release-latest-{{ ansible_distribution_major_version }}.noarch.rpm"
