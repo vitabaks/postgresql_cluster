@@ -2,6 +2,13 @@
 
 # Debian Ubuntu
 - block:
+    - name: Make sure the gnupg package is present
+      apt:
+        force_apt_get: yes
+        name: gnupg
+        state: present
+        update_cache: yes
+
     - name: Add repository apt-key
       apt_key:
         url: "{{ item.key }}"
