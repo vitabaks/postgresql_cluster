@@ -1,0 +1,43 @@
+# config for vip-manager by Cybertec Schönig & Schönig GmbH
+
+# time (in milliseconds) after which vip-manager wakes up and checks if it needs to register or release ip addresses.
+interval: {{ vip_manager_interval }}
+
+# the etcd or consul key which vip-manager will regularly poll.
+key: "/service/{{ patroni_cluster_name }}/leader"
+# if the value of the above key matches the NodeName (often the hostname of this host), vip-manager will try to add the virtual ip address to the interface specified in Iface
+nodename: "{{ ansible_hostname }}"
+
+ip: {{ cluster_vip }} # the virtual ip address to manage
+mask: 24 # netmask for the virtual ip
+iface: {{ vip_interface }} #interface to which the virtual ip will be added
+
+# how the virtual ip should be managed. we currently support "ip addr add/remove" through shell commands or the Hetzner api
+hosting_type: basic # possible values: basic, hetzner .
+
+endpoint_type: {{ dcs_type }} # etcd or consul
+# a list that contains all endpoints to which etcd could talk. 
+{% if dcs_exists == 'false' and dcs_type == 'etcd' %}
+endpoints:
+{% for host in groups['postgres_cluster'] %}
+  - http://{{ hostvars[host]['inventory_hostname'] }}:2379
+{% endfor %}
+{% endif %}
+{% if dcs_exists == 'true' and dcs_type == 'etcd' %}
+endpoints:
+{% for etcd_hosts in patroni_etcd_hosts %}
+  - http://{{ etcd_hosts.host }}:{{ etcd_hosts.port }}
+{% endfor %}
+{% endif %}
+
+  # consul will always only use the first entry from this list.
+  # For consul, you'll obviously need to change the port to 8500. Unless you're using a different one. Maybe you're a rebel and are running consul on port 2379? Just to confuse people? Why would you do that? Oh, I get it.
+
+# etcd_user: "patroni"
+# etcd_password: "Julian's secret password"
+# don't worry about parameter with a prefix that doesn't match the endpoint_type. You can write anything there, I won't even look at it.
+# consul_token: "Julian's secret token"
+
+#how often things should be retried and how long to wait between retries. (currently only affects arpClient)
+retry_num: 2
+retry_after: 250  #in milliseconds

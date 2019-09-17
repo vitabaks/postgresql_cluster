@@ -23,10 +23,14 @@ patroni_install_version: "latest"  # or specific version (example 1.5.6)
 
 # Load Balancing
 with_haproxy_load_balancing: 'false' # or 'true' if you want to install and configure the load-balancing (based on haproxy+confd+keepalived)
-# by default used the virtual ip address (cluster_vip) only on the server with the role of master (based on vip-manager)
 haproxy_major: "1.8"  # if variable "with_haproxy_load_balancing=true"
 haproxy_version: "1.8.20"  # version to build from source
 keepalived_virtual_router_id: "133"  # specify a unique virtual_router_id
+
+# vip-manager  (if with_haproxy_load_balancing: 'false')
+vip_manager_version: "0.6" # version to install
+vip_manager_config: "/etc/patroni/vip-manager.yml"
+vip_manager_interval: "1000"  # time (in milliseconds) after which vip-manager wakes up and checks if it needs to register or release ip addresses.
 
 
 # DCS (Distributed Consensus Store)
