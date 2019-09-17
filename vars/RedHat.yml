@@ -19,6 +19,7 @@ yum_repository: []
 #    description: "repo description"
 #    baseurl: "https://repo.url"
 #    gpgkey: "https://key.url"
+#    gpgcheck: "yes"
 
 install_epel_repo: 'true'
 install_postgresql_repo: 'true' # postgresql repository will be installed from the package "pgdg-redhat-repo-latest.noarch.rpm" (tasks/add-repository.yml)

@@ -33,6 +33,7 @@
         description: "{{ item.description }}"
         baseurl: "{{ item.baseurl }}"
         gpgkey: "{{ item.gpgkey }}"
+        gpgcheck: "{{ item.gpgcheck }}"
       loop: "{{ yum_repository | flatten(1) }}"
       when: yum_repository | length > 0
 
