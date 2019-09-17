@@ -40,6 +40,13 @@
       modprobe:
         name: nf_conntrack_ipv4
         state: present
+      when: ansible_kernel is version('4.19', '<')
+
+    - name: Load the nf_conntrack module
+      modprobe:
+        name: nf_conntrack
+        state: present
+      when: ansible_kernel is version('4.19', '>=')
 
     - name: Configure the kernel to keep connections alive when enabling the firewall
       sysctl:
