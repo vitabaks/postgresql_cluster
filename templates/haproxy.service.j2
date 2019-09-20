@@ -4,6 +4,7 @@ After=network.target
 
 [Service]
 Environment="CONFIG=/etc/haproxy/haproxy.cfg" "PIDFILE=/var/run/haproxy/haproxy.pid"
+ExecStartPre=/bin/mkdir -p /var/run/haproxy
 ExecStartPre=/usr/local/sbin/haproxy -f $CONFIG -c -q
 ExecStart=/usr/local/sbin/haproxy -Ws -f $CONFIG -p $PIDFILE
 ExecReload=/usr/local/sbin/haproxy -f $CONFIG -c -q
