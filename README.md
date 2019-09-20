@@ -69,7 +69,7 @@ RedHat and Debian based distros (x86_64)
 - Ubuntu: 16.04
 - Debian: 8
 
-:white_check_mark: tested, works fine: `Debian 9, Ubuntu 18.04, CentOS 7.6`
+:white_check_mark: tested, works fine: `Debian 9/10, Ubuntu 18.04, CentOS 7.6`
 
 ###### PostgreSQL versions: 
 all supported PostgreSQL versions
@@ -83,6 +83,24 @@ This has been tested on Ansible 2.7.10 and higher.
 This playbook requires root privileges or sudo.
 
 Ansible ([What is Ansible](https://www.ansible.com/resources/videos/quick-start-video)?)
+
+## Recommendations
+- **linux (Operation System)**: 
+
+Update your operating system on your target servers before deploying;
+
+Make sure you have time synchronization is configured (NTP).
+Specify `ntp_enabled:'true'` and `ntp_servers` if you want to install and configure the ntp service.
+
+- **DCS (Distributed Configuration Store)**: 
+
+Fast drives and a reliable network are the most important factors for the performance and stability of an etcd cluster.
+
+Avoid storing etcd data on the same drive along with other processes (such as the database) that are intensively using the resources of the disk subsystem! 
+Store the etcd and postgresql data on **different** disks (see `etcd_data_dir` variable), use ssd drives if possible.
+See [hardware recommendations](https://etcd.io/docs/v3.3.12/op-guide/hardware/) and [tuning](https://etcd.io/docs/v3.3.12/tuning/) guides.
+
+Overloaded (highload) database clusters may require the installation of the etcd cluster on dedicated servers, separate from the database servers.
 
 ---
 
