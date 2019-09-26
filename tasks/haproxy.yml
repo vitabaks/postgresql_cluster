@@ -8,6 +8,7 @@
         src: http://www.haproxy.org/download/{{ haproxy_major }}/src/haproxy-{{ haproxy_version }}.tar.gz
         dest: /tmp/
         remote_src: yes
+      register: haproxy_src_result
 
     - name: "haproxy | download lua-5.3.5 source files"
       become: yes
@@ -17,6 +18,7 @@
         dest: /tmp/
         remote_src: yes
         validate_certs: no
+      register: lua_src_result
       tags: lua
 
       # "Debian"
@@ -56,11 +58,13 @@
         - systemd-devel
       when: ansible_os_family == "RedHat"
   environment: '{{ proxy_env | default({}) }}'
-
+  tags: haproxy
+  
 - name: haproxy | add haproxy group
   group:
     name: haproxy
     state: present
+  tags: haproxy
 
 - name: haproxy | add haproxy user
   user:
@@ -68,6 +72,7 @@
     comment: "HAProxy user"
     group: haproxy
     shell: /usr/sbin/nologin
+  tags: haproxy
 
 - name: haproxy | create directories
   file:
@@ -79,6 +84,7 @@
     - /etc/haproxy
     - /var/run/haproxy
     - /var/lib/haproxy/dev
+  tags: haproxy
 
 # The version of Lua in the CentOS 7 repositories is too old for HAProxy
 - name: haproxy | build and install lua-5.3.5 (required for HAProxy)
@@ -87,8 +93,9 @@
   shell: "make INSTALL_TOP=/opt/lua-5.3.5 linux install"
   args:
     chdir: /tmp/lua-5.3.5
-  tags: lua
-
+  when: lua_src_result.changed
+  tags: [ haproxy, lua ]
+ 
 # https://github.com/haproxy/haproxy/blob/master/INSTALL
 - name: haproxy | build HAProxy
   become: yes
@@ -109,6 +116,8 @@
       USE_LUA: 1
       LUA_INC: /opt/lua-5.3.5/include
       LUA_LIB: /opt/lua-5.3.5/lib
+  when: haproxy_src_result.changed
+  tags: haproxy
 
 - name: haproxy | install HAProxy
   become: yes
@@ -116,7 +125,8 @@
   make:
     chdir: "/tmp/haproxy-{{ haproxy_version }}"
     target: install
-
+  when: haproxy_src_result.changed
+  tags: haproxy
 
 - name: haproxy | create systemd service file
   template:
@@ -124,12 +134,15 @@
     dest: /etc/systemd/system/haproxy.service
     owner: haproxy
     group: haproxy
+  register: haproxy_service_result
+  tags: [ haproxy, haproxy_service ]
 
 - name: haproxy | generate conf file "/etc/haproxy/haproxy.cfg"
   template:
     src: templates/haproxy.cfg.j2
     dest: /etc/haproxy/haproxy.cfg
-  tags: [ haproxy_conf, haproxy ]
+  register: haproxy_conf_result
+  tags: [ haproxy, haproxy_conf ]
 
 - name: haproxy | restart systemd service
   systemd:
@@ -137,6 +150,9 @@
     name: haproxy
     enabled: yes
     state: restarted
+  register: haproxy_restart_result
+  when: haproxy_conf_result.changed
+  tags: [ haproxy, haproxy_conf ]
 
 - name: haproxy | check HAProxy is started and accepting connections
   wait_for:
@@ -146,7 +162,8 @@
     timeout: 120
     delay: 10
   ignore_errors: no
-
+  when: haproxy_restart_result.changed
+  tags: [ haproxy, haproxy_conf ]
 
  # for automate the haproxy configuration (optional)
 - import_tasks: ../tasks/confd.yml
