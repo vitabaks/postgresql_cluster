@@ -3,6 +3,7 @@
 - name: ntp | install package
   package:
     name: ntp
+    state: present
   environment: '{{ proxy_env | default({}) }}'
   tags: [ ntp_install, ntp ]
 

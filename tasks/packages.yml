@@ -1,11 +1,38 @@
 ---
 
-# Install Packages
+# Install packages from files
+- block:
+    - name: copy packages into /tmp
+      copy:
+        src: '{{ item }}'
+        dest: /tmp/
+      loop: "{{ packages_from_file }}"
+      register: copy_packages_result
+
+    - name: Install packages
+      apt:
+        force_apt_get: yes
+        deb: '/tmp/{{ item }}'
+        state: present
+      loop: "{{ packages_from_file | map('basename') | list }}"
+      when: ansible_os_family == "Debian" and copy_packages_result.changed
+
+    - name: Install packages
+      package:
+        name: '/tmp/{{ item }}'
+        state: present
+      loop: "{{ packages_from_file | map('basename') | list }}"
+      when: ansible_os_family == "RedHat" and copy_packages_result.changed
+  when: packages_from_file is defined and packages_from_file | length > 0
+  tags: install_packages_from_file
+
+# Install packages from repository
 - name: Install | system packages
   package:
     name: "{{ item }}"
   loop: "{{ system_packages }}"
   environment: '{{ proxy_env | default({}) }}'
+  when: installation_method == "repo"
   tags: install_packages
 
 # PostgreSQL prepare for install (for Debian based only)
@@ -26,14 +53,14 @@
       file:
         dest: /etc/logrotate.d/postgresql-common
         state: absent
-  when: ansible_os_family == "Debian"
+  when: installation_method == "repo" and ansible_os_family == "Debian"
   tags: install_postgres
 
-# Install PostgreSQL
+# Install PostgreSQL from repository
 - name: Install | PostgreSQL packages
   package:
     name: "{{ item }}"
   loop: "{{ postgresql_packages }}"
   environment: '{{ proxy_env | default({}) }}'
-  when: postgresql_exists != "true"
+  when: installation_method == "repo" and postgresql_exists != "true"
   tags: install_postgres

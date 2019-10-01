@@ -1,23 +1,26 @@
 ---
-# Patroni setup and configuration
+# Patroni install
 
 - import_tasks: ../tasks/pip.yml
+  when: patroni_installation_method == "pip"
   tags: [ patroni, patroni_install, pip ]
 
-
-- name: Patroni | copy patroni requirements.txt file
-  copy:
-    src: files/requirements.txt
-    dest: /tmp/requirements.txt
-  tags: [ patroni, patroni_install ]
-
+# installation_method: "repo" and patroni_installation_method: "pip"
 - block:
+      # default installation method from pip repo
+    - name: Patroni | copy patroni requirements.txt file
+      copy:
+        src: requirements.txt
+        dest: /tmp/requirements.txt
+      when: patroni_pip_requirements_repo | length < 1
+
     - name: Patroni | install setuptools
       pip:
         name: setuptools
         state: latest
         executable: /usr/local/bin/pip3
         extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
+      when: patroni_pip_requirements_repo | length < 1
 
     - name: Patroni | install requirements
       pip:
@@ -26,6 +29,7 @@
         extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
       environment:
         PATH: "{{ postgresql_bin_dir }}:{{ ansible_env.PATH }}"
+      when: patroni_pip_requirements_repo | length < 1
 
     - name: Patroni | install patroni
       pip:
@@ -33,24 +37,99 @@
         state: latest
         executable: /usr/local/bin/pip3
         extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
-      when: patroni_install_version == "latest"
+      when: patroni_pip_package_repo | length < 1 and patroni_install_version == "latest"
 
     - name: "Patroni | install patroni {{ patroni_install_version }}"
       pip:
         name: "patroni=={{ patroni_install_version }}"
         executable: /usr/local/bin/pip3
         extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
-      when: patroni_install_version != "latest"
+      when: patroni_pip_package_repo | length < 1 and patroni_install_version != "latest"
 
-      # "RequestsDependencyWarning: urllib3 (1.25.2) doesn't match a supported version!"
-    - name: Patroni | make sure urllib3 version <1.25
+      # when "patroni_pip_requirements_repo" and "patroni_pip_package_repo" is defined
+    - name: Patroni | download patroni requirements
+      get_url:
+        url: '{{ item }}'
+        dest: /tmp/
+        timeout: 120
+        validate_certs: no
+      loop: "{{ patroni_pip_requirements_repo }}"
+      when: patroni_pip_requirements_repo | length > 0
+
+    - name: Patroni | download patroni package
+      get_url:
+        url: '{{ item }}'
+        dest: /tmp/
+        timeout: 60
+        validate_certs: no
+      loop: "{{ patroni_pip_package_repo | list }}"
+      when: patroni_pip_package_repo | length > 0
+
+    - name: Patroni | install requirements
       pip:
-        name: urllib3<1.25
+        name: 'file:///tmp/{{ item }}'
         executable: /usr/local/bin/pip3
-        extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
+        extra_args: "--no-index --find-links=file:///tmp --ignore-installed"
+      loop: "{{ patroni_pip_requirements_repo | map('basename') | list }}"
+      when: patroni_pip_requirements_repo | length > 0
+
+    - name: Patroni | install patroni
+      pip:
+        name: 'file:///tmp/{{ item }}'
+        executable: /usr/local/bin/pip3
+        extra_args: "--no-index --find-links=file:///tmp --ignore-installed"
+      loop: "{{ patroni_pip_package_repo | map('basename') | list }}"
+      when: patroni_pip_package_repo | length > 0
+  when: installation_method == "repo" and patroni_installation_method == "pip"
   environment: '{{ proxy_env | default({}) }}'
   tags: [ patroni, patroni_install ]
 
+# installation_method: "file" and patroni_installation_method: "pip"
+- block:
+    - name: Patroni | copy patroni requirements
+      copy:
+        src: '{{ item }}'
+        dest: /tmp/
+      loop: "{{ patroni_pip_requirements_file }}"
+      when: patroni_pip_requirements_file | length > 0
+
+    - name: Patroni | copy patroni package
+      copy:
+        src: '{{ item }}'
+        dest: /tmp/
+      loop: "{{ patroni_pip_package_file }}"
+      when: patroni_pip_package_file | length > 0
+
+    - name: Patroni | install requirements
+      pip:
+        name: 'file:///tmp/{{ item }}'
+        executable: /usr/local/bin/pip3
+        extra_args: "--no-index --find-links=file:///tmp --ignore-installed"
+      loop: "{{ patroni_pip_requirements_file | map('basename') | list }}"
+      when: patroni_pip_requirements_file | length > 0
+
+    - name: Patroni | install patroni
+      pip:
+        name: 'file:///tmp/{{ item }}'
+        executable: /usr/local/bin/pip3
+        extra_args: "--no-index --find-links=file:///tmp --ignore-installed"
+      loop: "{{ patroni_pip_package_file | map('basename') | list }}"
+      when: patroni_pip_package_file | length > 0
+  when: installation_method == "file" and patroni_installation_method == "pip"
+  tags: [ patroni, patroni_install ]
+
+## TODO
+# installation_method: "repo" and patroni_installation_method: "rpm/deb"
+#- block:
+#  when: installation_method == "repo" and (patroni_installation_method == "rpm" or patroni_installation_method == "deb")
+#  tags: [ patroni, patroni_install ]
+
+# installation_method: "file" and patroni_installation_method: "rpm/deb"
+#- block:
+#  when: installation_method == "file" and (patroni_installation_method == "rpm" or patroni_installation_method == "deb")
+#  tags: [ patroni, patroni_install ]
+
+# Patroni configure
 - name: Patroni | create conf directory
   file:
     path: /etc/patroni
@@ -74,7 +153,6 @@
     group: postgres
     mode: 0644
   tags: [ patroni, patroni_conf, patroni_service ]
-
 
 - name: Patroni | Prepare PostgreSQL | create statistics directory (if not already exists)
   file:

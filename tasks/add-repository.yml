@@ -22,7 +22,7 @@
         update_cache: yes
       loop: "{{ apt_repository }}"
   environment: '{{ proxy_env | default({}) }}'
-  when: ansible_os_family == "Debian"
+  when: installation_method == "repo" and ansible_os_family == "Debian"
   tags: add_repo
 
 # RedHat CentOS
@@ -71,5 +71,5 @@
       when: install_postgresql_repo == "true"
       tags: install_postgresql_repo
   environment: '{{ proxy_env | default({}) }}'
-  when: ansible_os_family == "RedHat"
+  when: installation_method == "repo" and ansible_os_family == "RedHat"
   tags: add_repo

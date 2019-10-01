@@ -1,13 +1,27 @@
 ---
 
+# install confd package from repo
 - name: confd | download and copy "confd" binary file to /usr/local/bin/
   get_url:
-    url: https://github.com/kelseyhightower/confd/releases/download/v0.16.0/confd-0.16.0-linux-amd64
+    url: '{{ item }}'
     dest: /usr/local/bin/confd
     mode: u+x,g+x,o+x
-    timeout: 30
+    timeout: 60
     validate_certs: no
+  loop:
+    - '{{ confd_package_repo }}'
   environment: '{{ proxy_env | default({}) }}'
+  when: installation_method == "repo" and confd_package_repo | length > 0
+  tags: [ get_confd, confd ]
+
+# install confd package from file
+- name: confd | copy "confd" binary file to /usr/local/bin/
+  copy:
+    src: '{{ confd_package_file }}'
+    dest: /usr/local/bin/confd
+    mode: u+x,g+x,o+x
+  environment: '{{ proxy_env | default({}) }}'
+  when: installation_method == "file" and confd_package_file | length > 0
   tags: [ get_confd, confd ]
 
 - name: confd | create conf directories
