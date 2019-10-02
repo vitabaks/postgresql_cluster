@@ -20,7 +20,6 @@
     src: '{{ confd_package_file }}'
     dest: /usr/local/bin/confd
     mode: u+x,g+x,o+x
-  environment: '{{ proxy_env | default({}) }}'
   when: installation_method == "file" and confd_package_file | length > 0
   tags: [ get_confd, confd ]
 

@@ -7,13 +7,14 @@
         force_apt_get: yes
         name: gnupg
         state: present
-        update_cache: yes
+      when: apt_repository_keys | length > 0 and apt_repository | length > 0
 
     - name: Add repository apt-key
       apt_key:
         url: "{{ item.key }}"
         state: present
       loop: "{{ apt_repository_keys }}"
+      when: apt_repository_keys | length > 0
 
     - name: Add repository
       apt_repository:
@@ -21,6 +22,7 @@
         state: present
         update_cache: yes
       loop: "{{ apt_repository }}"
+      when: apt_repository | length > 0
   environment: '{{ proxy_env | default({}) }}'
   when: installation_method == "repo" and ansible_os_family == "Debian"
   tags: add_repo

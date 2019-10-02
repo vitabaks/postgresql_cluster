@@ -52,7 +52,7 @@ postgresql_packages:
 
 # Extra packages
 etcd_package_repo: "https://github.com/etcd-io/etcd/releases/download/{{ etcd_ver }}/etcd-{{ etcd_ver }}-linux-amd64.tar.gz"
-vip_manager_package_repo: "https://github.com/cybertec-postgresql/vip-manager/releases/download/v{{ vip_manager_version }}/vip-manager_{{ vip_manager_version }}-1_amd64.rpm"
+vip_manager_package_repo: "https://github.com/cybertec-postgresql/vip-manager/releases/download/v{{ vip_manager_version }}/vip-manager_{{ vip_manager_version }}-1_amd64.deb"
 ## (if with_haproxy_load_balancing: 'true')
 haproxy_package_repo: "http://www.haproxy.org/download/{{ haproxy_major }}/src/haproxy-{{ haproxy_version }}.tar.gz"
 lua_package_repo: "https://www.lua.org/ftp/lua-5.3.5.tar.gz" # required for build haproxy

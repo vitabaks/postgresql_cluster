@@ -52,7 +52,7 @@
     name: "{{ haproxy_compile_requirements }}"
     state: present
   environment: '{{ proxy_env | default({}) }}'
-  tags: haproxy
+  tags: [ haproxy, haproxy_requirements ]
 
 - name: haproxy | add haproxy group
   group:

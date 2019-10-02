@@ -43,6 +43,7 @@
 - - pgbouncer_restart
 - load_balancing
 - - haproxy
+- - - haproxy_requirements
 - - - haproxy_conf
 - - confd
 - - - get_confd

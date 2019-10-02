@@ -17,7 +17,6 @@
         src: '/tmp/{{ etcd_package_repo | basename }}'
         dest: /tmp/
         remote_src: yes
-      environment: '{{ proxy_env | default({}) }}'
 
     - name: etcd cluster | copy "etcd" and "etcdctl" binary files to /usr/local/bin/
       copy:
