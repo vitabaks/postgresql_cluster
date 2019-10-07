@@ -23,7 +23,11 @@ WorkingDirectory=~
 #ExecStartPre=-/usr/bin/sudo /bin/chown postgres /dev/watchdog
 
 # Start the patroni process
+{% if patroni_installation_method == 'pip' %}
 ExecStart=/usr/local/bin/patroni /etc/patroni/patroni.yml
+{% else %}
+ExecStart=/usr/bin/patroni /etc/patroni/patroni.yml
+{% endif %}
 
 # Send HUP to reload from patroni.yml
 ExecReload=/bin/kill -s HUP $MAINPID

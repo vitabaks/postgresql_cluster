@@ -71,11 +71,11 @@ haproxy_compile_requirements:
   - libssl-dev
 
 # You can also use your own repository for extra packages. You need to preload all the packages and change this URLs.
-installation_method: "repo" #(default) or "file"
+installation_method: "repo" #(default)"repo" or "file"
 
 # Patroni package will be installed from the pip (by default).
 # You also have the option of choosing an patroni installation method using the deb package.
-patroni_installation_method: "pip" #(default) or "deb"
+patroni_installation_method: "pip" #(default)"pip" or "deb"
 
 # (if patroni_installation_type: "pip") 
 # Packages from your repository will be used to install instead of the pip repository.
@@ -106,7 +106,9 @@ patroni_pip_package_repo: []
 # - "http://my-repo.url/patroni-1.6.0.tar.gz"
 
 # ( if patroni_installation_type: "deb" )
-patroni_deb_package_repo: "https://apt.postgresql.org/pub/repos/apt/pool/main/p/patroni/patroni_1.6.0-2.pgdg90%2b1_all.deb" # (package for Debian 9)
+# You can preload the patroni deb package to your APT repository, or explicitly specify the path to the package in this variable:
+patroni_deb_package_repo: []
+#  - "https://apt.postgresql.org/pub/repos/apt/pool/main/p/patroni/patroni_1.6.0-2.pgdg90%2b1_all.deb" # (package for Debian 9)
 
 
 # ================================================================================================= #

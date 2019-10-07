@@ -72,11 +72,11 @@ haproxy_compile_requirements:
   - systemd-devel
 
 # You can also use your own repository for extra packages. You need to preload all the packages and change this URLs.
-installation_method: "repo" #(default) or "file"
+installation_method: "repo" #(default)"repo" or "file"
 
 # Patroni package will be installed from the pip repository (by default).
 # You also have the option of choosing an patroni installation method using the rpm package.
-patroni_installation_method: "pip" #(default) or "rpm"
+patroni_installation_method: "pip" #(default)"pip" or "rpm"
 
 # (if patroni_installation_type: "pip") 
 # Packages from your repository will be used to install instead of the pip repository.
@@ -107,7 +107,9 @@ patroni_pip_package_repo: []
 #  - "http://my-repo.url/patroni-1.6.0.tar.gz"
 
 # (if patroni_installation_type: "rpm")
-patroni_rpm_package_repo: "https://github.com/cybertec-postgresql/patroni-packaging/releases/download/1.6.0-1/patroni-1.6.0-1.rhel7.x86_64.rpm" # (package for RHEL/CentOS 7)
+# You can preload the patroni rpm package to your YUM repository, or explicitly specify the path to the package in this variable:
+patroni_rpm_package_repo: []
+#  - "https://github.com/cybertec-postgresql/patroni-packaging/releases/download/1.6.0-1/patroni-1.6.0-1.rhel7.x86_64.rpm" # (package for RHEL/CentOS 7)
 
 
 # ================================================================================================= #
@@ -155,8 +157,8 @@ confd_package_file: "confd-0.16.0-linux-amd64" # https://github.com/kelseyhighto
 # (optional) Specify additional rpm packages if required (for any installation_method)
 # this packages will be installed before all other packages.
 packages_from_file: []
-#  - "python36-psycopg2-2.7.7-1.el7.x86_64.rpm" # https://mirror.linux-ia64.org/epel/7/x86_64/Packages/p/
-#  - "python36-setuptools-39.2.0-3.el7.noarch.rpm" # https://mirror.linux-ia64.org/epel/7/x86_64/Packages/p/
+#  - "python36-psycopg2-2.7.7-1.el7.x86_64.rpm" # https://mirror.linux-ia64.org/epel/7/x86_64/Packages/p/ # (required for "patroni")
+#  - "libyaml-0.1.4-11.el7_0.x86_64.rpm" # (required for "patroni_rpm_package")
 #  - "jq-1.5-1.el7.x86_64.rpm" # https://mirror.linux-ia64.org/epel/7/x86_64/Packages/j/
 #  - "other-package-name_1_amd64.rpm"
 #  - ""

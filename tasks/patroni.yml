@@ -45,7 +45,11 @@
         executable: /usr/local/bin/pip3
         extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
       when: patroni_pip_package_repo | length < 1 and patroni_install_version != "latest"
+  when: installation_method == "repo" and patroni_installation_method == "pip"
+  environment: '{{ proxy_env | default({}) }}'
+  tags: [ patroni, patroni_install ]
 
+- block:
       # when "patroni_pip_requirements_repo" and "patroni_pip_package_repo" is defined
     - name: Patroni | download patroni requirements
       get_url:
@@ -81,7 +85,6 @@
       loop: "{{ patroni_pip_package_repo | map('basename') | list }}"
       when: patroni_pip_package_repo | length > 0
   when: installation_method == "repo" and patroni_installation_method == "pip"
-  environment: '{{ proxy_env | default({}) }}'
   tags: [ patroni, patroni_install ]
 
 # installation_method: "file" and patroni_installation_method: "pip"
@@ -118,16 +121,91 @@
   when: installation_method == "file" and patroni_installation_method == "pip"
   tags: [ patroni, patroni_install ]
 
-## TODO
 # installation_method: "repo" and patroni_installation_method: "rpm/deb"
-#- block:
-#  when: installation_method == "repo" and (patroni_installation_method == "rpm" or patroni_installation_method == "deb")
-#  tags: [ patroni, patroni_install ]
+- block:
+    # Debian
+    - name: Install | patroni package
+      package:
+        name: patroni
+        state: present
+      when: ansible_os_family == "Debian" and patroni_deb_package_repo | length < 1
+
+    # RedHat
+    - name: Install | patroni package
+      package:
+        name: patroni
+        state: present
+      when: ansible_os_family == "RedHat" and patroni_rpm_package_repo | length < 1
+
+    # when patroni_deb_package_repo or patroni_rpm_package_repo URL is defined
+    # Debian
+    - name: Patroni | download patroni deb package
+      get_url:
+        url: '{{ item }}'
+        dest: /tmp/
+        timeout: 60
+        validate_certs: no
+      loop: '{{ patroni_deb_package_repo | list }}'
+      when: ansible_os_family == "Debian" and patroni_deb_package_repo | length > 0
+
+    - name: Patroni | install deb package
+      apt:
+        force_apt_get: yes
+        deb: '/tmp/{{ item }}'
+        state: present
+      loop: "{{ patroni_deb_package_repo | map('basename') | list }}"
+      when: ansible_os_family == "Debian" and patroni_deb_package_repo | length > 0
+
+    # RedHat
+    - name: Patroni | download patroni rpm package
+      get_url:
+        url: '{{ item }}'
+        dest: /tmp/
+        timeout: 60
+        validate_certs: no
+      loop: '{{ patroni_rpm_package_repo | list }}'
+      when: ansible_os_family == "RedHat" and patroni_rpm_package_repo | length > 0
+
+    - name: Patroni | install rpm package
+      package:
+        name: '/tmp/{{ item }}'
+        state: present
+      loop: "{{ patroni_rpm_package_repo | map('basename') | list }}"
+      when: ansible_os_family == "RedHat" and patroni_rpm_package_repo | length > 0
+  environment: '{{ proxy_env | default({}) }}'
+  when: installation_method == "repo" and (patroni_installation_method == "rpm" or patroni_installation_method == "deb")
+  tags: [ patroni, patroni_install ]
 
 # installation_method: "file" and patroni_installation_method: "rpm/deb"
-#- block:
-#  when: installation_method == "file" and (patroni_installation_method == "rpm" or patroni_installation_method == "deb")
-#  tags: [ patroni, patroni_install ]
+- block:
+    # Debian
+    - name: Patroni | copy patroni deb package into /tmp
+      copy:
+        src: '{{ patroni_deb_package_file }}'
+        dest: /tmp/
+      when: ansible_os_family == "Debian"
+
+    - name: Patroni | install deb package
+      apt:
+        force_apt_get: yes
+        deb: "/tmp/{{ patroni_deb_package_file | basename }}"
+        state: present
+      when: ansible_os_family == "Debian"
+
+    # RedHat
+    - name: Patroni | copy patroni rpm package into /tmp
+      copy:
+        src: '{{ patroni_rpm_package_file }}'
+        dest: /tmp/
+      when: ansible_os_family == "RedHat"
+
+    - name: Patroni | install rpm package
+      package:
+        name: "/tmp/{{ patroni_rpm_package_file | basename }}"
+        state: present
+      when: ansible_os_family == "RedHat"
+  when: installation_method == "file" and (patroni_installation_method == "rpm" or patroni_installation_method == "deb")
+  tags: [ patroni, patroni_install ]
 
 # Patroni configure
 - name: Patroni | create conf directory
@@ -190,13 +268,21 @@
       when: not pgdata_initialized.stat.exists
       tags: [ patroni, patroni_check_init ]
 
-    - name: Patroni | Prepare PostgreSQL | check PostgreSQL is started and accepting connections
+    - name: Patroni | Prepare PostgreSQL | check PostgreSQL service is started
+      systemd:
+        name: postgresql
+        state: started
+      ignore_errors: yes
+
+    - name: Patroni | Prepare PostgreSQL | check PostgreSQL is accepting connections
       become: yes
       become_user: postgres
       command: "{{ postgresql_bin_dir }}/pg_isready -p {{ postgresql_port }}"
       register: pg_isready_result
-      failed_when: pg_isready_result.rc != 0
-      tags: patroni
+      until: pg_isready_result.rc == 0
+      retries: 30
+      delay: 10
+      ignore_errors: no
 
     - name: Patroni | Prepare PostgreSQL | generate pg_hba.conf on Master
       template:
@@ -301,7 +387,6 @@
   tags: [ patroni, patroni_start_master ]
  # when postgresql exists (master)
 
-
  # wheh postgresql NOT exists
 - block:
     - name: Patroni | Prepare PostgreSQL | make sure PostgreSQL data directory "{{ postgresql_data_dir }}" exists
@@ -346,14 +431,13 @@
   tags: patroni
  # wheh postgresql NOT exists
 
-
 # start patroni on master
 - block:
     - name: Patroni | start patroni service on the Master server
       systemd:
         daemon_reload: yes
         name: patroni
-        state: started
+        state: restarted
         enabled: yes
 
     - name: Patroni | wait for port 8008 to become open on the host
@@ -374,17 +458,22 @@
       retries: 30
       delay: 10
       ignore_errors: no
-
-    - name: Patroni | PostgreSQL Cluster status
-      become: yes
-      become_user: postgres
-      command: /usr/local/bin/patronictl -c /etc/patroni/patroni.yml list
-      register: patronictl_result
-    - debug:
-        var: patronictl_result.stdout_lines
   when: is_master == "true"
   tags: [ patroni, patroni_start_master ]
 
+- block:
+    - name: Patroni | PostgreSQL Cluster status
+      become: yes
+      become_user: postgres
+      command: patronictl -c /etc/patroni/patroni.yml list
+      register: patronictl_result
+      environment:
+        PATH: "{{ ansible_env.PATH }}:/usr/bin:/usr/local/bin"
+    - debug:
+        var: patronictl_result.stdout_lines
+  ignore_errors: yes
+  when: is_master == "true"
+  tags: patroni
 
 # pg_hba (using a templates/pg_hba.conf.j2)
 - block:
@@ -415,7 +504,6 @@
       when: ansible_os_family == "RedHat" and is_master == "true"
   tags: [ patroni, pg_hba_generate ]
 
-
 # start patroni on replica
 - block:
     - name: Patroni | Prepare PostgreSQL | make sure the data directory "{{ postgresql_data_dir }}" is empty on Replica
@@ -433,7 +521,7 @@
       systemd:
         daemon_reload: yes
         name: patroni
-        state: started
+        state: restarted
         enabled: yes
 
     - name: Patroni | wait for port 8008 to become open on the host
@@ -446,7 +534,6 @@
       ignore_errors: no
   when: is_master != "true"
   tags: [patroni, patroni_start_replica]
-
 
 # disable postgresql from autostart
   # "Debian"
