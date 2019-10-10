@@ -18,32 +18,38 @@
       pip:
         name: setuptools
         state: latest
-        executable: /usr/local/bin/pip3
+        executable: pip3
         extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
+      environment:
+        PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
       when: patroni_pip_requirements_repo | length < 1
 
     - name: Patroni | install requirements
       pip:
         requirements: /tmp/requirements.txt
-        executable: /usr/local/bin/pip3
+        executable: pip3
         extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
       environment:
-        PATH: "{{ postgresql_bin_dir }}:{{ ansible_env.PATH }}"
+        PATH: "{{ ansible_env.PATH }}:{{ postgresql_bin_dir }}:/usr/local/bin:/usr/bin"
       when: patroni_pip_requirements_repo | length < 1
 
     - name: Patroni | install patroni
       pip:
         name: patroni
         state: latest
-        executable: /usr/local/bin/pip3
+        executable: pip3
         extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
+      environment:
+        PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
       when: patroni_pip_package_repo | length < 1 and patroni_install_version == "latest"
 
     - name: "Patroni | install patroni {{ patroni_install_version }}"
       pip:
         name: "patroni=={{ patroni_install_version }}"
-        executable: /usr/local/bin/pip3
+        executable: pip3
         extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
+      environment:
+        PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
       when: patroni_pip_package_repo | length < 1 and patroni_install_version != "latest"
   when: installation_method == "repo" and patroni_installation_method == "pip"
   environment: '{{ proxy_env | default({}) }}'
@@ -72,17 +78,21 @@
     - name: Patroni | install requirements
       pip:
         name: 'file:///tmp/{{ item }}'
-        executable: /usr/local/bin/pip3
+        executable: pip3
         extra_args: "--no-index --find-links=file:///tmp --ignore-installed"
       loop: "{{ patroni_pip_requirements_repo | map('basename') | list }}"
+      environment:
+        PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
       when: patroni_pip_requirements_repo | length > 0
 
     - name: Patroni | install patroni
       pip:
         name: 'file:///tmp/{{ item }}'
-        executable: /usr/local/bin/pip3
+        executable: pip3
         extra_args: "--no-index --find-links=file:///tmp --ignore-installed"
       loop: "{{ patroni_pip_package_repo | map('basename') | list }}"
+      environment:
+        PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
       when: patroni_pip_package_repo | length > 0
   when: installation_method == "repo" and patroni_installation_method == "pip"
   tags: [ patroni, patroni_install ]
@@ -106,17 +116,21 @@
     - name: Patroni | install requirements
       pip:
         name: 'file:///tmp/{{ item }}'
-        executable: /usr/local/bin/pip3
+        executable: pip3
         extra_args: "--no-index --find-links=file:///tmp --ignore-installed"
       loop: "{{ patroni_pip_requirements_file | map('basename') | list }}"
+      environment:
+        PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
       when: patroni_pip_requirements_file | length > 0
 
     - name: Patroni | install patroni
       pip:
         name: 'file:///tmp/{{ item }}'
-        executable: /usr/local/bin/pip3
+        executable: pip3
         extra_args: "--no-index --find-links=file:///tmp --ignore-installed"
       loop: "{{ patroni_pip_package_file | map('basename') | list }}"
+      environment:
+        PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
       when: patroni_pip_package_file | length > 0
   when: installation_method == "file" and patroni_installation_method == "pip"
   tags: [ patroni, patroni_install ]
