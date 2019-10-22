@@ -9,23 +9,23 @@
         timeout: 120
         validate_certs: no
       loop:
-        - '{{ haproxy_package_repo }}'
-        - '{{ lua_package_repo }}'
+        - '{{ haproxy_src_repo }}'
+        - '{{ lua_src_repo }}'
       environment: '{{ proxy_env | default({}) }}'
 
     - name: "haproxy | extract HAProxy source files into /tmp"
       unarchive:
-        src: '/tmp/{{ haproxy_package_repo | basename }}'
+        src: '/tmp/{{ haproxy_src_repo | basename }}'
         dest: /tmp/
         remote_src: yes
-      when: haproxy_package_repo | length > 0
+      when: haproxy_src_repo | length > 0
 
     - name: "haproxy | extract lua source files into /tmp"
       unarchive:
-        src: '/tmp/{{ lua_package_repo | basename }}'
+        src: '/tmp/{{ lua_src_repo | basename }}'
         dest: /tmp/
         remote_src: yes
-      when: lua_package_repo | length > 0
+      when: lua_src_repo | length > 0
       tags: lua
   when: installation_method == "repo"
   tags: haproxy
@@ -34,15 +34,15 @@
 - block:
     - name: "haproxy | extract HAProxy source files into /tmp"
       unarchive:
-        src: '{{ haproxy_package_file }}'
+        src: '{{ haproxy_src_file }}'
         dest: /tmp/
-      when: haproxy_package_file | length > 0
+      when: haproxy_src_file | length > 0
 
     - name: "haproxy | extract lua source files into /tmp"
       unarchive:
-        src: '{{ lua_package_file }}'
+        src: '{{ lua_src_file }}'
         dest: /tmp/
-      when: lua_package_file | length > 0
+      when: lua_src_file | length > 0
       tags: lua
   when: installation_method == "file"
   tags: haproxy
@@ -85,16 +85,16 @@
     - name: haproxy | build and install lua (required for haproxy)
       become: yes
       become_user: root
-      shell: "make INSTALL_TOP=/opt/{{ lua_package_repo.split('.tar.gz')[0] | basename }} linux install"
+      shell: "make INSTALL_TOP=/opt/{{ lua_src_repo.split('.tar.gz')[0] | basename }} linux install"
       args:
-        chdir: "/tmp/{{ lua_package_repo.split('.tar.gz')[0] | basename }}"
+        chdir: "/tmp/{{ lua_src_repo.split('.tar.gz')[0] | basename }}"
       tags: lua
 
     - name: haproxy | build HAProxy
       become: yes
       become_user: root
       make:
-        chdir: "/tmp/{{ haproxy_package_repo.split('.tar.gz')[0] | basename }}"
+        chdir: "/tmp/{{ haproxy_src_repo.split('.tar.gz')[0] | basename }}"
         params:
           TARGET: linux2628
           USE_GETADDRINFO: 1
@@ -107,14 +107,14 @@
           USE_NS: 1
           USE_TFO: 1
           USE_LUA: 1
-          LUA_INC: "/opt/{{ lua_package_repo.split('.tar.gz')[0] | basename }}/include"
-          LUA_LIB: "/opt/{{ lua_package_repo.split('.tar.gz')[0] | basename }}/lib"
+          LUA_INC: "/opt/{{ lua_src_repo.split('.tar.gz')[0] | basename }}/include"
+          LUA_LIB: "/opt/{{ lua_src_repo.split('.tar.gz')[0] | basename }}/lib"
 
     - name: haproxy | install HAProxy
       become: yes
       become_user: root
       make:
-        chdir: "/tmp/{{ haproxy_package_repo.split('.tar.gz')[0] | basename }}"
+        chdir: "/tmp/{{ haproxy_src_repo.split('.tar.gz')[0] | basename }}"
         target: install
   when: installation_method == "repo"
   tags: haproxy
@@ -124,16 +124,16 @@
     - name: haproxy | build and install lua (required for haproxy)
       become: yes
       become_user: root
-      shell: "make INSTALL_TOP=/opt/{{ lua_package_file.split('.tar.gz')[0] | basename }} linux install"
+      shell: "make INSTALL_TOP=/opt/{{ lua_src_file.split('.tar.gz')[0] | basename }} linux install"
       args:
-        chdir: "/tmp/{{ lua_package_file.split('.tar.gz')[0] | basename }}"
+        chdir: "/tmp/{{ lua_src_file.split('.tar.gz')[0] | basename }}"
       tags: lua
 
     - name: haproxy | build HAProxy
       become: yes
       become_user: root
       make:
-        chdir: "/tmp/{{ haproxy_package_file.split('.tar.gz')[0] | basename }}"
+        chdir: "/tmp/{{ haproxy_src_file.split('.tar.gz')[0] | basename }}"
         params:
           TARGET: linux2628
           USE_GETADDRINFO: 1
@@ -146,14 +146,14 @@
           USE_NS: 1
           USE_TFO: 1
           USE_LUA: 1
-          LUA_INC: "/opt/{{ lua_package_file.split('.tar.gz')[0] | basename }}/include"
-          LUA_LIB: "/opt/{{ lua_package_file.split('.tar.gz')[0] | basename }}/lib"
+          LUA_INC: "/opt/{{ lua_src_file.split('.tar.gz')[0] | basename }}/include"
+          LUA_LIB: "/opt/{{ lua_src_file.split('.tar.gz')[0] | basename }}/lib"
 
     - name: haproxy | install HAProxy
       become: yes
       become_user: root
       make:
-        chdir: "/tmp/{{ haproxy_package_file.split('.tar.gz')[0] | basename }}"
+        chdir: "/tmp/{{ haproxy_src_file.split('.tar.gz')[0] | basename }}"
         target: install
   when: installation_method == "file"
   tags: haproxy
