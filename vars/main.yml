@@ -23,8 +23,7 @@ patroni_install_version: "latest"  # or specific version (example 1.5.6)
 
 # Load Balancing
 with_haproxy_load_balancing: 'false' # or 'true' if you want to install and configure the load-balancing (based on haproxy+confd+keepalived)
-haproxy_major: "1.8"  # if variable "with_haproxy_load_balancing=true"
-haproxy_version: "1.8.20"  # version to build from source
+## if variable "with_haproxy_load_balancing: 'true'"
 keepalived_virtual_router_id: "133"  # specify a unique virtual_router_id
 
 # vip-manager  (if with_haproxy_load_balancing: 'false')

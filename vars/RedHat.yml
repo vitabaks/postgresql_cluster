@@ -55,10 +55,16 @@ postgresql_packages:
 # Extra packages
 etcd_package_repo: "https://github.com/etcd-io/etcd/releases/download/{{ etcd_ver }}/etcd-{{ etcd_ver }}-linux-amd64.tar.gz"
 vip_manager_package_repo: "https://github.com/cybertec-postgresql/vip-manager/releases/download/v{{ vip_manager_version }}/vip-manager_{{ vip_manager_version }}-1_amd64.rpm"
-## (if with_haproxy_load_balancing: 'true')
+# (if with_haproxy_load_balancing: 'true')
+haproxy_installation_method: "rpm" #(default)"rpm" or "src"
+haproxy_install_repo: 'true' # or 'false' # only for RedHat/CentOS version 7.
+## for RedHat/CentOS/OracleLinux 7 the haproxy version 1.8 (LTS) will be installed from the "rh-haproxy18" package from the Software Collections (SCL) repository.
+## you can preload the haproxy rpm packages to your YUM repository (in this case specify "haproxy_install_repo: 'false'").
 confd_package_repo: "https://github.com/kelseyhightower/confd/releases/download/v0.16.0/confd-0.16.0-linux-amd64"
+
+# (optional) if haproxy_installation_method: 'src'
 lua_src_repo: "https://www.lua.org/ftp/lua-5.3.5.tar.gz" # required for build haproxy
-haproxy_src_repo: "http://www.haproxy.org/download/{{ haproxy_major }}/src/haproxy-{{ haproxy_version }}.tar.gz"
+haproxy_src_repo: "http://www.haproxy.org/download/1.8/src/haproxy-1.8.21.tar.gz"
 haproxy_compile_requirements:
   - unzip
   - gzip
@@ -149,9 +155,13 @@ patroni_rpm_package_file: "patroni-1.6.0-1.rhel7.x86_64.rpm" # (package for RHEL
 etcd_package_file: "etcd-v3.3.15-linux-amd64.tar.gz" # https://github.com/etcd-io/etcd/releases
 vip_manager_package_file: "vip-manager_0.6-1_amd64.rpm" # https://github.com/cybertec-postgresql/vip-manager/releases
 ## (if with_haproxy_load_balancing: 'true')
-haproxy_src_file: "haproxy-1.8.21.tar.gz" # http://www.haproxy.org/download/1.8/src/
-lua_src_file: "lua-5.3.5.tar.gz" # https://www.lua.org/ftp/lua-5.3.5.tar.gz (required for build haproxy)
+haproxy_package_file: []
+#  - "rh-haproxy18-runtime-3.1-2.el7.x86_64.rpm"
+#  - "rh-haproxy18-haproxy-1.8.17-1.el7.x86_64.rpm"
 confd_package_file: "confd-0.16.0-linux-amd64" # https://github.com/kelseyhightower/confd/releases
+# (optional) if haproxy_installation_method: 'src'
+lua_src_file: "lua-5.3.5.tar.gz" # https://www.lua.org/ftp/lua-5.3.5.tar.gz (required for build haproxy)
+haproxy_src_file: "haproxy-1.8.21.tar.gz" # http://www.haproxy.org/download/1.8/src/
 
 # ------------------------------------------------------------------------------------------------- #
 # (optional) Specify additional rpm packages if required (for any installation_method)
@@ -163,3 +173,7 @@ packages_from_file: []
 #  - "other-package-name_1_amd64.rpm"
 #  - ""
 
+# ----------------------------------------------------------------------------------------------------------------------------------
+# Attention! If you want to use the installation method "file".
+# You need to independently determine all the necessary the dependencies of rpm packages for your version of the Linux distribution.
+# ----------------------------------------------------------------------------------------------------------------------------------
