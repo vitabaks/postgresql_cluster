@@ -6,6 +6,7 @@
 - - install_postgresql_repo
 - install_packages
 - - install_postgres
+- - install_packages_from_file
 - sudo
 - - postgres_sudo
 - firewall
@@ -42,6 +43,7 @@
 - - pgbouncer_restart
 - load_balancing
 - - haproxy
+- - - haproxy_requirements
 - - - haproxy_conf
 - - confd
 - - - get_confd

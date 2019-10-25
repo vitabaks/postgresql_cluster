@@ -1,38 +1,52 @@
 ---
 
-# Debian Ubuntu
+# install vip-manager package from repo
 - block:
-    - name: "vip-manager | get vip-manager_{{ vip_manager_version }}-1_amd64.deb"
+    - name: vip-manager | get vip-manager package
       get_url:
-        url: "https://github.com/cybertec-postgresql/vip-manager/releases/download/v{{ vip_manager_version }}/vip-manager_{{ vip_manager_version }}-1_amd64.deb"
+        url: '{{ item }}'
         dest: /tmp/
-        timeout: 30
+        timeout: 60
         validate_certs: no
+      loop:
+        - '{{ vip_manager_package_repo }}'
+      environment: '{{ proxy_env | default({}) }}'
 
     - name: vip-manager | install package
       apt:
         force_apt_get: yes
-        deb: "/tmp/vip-manager_{{ vip_manager_version }}-1_amd64.deb"
+        deb: "/tmp/{{ vip_manager_package_repo | basename }}"
         state: present
-  environment: '{{ proxy_env | default({}) }}'
-  when: ansible_os_family == "Debian"
-  tags: [ vip_manager, vip_manager_install ]
-
-# RedHat CentOS
-- block:
-    - name: "vip-manager | get vip-manager_{{ vip_manager_version }}-1_amd64.rpm"
-      get_url:
-        url: "https://github.com/cybertec-postgresql/vip-manager/releases/download/v{{ vip_manager_version }}/vip-manager_{{ vip_manager_version }}-1_amd64.rpm"
-        dest: /tmp/
-        timeout: 30
-        validate_certs: no
+      when: ansible_os_family == "Debian"
 
     - name: vip-manager | install package
       package:
-        name: "/tmp/vip-manager_{{ vip_manager_version }}-1_amd64.rpm"
+        name: "/tmp/{{ vip_manager_package_repo | basename }}"
         state: present
-  environment: '{{ proxy_env | default({}) }}'
-  when: ansible_os_family == "RedHat"
+      when: ansible_os_family == "RedHat"
+  when: installation_method == "repo" and vip_manager_package_repo | length > 0
+  tags: [ vip_manager, vip_manager_install ]
+
+# install vip-manager package from file
+- block:
+    - name: vip-manager | copy vip-manager package into /tmp
+      copy:
+        src: '{{ vip_manager_package_file }}'
+        dest: /tmp/
+
+    - name: vip-manager | install package
+      apt:
+        force_apt_get: yes
+        deb: "/tmp/{{ vip_manager_package_file | basename }}"
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: vip-manager | install package
+      package:
+        name: "/tmp/{{ vip_manager_package_file | basename }}"
+        state: present
+      when: ansible_os_family == "RedHat"
+  when: installation_method == "file" and vip_manager_package_file | length > 0
   tags: [ vip_manager, vip_manager_install ]
 
 - name: vip-manager | generate conf file "{{ vip_manager_config }}"

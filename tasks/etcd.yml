@@ -1,22 +1,53 @@
 ---
 
-- name: etcd cluster | download and extract "etcd" into /tmp
-  unarchive:
-    src: https://github.com/etcd-io/etcd/releases/download/{{ etcd_ver }}/etcd-{{ etcd_ver }}-linux-amd64.tar.gz
-    dest: /tmp/
-    remote_src: yes
-    validate_certs: no
-  environment: '{{ proxy_env | default({}) }}'
+# install etcd package from repo
+- block:
+    - name: etcd cluster | download "etcd" package
+      get_url:
+        url: '{{ item }}'
+        dest: /tmp/
+        timeout: 60
+        validate_certs: no
+      loop:
+        - '{{ etcd_package_repo }}'
+      environment: '{{ proxy_env | default({}) }}'
 
-- name: etcd cluster | copy "etcd" and "etcdctl" binary files to /usr/local/bin/
-  copy:
-    src: "/tmp/etcd-{{ etcd_ver }}-linux-amd64/{{ item }}"
-    dest: /usr/local/bin/
-    mode: u+x,g+x,o+x
-    remote_src: yes
-  loop:
-    - etcd
-    - etcdctl
+    - name: etcd cluster | extract "etcd" into /tmp
+      unarchive:
+        src: '/tmp/{{ etcd_package_repo | basename }}'
+        dest: /tmp/
+        remote_src: yes
+
+    - name: etcd cluster | copy "etcd" and "etcdctl" binary files to /usr/local/bin/
+      copy:
+        src: "/tmp/{{ etcd_package_repo.split('.tar.gz')[0] | basename }}/{{ item }}"
+        dest: /usr/local/bin/
+        mode: u+x,g+x,o+x
+        remote_src: yes
+      loop:
+        - etcd
+        - etcdctl
+  when: installation_method == "repo" and etcd_package_repo | length > 0
+  tags: etcd_package_install
+
+# install etcd package from file
+- block:
+    - name: etcd cluster | extract "etcd" into /tmp
+      unarchive:
+        src: '{{ etcd_package_file }}'
+        dest: /tmp/
+
+    - name: etcd cluster | copy "etcd" and "etcdctl" binary files to /usr/local/bin/
+      copy:
+        src: "/tmp/{{ etcd_package_file.split('.tar.gz')[0] | basename }}/{{ item }}"
+        dest: /usr/local/bin/
+        mode: u+x,g+x,o+x
+        remote_src: yes
+      loop:
+        - etcd
+        - etcdctl
+  when: installation_method == "file" and etcd_package_file | length > 0
+  tags: etcd_package_install
 
 - name: etcd cluster | create etcd conf directory
   file:

@@ -1,65 +1,59 @@
 ---
 
+# from repo
 - block:
-    - name: "haproxy | download HAProxy {{ haproxy_version }} source files"
-      become: yes
-      become_user: root
-      unarchive:
-        src: http://www.haproxy.org/download/{{ haproxy_major }}/src/haproxy-{{ haproxy_version }}.tar.gz
+    - name: "haproxy | download HAProxy and lua source files"
+      get_url:
+        url: '{{ item }}'
         dest: /tmp/
-        remote_src: yes
-      register: haproxy_src_result
-
-    - name: "haproxy | download lua-5.3.5 source files"
-      become: yes
-      become_user: root
-      unarchive:
-        src: https://www.lua.org/ftp/lua-5.3.5.tar.gz
-        dest: /tmp/
-        remote_src: yes
+        timeout: 120
         validate_certs: no
-      register: lua_src_result
+      loop:
+        - '{{ haproxy_src_repo }}'
+        - '{{ lua_src_repo }}'
+      environment: '{{ proxy_env | default({}) }}'
+
+    - name: "haproxy | extract HAProxy source files into /tmp"
+      unarchive:
+        src: '/tmp/{{ haproxy_src_repo | basename }}'
+        dest: /tmp/
+        remote_src: yes
+      when: haproxy_src_repo | length > 0
+
+    - name: "haproxy | extract lua source files into /tmp"
+      unarchive:
+        src: '/tmp/{{ lua_src_repo | basename }}'
+        dest: /tmp/
+        remote_src: yes
+      when: lua_src_repo | length > 0
       tags: lua
-
-      # "Debian"
-    - name: haproxy | Install the prerequisites packages to compile HAProxy
-      package:
-        name: "{{ packages }}"
-      vars:
-        packages:
-        - unzip
-        - gzip
-        - build-essential
-        - libc6-dev
-        - libpcre3-dev
-        - liblua5.3-dev
-        - libreadline-dev
-        - zlib1g-dev
-        - libsystemd-dev
-        - ca-certificates
-        - libssl-dev
-      when: ansible_os_family == "Debian"
-
-      # "RedHat"
-    - name: haproxy | Install the prerequisites packages to compile HAProxy
-      package:
-        name: "{{ packages }}"
-      vars:
-        packages:
-        - unzip
-        - gzip
-        - "@Development tools"
-        - pcre-devel
-        - zlib-devel
-        - readline-devel
-        - openssl
-        - openssl-devel
-        - openssl-libs
-        - systemd-devel
-      when: ansible_os_family == "RedHat"
-  environment: '{{ proxy_env | default({}) }}'
+  when: installation_method == "repo"
   tags: haproxy
-  
+
+# from file
+- block:
+    - name: "haproxy | extract HAProxy source files into /tmp"
+      unarchive:
+        src: '{{ haproxy_src_file }}'
+        dest: /tmp/
+      when: haproxy_src_file | length > 0
+
+    - name: "haproxy | extract lua source files into /tmp"
+      unarchive:
+        src: '{{ lua_src_file }}'
+        dest: /tmp/
+      when: lua_src_file | length > 0
+      tags: lua
+  when: installation_method == "file"
+  tags: haproxy
+
+- name: haproxy | install the prerequisites packages to compile HAProxy
+  package:
+    name: "{{ haproxy_compile_requirements }}"
+    state: present
+  environment: '{{ proxy_env | default({}) }}'
+  tags: [ haproxy, haproxy_requirements ]
+
 - name: haproxy | add haproxy group
   group:
     name: haproxy
@@ -86,46 +80,82 @@
     - /var/lib/haproxy/dev
   tags: haproxy
 
-# The version of Lua in the CentOS 7 repositories is too old for HAProxy
-- name: haproxy | build and install lua-5.3.5 (required for HAProxy)
-  become: yes
-  become_user: root
-  shell: "make INSTALL_TOP=/opt/lua-5.3.5 linux install"
-  args:
-    chdir: /tmp/lua-5.3.5
-  when: lua_src_result.changed
-  tags: [ haproxy, lua ]
- 
-# https://github.com/haproxy/haproxy/blob/master/INSTALL
-- name: haproxy | build HAProxy
-  become: yes
-  become_user: root
-  make:
-    chdir: "/tmp/haproxy-{{ haproxy_version }}"
-    params:
-      TARGET: linux2628
-      USE_GETADDRINFO: 1
-      USE_ZLIB: 1
-      USE_REGPARM: 1
-      USE_OPENSSL: 1
-      USE_LIBCRYPT: 1
-      USE_SYSTEMD: 1
-      USE_PCRE: 1
-      USE_NS: 1
-      USE_TFO: 1
-      USE_LUA: 1
-      LUA_INC: /opt/lua-5.3.5/include
-      LUA_LIB: /opt/lua-5.3.5/lib
-  when: haproxy_src_result.changed
+# Build and install HAproxy from source
+- block:
+    - name: haproxy | build and install lua (required for haproxy)
+      become: yes
+      become_user: root
+      shell: "make INSTALL_TOP=/opt/{{ lua_src_repo.split('.tar.gz')[0] | basename }} linux install"
+      args:
+        chdir: "/tmp/{{ lua_src_repo.split('.tar.gz')[0] | basename }}"
+      tags: lua
+
+    - name: haproxy | build HAProxy
+      become: yes
+      become_user: root
+      make:
+        chdir: "/tmp/{{ haproxy_src_repo.split('.tar.gz')[0] | basename }}"
+        params:
+          TARGET: linux2628
+          USE_GETADDRINFO: 1
+          USE_ZLIB: 1
+          USE_REGPARM: 1
+          USE_OPENSSL: 1
+          USE_LIBCRYPT: 1
+          USE_SYSTEMD: 1
+          USE_PCRE: 1
+          USE_NS: 1
+          USE_TFO: 1
+          USE_LUA: 1
+          LUA_INC: "/opt/{{ lua_src_repo.split('.tar.gz')[0] | basename }}/include"
+          LUA_LIB: "/opt/{{ lua_src_repo.split('.tar.gz')[0] | basename }}/lib"
+
+    - name: haproxy | install HAProxy
+      become: yes
+      become_user: root
+      make:
+        chdir: "/tmp/{{ haproxy_src_repo.split('.tar.gz')[0] | basename }}"
+        target: install
+  when: installation_method == "repo"
   tags: haproxy
 
-- name: haproxy | install HAProxy
-  become: yes
-  become_user: root
-  make:
-    chdir: "/tmp/haproxy-{{ haproxy_version }}"
-    target: install
-  when: haproxy_src_result.changed
+# installation_method: "file"
+- block:
+    - name: haproxy | build and install lua (required for haproxy)
+      become: yes
+      become_user: root
+      shell: "make INSTALL_TOP=/opt/{{ lua_src_file.split('.tar.gz')[0] | basename }} linux install"
+      args:
+        chdir: "/tmp/{{ lua_src_file.split('.tar.gz')[0] | basename }}"
+      tags: lua
+
+    - name: haproxy | build HAProxy
+      become: yes
+      become_user: root
+      make:
+        chdir: "/tmp/{{ haproxy_src_file.split('.tar.gz')[0] | basename }}"
+        params:
+          TARGET: linux2628
+          USE_GETADDRINFO: 1
+          USE_ZLIB: 1
+          USE_REGPARM: 1
+          USE_OPENSSL: 1
+          USE_LIBCRYPT: 1
+          USE_SYSTEMD: 1
+          USE_PCRE: 1
+          USE_NS: 1
+          USE_TFO: 1
+          USE_LUA: 1
+          LUA_INC: "/opt/{{ lua_src_file.split('.tar.gz')[0] | basename }}/include"
+          LUA_LIB: "/opt/{{ lua_src_file.split('.tar.gz')[0] | basename }}/lib"
+
+    - name: haproxy | install HAProxy
+      become: yes
+      become_user: root
+      make:
+        chdir: "/tmp/{{ haproxy_src_file.split('.tar.gz')[0] | basename }}"
+        target: install
+  when: installation_method == "file"
   tags: haproxy
 
 - name: haproxy | create systemd service file
@@ -134,7 +164,6 @@
     dest: /etc/systemd/system/haproxy.service
     owner: haproxy
     group: haproxy
-  register: haproxy_service_result
   tags: [ haproxy, haproxy_service ]
 
 - name: haproxy | generate conf file "/etc/haproxy/haproxy.cfg"

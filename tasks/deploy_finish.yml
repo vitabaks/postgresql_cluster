@@ -4,8 +4,10 @@
     - name: PostgreSQL Cluster health
       become: yes
       become_user: postgres
-      command: /usr/local/bin/patronictl -c /etc/patroni/patroni.yml list
+      command: patronictl -c /etc/patroni/patroni.yml list
       register: patronictl_result
+      environment:
+        PATH: "{{ ansible_env.PATH }}:/usr/bin:/usr/local/bin"
     - debug:
         var: patronictl_result.stdout_lines
   when: is_master == "true"

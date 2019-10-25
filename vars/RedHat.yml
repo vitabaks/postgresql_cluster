@@ -12,30 +12,32 @@ postgresql_pgpass: /var/lib/pgsql/.pgpass
 
 postgresql_version_terse: "{{ postgresql_version | replace('.', '') }}"
 
-
-# Repository (optional)
+# Repository
 yum_repository: []
 #  - name: "repo name"
 #    description: "repo description"
-#    baseurl: "https://repo.url"
-#    gpgkey: "https://key.url"
+#    baseurl: "https://my-repo.url"
+#    gpgkey: "https://my-repo-key.url"
 #    gpgcheck: "yes"
 
-install_epel_repo: 'true'
-install_postgresql_repo: 'true' # postgresql repository will be installed from the package "pgdg-redhat-repo-latest.noarch.rpm" (tasks/add-repository.yml)
+install_epel_repo: 'true' # or 'false' (installed from the package "epel-release-latest-7.noarch.rpm" tasks/add-repository.yml)
+install_postgresql_repo: 'true' # or 'false' (installed from the package "pgdg-redhat-repo-latest.noarch.rpm" tasks/add-repository.yml)
 
-# Packages
+# Packages (for yum repo)
 system_packages:
-  - sudo
-  - vim
-  - curl
-  - less
   - python
   - python-devel
   - python-psycopg2
   - python-setuptools
   - python36
   - python36-devel
+  - python36-psycopg2
+  - python36-setuptools
+  - python36-pip
+  - curl
+  - less
+  - sudo
+  - vim
   - gcc
   - unzip
   - gzip
@@ -49,4 +51,115 @@ postgresql_packages:
   - postgresql{{ postgresql_version_terse }}-contrib
   - postgresql{{ postgresql_version_terse }}-devel
 #  - pg_repack{{ postgresql_version_terse }}
+
+# Extra packages
+etcd_package_repo: "https://github.com/etcd-io/etcd/releases/download/{{ etcd_ver }}/etcd-{{ etcd_ver }}-linux-amd64.tar.gz"
+vip_manager_package_repo: "https://github.com/cybertec-postgresql/vip-manager/releases/download/v{{ vip_manager_version }}/vip-manager_{{ vip_manager_version }}-1_amd64.rpm"
+## (if with_haproxy_load_balancing: 'true')
+confd_package_repo: "https://github.com/kelseyhightower/confd/releases/download/v0.16.0/confd-0.16.0-linux-amd64"
+lua_src_repo: "https://www.lua.org/ftp/lua-5.3.5.tar.gz" # required for build haproxy
+haproxy_src_repo: "http://www.haproxy.org/download/{{ haproxy_major }}/src/haproxy-{{ haproxy_version }}.tar.gz"
+haproxy_compile_requirements:
+  - unzip
+  - gzip
+  - "@Development tools"
+  - pcre-devel
+  - zlib-devel
+  - readline-devel
+  - openssl
+  - openssl-devel
+  - openssl-libs
+  - systemd-devel
+
+# You can also use your own repository for extra packages. You need to preload all the packages and change this URLs.
+installation_method: "repo" #(default)"repo" or "file"
+
+# Patroni package will be installed from the pip repository (by default).
+# You also have the option of choosing an patroni installation method using the rpm package.
+patroni_installation_method: "pip" #(default)"pip" or "rpm"
+
+# (if patroni_installation_type: "pip") 
+# Packages from your repository will be used to install instead of the pip repository.
+pip_package_repo: "https://bootstrap.pypa.io/get-pip.py" # latest version pip3 for python3 (or use "pip-<version>.tar.gz").
+patroni_pip_requirements_repo: []
+#  - "http://my-repo.url/setuptools-41.2.0.zip"
+#  - "http://my-repo.url/setuptools_scm-3.3.3.tar.gz"
+#  - "http://my-repo.url/urllib3-1.24.3.tar.gz"
+#  - "http://my-repo.url/boto-2.49.0.tar.gz" # (interfaces to Amazon Web Services)
+#  - "http://my-repo.url/PyYAML-5.1.2.tar.gz"
+#  - "http://my-repo.url/chardet-3.0.4.tar.gz"
+#  - "http://my-repo.url/idna-2.8.tar.gz"
+#  - "http://my-repo.url/certifi-2019.9.11.tar.gz"
+#  - "http://my-repo.url/requests-2.22.0.tar.gz"
+#  - "http://my-repo.url/six-1.12.0.tar.gz"
+#  - "http://my-repo.url/kazoo-2.6.1.tar.gz"
+#  - "http://my-repo.url/dnspython-1.16.0.zip"
+#  - "http://my-repo.url/python-etcd-0.4.5.tar.gz"
+#  - "http://my-repo.url/Click-7.0.tar.gz"
+#  - "http://my-repo.url/prettytable-0.7.2.tar.gz"
+#  - "http://my-repo.url/pytz-2019.2.tar.gz"
+#  - "http://my-repo.url/tzlocal-2.0.0.tar.gz"
+#  - "http://my-repo.url/wheel-0.33.6.tar.gz"
+#  - "http://my-repo.url/python-dateutil-2.8.0.tar.gz"
+#  - "http://my-repo.url/psutil-5.6.3.tar.gz"
+#  - "http://my-repo.url/cdiff-1.0.tar.gz"
+patroni_pip_package_repo: []
+#  - "http://my-repo.url/patroni-1.6.0.tar.gz"
+
+# (if patroni_installation_type: "rpm")
+# You can preload the patroni rpm package to your YUM repository, or explicitly specify the path to the package in this variable:
+patroni_rpm_package_repo: []
+#  - "https://github.com/cybertec-postgresql/patroni-packaging/releases/download/1.6.0-1/patroni-1.6.0-1.rhel7.x86_64.rpm" # (package for RHEL/CentOS 7)
+
+
+# ================================================================================================= #
+# (optional) if installation_method: "file"
+# You can also download the necessary packages into postgresql_cluster/files/ directory.
+# Packages from this directory will be used for installation.
+pip_package_file: "pip-19.2.3.tar.gz" # https://pypi.org/project/pip/#files
+patroni_pip_requirements_file:
+  - "setuptools-41.2.0.zip"        # https://pypi.org/project/setuptools/#files
+  - "setuptools_scm-3.3.3.tar.gz"  # https://pypi.org/project/setuptools-scm/#files
+  - "urllib3-1.24.3.tar.gz"        # https://pypi.org/project/urllib3/1.24.3/#files
+  - "boto-2.49.0.tar.gz"           # https://pypi.org/project/boto/#files # (interfaces to Amazon Web Services)
+  - "PyYAML-5.1.2.tar.gz"          # https://pypi.org/project/PyYAML/#files
+  - "chardet-3.0.4.tar.gz"         # https://pypi.org/project/chardet/#files # (required for "requests")
+  - "idna-2.8.tar.gz"              # https://pypi.org/project/idna/#files    # (required for "requests")
+  - "certifi-2019.9.11.tar.gz"     # https://pypi.org/project/certifi/#files # (required for "requests")
+  - "requests-2.22.0.tar.gz"       # https://pypi.org/project/requests/#files
+  - "six-1.12.0.tar.gz"            # https://pypi.org/project/six/#files
+  - "kazoo-2.6.1.tar.gz"           # https://pypi.org/project/kazoo/#files
+  - "dnspython-1.16.0.zip"         # https://pypi.org/project/dnspython/#files # (required for "python-etcd")
+  - "python-etcd-0.4.5.tar.gz"     # https://pypi.org/project/python-etcd/#files
+  - "Click-7.0.tar.gz"             # https://pypi.org/project/click/#files
+  - "prettytable-0.7.2.tar.gz"     # https://pypi.org/project/PrettyTable/#files
+  - "pytz-2019.2.tar.gz"           # https://pypi.org/project/pytz/#files # (required for "tzlocal")
+  - "tzlocal-2.0.0.tar.gz"         # https://pypi.org/project/tzlocal/#files
+  - "wheel-0.33.6.tar.gz"          # https://pypi.org/project/wheel/#files
+  - "python-dateutil-2.8.0.tar.gz" # https://pypi.org/project/python-dateutil/#files
+  - "psutil-5.6.3.tar.gz"          # https://pypi.org/project/psutil/#files
+  - "cdiff-1.0.tar.gz"             # https://pypi.org/project/cdiff/#files
+patroni_pip_package_file: 
+  - "patroni-1.6.0.tar.gz"         # https://pypi.org/project/patroni/#files
+
+# ( if patroni_installation_type: "rpm" and installation_method: "file" )
+patroni_rpm_package_file: "patroni-1.6.0-1.rhel7.x86_64.rpm" # (package for RHEL/CentOS 7) https://github.com/cybertec-postgresql/patroni-packaging/releases/
+
+# additional packages
+etcd_package_file: "etcd-v3.3.15-linux-amd64.tar.gz" # https://github.com/etcd-io/etcd/releases
+vip_manager_package_file: "vip-manager_0.6-1_amd64.rpm" # https://github.com/cybertec-postgresql/vip-manager/releases
+## (if with_haproxy_load_balancing: 'true')
+haproxy_src_file: "haproxy-1.8.21.tar.gz" # http://www.haproxy.org/download/1.8/src/
+lua_src_file: "lua-5.3.5.tar.gz" # https://www.lua.org/ftp/lua-5.3.5.tar.gz (required for build haproxy)
+confd_package_file: "confd-0.16.0-linux-amd64" # https://github.com/kelseyhightower/confd/releases
+
+# ------------------------------------------------------------------------------------------------- #
+# (optional) Specify additional rpm packages if required (for any installation_method)
+# this packages will be installed before all other packages.
+packages_from_file: []
+#  - "python36-psycopg2-2.7.7-1.el7.x86_64.rpm" # https://mirror.linux-ia64.org/epel/7/x86_64/Packages/p/ # (required for "patroni")
+#  - "libyaml-0.1.4-11.el7_0.x86_64.rpm" # (required for "patroni_rpm_package")
+#  - "jq-1.5-1.el7.x86_64.rpm" # https://mirror.linux-ia64.org/epel/7/x86_64/Packages/j/
+#  - "other-package-name_1_amd64.rpm"
+#  - ""
 
