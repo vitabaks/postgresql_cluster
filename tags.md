@@ -45,6 +45,7 @@
 - - haproxy
 - - - haproxy_requirements
 - - - haproxy_conf
+- - - haproxy_selinux
 - - confd
 - - - get_confd
 - - - confd_conf

@@ -302,6 +302,15 @@
   register: haproxy_conf_result
   tags: [ haproxy, haproxy_conf ]
 
+- name: haproxy | selinux | set haproxy_connect_any flag to enable tcp connections
+  seboolean:
+    name: haproxy_connect_any
+    state: yes
+    persistent: yes
+  when: ansible_os_family == "RedHat"
+  ignore_errors: yes
+  tags: [ haproxy, haproxy_selinux ]
+
 - name: haproxy | restart haproxy.service
   systemd:
     daemon_reload: yes
