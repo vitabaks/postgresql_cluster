@@ -122,6 +122,12 @@
   tags: haproxy
 
 # Build and install HAproxy from source
+- name: haproxy | setting facts
+  set_fact:
+    target_linux: "{% if haproxy_major is version('2.0', '>=') %}linux-glibc{% else %}linux2628{% endif %}"
+  when: haproxy_installation_method == "src"
+  tags: haproxy
+
 # from repo
 - block:
     - name: "haproxy | download HAProxy and lua source files"
@@ -192,7 +198,7 @@
       make:
         chdir: "/tmp/{{ haproxy_src_repo.split('.tar.gz')[0] | basename }}"
         params:
-          TARGET: linux2628
+          TARGET: "{{ target_linux }}"
           USE_GETADDRINFO: 1
           USE_ZLIB: 1
           USE_REGPARM: 1
@@ -231,7 +237,7 @@
       make:
         chdir: "/tmp/{{ haproxy_src_file.split('.tar.gz')[0] | basename }}"
         params:
-          TARGET: linux2628
+          TARGET: "{{ target_linux }}"
           USE_GETADDRINFO: 1
           USE_ZLIB: 1
           USE_REGPARM: 1
