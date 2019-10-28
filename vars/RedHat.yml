@@ -29,6 +29,8 @@ system_packages:
   - python-devel
   - python-psycopg2
   - python-setuptools
+  - libselinux-python
+  - libsemanage-python
   - python36
   - python36-devel
   - python36-psycopg2
