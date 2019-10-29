@@ -9,10 +9,6 @@ ExecStartPre=/bin/mkdir -p /var/run/haproxy
 ExecStartPre=/usr/local/sbin/haproxy -f $CONFIG -c -q
 ExecStart=/usr/local/sbin/haproxy -Ws -f $CONFIG -p $PIDFILE
 ExecReload=/usr/local/sbin/haproxy -f $CONFIG -c -q
-{% elif haproxy_installation_method == "rpm" and (ansible_os_family == "RedHat" and ansible_distribution_major_version == '7') %}
-ExecStartPre=/opt/rh/rh-haproxy18/root/usr/sbin/haproxy -f $CONFIG -c -q
-ExecStart=/opt/rh/rh-haproxy18/root/usr/sbin/haproxy -Ws -f $CONFIG -p $PIDFILE
-ExecReload=/opt/rh/rh-haproxy18/root/usr/sbin/haproxy -f $CONFIG -c -q
 {% else %}
 ExecStartPre=/usr/sbin/haproxy -f $CONFIG -c -q
 ExecStart=/usr/sbin/haproxy -Ws -f $CONFIG -p $PIDFILE
