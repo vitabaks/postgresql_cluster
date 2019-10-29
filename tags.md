@@ -57,6 +57,7 @@
 - - keepalived
 - - - keepalived_install
 - - - keepalived_conf
+- - - keepalived_selinux
 - - - keepalived_restart
 - vip_manager
 - - vip_manager_install

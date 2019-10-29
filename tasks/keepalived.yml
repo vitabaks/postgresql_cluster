@@ -24,6 +24,14 @@
     dest: /etc/keepalived/keepalived.conf
   tags: [ keepalived_conf, keepalived ]
 
+- name: keepalived | selinux | change the keepalived_t domain to permissive
+  selinux_permissive:
+    name: keepalived_t
+    permissive: true
+  when: ansible_os_family == "RedHat"
+  ignore_errors: yes
+  tags: [ keepalived, keepalived_selinux ]
+
 - name: keepalived | restart systemd service
   systemd:
     daemon_reload: yes
