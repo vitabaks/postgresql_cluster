@@ -45,6 +45,7 @@
 - - haproxy
 - - - haproxy_requirements
 - - - haproxy_conf
+- - - haproxy_selinux
 - - confd
 - - - get_confd
 - - - confd_conf
@@ -56,6 +57,7 @@
 - - keepalived
 - - - keepalived_install
 - - - keepalived_conf
+- - - keepalived_selinux
 - - - keepalived_restart
 - vip_manager
 - - vip_manager_install
