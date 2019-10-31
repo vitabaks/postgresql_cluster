@@ -1,9 +1,11 @@
 global_defs {
    router_id ocp_vrrp
+   enable_script_security
+   script_user root
 }
  
 vrrp_script haproxy_check {
-   script "/bin/kill -0 `cat /var/run/haproxy/haproxy.pid`"
+   script "/usr/libexec/keepalived/haproxy_check.sh"
    interval 2
    weight 2
 }

@@ -18,10 +18,31 @@
     - "net.ipv4.ip_forward"
   tags: [ keepalived_conf, keepalived ]
 
+- name: keepalived | make sure the "/usr/libexec/keepalived" directory exists
+  file:
+    dest: /usr/libexec/keepalived
+    state: directory
+    owner: root
+    group: root
+  tags: [ keepalived_conf, keepalived ]
+
+- name: keepalived | create vrrp_script "/usr/libexec/keepalived/haproxy_check.sh"
+  copy:
+    content: |
+      #!/bin/bash
+      /bin/kill -0 `cat /var/run/haproxy/haproxy.pid`
+    dest: /usr/libexec/keepalived/haproxy_check.sh
+    owner: root
+    group: root
+    mode: 0700
+  register: haproxy_check_result
+  tags: [ keepalived_conf, keepalived ]
+
 - name: keepalived | generate conf file "/etc/keepalived/keepalived.conf"
   template:
     src: templates/keepalived.conf.j2
     dest: /etc/keepalived/keepalived.conf
+  register: keepalived_conf_result
   tags: [ keepalived_conf, keepalived ]
 
 - name: keepalived | selinux | change the keepalived_t domain to permissive
@@ -38,6 +59,7 @@
     name: keepalived
     enabled: yes
     state: restarted
+  when: haproxy_check_result.changed or keepalived_conf_result.changed
   tags: [ keepalived_restart, keepalived ]
 
 - name: wait for the cluster ip address (VIP) "{{ cluster_vip }}" is running
