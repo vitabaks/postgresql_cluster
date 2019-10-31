@@ -324,6 +324,14 @@
   ignore_errors: yes
   tags: [ haproxy, haproxy_selinux ]
 
+- name: haproxy | selinux | change the haproxy_t domain to permissive
+  selinux_permissive:
+    name: haproxy_t
+    permissive: true
+  when: ansible_selinux.status is defined and ansible_selinux.status == 'enabled'
+  ignore_errors: yes
+  tags: [ haproxy, haproxy_selinux ]
+
 - name: haproxy | restart haproxy.service
   systemd:
     daemon_reload: yes
