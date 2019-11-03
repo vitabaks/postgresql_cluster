@@ -74,7 +74,7 @@ RedHat and Debian based distros (x86_64)
 ###### PostgreSQL versions: 
 all supported PostgreSQL versions
 
-:white_check_mark: tested, works fine: `PostgreSQL 9.6, 10, 11`
+:white_check_mark: tested, works fine: `PostgreSQL 9.6, 10, 11, 12`
 
 ###### Ansible version 
 This has been tested on Ansible 2.7.10 and higher.
