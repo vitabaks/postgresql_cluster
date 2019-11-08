@@ -102,6 +102,13 @@ See [hardware recommendations](https://etcd.io/docs/v3.3.12/op-guide/hardware/) 
 
 Overloaded (highload) database clusters may require the installation of the etcd cluster on dedicated servers, separate from the database servers.
 
+- **Placement of cluster members in different data centers**:
+
+If you’d prefer a cross-data center setup, where the replicating databases are located in different data centers, etcd member placement becomes critical.
+
+There are quite a lot of things to consider if you want to create a really robust etcd cluster, but there is one rule: *do not placing all etcd members in your primary data center*. See some [examples](https://www.cybertec-postgresql.com/en/introduction-and-how-to-etcd-clusters-for-patroni/).
+
+
 ---
 
 ## Quick start
