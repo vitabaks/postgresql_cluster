@@ -20,6 +20,7 @@
         state: latest
         executable: pip3
         extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
+        umask: "0022"
       environment:
         PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
       when: patroni_pip_requirements_repo | length < 1
@@ -29,6 +30,7 @@
         requirements: /tmp/requirements.txt
         executable: pip3
         extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
+        umask: "0022"
       environment:
         PATH: "{{ ansible_env.PATH }}:{{ postgresql_bin_dir }}:/usr/local/bin:/usr/bin"
       when: patroni_pip_requirements_repo | length < 1
@@ -39,6 +41,7 @@
         state: latest
         executable: pip3
         extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
+        umask: "0022"
       environment:
         PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
       when: patroni_pip_package_repo | length < 1 and patroni_install_version == "latest"
@@ -48,6 +51,7 @@
         name: "patroni=={{ patroni_install_version }}"
         executable: pip3
         extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
+        umask: "0022"
       environment:
         PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
       when: patroni_pip_package_repo | length < 1 and patroni_install_version != "latest"
@@ -80,6 +84,7 @@
         name: 'file:///tmp/{{ item }}'
         executable: pip3
         extra_args: "--no-index --find-links=file:///tmp --ignore-installed"
+        umask: "0022"
       loop: "{{ patroni_pip_requirements_repo | map('basename') | list }}"
       environment:
         PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
@@ -90,6 +95,7 @@
         name: 'file:///tmp/{{ item }}'
         executable: pip3
         extra_args: "--no-index --find-links=file:///tmp --ignore-installed"
+        umask: "0022"
       loop: "{{ patroni_pip_package_repo | map('basename') | list }}"
       environment:
         PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
@@ -118,6 +124,7 @@
         name: 'file:///tmp/{{ item }}'
         executable: pip3
         extra_args: "--no-index --find-links=file:///tmp --ignore-installed"
+        umask: "0022"
       loop: "{{ patroni_pip_requirements_file | map('basename') | list }}"
       environment:
         PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
@@ -128,6 +135,7 @@
         name: 'file:///tmp/{{ item }}'
         executable: pip3
         extra_args: "--no-index --find-links=file:///tmp --ignore-installed"
+        umask: "0022"
       loop: "{{ patroni_pip_package_file | map('basename') | list }}"
       environment:
         PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
