@@ -37,29 +37,41 @@
 
 # PostgreSQL prepare for install (for Debian based only)
 - block:
-    - name: Install | ensure postgresql database-cluster manager package
+    - name: Install | PostgreSQL | ensure postgresql database-cluster manager package
       package:
         name: postgresql-common
         state: present
       environment: '{{ proxy_env | default({}) }}'
 
-    - name: disable initializing of a default postgresql cluster
+    - name: Install | PostgreSQL | disable initializing of a default postgresql cluster
       replace:
         path: /etc/postgresql-common/createcluster.conf
         replace: create_main_cluster = false
         regexp: ^#?create_main_cluster.*$
 
-    - name: disable log rotation with logrotate for postgresql (use logging_collector)
+    - name: Install | PostgreSQL | disable log rotation with logrotate for postgresql (use logging_collector)
       file:
         dest: /etc/logrotate.d/postgresql-common
         state: absent
   when: installation_method == "repo" and ansible_os_family == "Debian"
   tags: install_postgres
 
+# PostgreSQL prepare for install (for RHEL 8)
+- block:
+    - name: Install | PostgreSQL | disable postgresql module
+      shell: 'dnf -y module disable postgresql && dnf clean all'
+      args:
+        warn: false
+  environment: '{{ proxy_env | default({}) }}'
+  when: installation_method == "repo" and (proxy_env is defined and proxy_env | length > 0) and (ansible_os_family == "RedHat" and ansible_distribution_major_version >= '8')
+  ignore_errors: yes
+  tags: install_postgres
+
 # Install PostgreSQL from repository
 - name: Install | PostgreSQL packages
   package:
     name: "{{ item }}"
+    update_cache: yes
   loop: "{{ postgresql_packages }}"
   environment: '{{ proxy_env | default({}) }}'
   when: installation_method == "repo" and postgresql_exists != "true"

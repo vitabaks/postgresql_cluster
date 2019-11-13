@@ -49,8 +49,8 @@
     # RedHat os family version 8 (and higher)
     - name: haproxy | install HAProxy 1.8 package
       package:
-        name: "haproxy=1.8.*"
-        state: haproxy
+        name: haproxy
+        state: present
       when: ansible_distribution_major_version is version('8', '>=')
   environment: '{{ proxy_env | default({}) }}'
   when: ansible_os_family == "RedHat" and installation_method == "repo" and haproxy_installation_method == "rpm"

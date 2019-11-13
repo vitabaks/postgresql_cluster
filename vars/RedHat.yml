@@ -24,19 +24,26 @@ install_epel_repo: 'true' # or 'false' (installed from the package "epel-release
 install_postgresql_repo: 'true' # or 'false' (installed from the package "pgdg-redhat-repo-latest.noarch.rpm" tasks/add-repository.yml)
 
 # Packages (for yum repo)
+os_specific_packages:
+  RedHat-7:
+    - python
+    - python-devel
+    - python-psycopg2
+    - python-setuptools
+    - libselinux-python
+    - libsemanage-python
+    - policycoreutils-python
+  RedHat-8:
+    - python3-libselinux
+    - python3-libsemanage
+    - python3-policycoreutils
 system_packages:
-  - python
-  - python-devel
-  - python-psycopg2
-  - python-setuptools
-  - libselinux-python
-  - libsemanage-python
-  - policycoreutils-python
-  - python36
-  - python36-devel
-  - python36-psycopg2
-  - python36-setuptools
-  - python36-pip
+  - python3
+  - python3-devel
+  - python3-psycopg2
+  - python3-setuptools
+  - python3-pip
+  - "{{ os_specific_packages[ansible_os_family ~ '-' ~ ansible_distribution_major_version] }}"
   - curl
   - less
   - sudo
@@ -45,6 +52,13 @@ system_packages:
   - jq
   - iptables
   - acl
+
+# The glibc-langpack package includes the basic information required to support the language in your applications.
+## for RHEL version 8 (only)
+glibc_langpack:
+  - "glibc-langpack-en"
+  - "glibc-langpack-ru" # optional
+#  - "glibc-langpack-de"
 
 postgresql_packages:
   - postgresql{{ postgresql_version_terse }}

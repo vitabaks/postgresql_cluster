@@ -69,7 +69,7 @@ RedHat and Debian based distros (x86_64)
 - Ubuntu: 16.04
 - Debian: 8
 
-:white_check_mark: tested, works fine: `Debian 9/10, Ubuntu 18.04, CentOS 7.6`
+:white_check_mark: tested, works fine: `Debian 9/10, Ubuntu 18.04, CentOS 7.6/7.7/8.0`
 
 ###### PostgreSQL versions: 
 all supported PostgreSQL versions

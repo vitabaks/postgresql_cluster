@@ -4,6 +4,16 @@
   package:
     name: pgbouncer
   environment: '{{ proxy_env | default({}) }}'
+  when: ansible_os_family == "Debian" or (ansible_os_family == "RedHat" and ansible_distribution_major_version == '7')
+  tags: [ pgbouncer_install, pgbouncer ]
+
+# RHEL 8
+- name: PgBouncer | install package
+  dnf:
+    name: pgbouncer
+    disablerepo: AppStream
+  environment: '{{ proxy_env | default({}) }}'
+  when: ansible_os_family == "RedHat" and ansible_distribution_major_version >= '8'
   tags: [ pgbouncer_install, pgbouncer ]
 
 - name: PgBouncer | ensure config directory "{{ pgbouncer_conf_dir }}" exist

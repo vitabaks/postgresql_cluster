@@ -204,9 +204,11 @@ ntp_servers: []
 timezone: []
 #timezone: "Europe/Moscow"
 
+# Generate locale 
+## (except RHEL>=8,use glibc-langpack)
 locales:
   - { language_country: "en_US", encoding: "UTF-8" }
-  - { language_country: "ru_RU", encoding: "UTF-8" }
+  - { language_country: "ru_RU", encoding: "UTF-8" } # optional
 #  - { language_country: "", encoding: "" }
 
 
