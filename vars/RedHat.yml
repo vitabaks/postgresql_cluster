@@ -34,6 +34,7 @@ os_specific_packages:
     - libsemanage-python
     - policycoreutils-python
   RedHat-8:
+    - python2 # required for pgbouncer
     - python3-libselinux
     - python3-libsemanage
     - python3-policycoreutils
