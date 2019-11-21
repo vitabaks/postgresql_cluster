@@ -30,6 +30,7 @@
 - name: Install | system packages
   package:
     name: "{{ item }}"
+    update_cache: yes
   loop: "{{ system_packages }}"
   environment: '{{ proxy_env | default({}) }}'
   when: installation_method == "repo"
