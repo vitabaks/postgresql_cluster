@@ -290,11 +290,37 @@
       when: not pgdata_initialized.stat.exists
       tags: [ patroni, patroni_check_init ]
 
-    - name: Patroni | Prepare PostgreSQL | check PostgreSQL service is started
-      systemd:
-        name: postgresql
-        state: started
+      # "Debian"
+    - name: Patroni | Prepare PostgreSQL | check PostgreSQL is started
+      become: yes
+      become_user: postgres
+      command: "/usr/bin/pg_ctlcluster {{ postgresql_version }} {{ postgresql_cluster_name }} status"
+      register: pg_ctlcluster_status_result
+      changed_when: false
       ignore_errors: yes
+      when: ansible_os_family == "Debian"
+
+    - name: Patroni | Prepare PostgreSQL | start PostgreSQL
+      become: yes
+      become_user: postgres
+      command: "/usr/bin/pg_ctlcluster {{ postgresql_version }} {{ postgresql_cluster_name }} start"
+      when: ansible_os_family == "Debian" and pg_ctlcluster_status_result.rc == 3
+
+      # "RedHat"
+    - name: Patroni | Prepare PostgreSQL | check PostgreSQL is started
+      become: yes
+      become_user: postgres
+      command: "{{ postgresql_bin_dir }}/pg_ctl status -D {{ postgresql_data_dir }}"
+      register: pg_ctl_status_result
+      changed_when: false
+      ignore_errors: yes
+      when: ansible_os_family == "RedHat"
+
+    - name: Patroni | Prepare PostgreSQL | start PostgreSQL
+      become: yes
+      become_user: postgres
+      command: "{{ postgresql_bin_dir }}/pg_ctl start -D {{ postgresql_data_dir }}"
+      when: ansible_os_family == "RedHat" and pg_ctl_status_result.rc == 3
 
     - name: Patroni | Prepare PostgreSQL | check PostgreSQL is accepting connections
       become: yes
