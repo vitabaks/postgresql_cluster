@@ -111,15 +111,15 @@ There are quite a lot of things to consider if you want to create a really robus
 
 ---
 
-## Quick start
+## Deployment: quick start
 0. [Install Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) to the managed machine
-###### My recommendation: latest releases via [Pip](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html#latest-releases-via-pip)
+###### Example: install latest release using [pip](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html#latest-releases-via-pip)
+
+`pip install ansible`
 
 1. Download or clone this repository
 
 `git clone https://github.com/vitabaks/postgresql_cluster.git`
-
-###### To use a proxy server, specify `--config "http.proxy=proxy_server:port"`
 
 2. Go to the playbook directory
 
@@ -136,7 +136,7 @@ There are quite a lot of things to consider if you want to create a really robus
 `vim vars/main.yml`
 
 ###### Minimum set of variables: 
-- `proxy_env` (for offline installation)
+- `proxy_env` # if required (*for download packages*)
 
 example:
 ```
@@ -160,6 +160,36 @@ proxy_env:
 
 ## Variables
 See the vars/[main.yml](./vars/main.yml) and ([Debian.yml](./vars/Debian.yml) or [RedHat.yml](./vars/RedHat.yml)) files for more details.
+
+
+## Scaling: add a new node to an existing postgres cluster
+After you successfully deployed your PostgreSQL HA cluster, you may need to scale it further. \
+Use the `add_pgnode.yml` playbook for this.
+
+> :grey_exclamation: This playbook does not scaling the etcd cluster.
+
+During the run this playbook, the new nodes will be prepared in the same way as when first deployment the cluster. But unlike the initial deployment, all the necessary **configuration files will be copied from the master server**.
+
+###### Preparation:
+
+1. Add a new node (*or subnet*) to the `pg_hba.conf` file on all nodes in your cluster
+2. Apply pg_hba.conf for all PostgreSQL (see `patronictl reload --help`)
+
+###### Steps to add a new node:
+
+3. Go to the playbook directory
+4. Edit the inventory file
+
+Specify the ip address of one of the nodes of the cluster in the [master] group, and the new node (which you want to add) in the [replica] group.
+
+5. Edit the variable files
+
+Variables that should be the same on all cluster nodes: \
+`with_haproxy_load_balancing`,` postgresql_version`, `postgresql_data_dir`,` postgresql_conf_dir`.
+
+6. Run playbook:
+
+`ansible-playbook add_pgnode.yml`
 
 
 ## Maintenance

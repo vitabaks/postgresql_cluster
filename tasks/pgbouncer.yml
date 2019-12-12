@@ -64,6 +64,7 @@
     owner: postgres
     group: postgres
     mode: 0640
+  when: existing_pgcluster is not defined or not existing_pgcluster|bool
   tags: [ pgbouncer_conf, pgbouncer ]
 
 - name: PgBouncer | configure userlist.txt
@@ -73,6 +74,44 @@
     owner: postgres
     group: postgres
     mode: 0640
+  when: existing_pgcluster is not defined or not existing_pgcluster|bool
+  tags: [ pgbouncer_conf, pgbouncer ]
+
+- block: # for add_pgnode.yml
+    - name: PgBouncer | fetch pgbouncer.ini and userlist.txt conf files from master
+      run_once: true
+      fetch:
+        src: '{{ item }}'
+        dest: files/
+        validate_checksum: yes
+        flat: yes
+      loop:
+       - /etc/pgbouncer/pgbouncer.ini
+       - /etc/pgbouncer/userlist.txt
+      delegate_to: '{{ groups.master[0] }}'
+
+    - name: PgBouncer | copy pgbouncer.ini and userlist.txt conf files to replica
+      copy:
+        src: 'files/{{ item }}'
+        dest: /etc/pgbouncer/
+        owner: postgres
+        group: postgres
+        mode: 0640
+      loop:
+       - pgbouncer.ini
+       - userlist.txt
+
+    - name: PgBouncer | prepare pgbouncer.ini conf file (replace "listen_addr")
+      lineinfile:
+        path: /etc/pgbouncer/pgbouncer.ini
+        regexp: '{{ item.regexp }}'
+        line: '{{ item.line }}'
+        backrefs: yes
+      loop:
+       - { regexp: '^listen_addr =', line: 'listen_addr = {{ hostvars[inventory_hostname].inventory_hostname }}' }
+      loop_control:
+        label: "{{ item.line }}"
+  when: existing_pgcluster is defined and existing_pgcluster|bool
   tags: [ pgbouncer_conf, pgbouncer ]
 
 - name: PgBouncer | restart systemd service

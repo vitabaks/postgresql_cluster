@@ -1,0 +1,56 @@
+---
+
+- name: PostgreSQL High-Availability Cluster Scaling (add replica node)
+  hosts: replica
+  become: true
+  become_method: sudo
+  any_errors_fatal: true
+  gather_facts: true
+  vars_files:
+    - vars/main.yml
+    - "vars/{{ ansible_os_family }}.yml"
+  vars:
+    existing_pgcluster: true
+
+
+  pre_tasks:
+    - import_tasks: tasks/check_system.yml
+
+    - import_tasks: tasks/add-repository.yml
+      tags: [ add_repo ]
+
+    - import_tasks: tasks/packages.yml
+      tags: [ install_packages ]
+
+    - import_tasks: tasks/sudo.yml
+      tags: [ sudo, postgres_sudo ]
+
+  roles:
+    - role: ansible-role-firewall
+      tags: firewall
+
+  tasks:
+    - meta: flush_handlers
+
+    - import_tasks: tasks/configure.yml
+      tags: configure
+
+    - import_tasks: tasks/patroni.yml
+      tags: patroni
+
+    - import_tasks: tasks/pgbouncer.yml
+      when: install_pgbouncer == "true"
+      tags: pgbouncer
+
+    - import_tasks: tasks/haproxy.yml
+      when: with_haproxy_load_balancing == "true"
+      tags: load_balancing
+
+    - import_tasks: tasks/vip-manager.yml
+      when: with_haproxy_load_balancing != "true"
+      tags: [ vip, vip_manager ]
+
+    # finish (info)
+    - import_tasks: tasks/deploy_finish.yml
+      tags: [ cluster_info, cluster_status ]
+

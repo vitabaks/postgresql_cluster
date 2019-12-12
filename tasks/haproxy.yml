@@ -312,7 +312,42 @@
   template:
     src: templates/haproxy.cfg.j2
     dest: /etc/haproxy/haproxy.cfg
+    owner: haproxy
+    group: haproxy
   register: haproxy_conf_result
+  when: existing_pgcluster is not defined or not existing_pgcluster|bool
+  tags: [ haproxy, haproxy_conf ]
+
+- block: # for add_pgnode.yml
+    - name: haproxy | fetch haproxy.cfg file from master
+      run_once: true
+      fetch:
+        src: /etc/haproxy/haproxy.cfg
+        dest: files/haproxy.cfg
+        validate_checksum: yes
+        flat: yes
+      delegate_to: '{{ groups.master[0] }}'
+
+    - name: haproxy | copy haproxy.cfg file to replica
+      copy:
+        src: files/haproxy.cfg
+        dest: /etc/haproxy/haproxy.cfg
+        owner: haproxy
+        group: haproxy
+      register: haproxy_conf_result
+
+    - name: haproxy | prepare haproxy.cfg conf file (replace "bind" for stats)
+      lineinfile:
+        path: /etc/haproxy/haproxy.cfg
+        regexp: '{{ item.regexp }}'
+        line: '{{ item.line }}'
+        backrefs: yes
+      loop:
+       - { regexp: '^.*bind.*:7000$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:7000' }
+      loop_control:
+        label: "{{ item.line }}"
+      register: haproxy_conf_prepare_result
+  when: existing_pgcluster is defined and existing_pgcluster|bool
   tags: [ haproxy, haproxy_conf ]
 
 - name: haproxy | selinux | set haproxy_connect_any flag to enable tcp connections
@@ -339,7 +374,7 @@
     enabled: yes
     state: restarted
   register: haproxy_restart_result
-  when: haproxy_conf_result.changed
+  when: haproxy_conf_result.changed or haproxy_conf_prepare_result.changed
   tags: [ haproxy, haproxy_conf ]
 
 - name: haproxy | check HAProxy is started and accepting connections

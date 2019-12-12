@@ -57,6 +57,38 @@
     group: postgres
     mode: 0644
   register: vip_manager_conf_result
+  when: existing_pgcluster is not defined or not existing_pgcluster|bool
+  tags: [ vip_manager, vip_manager_conf ]
+
+- block: # for add_pgnode.yml
+    - name: vip-manager | fetch vip-manager.yml conf file from master
+      run_once: true
+      fetch:
+        src: '{{ vip_manager_config }}'
+        dest: 'files/{{ vip_manager_config }}'
+        validate_checksum: yes
+        flat: yes
+      delegate_to: '{{ groups.master[0] }}'
+
+    - name: vip-manager | copy vip-manager.yml conf file to replica
+      copy:
+        src: 'files/{{ vip_manager_config }}'
+        dest: '{{ vip_manager_config }}'
+      register: vip_manager_conf_result
+
+    - name: vip-manager | prepare vip-manager.yml conf file (replace "nodename","iface")
+      lineinfile:
+        path: '{{ vip_manager_config }}'
+        regexp: '{{ item.regexp }}'
+        line: '{{ item.line }}'
+        backrefs: yes
+      loop:
+       - { regexp: '^nodename:', line: 'nodename: "{{ ansible_hostname }}"' }
+       - { regexp: '^iface:', line: 'iface: {{ vip_interface }} #interface to which the virtual ip will be added' }
+      loop_control:
+        label: "{{ item.line }}"
+      register: vip_manager_conf_prepare_result
+  when: existing_pgcluster is defined and existing_pgcluster|bool
   tags: [ vip_manager, vip_manager_conf ]
 
 - name: vip-manager | generate systemd service file
@@ -76,7 +108,7 @@
     state: restarted
     enabled: yes
   register: vip_manager_restart_result
-  when: vip_manager_conf_result.changed or vip_manager_service_result.changed
+  when: vip_manager_conf_result.changed or vip_manager_service_result.changed or vip_manager_conf_prepare_result.changed
   tags: [ vip_manager, vip_manager_restart ]
 
 - name: wait for the cluster ip address (VIP) "{{ cluster_vip }}" is running

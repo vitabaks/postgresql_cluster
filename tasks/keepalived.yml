@@ -43,6 +43,37 @@
     src: templates/keepalived.conf.j2
     dest: /etc/keepalived/keepalived.conf
   register: keepalived_conf_result
+  when: existing_pgcluster is not defined or not existing_pgcluster|bool
+  tags: [ keepalived_conf, keepalived ]
+
+- block: # for add_pgnode.yml
+    - name: keepalived | fetch keepalived.conf conf file from master
+      run_once: true
+      fetch:
+        src: /etc/keepalived/keepalived.conf
+        dest: files/keepalived.conf
+        validate_checksum: yes
+        flat: yes
+      delegate_to: '{{ groups.master[0] }}'
+
+    - name: keepalived | copy keepalived.conf conf file to replica
+      copy:
+        src: files/keepalived.conf
+        dest: /etc/keepalived/keepalived.conf
+      register: keepalived_conf_result
+
+    - name: keepalived | prepare keepalived.conf conf file (replace "interface")
+      lineinfile:
+        path: /etc/keepalived/keepalived.conf
+        regexp: '{{ item.regexp }}'
+        line: '{{ item.line }}'
+        backrefs: yes
+      loop:
+       - { regexp: '^.*interface', line: '   interface {{ vip_interface }}' }
+      loop_control:
+        label: "{{ item.line }}"
+      register: keepalived_conf_prepare_result
+  when: existing_pgcluster is defined and existing_pgcluster|bool
   tags: [ keepalived_conf, keepalived ]
 
 - name: keepalived | selinux | change the keepalived_t domain to permissive
@@ -59,7 +90,7 @@
     name: keepalived
     enabled: yes
     state: restarted
-  when: haproxy_check_result.changed or keepalived_conf_result.changed
+  when: haproxy_check_result.changed or keepalived_conf_result.changed or keepalived_conf_prepare_result.changed
   tags: [ keepalived_restart, keepalived ]
 
 - name: wait for the cluster ip address (VIP) "{{ cluster_vip }}" is running

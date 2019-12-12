@@ -243,6 +243,42 @@
     owner: postgres
     group: postgres
     mode: 0640
+  when: existing_pgcluster is not defined or not existing_pgcluster|bool
+  tags: [ patroni, patroni_conf ]
+
+- block: # for add_pgnode.yml
+    - name: Patroni | fetch patroni.yml conf file from master
+      run_once: true
+      fetch:
+        src: /etc/patroni/patroni.yml
+        dest: files/patroni.yml
+        validate_checksum: yes
+        flat: yes
+      delegate_to: '{{ groups.master[0] }}'
+
+    - name: Patroni | copy patroni.yml conf file to replica
+      copy:
+        src: files/patroni.yml
+        dest: /etc/patroni/patroni.yml
+        owner: postgres
+        group: postgres
+        mode: 0640
+
+    - name: Patroni | prepare patroni.yml conf file (replace "name","listen","connect_address")
+      lineinfile:
+        path: /etc/patroni/patroni.yml
+        regexp: '{{ item.regexp }}'
+        line: '{{ item.line }}'
+        backrefs: yes
+      loop:
+       - { regexp: '^name:', line: 'name: {{ ansible_hostname }}' }
+       - { regexp: '^  listen: .*:8008$', line: '  listen: {{ hostvars[inventory_hostname].inventory_hostname }}:8008' }
+       - { regexp: '^  connect_address: .*:8008$', line: '  connect_address: {{ hostvars[inventory_hostname].inventory_hostname }}:8008' }
+       - { regexp: '^  listen: ((?!8008).)*$', line: '  listen: {{ hostvars[inventory_hostname].inventory_hostname }},127.0.0.1:{{ postgresql_port }}' }
+       - { regexp: '^  connect_address: ((?!8008).)*$', line: '  connect_address: {{ hostvars[inventory_hostname].inventory_hostname }}:{{ postgresql_port }}' }
+      loop_control:
+        label: "{{ item.line }}"
+  when: existing_pgcluster is defined and existing_pgcluster|bool
   tags: [ patroni, patroni_conf ]
 
 - name: Patroni | copy systemd service file "/etc/systemd/system/patroni.service"
@@ -456,13 +492,19 @@
 
       # "Debian" only
       # patroni bootstrap failure is possible if the postgresql config files are missing
+    - name: Patroni | Prepare PostgreSQL | make sure the postgresql config files exists
+      stat:
+        path: "{{ postgresql_conf_dir }}/postgresql.conf"
+      register: postgresql_conf
+      when: ansible_os_family == "Debian"
+
     - name: Patroni | Prepare PostgreSQL | generate default postgresql config files
       become: yes
       become_user: postgres
       command: "/usr/bin/pg_createcluster {{ postgresql_version }} {{ postgresql_cluster_name }} -d {{ postgresql_data_dir }} -p {{ postgresql_port }} -e {{ postgresql_encoding }} --locale {{ postgresql_locale }}"
       register: pg_createcluster_result
       failed_when: pg_createcluster_result.rc != 0
-      when: ansible_os_family == "Debian"
+      when: ansible_os_family == "Debian" and not postgresql_conf.stat.exists
 
     - name: Patroni | Prepare PostgreSQL | make sure the data directory "{{ postgresql_data_dir }}" is empty on Master
       file:
@@ -550,6 +592,27 @@
       register: pg_ctlcluster_result
       failed_when: pg_ctlcluster_result.rc != 0
       when: ansible_os_family == "RedHat" and is_master == "true"
+  when: existing_pgcluster is not defined or not existing_pgcluster|bool
+  tags: [ patroni, pg_hba_generate ]
+
+- block: # for add_pgnode.yml
+    - name: Patroni | Prepare PostgreSQL | fetch pg_hba.conf file from master
+      run_once: true
+      fetch:
+        src: "{{ postgresql_conf_dir }}/pg_hba.conf"
+        dest: files/pg_hba.conf
+        validate_checksum: yes
+        flat: yes
+      delegate_to: '{{ groups.master[0] }}'
+
+    - name: Patroni | Prepare PostgreSQL | copy pg_hba.conf file to replica
+      copy:
+        src: files/pg_hba.conf
+        dest: "{{ postgresql_conf_dir }}/pg_hba.conf"
+        owner: postgres
+        group: postgres
+        mode: 0640
+  when: existing_pgcluster is defined and existing_pgcluster|bool
   tags: [ patroni, pg_hba_generate ]
 
 # start patroni on replica
