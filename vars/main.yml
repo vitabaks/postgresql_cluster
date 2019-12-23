@@ -39,7 +39,7 @@ dcs_type: "etcd"
  # if variable "dcs_exists=false" and "dcs_type=etcd":
 etcd_ver: "v3.3.18" # version for deploy etcd cluster
 etcd_data_dir: "/var/lib/etcd"
-etcd_cluster_name: "etcdCluster" # ETCD_INITIAL_CLUSTER_TOKEN
+etcd_cluster_name: "etcd-{{ patroni_cluster_name }}" # ETCD_INITIAL_CLUSTER_TOKEN
 
  # if variable "dcs_exists=true" and "dcs_type=etcd" - specify ip-address your etcd cluster in the "patroni_etcd_hosts" variable
  # example (use existing cluster of 3 nodes)
