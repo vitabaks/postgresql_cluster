@@ -21,13 +21,13 @@ auth_file = /etc/pgbouncer/userlist.txt
 admin_users = postgres
 ignore_startup_parameters = extra_float_digits,geqo
  
-pool_mode = session
+pool_mode = {{ pgbouncer_default_pool_mode }}
 server_reset_query = DISCARD ALL
-max_client_conn = {{ max_client_conn }}
-default_pool_size = 10
+max_client_conn = {{ pgbouncer_max_client_conn }}
+default_pool_size = {{ pgbouncer_default_pool_size }}
 reserve_pool_size = 1
 reserve_pool_timeout = 1
-max_db_connections = {{ max_db_connections }}
+max_db_connections = {{ pgbouncer_max_db_connections }}
 pkt_buf = 8192
 
 
