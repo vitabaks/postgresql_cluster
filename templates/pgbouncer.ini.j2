@@ -3,6 +3,8 @@
 {{ pool.name }} = host=127.0.0.1 port={{ postgresql_port }} dbname={{ pool.dbname }} {{ pool.pool_parameters }}
 {% endfor %}
 
+* = host=127.0.0.1 port={{ postgresql_port }}
+
 [pgbouncer]
 logfile = {{ pgbouncer_log_dir }}/pgbouncer.log
 pidfile = /var/run/pgbouncer/pgbouncer.pid
