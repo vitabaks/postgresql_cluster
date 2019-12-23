@@ -88,11 +88,18 @@
   ignore_errors: no
 
 - block:
-    - name: etcd cluster health
+    - name: etcd cluster | wait until the etcd cluster is healthy
       command: /usr/local/bin/etcdctl cluster-health
       register: etcd_health_result
-    - debug:
+      run_once: true
+      changed_when: false
+      until: "'cluster is healthy' in etcd_health_result.stdout"
+      retries: 10
+      delay: 10
+      ignore_errors: no
+
+    - name: etcd cluster | health
+      run_once: true
+      debug:
         var: etcd_health_result.stdout_lines
-  when: is_master == "true"
-  ignore_errors: yes
   tags: etcd_status
