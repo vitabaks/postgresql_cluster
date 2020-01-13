@@ -246,7 +246,7 @@ soft_nofile: 65536
 hard_nofile: 200000
 
 
-# I/O Scheduler
+# I/O Scheduler (optional)
 set_scheduler: 'false' # or 'true'
 scheduler:
   - { sched: "deadline" , nr_requests: "1024", device: "sda" }
@@ -265,8 +265,8 @@ scheduler:
   # kyber
 
 
-# SSH Keys
-enable_SSH_Key_based_authentication: 'true' # or 'false'
+# SSH Keys (optional)
+enable_ssh_key_based_authentication: 'false' # or 'true' for configure SSH Key-Based Authentication
 ssh_key_user: "postgres"
 ssh_key_state: "present"
 ssh_known_hosts: "{{ groups['postgres_cluster'] }}"

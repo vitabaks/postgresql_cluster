@@ -50,7 +50,7 @@
 
 # SSH Keys
 - import_tasks: ../tasks/ssh-keys.yml
-  when: enable_SSH_Key_based_authentication is defined and enable_SSH_Key_based_authentication == "true"
+  when: enable_ssh_key_based_authentication is defined and enable_ssh_key_based_authentication == "true"
   ignore_errors: yes
   tags: [ ssh_keys, configure ]
 
