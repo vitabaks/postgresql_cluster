@@ -156,7 +156,7 @@ postgresql_parameters:
 #  - { option: "max_parallel_workers",                value: "12"      } # for PostgreSQL 10 and above
 #  - { option: "max_parallel_workers_per_gather",     value: "4"       } # for PostgreSQL 9.6 and above
 #  - { option: "max_parallel_maintenance_workers",    value: "2"       } # for PostgreSQL 11 and above
-#  - { option: "hot_standby_feedback",                value: "on"      } # for "synchronous_mode"
+#  - { option: "hot_standby_feedback",                value: "on"      } # allows feedback from a hot standby to the primary that will avoid query conflicts
 #  - { option: "max_standby_streaming_delay",         value: "30s"     }
 #  - { option: "wal_receiver_status_interval",        value: "10s"     }
 #  - { option: "old_snapshot_threshold",              value: "60min"   } # for PostgreSQL 9.6 and above (1min-60d)
