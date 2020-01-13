@@ -12,4 +12,6 @@
     state: present
   ignore_errors: yes
   loop: "{{ postgresql_users | flatten(1) }}"
+  loop_control:
+    label: "{{ item.name }}"
   when: postgresql_users is defined and postgresql_users | length > 0
