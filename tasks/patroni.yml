@@ -366,7 +366,7 @@
       until: pg_isready_result.rc == 0
       retries: 30
       delay: 10
-      ignore_errors: no
+      changed_when: false
 
     - name: Patroni | Prepare PostgreSQL | generate pg_hba.conf on Master
       template:
@@ -458,6 +458,7 @@
       command: "/usr/bin/pg_ctlcluster {{ postgresql_version }} {{ postgresql_cluster_name }} status"
       register: pg_ctlcluster_result
       failed_when: pg_ctlcluster_result.rc != 3
+      changed_when: false
       when: ansible_os_family == "Debian"
 
       # "RedHat"
@@ -467,6 +468,7 @@
       command: "{{ postgresql_bin_dir }}/pg_ctl status -D {{ postgresql_data_dir }}"
       register: pg_ctlcluster_result
       failed_when: pg_ctlcluster_result.rc != 3
+      changed_when: false
       when: ansible_os_family == "RedHat"
 
   when: is_master == "true" and postgresql_exists == "true"
@@ -549,7 +551,7 @@
       until: pg_isready_result.rc == 0
       retries: 30
       delay: 10
-      ignore_errors: no
+      changed_when: false
   when: is_master == "true"
   tags: [ patroni, patroni_start_master ]
 
@@ -561,6 +563,7 @@
       register: patronictl_result
       environment:
         PATH: "{{ ansible_env.PATH }}:/usr/bin:/usr/local/bin"
+      changed_when: false
     - debug:
         var: patronictl_result.stdout_lines
   ignore_errors: yes
