@@ -420,12 +420,14 @@
       become: yes
       become_user: postgres
 
-    - name: Patroni | Prepare PostgreSQL | perform CHECKPOINT before stopping postgresql
+    - name: Patroni | Prepare PostgreSQL | waiting for CHECKPOINT to complete before stopping postgresql
       become: yes
       become_user: postgres
       command: "{{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -c 'CHECKPOINT'"
       register: checkpoint_result
-      failed_when: checkpoint_result.rc != 0
+      until: checkpoint_result.rc == 0
+      retries: 180
+      delay: 15
 
       # "Debian"
     - name: Patroni | Prepare PostgreSQL | stop PostgreSQL (will be managed by patroni)
