@@ -13,8 +13,9 @@ User=etcd
 ExecStart=/bin/bash -c "GOMAXPROCS=$(nproc) /usr/local/bin/etcd"
 Restart=on-failure
 LimitNOFILE=65536
-IOSchedulingClass=best-effort
+IOSchedulingClass=realtime
 IOSchedulingPriority=0
+Nice=-20
  
 [Install]
 WantedBy=multi-user.target
