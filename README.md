@@ -159,7 +159,7 @@ proxy_env:
 ---
 
 ## Variables
-See the vars/[main.yml](./vars/main.yml) and ([Debian.yml](./vars/Debian.yml) or [RedHat.yml](./vars/RedHat.yml)) files for more details.
+See the vars/[main.yml](./vars/main.yml), [system.yml](./vars/system.yml) and ([Debian.yml](./vars/Debian.yml) or [RedHat.yml](./vars/RedHat.yml)) files for more details.
 
 
 ## Scaling: add a new node to an existing postgres cluster
