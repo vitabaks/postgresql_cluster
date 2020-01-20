@@ -679,3 +679,17 @@
     daemon_reload: yes
   when: ansible_os_family == "RedHat"
   tags: [ patroni, postgresql_disable ]
+
+# PATRONICTL_CONFIG_FILE (patroni v1.6.1 and higher)
+- name: Patroni | add PATRONICTL_CONFIG_FILE environment variable into /etc/environment
+  lineinfile:
+    dest: "/etc/environment"
+    state: present
+    regexp: "^export PATRONICTL_CONFIG_FILE"
+    line: "export PATRONICTL_CONFIG_FILE=/etc/patroni/patroni.yml"
+    owner: root
+    group: root
+    mode: '0644'
+  ignore_errors: yes
+  tags: [ patroni, patroni_env ]
+
