@@ -75,6 +75,16 @@ ssh_key_state: "present"
 ssh_known_hosts: "{{ groups['postgres_cluster'] }}"
 
 
+# sudo
+sudo_users:
+  - name: "postgres"
+    nopasswd: "yes" # or "no" to require a password
+    commands: "ALL"
+#  - name: "joe" # other user (example)
+#    nopasswd: "no"
+#    commands: "/usr/bin/find, /usr/bin/less, /usr/bin/tail, /bin/kill"
+
+
 # Firewall (ansible-role-firewall)
  # https://github.com/geerlingguy/ansible-role-firewall
 firewall_enabled_at_boot: true
