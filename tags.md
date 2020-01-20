@@ -23,7 +23,9 @@
 - - - ntp_conf
 - - ssh_keys
 - etcd
-- - etcd_cluster
+- - etcd_install
+- - etcd_conf
+- - etcd_start
 - - etcd_status
 - patroni
 - - pip
