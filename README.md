@@ -109,6 +109,16 @@ If you’d prefer a cross-data center setup, where the replicating databases are
 There are quite a lot of things to consider if you want to create a really robust etcd cluster, but there is one rule: *do not placing all etcd members in your primary data center*. See some [examples](https://www.cybertec-postgresql.com/en/introduction-and-how-to-etcd-clusters-for-patroni/).
 
 
+- **How to prevent data loss in case of autofailover (synchronous_modes and pg_rewind)**:
+
+Due to performance reasons, a synchronous replication is disabled by default.
+
+To minimize the risk of losing data on autofailover, you can configure settings in the following way:
+- synchronous_mode: 'true'
+- synchronous_mode_strict: 'true'
+- synchronous_commit: 'on' (or 'remote_write'/'remote_apply')
+- postgresql_use_pg_rewind: 'false' (enabled by default)
+
 ---
 
 ## Deployment: quick start
@@ -202,7 +212,6 @@ You should learn each component of the cluster for its further maintenance.
 - [etcd operations guide](https://etcd.io/docs/v3.3.12/op-guide/)
 
 ## Disaster Recovery
-> Involves a set of policies, tools and procedures to enable the recovery or continuation of vital technology infrastructure and systems following a natural or human-induced disaster.
 
 A high availability cluster provides an automatic failover mechanism, and does not cover all disaster recovery scenarios.
 You must take care of backing up your data yourself.
