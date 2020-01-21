@@ -39,7 +39,7 @@ bootstrap:
       #port: 1111
       #primary_slot_name: patroni 
     postgresql:
-      use_pg_rewind: true
+      use_pg_rewind: {{ postgresql_use_pg_rewind |d(false, true) |lower }}
       use_slots: true
       parameters:
       {% for parameter in postgresql_parameters %}
