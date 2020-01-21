@@ -11,14 +11,15 @@ cluster_vip: "10.128.64.145" # for client access to databases in the cluster
 vip_interface: "{{ ansible_default_ipv4.interface }}" # interface name (ex. "ens32")
 
 patroni_cluster_name: "postgres-cluster"  # specify the cluster name
-synchronous_mode: 'false'  # or 'true' for enable synchronous database replication
+patroni_install_version: "latest"  # or specific version (example 1.5.6)
 
 patroni_superuser_username: "postgres"
 patroni_superuser_password: "postgres-pass" # please change password
 patroni_replication_username: "replicator"
 patroni_replication_password: "replicator-pass" # please change password
 
-patroni_install_version: "latest"  # or specific version (example 1.5.6)
+synchronous_mode: 'false'  # or 'true' for enable synchronous database replication
+synchronous_mode_strict: 'false' # if 'true' then block all client writes to the master, when a synchronous replica is not available
 
 
 # Load Balancing

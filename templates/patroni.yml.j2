@@ -33,7 +33,7 @@ bootstrap:
     maximum_lag_on_failover: 1048576
     master_start_timeout: 300
     synchronous_mode: {{ synchronous_mode |d(false, true) |lower }}
-    synchronous_mode_strict: false
+    synchronous_mode_strict: {{ synchronous_mode_strict |d(false, true) |lower }}
     #standby_cluster:
       #host: 127.0.0.1
       #port: 1111
