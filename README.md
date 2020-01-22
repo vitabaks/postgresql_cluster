@@ -117,7 +117,7 @@ To minimize the risk of losing data on autofailover, you can configure settings 
 - synchronous_mode: 'true'
 - synchronous_mode_strict: 'true'
 - synchronous_commit: 'on' (or 'remote_write'/'remote_apply')
-- postgresql_use_pg_rewind: 'false' (enabled by default)
+- use_pg_rewind: 'false' (enabled by default)
 
 ---
 

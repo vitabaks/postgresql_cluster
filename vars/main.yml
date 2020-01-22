@@ -63,7 +63,6 @@ postgresql_port: "5432"
 postgresql_encoding: "UTF8"       # for bootstrap only (initdb)
 postgresql_locale: "en_US.UTF-8"  # for bootstrap only (initdb)
 postgresql_data_checksums: 'true' # for bootstrap only (initdb)
-postgresql_use_pg_rewind: 'true'  # or 'false'
 
 # (optional) list of users to be created (if not already exists)
 postgresql_users: []
@@ -200,6 +199,23 @@ pgbouncer_users:
 
 
 # Extended patroni variables (optional)
+patroni_ttl: 30
+patroni_loop_wait: 10
+patroni_retry_timeout: 10
+patroni_maximum_lag_on_failover: 1048576
+patroni_master_start_timeout: 300
+
+patroni_postgresql_use_pg_rewind: 'true' # or 'false'
+# try to use pg_rewind on the former leader when it joins cluster as a replica.
+
+patroni_remove_data_directory_on_rewind_failure: 'false' # or 'true' (if use_pg_rewind: 'true')
+# avoid removing the data directory on an unsuccessful rewind
+# if 'true', Patroni will remove the PostgreSQL data directory and recreate the replica.
+
+patroni_remove_data_directory_on_diverged_timelines: 'false' # or 'true'
+# if 'true', Patroni will remove the PostgreSQL data directory and recreate the replica
+# if it notices that timelines are diverging and the former master can not start streaming from the new master.
+
 patroni_create_replica_methods:
 #  - pgbackrest
 #  - wal_e

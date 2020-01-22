@@ -27,11 +27,11 @@ bootstrap:
   # this section will be written into Etcd:/<namespace>/<scope>/config after initializing new cluster
   # and all other cluster members will use it as a `global configuration`
   dcs:
-    ttl: 30
-    loop_wait: 10
-    retry_timeout: 10
-    maximum_lag_on_failover: 1048576
-    master_start_timeout: 300
+    ttl: {{ patroni_ttl |d(30, true) |int }}
+    loop_wait: {{ patroni_loop_wait |d(10, true) |int }}
+    retry_timeout: {{ patroni_retry_timeout |d(10, true) |int }}
+    maximum_lag_on_failover: {{ patroni_maximum_lag_on_failover |d(1048576, true) |int }}
+    master_start_timeout: {{ patroni_master_start_timeout |d(300, true) |int }}
     synchronous_mode: {{ synchronous_mode |d(false, true) |lower }}
     synchronous_mode_strict: {{ synchronous_mode_strict |d(false, true) |lower }}
     #standby_cluster:
@@ -39,7 +39,7 @@ bootstrap:
       #port: 1111
       #primary_slot_name: patroni 
     postgresql:
-      use_pg_rewind: {{ postgresql_use_pg_rewind |d(false, true) |lower }}
+      use_pg_rewind: {{ patroni_postgresql_use_pg_rewind |d(false, true) |lower }}
       use_slots: true
       parameters:
       {% for parameter in postgresql_parameters %}
@@ -107,6 +107,9 @@ postgresql:
     unix_socket_directories: {{ postgresql_unix_socket_dir }}
     stats_temp_directory: /var/lib/pgsql_stats_tmp
  
+  remove_data_directory_on_rewind_failure: {{ patroni_remove_data_directory_on_rewind_failure |d(false, true) |lower }}
+  remove_data_directory_on_diverged_timelines: {{ patroni_remove_data_directory_on_diverged_timelines |d(false, true) |lower }}
+
 #  callbacks:
 #    on_start:
 #    on_stop:
