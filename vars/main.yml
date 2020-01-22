@@ -199,3 +199,22 @@ pgbouncer_users:
 #  - { username: "", password: "" }
 
 
+# Extended patroni variables (optional)
+patroni_create_replica_methods:
+#  - pgbackrest
+#  - wal_e
+  - basebackup
+pgbackrest:
+  - { option: "command",    value: "/usr/bin/pgbackrest --stanza=<stanza_name> --delta restore" }
+  - { option: "keep_data",  value: "True" }
+  - { option: "no_params",  value: "True" }
+wal_e:
+  - { option: "command",    value: "patroni_wale_restore" }
+  - { option: "no_master",  value: "1" }
+  - { option: "envdir",     value: "/etc/wal_e/envdir" }
+  - { option: "use_iam",    value: "1" }
+basebackup:
+  - { option: "max-rate",   value: "100M" }
+  - { option: "checkpoint", value: "fast" }
+
+

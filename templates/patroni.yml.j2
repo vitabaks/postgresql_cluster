@@ -115,21 +115,34 @@ postgresql:
 #    on_role_change:
  
   create_replica_methods:
-#   - pgbackrest
-#   - wal_e
-   - basebackup
-# pgbackrest:
-#   command: /usr/bin/pgbackrest --stanza=<Stanza_Name> --delta restore
-#   keep_data: True
-#   no_params: True
-#  wal_e
-#    command: patroni_wale_restore
-#    no_master: 1
-#    envdir: /etc/wal_e/envdir
-#    use_iam: 1
+{% if patroni_create_replica_methods is defined and patroni_create_replica_methods | length > 0 %}
+  {% for create_replica_method in patroni_create_replica_methods %}
+    - {{ create_replica_method }}
+  {% endfor %}
+  {% if 'pgbackrest' in patroni_create_replica_methods %}
+  pgbackrest:
+    {% for item in pgbackrest %}
+    {{ item.option }}: {{ item.value }}
+    {% endfor %}
+  {% endif %}
+  {% if 'wal_e' in patroni_create_replica_methods %}
+  wal_e:
+    {% for item in wal_e %}
+    {{ item.option }}: {{ item.value }}
+    {% endfor %}
+  {% endif %}
+  {% if 'basebackup' in patroni_create_replica_methods %}
+  basebackup:
+    {% for item in basebackup %}
+    {{ item.option }}: '{{ item.value }}'
+    {% endfor %}
+  {% endif %}
+{% else %}
+    - basebackup
   basebackup:
     max-rate: '100M'
- 
+{% endif %}
+
  #watchdog:
 #  mode: automatic # Allowed values: off, automatic, required
 #  device: /dev/watchdog
