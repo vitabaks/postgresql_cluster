@@ -1,11 +1,5 @@
 ---
 
-# Hostname
-- import_tasks: ../tasks/hostname.yml
-  when: hostname is defined and hostname | length > 0
-  ignore_errors: yes
-  tags: [ hostname, configure ]
-
 # Kernel
 - import_tasks: ../tasks/sysctl.yml
   when: sysctl_conf is defined and sysctl_conf | length > 0

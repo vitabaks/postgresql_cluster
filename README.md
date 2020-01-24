@@ -176,7 +176,7 @@ See the vars/[main.yml](./vars/main.yml), [system.yml](./vars/system.yml) and ([
 After you successfully deployed your PostgreSQL HA cluster, you may need to scale it further. \
 Use the `add_pgnode.yml` playbook for this.
 
-> :grey_exclamation: This playbook does not scaling the etcd cluster.
+> :grey_exclamation: This playbook does not scaling the etcd cluster and haproxy balancers.
 
 During the run this playbook, the new nodes will be prepared in the same way as when first deployment the cluster. But unlike the initial deployment, all the necessary **configuration files will be copied from the master server**.
 

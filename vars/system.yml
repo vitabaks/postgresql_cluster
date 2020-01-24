@@ -89,22 +89,34 @@ sudo_users:
  # https://github.com/geerlingguy/ansible-role-firewall
 firewall_enabled_at_boot: true
 
-firewall_allowed_tcp_ports:
-  - "{{ ansible_ssh_port }}"
-  - "{{ postgresql_port }}"
-  - "{{ pgbouncer_listen_port }}"
-  - "2379" # ETCD port
-  - "2380" # ETCD port
-  - "8008" # Patroni REST API port
-  - "5000" # HAProxy (read/write) master
-  - "5001" # HAProxy (read only) all replicas
-  - "5002" # HAProxy (read only) synchronous replica only
-  - "5003" # HAProxy (read only) asynchronous replicas only
-  - "7000" # HAProxy stats
+firewall_allowed_tcp_ports_for:
+  master: []
+  replica: []
+  postgres_cluster:
+    - "{{ ansible_ssh_port }}"
+    - "{{ postgresql_port }}"
+    - "{{ pgbouncer_listen_port }}"
+    - "8008" # Patroni REST API port
+  etcd_cluster:
+    - "{{ ansible_ssh_port }}"
+    - "2379" # ETCD port
+    - "2380" # ETCD port
+  balancers:
+    - "{{ ansible_ssh_port }}"
+    - "5000" # HAProxy (read/write) master
+    - "5001" # HAProxy (read only) all replicas
+    - "5002" # HAProxy (read only) synchronous replica only
+    - "5003" # HAProxy (read only) asynchronous replicas only
+    - "7000" # HAProxy stats
 
-firewall_additional_rules:
-  - "iptables -p vrrp -A INPUT -j ACCEPT"  # Keepalived (vrrp)
-  - "iptables -p vrrp -A OUTPUT -j ACCEPT" # Keepalived (vrrp)
+firewall_additional_rules_for:
+  master: []
+  replica: []
+  postgres_cluster: []
+  etcd_cluster: []
+  balancers:
+    - "iptables -p vrrp -A INPUT -j ACCEPT"  # Keepalived (vrrp)
+    - "iptables -p vrrp -A OUTPUT -j ACCEPT" # Keepalived (vrrp)
 
  # disable firewalld (installed by default on RHEL/CentOS) or ufw (installed by default on Ubuntu)
 firewall_disable_firewalld: true

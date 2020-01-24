@@ -274,6 +274,15 @@
   tags: haproxy
 
 # Configure
+- name: haproxy | make sure the kernel parameter "net.ipv4.ip_nonlocal_bind" are enabled
+  sysctl:
+    name: "net.ipv4.ip_nonlocal_bind"
+    value: "1"
+    sysctl_set: "yes"
+    state: "present"
+    reload: "yes"
+  tags: haproxy
+
 - name: haproxy | add haproxy group
   group:
     name: haproxy
@@ -350,6 +359,40 @@
   when: existing_pgcluster is defined and existing_pgcluster|bool
   tags: [ haproxy, haproxy_conf ]
 
+- name: haproxy | selinux | make sure the libsemanage-python, policycoreutils-python packages is present
+  package:
+    name: "{{ packages }}"
+    state: present
+    update_cache: yes
+  vars:
+    packages:
+     - libsemanage-python
+     - policycoreutils-python
+  environment: '{{ proxy_env | default({}) }}'
+  when:
+    - ansible_os_family == "RedHat"
+    - ansible_distribution_major_version == '7'
+    - installation_method == "repo"
+    - haproxy_installation_method == "rpm"
+  tags: haproxy
+
+- name: haproxy | selinux | make sure the python3-libsemanage, python3-policycoreutils packages is present
+  package:
+    name: "{{ packages }}"
+    state: present
+    update_cache: yes
+  vars:
+    packages:
+     - python3-libsemanage
+     - python3-policycoreutils
+  environment: '{{ proxy_env | default({}) }}'
+  when:
+    - ansible_os_family == "RedHat"
+    - ansible_distribution_major_version is version('8', '>=')
+    - installation_method == "repo"
+    - haproxy_installation_method == "rpm"
+  tags: haproxy
+
 - name: haproxy | selinux | set haproxy_connect_any flag to enable tcp connections
   seboolean:
     name: haproxy_connect_any
@@ -374,7 +417,6 @@
     enabled: yes
     state: restarted
   register: haproxy_restart_result
-  when: haproxy_conf_result.changed or haproxy_conf_prepare_result.changed
   tags: [ haproxy, haproxy_conf ]
 
 - name: haproxy | check HAProxy is started and accepting connections
