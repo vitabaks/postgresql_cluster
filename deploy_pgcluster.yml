@@ -64,6 +64,9 @@
   tasks:
     - meta: flush_handlers
 
+    - import_tasks: tasks/sysctl.yml
+      tags: [ sysctl, kernel ]
+
     - import_tasks: tasks/timezone.yml
       when: timezone is defined and timezone | length > 0
       ignore_errors: yes
@@ -86,10 +89,14 @@
   gather_facts: true
   vars_files:
     - vars/main.yml
+    - vars/system.yml
     - "vars/{{ ansible_os_family }}.yml"
 
   tasks:
     - meta: flush_handlers
+
+    - import_tasks: tasks/sysctl.yml
+      tags: [ sysctl, kernel ]
 
     - import_tasks: tasks/haproxy.yml
       when: with_haproxy_load_balancing == "true" and cluster_vip | length > 0
