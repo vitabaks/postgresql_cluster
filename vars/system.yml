@@ -20,22 +20,31 @@ locales:
 # Kernel parameters
  # these parameters for example! Specify kernel options for your system
 sysctl_conf:
-  - { name: "vm.swappiness",                  value: "1"         }
-  - { name: "vm.min_free_kbytes",             value: "102400"    }
-  - { name: "vm.dirty_expire_centisecs",      value: "1000"      }
-  - { name: "vm.dirty_background_bytes",      value: "67108864"  }
-  - { name: "vm.dirty_bytes",                 value: "536870912" }
-#  - { name: "vm.nr_hugepages",                value: "9510"      } # example "9510"=18GB
-  - { name: "vm.zone_reclaim_mode",           value: "0"         }
-  - { name: "kernel.numa_balancing",          value: "0"         }
-  - { name: "kernel.sched_migration_cost_ns", value: "5000000"   }
-  - { name: "kernel.sched_autogroup_enabled", value: "0"         }
-  - { name: "net.ipv4.ip_nonlocal_bind",      value: "1"         }
-  - { name: "net.ipv4.ip_forward",            value: "1"         }
-  - { name: "net.ipv4.ip_local_port_range",   value: "1024 65535" }
-  - { name: "net.netfilter.nf_conntrack_max", value: "1048576"    }
-#  - { name: "",            value: "" }
-#  - { name: "",            value: "" }
+  etcd_cluster: []
+  master: []
+  replica: []
+  postgres_cluster:
+    - { name: "vm.swappiness",                  value: "1"         }
+    - { name: "vm.min_free_kbytes",             value: "102400"    }
+    - { name: "vm.dirty_expire_centisecs",      value: "1000"      }
+    - { name: "vm.dirty_background_bytes",      value: "67108864"  }
+    - { name: "vm.dirty_bytes",                 value: "536870912" }
+#    - { name: "vm.nr_hugepages",                value: "9510"      } # example "9510"=18GB
+    - { name: "vm.zone_reclaim_mode",           value: "0"         }
+    - { name: "kernel.numa_balancing",          value: "0"         }
+    - { name: "kernel.sched_migration_cost_ns", value: "5000000"   }
+    - { name: "kernel.sched_autogroup_enabled", value: "0"         }
+    - { name: "net.ipv4.ip_nonlocal_bind",      value: "1"         }
+    - { name: "net.ipv4.ip_forward",            value: "1"         }
+    - { name: "net.ipv4.ip_local_port_range",   value: "1024 65535" }
+    - { name: "net.netfilter.nf_conntrack_max", value: "1048576"    }
+#    - { name: "",            value: "" }
+  balancers:
+    - { name: "net.ipv4.ip_nonlocal_bind",      value: "1"         }
+    - { name: "net.ipv4.ip_forward",            value: "1"         }
+    - { name: "net.ipv4.ip_local_port_range",   value: "1024 65535" }
+    - { name: "net.netfilter.nf_conntrack_max", value: "1048576"    }
+#    - { name: "",            value: "" }
 
 
 # Transparent Huge Pages
@@ -89,22 +98,34 @@ sudo_users:
  # https://github.com/geerlingguy/ansible-role-firewall
 firewall_enabled_at_boot: true
 
-firewall_allowed_tcp_ports:
-  - "{{ ansible_ssh_port }}"
-  - "{{ postgresql_port }}"
-  - "{{ pgbouncer_listen_port }}"
-  - "2379" # ETCD port
-  - "2380" # ETCD port
-  - "8008" # Patroni REST API port
-  - "5000" # HAProxy (read/write) master
-  - "5001" # HAProxy (read only) all replicas
-  - "5002" # HAProxy (read only) synchronous replica only
-  - "5003" # HAProxy (read only) asynchronous replicas only
-  - "7000" # HAProxy stats
+firewall_allowed_tcp_ports_for:
+  master: []
+  replica: []
+  postgres_cluster:
+    - "{{ ansible_ssh_port }}"
+    - "{{ postgresql_port }}"
+    - "{{ pgbouncer_listen_port }}"
+    - "8008" # Patroni REST API port
+  etcd_cluster:
+    - "{{ ansible_ssh_port }}"
+    - "2379" # ETCD port
+    - "2380" # ETCD port
+  balancers:
+    - "{{ ansible_ssh_port }}"
+    - "5000" # HAProxy (read/write) master
+    - "5001" # HAProxy (read only) all replicas
+    - "5002" # HAProxy (read only) synchronous replica only
+    - "5003" # HAProxy (read only) asynchronous replicas only
+    - "7000" # HAProxy stats
 
-firewall_additional_rules:
-  - "iptables -p vrrp -A INPUT -j ACCEPT"  # Keepalived (vrrp)
-  - "iptables -p vrrp -A OUTPUT -j ACCEPT" # Keepalived (vrrp)
+firewall_additional_rules_for:
+  master: []
+  replica: []
+  postgres_cluster: []
+  etcd_cluster: []
+  balancers:
+    - "iptables -p vrrp -A INPUT -j ACCEPT"  # Keepalived (vrrp)
+    - "iptables -p vrrp -A OUTPUT -j ACCEPT" # Keepalived (vrrp)
 
  # disable firewalld (installed by default on RHEL/CentOS) or ufw (installed by default on Ubuntu)
 firewall_disable_firewalld: true

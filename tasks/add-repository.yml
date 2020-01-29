@@ -2,13 +2,6 @@
 
 # Debian Ubuntu
 - block:
-    - name: Make sure the gnupg package is present
-      apt:
-        force_apt_get: yes
-        name: gnupg
-        state: present
-      when: apt_repository_keys | length > 0 and apt_repository | length > 0
-
     - name: Add repository apt-key
       apt_key:
         url: "{{ item.key }}"
@@ -40,7 +33,7 @@
       when: yum_repository | length > 0
 
     # Install Epel Repository
-    - name: "install | get epel-release-latest-{{ ansible_distribution_major_version }}.noarch.rpm"
+    - name: "install | get epel-release-latest rpm package"
       get_url:
         url: "http://dl.fedoraproject.org/pub/epel/epel-release-latest-{{ ansible_distribution_major_version }}.noarch.rpm"
         dest: /tmp/

@@ -15,7 +15,7 @@ restapi:
 
 {% if dcs_exists == 'false' and dcs_type == 'etcd' %}
 etcd:
-  hosts: {% for host in groups['postgres_cluster'] %}{{ hostvars[host]['inventory_hostname'] }}:2379{% if not loop.last %},{% endif %}{% endfor %}
+  hosts: {% for host in groups['etcd_cluster'] %}{{ hostvars[host]['inventory_hostname'] }}:2379{% if not loop.last %},{% endif %}{% endfor %}
 {% endif %}
 {% if dcs_exists == 'true' and dcs_type == 'etcd' %}
 etcd:

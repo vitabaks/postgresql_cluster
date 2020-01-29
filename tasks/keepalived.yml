@@ -90,7 +90,6 @@
     name: keepalived
     enabled: yes
     state: restarted
-  when: haproxy_check_result.changed or keepalived_conf_result.changed or keepalived_conf_prepare_result.changed
   tags: [ keepalived_restart, keepalived ]
 
 - name: wait for the cluster ip address (VIP) "{{ cluster_vip }}" is running
