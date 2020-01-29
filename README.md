@@ -172,7 +172,9 @@ proxy_env:
 See the vars/[main.yml](./vars/main.yml), [system.yml](./vars/system.yml) and ([Debian.yml](./vars/Debian.yml) or [RedHat.yml](./vars/RedHat.yml)) files for more details.
 
 
-## Scaling: add a new node to an existing postgres cluster
+## Scaling: add new postgresql node to existing cluster
+<details><summary>Click here to expand...</summary><p>
+
 After you successfully deployed your PostgreSQL HA cluster, you may need to scale it further. \
 Use the `add_pgnode.yml` playbook for this.
 
@@ -200,6 +202,40 @@ Variables that should be the same on all cluster nodes: \
 6. Run playbook:
 
 `ansible-playbook add_pgnode.yml`
+
+</p></details>
+
+
+## Scaling: add new haproxy balancer node
+<details><summary>Click here to expand...</summary><p>
+
+Use the `add_balancer.yml` playbook for this.
+
+During the run this playbook, the new balancer node will be prepared in the same way as when first deployment the cluster. But unlike the initial deployment, **all necessary configuration files will be copied from the server specified in the [master] group**.
+
+> :heavy_exclamation_mark: Please test it in your test enviroment before using in a production.
+
+###### Steps to add a new banlancer node:
+
+1. Go to the playbook directory
+
+2. Edit the inventory file
+
+Specify the ip address of one of the existing balancer nodes in the [master] group, and the new balancer node (which you want to add) in the [balancers] group.
+
+> :heavy_exclamation_mark: Attention! The list of Firewall ports is determined dynamically based on the group in which the host is specified. \
+If you adding a new haproxy balancer node to one of the existing nodes from the [etcd_cluster] or [master]/[replica] groups, you can rewrite the iptables rules! \
+See firewall_allowed_tcp_ports_for.balancers variable in the system.yml file.
+
+3. Edit the `main.yml` variable file
+
+Specify `with_haproxy_load_balancing: 'true'`
+
+4. Run playbook:
+
+`ansible-playbook add_balancer.yml`
+
+</p></details>
 
 
 ## Maintenance

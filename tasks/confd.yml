@@ -50,10 +50,10 @@
         src: templates/haproxy.tmpl.j2
         dest: /etc/confd/templates/haproxy.tmpl
       tags: haproxy_tmpl
-  when: existing_pgcluster is not defined or not existing_pgcluster|bool
+  when: add_balancer is not defined or not add_balancer|bool
   tags: [ confd_conf, confd ]
 
-- block: # for add_pgnode.yml
+- block: # for add_balancer.yml
     - name: confd | fetch confd.toml, haproxy.toml, haproxy.tmpl conf files from master
       run_once: true
       fetch:
@@ -88,7 +88,7 @@
        - { regexp: '^.*bind.*:7000$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:7000' }
       loop_control:
         label: "{{ item.line }}"
-  when: existing_pgcluster is defined and existing_pgcluster|bool
+  when: add_balancer is defined and add_balancer|bool
   tags: [ confd_conf, confd ]
 
 - name: confd | copy systemd service file

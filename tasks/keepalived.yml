@@ -43,10 +43,10 @@
     src: templates/keepalived.conf.j2
     dest: /etc/keepalived/keepalived.conf
   register: keepalived_conf_result
-  when: existing_pgcluster is not defined or not existing_pgcluster|bool
+  when: add_balancer is not defined or not add_balancer|bool
   tags: [ keepalived_conf, keepalived ]
 
-- block: # for add_pgnode.yml
+- block: # for add_balancer.yml
     - name: keepalived | fetch keepalived.conf conf file from master
       run_once: true
       fetch:
@@ -73,7 +73,7 @@
       loop_control:
         label: "{{ item.line }}"
       register: keepalived_conf_prepare_result
-  when: existing_pgcluster is defined and existing_pgcluster|bool
+  when: add_balancer is defined and add_balancer|bool
   tags: [ keepalived_conf, keepalived ]
 
 - name: keepalived | selinux | change the keepalived_t domain to permissive

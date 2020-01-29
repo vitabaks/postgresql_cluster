@@ -324,10 +324,10 @@
     owner: haproxy
     group: haproxy
   register: haproxy_conf_result
-  when: existing_pgcluster is not defined or not existing_pgcluster|bool
+  when: add_balancer is not defined or not add_balancer|bool
   tags: [ haproxy, haproxy_conf ]
 
-- block: # for add_pgnode.yml
+- block: # for add_balancer.yml
     - name: haproxy | fetch haproxy.cfg file from master
       run_once: true
       fetch:
@@ -356,7 +356,7 @@
       loop_control:
         label: "{{ item.line }}"
       register: haproxy_conf_prepare_result
-  when: existing_pgcluster is defined and existing_pgcluster|bool
+  when: add_balancer is defined and add_balancer|bool
   tags: [ haproxy, haproxy_conf ]
 
 - name: haproxy | selinux | make sure the libsemanage-python, policycoreutils-python packages is present
