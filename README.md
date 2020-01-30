@@ -55,7 +55,8 @@ This is simple scheme without load balancing `Used by default`
 
 To provide a single entry point (VIP) for databases access is used "vip-manager".
 
-[**vip-manager**](https://github.com/cybertec-postgresql/vip-manager) manages a virtual IP (VIP) based on state kept in etcd or Consul. Is written in Go.  :copyright:  Cybertec Schönig & Schönig GmbH https://www.cybertec-postgresql.com
+[**vip-manager**](https://github.com/cybertec-postgresql/vip-manager) is a service that gets started on all cluster nodes and connects to the DCS. If the local node owns the leader-key, vip-manager starts the configured VIP. In case of a failover, vip-manager removes the VIP on the old leader and the corresponding service on the new leader starts it there. \
+Written in Go. Cybertec Schönig & Schönig GmbH https://www.cybertec-postgresql.com
 
 
 
