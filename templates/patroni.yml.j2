@@ -134,6 +134,12 @@ postgresql:
     {{ item.option }}: {{ item.value }}
     {% endfor %}
   {% endif %}
+  {% if 'wal_g' in patroni_create_replica_methods %}
+  wal_g:
+    {% for item in wal_g %}
+    {{ item.option }}: {{ item.value }}
+    {% endfor %}
+  {% endif %}
   {% if 'basebackup' in patroni_create_replica_methods %}
   basebackup:
     {% for item in basebackup %}

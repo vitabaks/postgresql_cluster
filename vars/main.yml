@@ -219,6 +219,7 @@ patroni_remove_data_directory_on_diverged_timelines: 'false' # or 'true'
 patroni_create_replica_methods:
 #  - pgbackrest
 #  - wal_e
+#  - wal_g
   - basebackup
 pgbackrest:
   - { option: "command",    value: "/usr/bin/pgbackrest --stanza=<stanza_name> --delta restore" }
@@ -229,8 +230,11 @@ wal_e:
   - { option: "no_master",  value: "1" }
   - { option: "envdir",     value: "/etc/wal_e/envdir" }
   - { option: "use_iam",    value: "1" }
+wal_g:
+  - { option: "command",    value: "patroni_walg_restore" }
+  - { option: "no_master",  value: "1" }
+  - { option: "envdir",     value: "/etc/wal_g/envdir" }
+  - { option: "use_iam",    value: "1" }
 basebackup:
   - { option: "max-rate",   value: "100M" }
   - { option: "checkpoint", value: "fast" }
-
-
