@@ -29,7 +29,8 @@ keepalived_virtual_router_id: "133"  # specify a unique virtual_router_id
 
 # vip-manager  (if with_haproxy_load_balancing: 'false')
 vip_manager_version: "0.6" # version to install
-vip_manager_config: "/etc/patroni/vip-manager.yml"
+vip_manager_conf_dir: "/etc/patroni"
+vip_manager_conf_file: "vip-manager.yml"
 vip_manager_interval: "1000"  # time (in milliseconds) after which vip-manager wakes up and checks if it needs to register or release ip addresses.
 
 
