@@ -137,12 +137,12 @@
       when: install_pgbouncer == "true"
       tags: pgbouncer
 
+    - import_tasks: tasks/patroni.yml
+      tags: patroni
+
     - import_tasks: tasks/vip-manager.yml
       when: with_haproxy_load_balancing != "true" and cluster_vip | length > 0
       tags: [ vip, vip_manager ]
-
-    - import_tasks: tasks/patroni.yml
-      tags: patroni
 
     # optional
     - import_tasks: tasks/postgresql-users.yml

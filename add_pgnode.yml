@@ -78,10 +78,6 @@
     - import_tasks: tasks/patroni.yml
       tags: patroni
 
-    - import_tasks: tasks/vip-manager.yml
-      when: with_haproxy_load_balancing != "true"
-      tags: [ vip, vip_manager ]
-
     # finish (info)
     - import_tasks: tasks/deploy_finish.yml
       tags: [ cluster_info, cluster_status ]
