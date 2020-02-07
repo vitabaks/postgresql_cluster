@@ -19,10 +19,10 @@
     - import_tasks: tasks/hostname.yml
       when: hostname is defined and hostname | length > 0
       tags: hostname
-  
+
     - import_tasks: tasks/sysctl.yml
       tags: [ sysctl, kernel ]
-  
+
     - name: Make sure the gnupg package is present
       apt:
         name: gnupg

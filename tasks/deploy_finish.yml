@@ -47,11 +47,8 @@
           - port 5002 (read only)  synchronous replica only
           - port 5003 (read only)  asynchronous replicas only
           - +------------------------------------------------+
-  when: with_haproxy_load_balancing == "true" and synchronous_mode == "true"
-  ignore_errors: yes
-  tags: conn_info
+      when: with_haproxy_load_balancing == "true" and synchronous_mode == "true"
 
-- block:
     - name: PostgreSQL Cluster connection info
       run_once: true
       debug:
@@ -61,11 +58,8 @@
           - port 5000 (read/write) master
           - port 5001 (read only)  all replicas
           - +------------------------------------------------+
-  when: with_haproxy_load_balancing == "true" and synchronous_mode != "true"
-  ignore_errors: yes
-  tags: conn_info
+      when: with_haproxy_load_balancing == "true" and synchronous_mode != "true"
 
-- block:
     - name: PostgreSQL Cluster connection info
       run_once: true
       debug:
@@ -74,11 +68,8 @@
           - address (VIP) {{ cluster_vip }}
           - port {{ pgbouncer_listen_port }} (pgbouncer)
           - +------------------------------------------------+
-  when: with_haproxy_load_balancing == "false" and install_pgbouncer == "true"
-  ignore_errors: yes
-  tags: conn_info
+      when: with_haproxy_load_balancing == "false" and install_pgbouncer == "true"
 
-- block:
     - name: PostgreSQL Cluster connection info
       run_once: true
       debug:
@@ -87,7 +78,8 @@
           - address (VIP) {{ cluster_vip }}
           - port {{ postgresql_port }}
           - +------------------------------------------------+
-  when: with_haproxy_load_balancing == "false" and install_pgbouncer != "true"
+      when: with_haproxy_load_balancing == "false" and install_pgbouncer != "true"
+  when: cluster_vip is defined and cluster_vip | length > 0
   ignore_errors: yes
   tags: conn_info
 
@@ -102,4 +94,6 @@
       debug:
         msg: "Cluster ip address (VIP) {{ cluster_vip }} is running on server {{ ansible_hostname }}"
       when: man_ip is defined and man_ip == cluster_vip
+  when: cluster_vip is defined and cluster_vip | length > 0
+  ignore_errors: yes
   tags: [ vip_owner, vip_status ]

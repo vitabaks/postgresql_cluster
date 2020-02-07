@@ -7,7 +7,7 @@ proxy_env: {}
 # -------------------------------------------
 
 # Cluster variables
-cluster_vip: "10.128.64.145" # for client access to databases in the cluster
+cluster_vip: "10.128.64.145" # for client access to databases in the cluster (optional)
 vip_interface: "{{ ansible_default_ipv4.interface }}" # interface name (ex. "ens32")
 
 patroni_cluster_name: "postgres-cluster"  # specify the cluster name

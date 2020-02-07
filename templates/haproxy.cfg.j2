@@ -26,7 +26,11 @@ listen stats
     stats uri /
  
 listen master
+{% if cluster_vip is defined and cluster_vip | length > 0 %}
     bind {{ cluster_vip }}:5000
+{% else %}
+    bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:5000
+{% endif %}
     maxconn 10000
     option tcplog
     option httpchk OPTIONS /master
@@ -44,7 +48,11 @@ server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hos
 {% endif %}
 
 listen replicas
+{% if cluster_vip is defined and cluster_vip | length > 0 %}
     bind {{ cluster_vip }}:5001
+{% else %}
+    bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:5001
+{% endif %}
     maxconn 10000
     option tcplog
     option httpchk OPTIONS /replica
@@ -63,7 +71,11 @@ server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hos
 {% endif %}
 
 listen replicas_sync
+{% if cluster_vip is defined and cluster_vip | length > 0 %}
     bind {{ cluster_vip }}:5002
+{% else %}
+    bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:5002
+{% endif %}
     maxconn 10000
     option tcplog
     option httpchk OPTIONS /sync
@@ -82,7 +94,11 @@ server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hos
 {% endif %}
  
 listen replicas_async
+{% if cluster_vip is defined and cluster_vip | length > 0 %}
     bind {{ cluster_vip }}:5003
+{% else %}
+    bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:5003
+{% endif %}
     maxconn 10000
     option tcplog
     option httpchk OPTIONS /async

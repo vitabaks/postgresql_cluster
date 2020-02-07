@@ -155,10 +155,11 @@ proxy_env:
   http_proxy: http://proxy_server_ip:port
   https_proxy: http://proxy_server_ip:port
 ```
-- `cluster_vip`
+- `cluster_vip` # for client access to databases in the cluster (optional)
 - `patroni_cluster_name`
 - `with_haproxy_load_balancing` `'true'` (Type A) or `'false'`/default (Type B)
 - `postgresql_version`
+- `postgresql_data_dir`
 
 
 5. Run playbook:

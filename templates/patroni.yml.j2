@@ -81,11 +81,10 @@ bootstrap:
 
   
 postgresql:
-{% if with_haproxy_load_balancing == "true" or install_pgbouncer == "true" %}
-  listen: {{ hostvars[inventory_hostname]['inventory_hostname'] }},127.0.0.1:{{ postgresql_port }}
-{% endif %}
-{% if with_haproxy_load_balancing != "true" and install_pgbouncer != "true" %}
+{% if with_haproxy_load_balancing != "true" and install_pgbouncer != "true" and (cluster_vip is defined and cluster_vip | length > 0) %}
   listen: {{ hostvars[inventory_hostname]['inventory_hostname'] }},{{ cluster_vip }},127.0.0.1:{{ postgresql_port }}
+{% else %}
+  listen: {{ hostvars[inventory_hostname]['inventory_hostname'] }},127.0.0.1:{{ postgresql_port }}
 {% endif %}
   connect_address: {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ postgresql_port }}
   use_unix_socket: true

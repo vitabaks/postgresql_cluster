@@ -86,8 +86,29 @@
         backrefs: yes
       loop:
        - { regexp: '^.*bind.*:7000$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:7000' }
+       - { regexp: '^.*bind.*:5000$', line: '    bind {{ cluster_vip }}:5000' }
+       - { regexp: '^.*bind.*:5001$', line: '    bind {{ cluster_vip }}:5001' }
+       - { regexp: '^.*bind.*:5002$', line: '    bind {{ cluster_vip }}:5002' }
+       - { regexp: '^.*bind.*:5003$', line: '    bind {{ cluster_vip }}:5003' }
       loop_control:
         label: "{{ item.line }}"
+      when: cluster_vip is defined and cluster_vip | length > 0
+
+    - name: confd | prepare haproxy.tmpl template file (replace "bind" for stats)
+      lineinfile:
+        path: /etc/confd/templates/haproxy.tmpl
+        regexp: '{{ item.regexp }}'
+        line: '{{ item.line }}'
+        backrefs: yes
+      loop:
+       - { regexp: '^.*bind.*:7000$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:7000' }
+       - { regexp: '^.*bind.*:5000$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:5000' }
+       - { regexp: '^.*bind.*:5001$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:5001' }
+       - { regexp: '^.*bind.*:5002$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:5002' }
+       - { regexp: '^.*bind.*:5003$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:5003' }
+      loop_control:
+        label: "{{ item.line }}"
+      when: cluster_vip is not defined or cluster_vip | length < 1
   when: add_balancer is defined and add_balancer|bool
   tags: [ confd_conf, confd ]
 

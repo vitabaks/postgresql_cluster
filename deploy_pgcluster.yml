@@ -99,7 +99,7 @@
       tags: [ sysctl, kernel ]
 
     - import_tasks: tasks/haproxy.yml
-      when: with_haproxy_load_balancing == "true" and cluster_vip | length > 0
+      when: with_haproxy_load_balancing == "true"
       tags: load_balancing
 
 
@@ -137,7 +137,7 @@
       tags: patroni
 
     - import_tasks: tasks/vip-manager.yml
-      when: with_haproxy_load_balancing != "true" and cluster_vip | length > 0
+      when: with_haproxy_load_balancing != "true" and (cluster_vip is defined and cluster_vip | length > 0)
       tags: [ vip, vip_manager ]
 
     # optional

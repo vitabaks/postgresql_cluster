@@ -111,6 +111,19 @@
        - { regexp: '^listen_addr =', line: 'listen_addr = {{ hostvars[inventory_hostname].inventory_hostname }}' }
       loop_control:
         label: "{{ item.line }}"
+      when: with_haproxy_load_balancing == 'true' or (cluster_vip is not defined or cluster_vip | length < 1)
+
+    - name: PgBouncer | prepare pgbouncer.ini conf file (replace "listen_addr")
+      lineinfile:
+        path: /etc/pgbouncer/pgbouncer.ini
+        regexp: '{{ item.regexp }}'
+        line: '{{ item.line }}'
+        backrefs: yes
+      loop:
+       - { regexp: '^listen_addr =', line: 'listen_addr = {{ hostvars[inventory_hostname].inventory_hostname }},{{ cluster_vip }}' }
+      loop_control:
+        label: "{{ item.line }}"
+      when: with_haproxy_load_balancing != 'true' and (cluster_vip is defined and cluster_vip | length > 0 )
   when: existing_pgcluster is defined and existing_pgcluster|bool
   tags: [ pgbouncer_conf, pgbouncer ]
 
