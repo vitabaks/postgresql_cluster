@@ -42,7 +42,9 @@ dcs_type: "etcd"
 etcd_ver: "v3.3.18" # version for deploy etcd cluster
 etcd_data_dir: "/var/lib/etcd"
 etcd_cluster_name: "etcd-{{ patroni_cluster_name }}" # ETCD_INITIAL_CLUSTER_TOKEN
-wal_g_ver: "v0.2.14" # version for deploy etcd cluster
+# WAL-G
+wal_g_install: "true" # or "false"
+wal_g_ver: "v0.2.14" # (if patroni_create_replica_methods.wal_g is defined and wal_g_install: "true")
 
  # if variable "dcs_exists=true" and "dcs_type=etcd" - specify ip-address your etcd cluster in the "patroni_etcd_hosts" variable
  # example (use existing cluster of 3 nodes)
