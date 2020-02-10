@@ -42,9 +42,6 @@ dcs_type: "etcd"
 etcd_ver: "v3.3.18" # version for deploy etcd cluster
 etcd_data_dir: "/var/lib/etcd"
 etcd_cluster_name: "etcd-{{ patroni_cluster_name }}" # ETCD_INITIAL_CLUSTER_TOKEN
-# WAL-G
-wal_g_install: "true" # or "false"
-wal_g_ver: "v0.2.14" # (if patroni_create_replica_methods.wal_g is defined and wal_g_install: "true")
 
  # if variable "dcs_exists=true" and "dcs_type=etcd" - specify ip-address your etcd cluster in the "patroni_etcd_hosts" variable
  # example (use existing cluster of 3 nodes)
@@ -219,6 +216,10 @@ patroni_remove_data_directory_on_rewind_failure: 'false' # or 'true' (if use_pg_
 patroni_remove_data_directory_on_diverged_timelines: 'false' # or 'true'
 # if 'true', Patroni will remove the PostgreSQL data directory and recreate the replica
 # if it notices that timelines are diverging and the former master can not start streaming from the new master.
+
+# WAL-G
+wal_g_install: "false" # or "false"
+wal_g_ver: "v0.2.14" # (if patroni_create_replica_methods.wal_g is defined and wal_g_install: "true")
 
 patroni_create_replica_methods:
 #  - pgbackrest
