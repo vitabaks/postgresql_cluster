@@ -20,7 +20,7 @@
 
     - name: copy "wal-g" binary files to /usr/local/bin/
       copy:
-        src: "/tmp/{{ wal_g_package_repo.split('.tar.gz')[0] | basename }}/{{ item }}"
+        src: "/tmp/wal-g"
         dest: /usr/local/bin/
         mode: u+x,g+x,o+x
         remote_src: yes
@@ -38,7 +38,7 @@
 
     - name: copy "wal-g" binary files to /usr/local/bin/
       copy:
-        src: "/tmp/{{ wal_g_package_file.split('.tar.gz')[0] | basename }}/{{ item }}"
+        src: "/tmp/wal-g"
         dest: /usr/local/bin/
         mode: u+x,g+x,o+x
         remote_src: yes
