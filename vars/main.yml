@@ -217,10 +217,6 @@ patroni_remove_data_directory_on_diverged_timelines: 'false' # or 'true'
 # if 'true', Patroni will remove the PostgreSQL data directory and recreate the replica
 # if it notices that timelines are diverging and the former master can not start streaming from the new master.
 
-# WAL-G
-wal_g_install: "false" # or "false"
-wal_g_ver: "v0.2.14" # (if patroni_create_replica_methods.wal_g is defined and wal_g_install: "true")
-
 patroni_create_replica_methods:
 #  - pgbackrest
 #  - wal_e
@@ -244,4 +240,6 @@ basebackup:
   - { option: "max-rate",   value: "100M" }
   - { option: "checkpoint", value: "fast" }
 
-
+# WAL-G
+wal_g_install: "false" # or "false"
+wal_g_ver: "v0.2.14" # (if patroni_create_replica_methods.wal_g is defined and wal_g_install: "true")

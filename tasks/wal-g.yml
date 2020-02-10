@@ -29,7 +29,7 @@
   when: installation_method == "repo" and wal_g_package_repo | length > 0
   tags: wal_g_install
 
-# install etcd package from file
+# install wal-g package from file
 - block:
     - name: extract "wal-g" into /tmp
       unarchive:
