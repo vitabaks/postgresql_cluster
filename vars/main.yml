@@ -42,6 +42,7 @@ dcs_type: "etcd"
 etcd_ver: "v3.3.18" # version for deploy etcd cluster
 etcd_data_dir: "/var/lib/etcd"
 etcd_cluster_name: "etcd-{{ patroni_cluster_name }}" # ETCD_INITIAL_CLUSTER_TOKEN
+wal_g_ver: "v0.2.14" # version for deploy etcd cluster
 
  # if variable "dcs_exists=true" and "dcs_type=etcd" - specify ip-address your etcd cluster in the "patroni_etcd_hosts" variable
  # example (use existing cluster of 3 nodes)
@@ -220,6 +221,7 @@ patroni_remove_data_directory_on_diverged_timelines: 'false' # or 'true'
 patroni_create_replica_methods:
 #  - pgbackrest
 #  - wal_e
+#  - wal_g
   - basebackup
 pgbackrest:
   - { option: "command",    value: "/usr/bin/pgbackrest --stanza=<stanza_name> --delta restore" }
@@ -229,6 +231,11 @@ wal_e:
   - { option: "command",    value: "patroni_wale_restore" }
   - { option: "no_master",  value: "1" }
   - { option: "envdir",     value: "/etc/wal_e/envdir" }
+  - { option: "use_iam",    value: "1" }
+wal_g:
+  - { option: "command",    value: "patroni_walg_restore" }
+  - { option: "no_master",  value: "1" }
+  - { option: "envdir",     value: "/etc/wal_g/envdir" }
   - { option: "use_iam",    value: "1" }
 basebackup:
   - { option: "max-rate",   value: "100M" }
