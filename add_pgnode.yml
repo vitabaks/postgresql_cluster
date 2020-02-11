@@ -72,7 +72,7 @@
       tags: pgbouncer
 
     - import_tasks: tasks/wal-g.yml
-      when: wal_g_install == "true" and patroni_create_replica_methods.wal_g is defined and wal_g | length > 0
+      when: wal_g_install == "true" and wal_g in patroni_create_replica_methods
       tags: wal-g
 
     - import_tasks: tasks/patroni.yml

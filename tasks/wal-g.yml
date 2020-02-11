@@ -2,7 +2,7 @@
 
 # install wal-g package from repo
 - block:
-    - name: download "wal-g" binary
+    - name: wal-g | download "wal-g" binary
       get_url:
         url: '{{ item }}'
         dest: /tmp/
@@ -12,13 +12,13 @@
         - '{{ wal_g_package_repo }}'
       environment: '{{ proxy_env | default({}) }}'
 
-    - name: extract "wal-g" into /tmp
+    - name: wal-g | extract "wal-g" into /tmp
       unarchive:
         src: '/tmp/{{ wal_g_package_repo | basename }}'
         dest: /tmp/
         remote_src: yes
 
-    - name: copy "wal-g" binary files to /usr/local/bin/
+    - name: wal-g | copy "wal-g" binary files to /usr/local/bin/
       copy:
         src: "/tmp/wal-g"
         dest: /usr/local/bin/
@@ -37,12 +37,12 @@
 
 # install wal-g package from file
 - block:
-    - name: extract "wal-g" into /tmp
+    - name: wal-g | extract "wal-g" into /tmp
       unarchive:
         src: '{{ wal_g_package_file }}'
         dest: /tmp/
 
-    - name: copy "wal-g" binary files to /usr/local/bin/
+    - name: wal-g | copy "wal-g" binary files to /usr/local/bin/
       copy:
         src: "/tmp/wal-g"
         dest: /usr/local/bin/
