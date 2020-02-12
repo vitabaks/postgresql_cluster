@@ -80,7 +80,8 @@
   package:
     name: "{{ item }}"
     update_cache: yes
+    state: present
   loop: "{{ postgresql_packages }}"
   environment: '{{ proxy_env | default({}) }}'
-  when: installation_method == "repo" and postgresql_exists != "true"
+  when: installation_method == "repo"
   tags: install_postgres
