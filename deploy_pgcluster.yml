@@ -128,15 +128,6 @@
     - import_tasks: tasks/configure.yml
       tags: configure
 
-    - name: Show wal_g variable
-      debug:
-        msg: "wal_g_install is {{ wal_g_install }}"
-
-    - name: "loop through list from a variable patroni_create_replica_methods"
-      debug:
-        msg: "An item: {{ item }}"
-      with_items: "{{ patroni_create_replica_methods }}"
-
     - import_tasks: tasks/wal-g.yml
       when: wal_g_install == "true" and wal_g in patroni_create_replica_methods
       tags: wal-g
