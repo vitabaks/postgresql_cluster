@@ -95,6 +95,8 @@
 - block:
     - name: etcd cluster | wait until the etcd cluster is healthy
       command: /usr/local/bin/etcdctl cluster-health
+      environment:
+        ETCDCTL_API: 2
       register: etcd_health_result
       run_once: true
       changed_when: false
