@@ -1,14 +1,10 @@
 {
-  "WALE_S3_PREFIX": "s3://bucket",
-  "AWS_ACCESS_KEY_ID": "minio",
-  "AWS_ENDPOINT": "http://172.26.9.200:9000",
+  "AWS_ACCESS_KEY_ID": "{{ aws_access_key_id }}",
+  "AWS_ENDPOINT": "{{ aws_endpoint }}",
   "AWS_S3_FORCE_PATH_STYLE": "true",
-  "AWS_SECRET_ACCESS_KEY": "miniosecret",
-  "PGDATA": "/var/lib/pgsql/11/data/",
-  "PGHOST": "/var/run/postgresql/.s.PGSQL.5432",
-  "WALG_UPLOAD_CONCURRENCY": "2",
-  "WALG_DOWNLOAD_CONCURRENCY": "2",
-  "WALG_UPLOAD_DISK_CONCURRENCY": "2",
-  "WALG_DELTA_MAX_STEPS": "7",
+  "AWS_SECRET_ACCESS_KEY": "{{ aws_secret_access_key }}",
+  "PGDATA": "{{ postgresql_data_dir }}",
+  "PGHOST": "{{ postgresql_unix_socket_dir }}",
+  "WALE_S3_PREFIX": "{{ wale_s3_prefix }}",
   "WALG_COMPRESSION_METHOD": "brotli"
 }
