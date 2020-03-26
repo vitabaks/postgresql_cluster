@@ -46,11 +46,6 @@
       loop:
         - wal-g
 
-    - name: wal-g | create wal-g conf directory
-      file:
-        path: /etc/wal_g/envdir
-        state: directory
-
   when: installation_method == "file" and wal_g_package_file | length > 0
   tags: wal_g_install
 
@@ -61,3 +56,4 @@
     owner: postgres
     group: postgres
     mode: 0644
+    tags: wal_g_install
