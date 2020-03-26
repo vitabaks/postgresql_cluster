@@ -71,6 +71,10 @@
       when: install_pgbouncer == "true"
       tags: pgbouncer
 
+    - import_tasks: tasks/wal-g.yml
+      when: wal_g_install == "true"
+      tags: wal-g
+
     - import_tasks: tasks/patroni.yml
       tags: patroni
 

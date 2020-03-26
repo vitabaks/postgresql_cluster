@@ -47,7 +47,7 @@ bootstrap:
       {% endfor %}
  
  #      recovery_conf:
-#        restore_command: cp ../wal_archive/%f %p
+#        restore_command: wal-g wal-fetch "%f" "%p"
  
   # some desired options for 'initdb'
 {% if postgresql_exists == 'true' %}

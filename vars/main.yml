@@ -121,7 +121,7 @@ postgresql_parameters:
   - { option: "max_files_per_process",               value: "4096"    }
   - { option: "archive_mode",                        value: "on"      }
   - { option: "archive_timeout",                     value: "1800s"   }
-  - { option: "archive_command",                     value: "cd ."    } # not doing anything yet with WAL-s
+  - { option: "archive_command",                     value: "wal-g wal-push '%p'"    } # not doing anything yet with WAL-s
   - { option: "wal_level",                           value: "replica" } # "replica" for PostgreSQL 9.6 and above (for 9.4, 9.5 use "hot_standby")
   - { option: "wal_keep_segments",                   value: "130"     }
   - { option: "max_wal_senders",                     value: "10"      }
@@ -234,4 +234,6 @@ basebackup:
   - { option: "max-rate",   value: "100M" }
   - { option: "checkpoint", value: "fast" }
 
-
+# WAL-G
+wal_g_install: "false" # or "true"
+wal_g_ver: "v0.2.15" # (if wal_g_install == "true")
