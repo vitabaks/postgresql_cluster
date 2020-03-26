@@ -56,4 +56,4 @@
     owner: postgres
     group: postgres
     mode: 0644
-    tags: wal_g_install
+  tags: wal_g_install
