@@ -8,7 +8,7 @@ postgresql_conf_dir: "{{ postgresql_data_dir }}"
 postgresql_bin_dir: "/usr/pgsql-{{ postgresql_version }}/bin"
 postgresql_log_dir: "/var/log/postgresql"
 postgresql_unix_socket_dir: "/var/run/postgresql"
-postgresql_pgpass: /var/lib/pgsql/.pgpass
+postgresql_pgpass: "{{ postgresql_home_dir }}/.pgpass"
 
 postgresql_version_terse: "{{ postgresql_version | replace('.', '') }}"
 

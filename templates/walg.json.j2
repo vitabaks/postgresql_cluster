@@ -6,5 +6,5 @@
   "PGDATA": "{{ postgresql_data_dir }}",
   "PGHOST": "{{ postgresql_unix_socket_dir }}",
   "WALE_S3_PREFIX": "{{ wale_s3_prefix }}",
-  "WALG_COMPRESSION_METHOD": "brotli"
+  "WALG_COMPRESSION_METHOD": "{{ walg_compression_method }}"
 }
