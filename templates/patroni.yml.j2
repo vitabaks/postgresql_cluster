@@ -48,10 +48,6 @@ bootstrap:
  
  #      recovery_conf:
 #        restore_command: cp ../wal_archive/%f %p #If you use wal-g, than use: wal-g wal-fetch %f %p
-      {% if postgresql_restore_command is defined and postgresql_restore_command | length > 0 %}
-        recovery_conf:
-          restore_command: {{ postgresql_restore_command }}
-      {% endif %}
   # some desired options for 'initdb'
 {% if postgresql_exists == 'true' %}
 #  initdb:  # Note: It needs to be a list (some options need values, others are switches)
@@ -147,6 +143,10 @@ postgresql:
     {% for item in basebackup %}
     {{ item.option }}: '{{ item.value }}'
     {% endfor %}
+  {% endif %}
+  {% if postgresql_restore_command is defined and postgresql_restore_command | length > 0 %}
+    recovery_conf:
+      restore_command: {{ postgresql_restore_command }}
   {% endif %}
 {% else %}
     - basebackup
