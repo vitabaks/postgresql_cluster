@@ -224,9 +224,6 @@ patroni_create_replica_methods:
 #  - wal_g
   - basebackup
 
-postgresql_restore_command: [] # written to recovery.conf when configuring follower (create replica)
-# postgresql_restore_command: 'wal-g wal-fetch %f %p' # restore WAL-s using WAL-G
-
 pgbackrest:
   - { option: "command",    value: "/usr/bin/pgbackrest --stanza=<stanza_name> --delta restore" }
   - { option: "keep_data",  value: "True" }
@@ -243,6 +240,10 @@ wal_g:
 basebackup:
   - { option: "max-rate",   value: "100M" }
   - { option: "checkpoint", value: "fast" }
+
+# "restore_command" written to recovery.conf when configuring follower (create replica)
+postgresql_restore_command: []
+# postgresql_restore_command: 'wal-g wal-fetch %f %p' # restore WAL-s using WAL-G
 
 # WAL-G
 wal_g_install: "false" # or "true"
