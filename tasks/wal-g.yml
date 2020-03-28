@@ -45,7 +45,7 @@
   when: installation_method == "file" and wal_g_package_file | length > 0
   tags: wal_g_install
 
-- name: wal-g | generate conf file .walg.json.j2
+- name: "wal-g | generate conf file {{ postgresql_home_dir }}/.walg.json"
   template:
     src: templates/walg.json.j2
     dest: '{{ postgresql_home_dir }}/.walg.json'
