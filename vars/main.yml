@@ -237,7 +237,7 @@ wal_e:
   - { option: "envdir",     value: "/etc/wal_e/envdir" }
   - { option: "use_iam",    value: "1" }
 wal_g:
-  - { option: "command",    value: "wal-g backup-fetch --datadir {{ postgresql_data_dir }} LATEST LATEST" }
+  - { option: "command",    value: "wal-g backup-fetch --datadir {{ postgresql_data_dir }} LATEST" }
   - { option: "no_master",  value: "1" }
   - { option: "use_iam",    value: "1" }
 basebackup:
