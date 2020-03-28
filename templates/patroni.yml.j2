@@ -149,10 +149,10 @@ postgresql:
   basebackup:
     max-rate: '100M'
 {% endif %}
-  {% if postgresql_restore_command is defined and postgresql_restore_command | length > 0 %}
-    recovery_conf:
-      restore_command: {{ postgresql_restore_command }}
-  {% endif %}
+{% if postgresql_restore_command is defined and postgresql_restore_command | length > 0 %}
+  recovery_conf:
+    restore_command: {{ postgresql_restore_command }}
+{% endif %}
  #watchdog:
 #  mode: automatic # Allowed values: off, automatic, required
 #  device: /dev/watchdog
