@@ -48,7 +48,7 @@
 - name: wal-g | generate conf file .walg.json.j2
   template:
     src: templates/walg.json.j2
-    dest: '/var/lib/pgsql/.walg.json'
+    dest: '{{ postgresql_home_dir }}/.walg.json'
     owner: postgres
     group: postgres
     mode: 0644
