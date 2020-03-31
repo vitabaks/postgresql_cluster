@@ -235,8 +235,6 @@ wal_e:
   - { option: "use_iam",    value: "1" }
 wal_g:
   - { option: "command",    value: "wal-g backup-fetch {{ postgresql_data_dir }} LATEST" }
-  - { option: "no_master",  value: "1" }
-  - { option: "use_iam",    value: "1" }
 basebackup:
   - { option: "max-rate",   value: "100M" }
   - { option: "checkpoint", value: "fast" }
