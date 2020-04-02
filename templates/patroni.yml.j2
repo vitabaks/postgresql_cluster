@@ -26,8 +26,8 @@ etcd:
 bootstrap:
   # this section will be written into Etcd:/<namespace>/<scope>/config after initializing new cluster
   # and all other cluster members will use it as a `global configuration`
-  method: {{ patoni_cluster_bootstrap_method }}
-{% if patoni_cluster_bootstrap_method == 'wal-g' %}
+  method: {{ patroni_cluster_bootstrap_method }}
+{% if patroni_cluster_bootstrap_method == 'wal-g' %}
   wal_g:
     command: /etc/patroni/wal_g_bootstrap.sh
     recovery_conf:
