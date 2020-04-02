@@ -55,8 +55,10 @@
   tags: wal_g_install
 
 - name: "wal-g | copy "wal_g_bootstrap.sh" to /etc/patroni/"
-  unarchive:
+  copy:
     src: 'wal_g_bootstrap.sh'
     dest: /etc/patroni/
+    owner: postgres
+    group: postgres
     mode: 0775
   tags: wal_g_install
