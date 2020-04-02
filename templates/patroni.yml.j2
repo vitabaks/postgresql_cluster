@@ -26,6 +26,15 @@ etcd:
 bootstrap:
   # this section will be written into Etcd:/<namespace>/<scope>/config after initializing new cluster
   # and all other cluster members will use it as a `global configuration`
+{% if walg_restore_from_backup == 'true' %}
+  method: wal_g
+  wal_g:
+    command: /etc/patroni/wal_g_bootstrap.sh
+    recovery_conf:
+       recovery_target_action: promote
+       recovery_target_timeline: latest
+       restore_command: wal-g wal-fetch %f %p
+{% endif %}
   dcs:
     ttl: {{ patroni_ttl |d(30, true) |int }}
     loop_wait: {{ patroni_loop_wait |d(10, true) |int }}

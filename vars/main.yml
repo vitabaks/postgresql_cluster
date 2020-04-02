@@ -122,7 +122,7 @@ postgresql_parameters:
   - { option: "archive_mode",                        value: "on"      }
   - { option: "archive_timeout",                     value: "1800s"   }
   - { option: "archive_command",                     value: "cd ."    }
-#  - { option: "archive_command",                     value: "wal-g wal-push '% p'" } # archive WAL-s using WAL-G
+#  - { option: "archive_command",                     value: "wal-g wal-push %p" } # archive WAL-s using WAL-G
   - { option: "wal_level",                           value: "replica" } # "replica" for PostgreSQL 9.6 and above (for 9.4, 9.5 use "hot_standby")
   - { option: "wal_keep_segments",                   value: "130"     }
   - { option: "max_wal_senders",                     value: "10"      }
@@ -252,3 +252,4 @@ aws_endpoint: "http://172.26.9.200:9000"
 aws_secret_access_key: "miniosecret"
 walg_s3_prefix: "s3://bucket"
 walg_compression_method: "brotli"
+walg_restore_from_backup: "false"
