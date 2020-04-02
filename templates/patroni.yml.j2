@@ -55,8 +55,6 @@ bootstrap:
         {{ parameter.option }}: {{ parameter.value }}
       {% endfor %}
  
- #      recovery_conf:
-#        restore_command: cp ../wal_archive/%f %p #If you use wal-g, than use: wal-g wal-fetch %f %p
   # some desired options for 'initdb'
 {% if postgresql_exists == 'true' %}
 #  initdb:  # Note: It needs to be a list (some options need values, others are switches)
