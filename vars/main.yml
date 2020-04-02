@@ -219,7 +219,7 @@ patroni_remove_data_directory_on_diverged_timelines: 'false' # or 'true'
 # if it notices that timelines are diverging and the former master can not start streaming from the new master.
 
 # https://patroni.readthedocs.io/en/latest/replica_bootstrap.html#bootstrap
-patoni_cluster_bootstrap_method: "initdb" # or "wal-g"
+patroni_cluster_bootstrap_method: "initdb" # or "wal-g"
 
 # https://patroni.readthedocs.io/en/latest/replica_bootstrap.html#building-replicas
 patroni_create_replica_methods:
