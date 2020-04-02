@@ -218,6 +218,10 @@ patroni_remove_data_directory_on_diverged_timelines: 'false' # or 'true'
 # if 'true', Patroni will remove the PostgreSQL data directory and recreate the replica
 # if it notices that timelines are diverging and the former master can not start streaming from the new master.
 
+# https://patroni.readthedocs.io/en/latest/replica_bootstrap.html#bootstrap
+patoni_cluster_bootstrap_method: "initdb" # or "wal-g"
+
+# https://patroni.readthedocs.io/en/latest/replica_bootstrap.html#building-replicas
 patroni_create_replica_methods:
 #  - pgbackrest
 #  - wal_e
@@ -244,6 +248,7 @@ basebackup:
 postgresql_restore_command: []
 # postgresql_restore_command: 'wal-g wal-fetch %f %p' # restore WAL-s using WAL-G
 
+
 # WAL-G
 wal_g_install: "false" # or "true"
 wal_g_ver: "v0.2.15"
@@ -252,4 +257,4 @@ aws_endpoint: "http://172.26.9.200:9000"
 aws_secret_access_key: "miniosecret"
 walg_s3_prefix: "s3://bucket"
 walg_compression_method: "brotli"
-walg_restore_from_backup: "false"
+
