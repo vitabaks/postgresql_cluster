@@ -252,9 +252,16 @@ postgresql_restore_command: []
 # WAL-G
 wal_g_install: "false" # or "true"
 wal_g_ver: "v0.2.15"
-aws_access_key_id: "minio"
-aws_endpoint: "http://172.26.9.200:9000"
-aws_secret_access_key: "miniosecret"
-walg_s3_prefix: "s3://bucket"
-walg_compression_method: "brotli"
+wal_g_json: # more options see https://github.com/wal-g/wal-g#configuration
+  - { option: "AWS_ACCESS_KEY_ID", value: "minio" }
+  - { option: "AWS_SECRET_ACCESS_KEY", value: "miniosecret" }
+  - { option: "AWS_ENDPOINT", value: "http://172.26.9.200:9000" }
+  - { option: "WALG_S3_PREFIX", value: "s3://bucket" }
+  - { option: "AWS_S3_FORCE_PATH_STYLE", value: "true" }
+  - { option: "WALG_COMPRESSION_METHOD", value: "brotli" }
+  - { option: "PGDATA", value: "{{ postgresql_data_dir }}" }
+  - { option: "PGHOST", value: "{{ postgresql_unix_socket_dir }}" }
+#  - { option: "AWS_REGION", value: "us-east-1" }
+#  - { option: "WALG_S3_CA_CERT_FILE", value: "/path/to/custom/ca/file" }
+#  - { option: "", value: "" }
 
