@@ -1,10 +1,7 @@
 {
-  "AWS_ACCESS_KEY_ID": "{{ aws_access_key_id }}",
-  "AWS_ENDPOINT": "{{ aws_endpoint }}",
-  "AWS_S3_FORCE_PATH_STYLE": "true",
-  "AWS_SECRET_ACCESS_KEY": "{{ aws_secret_access_key }}",
-  "PGDATA": "{{ postgresql_data_dir }}",
-  "PGHOST": "{{ postgresql_unix_socket_dir }}",
-  "WALG_S3_PREFIX": "{{ walg_s3_prefix }}",
-  "WALG_COMPRESSION_METHOD": "{{ walg_compression_method }}"
+{% for wal_g in wal_g_json %}
+  "{{ wal_g.option }}": "{{ wal_g.value }}"{% if not loop.last %},
+{% endif %}
+{% endfor %}
+
 }
