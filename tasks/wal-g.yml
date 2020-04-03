@@ -52,7 +52,7 @@
     owner: postgres
     group: postgres
     mode: 0644
-  tags: wal_g_install
+  tags: wal_g_install, wal_g_conf
 
 - name: wal-g | copy "wal_g_bootstrap.sh" to /etc/patroni/
   copy:
