@@ -75,3 +75,6 @@
 - - conn_info
 - - vip_owner
 - - vip_status
+- wal_g
+- - wal_g_install
+- - wal_g_conf
