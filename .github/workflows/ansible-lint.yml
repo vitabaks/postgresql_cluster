@@ -25,7 +25,7 @@ jobs:
         override-deps: |
           ansible==2.9
           ansible-lint==4.2.0
-        args: ""
+        args: "-x '204','305','403','502','503'"
 
     - name: Lint playbook with Ansible v2.8
       uses: ansible/ansible-lint-action@master
@@ -37,7 +37,7 @@ jobs:
         override-deps: |
           ansible==2.8
           ansible-lint==4.2.0
-        args: ""
+        args: "-x '204','305','403','502','503'"
 
     - name: Lint playbook with Ansible v2.7
       uses: ansible/ansible-lint-action@master
@@ -49,4 +49,4 @@ jobs:
         override-deps: |
           ansible==2.7
           ansible-lint==4.2.0
-        args: ""
+        args: "-x '204','305','403','502','503'"
