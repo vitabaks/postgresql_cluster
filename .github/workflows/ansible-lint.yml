@@ -1,0 +1,52 @@
+name: Ansible-lint
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: [ubuntu-18.04]
+
+    steps:
+    - name: Git clone repo postgresql_cluster
+      uses: actions/checkout@v2
+
+    - name: Lint playbook with Ansible v2.9
+      uses: ansible/ansible-lint-action@master
+      with:
+        targets: |
+          deploy_pgcluster.yml
+          add_pgnode.yml
+          add_balancer.yml
+        override-deps: |
+          ansible==2.9
+          ansible-lint==4.2.0
+        args: ""
+
+    - name: Lint playbook with Ansible v2.8
+      uses: ansible/ansible-lint-action@master
+      with:
+        targets: |
+          deploy_pgcluster.yml
+          add_pgnode.yml
+          add_balancer.yml
+        override-deps: |
+          ansible==2.8
+          ansible-lint==4.2.0
+        args: ""
+
+    - name: Lint playbook with Ansible v2.7
+      uses: ansible/ansible-lint-action@master
+      with:
+        targets: |
+          deploy_pgcluster.yml
+          add_pgnode.yml
+          add_balancer.yml
+        override-deps: |
+          ansible==2.7
+          ansible-lint==4.2.0
+        args: ""
