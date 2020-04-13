@@ -8,7 +8,8 @@ postgresql_conf_dir: "{{ postgresql_data_dir }}"
 postgresql_bin_dir: "/usr/pgsql-{{ postgresql_version }}/bin"
 postgresql_log_dir: "/var/log/postgresql"
 postgresql_unix_socket_dir: "/var/run/postgresql"
-postgresql_pgpass: /var/lib/pgsql/.pgpass
+postgresql_home_dir: "/var/lib/pgsql"
+postgresql_pgpass: "{{ postgresql_home_dir }}/.pgpass"
 
 postgresql_version_terse: "{{ postgresql_version | replace('.', '') }}"
 
@@ -69,6 +70,7 @@ postgresql_packages:
 
 # Extra packages
 etcd_package_repo: "https://github.com/etcd-io/etcd/releases/download/{{ etcd_ver }}/etcd-{{ etcd_ver }}-linux-amd64.tar.gz"
+wal_g_package_repo: "https://github.com/wal-g/wal-g/releases/download/{{ wal_g_ver }}/wal-g.linux-amd64.tar.gz"
 vip_manager_package_repo: "https://github.com/cybertec-postgresql/vip-manager/releases/download/v{{ vip_manager_version }}/vip-manager_{{ vip_manager_version }}-1_amd64.rpm"
 # (if with_haproxy_load_balancing: 'true')
 haproxy_installation_method: "rpm" #(default)"rpm" or "src"
@@ -172,6 +174,7 @@ patroni_rpm_package_file: "patroni-1.6.0-1.rhel7.x86_64.rpm" # (package for RHEL
 
 # additional packages
 etcd_package_file: "etcd-v3.3.15-linux-amd64.tar.gz" # https://github.com/etcd-io/etcd/releases
+wal_g_package_file: "wal-g.linux-amd64.tar.gz" # https://github.com/wal-g/wal-g/releases
 vip_manager_package_file: "vip-manager_0.6-1_amd64.rpm" # https://github.com/cybertec-postgresql/vip-manager/releases
 ## (if with_haproxy_load_balancing: 'true')
 haproxy_package_file: []

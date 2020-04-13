@@ -122,6 +122,7 @@ postgresql_parameters:
   - { option: "archive_mode",                        value: "on"      }
   - { option: "archive_timeout",                     value: "1800s"   }
   - { option: "archive_command",                     value: "cd ."    } # not doing anything yet with WAL-s
+#  - { option: "archive_command",                     value: "wal-g wal-push %p" } # archive WAL-s using WAL-G
   - { option: "wal_level",                           value: "replica" } # "replica" for PostgreSQL 9.6 and above (for 9.4, 9.5 use "hot_standby")
   - { option: "wal_keep_segments",                   value: "130"     }
   - { option: "max_wal_senders",                     value: "10"      }
@@ -217,10 +218,16 @@ patroni_remove_data_directory_on_diverged_timelines: 'false' # or 'true'
 # if 'true', Patroni will remove the PostgreSQL data directory and recreate the replica
 # if it notices that timelines are diverging and the former master can not start streaming from the new master.
 
+# https://patroni.readthedocs.io/en/latest/replica_bootstrap.html#bootstrap
+patroni_cluster_bootstrap_method: "initdb" # or "wal-g"
+
+# https://patroni.readthedocs.io/en/latest/replica_bootstrap.html#building-replicas
 patroni_create_replica_methods:
 #  - pgbackrest
 #  - wal_e
+#  - wal_g
   - basebackup
+
 pgbackrest:
   - { option: "command",    value: "/usr/bin/pgbackrest --stanza=<stanza_name> --delta restore" }
   - { option: "keep_data",  value: "True" }
@@ -230,8 +237,31 @@ wal_e:
   - { option: "no_master",  value: "1" }
   - { option: "envdir",     value: "/etc/wal_e/envdir" }
   - { option: "use_iam",    value: "1" }
+wal_g:
+  - { option: "command",    value: "wal-g backup-fetch {{ postgresql_data_dir }} LATEST" }
+  - { option: "no_params",  value: "True" }
 basebackup:
   - { option: "max-rate",   value: "100M" }
   - { option: "checkpoint", value: "fast" }
 
+# "restore_command" written to recovery.conf when configuring follower (create replica)
+postgresql_restore_command: []
+# postgresql_restore_command: 'wal-g wal-fetch %f %p' # restore WAL-s using WAL-G
+
+
+# WAL-G
+wal_g_install: "false" # or "true"
+wal_g_ver: "v0.2.15"
+wal_g_json: # more options see https://github.com/wal-g/wal-g#configuration
+  - { option: "AWS_ACCESS_KEY_ID", value: "minio" }
+  - { option: "AWS_SECRET_ACCESS_KEY", value: "miniosecret" }
+  - { option: "AWS_ENDPOINT", value: "http://172.26.9.200:9000" }
+  - { option: "WALG_S3_PREFIX", value: "s3://bucket" }
+  - { option: "AWS_S3_FORCE_PATH_STYLE", value: "true" }
+  - { option: "WALG_COMPRESSION_METHOD", value: "brotli" }
+  - { option: "PGDATA", value: "{{ postgresql_data_dir }}" }
+  - { option: "PGHOST", value: "{{ postgresql_unix_socket_dir }}" }
+#  - { option: "AWS_REGION", value: "us-east-1" }
+#  - { option: "WALG_S3_CA_CERT_FILE", value: "/path/to/custom/ca/file" }
+#  - { option: "", value: "" }
 

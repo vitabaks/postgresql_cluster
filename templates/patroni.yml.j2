@@ -26,6 +26,15 @@ etcd:
 bootstrap:
   # this section will be written into Etcd:/<namespace>/<scope>/config after initializing new cluster
   # and all other cluster members will use it as a `global configuration`
+  method: {{ patroni_cluster_bootstrap_method }}
+{% if patroni_cluster_bootstrap_method == 'wal-g' %}
+  wal-g:
+    command: /etc/patroni/wal_g_bootstrap.sh
+    recovery_conf:
+       recovery_target_action: promote
+       recovery_target_timeline: latest
+       restore_command: wal-g wal-fetch %f %p
+{% endif %}
   dcs:
     ttl: {{ patroni_ttl |d(30, true) |int }}
     loop_wait: {{ patroni_loop_wait |d(10, true) |int }}
@@ -45,9 +54,6 @@ bootstrap:
       {% for parameter in postgresql_parameters %}
         {{ parameter.option }}: {{ parameter.value }}
       {% endfor %}
- 
- #      recovery_conf:
-#        restore_command: cp ../wal_archive/%f %p
  
   # some desired options for 'initdb'
 {% if postgresql_exists == 'true' %}
@@ -133,6 +139,12 @@ postgresql:
     {{ item.option }}: {{ item.value }}
     {% endfor %}
   {% endif %}
+  {% if 'wal_g' in patroni_create_replica_methods %}
+  wal_g:
+    {% for item in wal_g %}
+    {{ item.option }}: {{ item.value }}
+    {% endfor %}
+  {% endif %}
   {% if 'basebackup' in patroni_create_replica_methods %}
   basebackup:
     {% for item in basebackup %}
@@ -143,6 +155,11 @@ postgresql:
     - basebackup
   basebackup:
     max-rate: '100M'
+{% endif %}
+
+{% if postgresql_restore_command is defined and postgresql_restore_command | length > 0 %}
+  recovery_conf:
+    restore_command: {{ postgresql_restore_command }}
 {% endif %}
 
  #watchdog:
