@@ -1,5 +1,5 @@
 ---
-# Vars for Debian based distributions
+# yamllint disable rule:line-length
 
 # PostgreSQL variables
 postgresql_cluster_name: "main"
@@ -15,11 +15,11 @@ postgresql_version_terse: "{{ postgresql_version | replace('.', '') }}"
 
 # Repository
 apt_repository_keys:
-  - key: "https://www.postgresql.org/media/keys/ACCC4CF8.asc" # postgresql repository apt key
+  - key: "https://www.postgresql.org/media/keys/ACCC4CF8.asc"  # postgresql repository apt key
 apt_repository:
-  - repo: "deb http://apt.postgresql.org/pub/repos/apt/ {{ ansible_distribution_release }}-pgdg main" # postgresql apt repository
-#  - repo: "deb http://deb.debian.org/debian/ {{ ansible_distribution_release }} main"                        # debian repo (optional)
-#  - repo: "deb http://deb.debian.org/debian/ {{ ansible_distribution_release }}-updates main"                # debian repo (optional)
+  - repo: "deb http://apt.postgresql.org/pub/repos/apt/ {{ ansible_distribution_release }}-pgdg main"  # postgresql apt repository
+#  - repo: "deb http://deb.debian.org/debian/ {{ ansible_distribution_release }} main"  # debian repo (optional)
+#  - repo: "deb http://deb.debian.org/debian/ {{ ansible_distribution_release }}-updates main"  # debian repo (optional)
 #  - repo: "deb http://security.debian.org/debian-security/ {{ ansible_distribution_release }}/updates main"  # debian repo (optional)
 
 # Packages (for apt repo)
@@ -53,18 +53,18 @@ postgresql_packages:
 etcd_package_repo: "https://github.com/etcd-io/etcd/releases/download/{{ etcd_ver }}/etcd-{{ etcd_ver }}-linux-amd64.tar.gz"
 wal_g_package_repo: "https://github.com/wal-g/wal-g/releases/download/{{ wal_g_ver }}/wal-g.linux-amd64.tar.gz"
 vip_manager_package_repo: "https://github.com/cybertec-postgresql/vip-manager/releases/download/v{{ vip_manager_version }}/vip-manager_{{ vip_manager_version }}-1_amd64.deb"
-## (if with_haproxy_load_balancing: 'true')
-haproxy_installation_method: "deb" #(default)"deb" or "src"
-haproxy_install_repo: 'true' # or 'false'
-## for Debian 8/9/10 the haproxy version 1.8 (LTS) will be installed from the haproxy.debian.net repository.
-## for Ubuntu <=18.04 the haproxy version 1.8 (LTS) will be installed from the ppa:vbernat/haproxy-1.8 repository.
-## you can preload the haproxy deb packages to your APT repository (in this case specify "haproxy_install_repo: 'false'").
+# (if with_haproxy_load_balancing: 'true')
+haproxy_installation_method: "deb"  # (default)"deb" or "src"
+haproxy_install_repo: 'true'  # or 'false'
+# for Debian 8/9/10 the haproxy version 1.8 (LTS) will be installed from the haproxy.debian.net repository.
+# for Ubuntu <=18.04 the haproxy version 1.8 (LTS) will be installed from the ppa:vbernat/haproxy-1.8 repository.
+# you can preload the haproxy deb packages to your APT repository (in this case specify "haproxy_install_repo: 'false'").
 confd_package_repo: "https://github.com/kelseyhightower/confd/releases/download/v0.16.0/confd-0.16.0-linux-amd64"
 
-## (optional) if haproxy_installation_method: 'src'
+# (optional) if haproxy_installation_method: 'src'
 haproxy_major: "1.8"
 haproxy_version: "1.8.22"  # version to build from source
-lua_src_repo: "https://www.lua.org/ftp/lua-5.3.5.tar.gz" # required for build haproxy
+lua_src_repo: "https://www.lua.org/ftp/lua-5.3.5.tar.gz"  # required for build haproxy
 haproxy_src_repo: "http://www.haproxy.org/download/{{ haproxy_major }}/src/haproxy-{{ haproxy_version }}.tar.gz"
 haproxy_compile_requirements:
   - unzip
@@ -82,20 +82,20 @@ haproxy_compile_requirements:
   - libssl-dev
 
 # You can also use your own repository for extra packages. You need to preload all the packages and change this URLs.
-installation_method: "repo" #(default)"repo" or "file"
+installation_method: "repo"  # (default)"repo" or "file"
 
 # Patroni package will be installed from the pip (by default).
 # You also have the option of choosing an patroni installation method using the deb package.
-patroni_installation_method: "pip" #(default)"pip" or "deb"
+patroni_installation_method: "pip"  # (default)"pip" or "deb"
 
-# (if patroni_installation_type: "pip") 
+# (if patroni_installation_type: "pip")
 # Packages from your repository will be used to install instead of the pip repository.
-pip_package_repo: "https://bootstrap.pypa.io/get-pip.py" # latest version pip3 for python3 (or use "pip-<version>.tar.gz").
+pip_package_repo: "https://bootstrap.pypa.io/get-pip.py"  # latest version pip3 for python3 (or use "pip-<version>.tar.gz").
 patroni_pip_requirements_repo: []
 #  - "http://my-repo.url/setuptools-41.2.0.zip"
 #  - "http://my-repo.url/setuptools_scm-3.3.3.tar.gz"
 #  - "http://my-repo.url/urllib3-1.24.3.tar.gz"
-#  - "http://my-repo.url/boto-2.49.0.tar.gz" # (interfaces to Amazon Web Services)
+#  - "http://my-repo.url/boto-2.49.0.tar.gz"  # (interfaces to Amazon Web Services)
 #  - "http://my-repo.url/PyYAML-5.1.2.tar.gz"
 #  - "http://my-repo.url/chardet-3.0.4.tar.gz"
 #  - "http://my-repo.url/idna-2.8.tar.gz"
@@ -119,53 +119,53 @@ patroni_pip_package_repo: []
 # ( if patroni_installation_type: "deb" )
 # You can preload the patroni deb package to your APT repository, or explicitly specify the path to the package in this variable:
 patroni_deb_package_repo: []
-#  - "https://apt.postgresql.org/pub/repos/apt/pool/main/p/patroni/patroni_1.6.0-2.pgdg90%2b1_all.deb" # (package for Debian 9)
+#  - "https://apt.postgresql.org/pub/repos/apt/pool/main/p/patroni/patroni_1.6.0-2.pgdg90%2b1_all.deb"  # (package for Debian 9)
 
 
 # ================================================================================================= #
 # (optional) if installation_method: "file"
 # You can also download the necessary packages into postgresql_cluster/files/ directory.
 # Packages from this directory will be used for installation.
-pip_package_file: "pip-19.2.3.tar.gz" # https://pypi.org/project/pip/#files
+pip_package_file: "pip-19.2.3.tar.gz"  # https://pypi.org/project/pip/#files
 patroni_pip_requirements_file:
-  - "setuptools-41.2.0.zip"        # https://pypi.org/project/setuptools/#files
+  - "setuptools-41.2.0.zip"  # https://pypi.org/project/setuptools/#files
   - "setuptools_scm-3.3.3.tar.gz"  # https://pypi.org/project/setuptools-scm/#files
-  - "urllib3-1.24.3.tar.gz"        # https://pypi.org/project/urllib3/1.24.3/#files
-  - "boto-2.49.0.tar.gz"           # https://pypi.org/project/boto/#files # (interfaces to Amazon Web Services)
-  - "PyYAML-5.1.2.tar.gz"          # https://pypi.org/project/PyYAML/#files
-  - "chardet-3.0.4.tar.gz"         # https://pypi.org/project/chardet/#files # (required for "requests")
-  - "idna-2.8.tar.gz"              # https://pypi.org/project/idna/#files    # (required for "requests")
-  - "certifi-2019.9.11.tar.gz"     # https://pypi.org/project/certifi/#files # (required for "requests")
-  - "requests-2.22.0.tar.gz"       # https://pypi.org/project/requests/#files
-  - "six-1.12.0.tar.gz"            # https://pypi.org/project/six/#files
-  - "kazoo-2.6.1.tar.gz"           # https://pypi.org/project/kazoo/#files
-  - "dnspython-1.16.0.zip"         # https://pypi.org/project/dnspython/#files # (required for "python-etcd")
-  - "python-etcd-0.4.5.tar.gz"     # https://pypi.org/project/python-etcd/#files
-  - "Click-7.0.tar.gz"             # https://pypi.org/project/click/#files
-  - "prettytable-0.7.2.tar.gz"     # https://pypi.org/project/PrettyTable/#files
-  - "pytz-2019.2.tar.gz"           # https://pypi.org/project/pytz/#files # (required for "tzlocal")
-  - "tzlocal-2.0.0.tar.gz"         # https://pypi.org/project/tzlocal/#files
-  - "wheel-0.33.6.tar.gz"          # https://pypi.org/project/wheel/#files
-  - "python-dateutil-2.8.0.tar.gz" # https://pypi.org/project/python-dateutil/#files
-  - "psutil-5.6.3.tar.gz"          # https://pypi.org/project/psutil/#files
-  - "cdiff-1.0.tar.gz"             # https://pypi.org/project/cdiff/#files
-patroni_pip_package_file: 
-  - "patroni-1.6.0.tar.gz"         # https://pypi.org/project/patroni/#files
+  - "urllib3-1.24.3.tar.gz"  # https://pypi.org/project/urllib3/1.24.3/#files
+  - "boto-2.49.0.tar.gz"  # https://pypi.org/project/boto/#files # (interfaces to Amazon Web Services)
+  - "PyYAML-5.1.2.tar.gz"  # https://pypi.org/project/PyYAML/#files
+  - "chardet-3.0.4.tar.gz"  # https://pypi.org/project/chardet/#files # (required for "requests")
+  - "idna-2.8.tar.gz"  # https://pypi.org/project/idna/#files    # (required for "requests")
+  - "certifi-2019.9.11.tar.gz"  # https://pypi.org/project/certifi/#files # (required for "requests")
+  - "requests-2.22.0.tar.gz"  # https://pypi.org/project/requests/#files
+  - "six-1.12.0.tar.gz"  # https://pypi.org/project/six/#files
+  - "kazoo-2.6.1.tar.gz"  # https://pypi.org/project/kazoo/#files
+  - "dnspython-1.16.0.zip"  # https://pypi.org/project/dnspython/#files # (required for "python-etcd")
+  - "python-etcd-0.4.5.tar.gz"  # https://pypi.org/project/python-etcd/#files
+  - "Click-7.0.tar.gz"  # https://pypi.org/project/click/#files
+  - "prettytable-0.7.2.tar.gz"  # https://pypi.org/project/PrettyTable/#files
+  - "pytz-2019.2.tar.gz"  # https://pypi.org/project/pytz/#files # (required for "tzlocal")
+  - "tzlocal-2.0.0.tar.gz"  # https://pypi.org/project/tzlocal/#files
+  - "wheel-0.33.6.tar.gz"  # https://pypi.org/project/wheel/#files
+  - "python-dateutil-2.8.0.tar.gz"  # https://pypi.org/project/python-dateutil/#files
+  - "psutil-5.6.3.tar.gz"  # https://pypi.org/project/psutil/#files
+  - "cdiff-1.0.tar.gz"  # https://pypi.org/project/cdiff/#files
+patroni_pip_package_file:
+  - "patroni-1.6.0.tar.gz"  # https://pypi.org/project/patroni/#files
 
 # ( if installation_method: "file" and patroni_installation_type: "deb")
-patroni_deb_package_file: "patroni_1.6.0-2.pgdg90+1_all.deb" # (package for Debian 9) https://apt.postgresql.org/pub/repos/apt/pool/main/p/patroni/
+patroni_deb_package_file: "patroni_1.6.0-2.pgdg90+1_all.deb"  # (package for Debian 9) https://apt.postgresql.org/pub/repos/apt/pool/main/p/patroni/
 
 # additional packages
-etcd_package_file: "etcd-v3.3.15-linux-amd64.tar.gz" # https://github.com/etcd-io/etcd/releases
-wal_g_package_file: "wal-g.linux-amd64.tar.gz" # https://github.com/wal-g/wal-g/releases
-vip_manager_package_file: "vip-manager_0.6-1_amd64.deb" # https://github.com/cybertec-postgresql/vip-manager/releases
-## (if with_haproxy_load_balancing: 'true')
+etcd_package_file: "etcd-v3.3.15-linux-amd64.tar.gz"  # https://github.com/etcd-io/etcd/releases
+wal_g_package_file: "wal-g.linux-amd64.tar.gz"  # https://github.com/wal-g/wal-g/releases
+vip_manager_package_file: "vip-manager_0.6-1_amd64.deb"  # https://github.com/cybertec-postgresql/vip-manager/releases
+# (if with_haproxy_load_balancing: 'true')
 haproxy_package_file: []
 #  - "haproxy_1.8.21-1~bpo9+1_amd64.deb"
-confd_package_file: "confd-0.16.0-linux-amd64" # https://github.com/kelseyhightower/confd/releases
+confd_package_file: "confd-0.16.0-linux-amd64"  # https://github.com/kelseyhightower/confd/releases
 # (optional) if haproxy_installation_method: 'src'
-lua_src_file: "lua-5.3.5.tar.gz" # https://www.lua.org/ftp/lua-5.3.5.tar.gz (required for build haproxy)
-haproxy_src_file: "haproxy-1.8.20.tar.gz" # http://www.haproxy.org/download/1.8/src/
+lua_src_file: "lua-5.3.5.tar.gz"  # https://www.lua.org/ftp/lua-5.3.5.tar.gz (required for build haproxy)
+haproxy_src_file: "haproxy-1.8.20.tar.gz"  # http://www.haproxy.org/download/1.8/src/
 
 # ------------------------------------------------------------------------------------------------- #
 # (optional) Specify additional deb packages if required (for any installation_method)
@@ -179,3 +179,5 @@ packages_from_file: []
 # Attention! If you want to use the installation method "file".
 # You need to independently determine all the necessary the dependencies of deb packages for your version of the Linux distribution.
 # ----------------------------------------------------------------------------------------------------------------------------------
+
+...

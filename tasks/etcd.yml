@@ -1,4 +1,5 @@
 ---
+# yamllint disable rule:line-length
 
 # install etcd package from repo
 - block:
@@ -7,7 +8,7 @@
         url: '{{ item }}'
         dest: /tmp/
         timeout: 60
-        validate_certs: no
+        validate_certs: false
       loop:
         - '{{ etcd_package_repo }}'
       environment: '{{ proxy_env | default({}) }}'
@@ -16,14 +17,14 @@
       unarchive:
         src: '/tmp/{{ etcd_package_repo | basename }}'
         dest: /tmp/
-        remote_src: yes
+        remote_src: true
 
     - name: etcd cluster | copy "etcd" and "etcdctl" binary files to /usr/local/bin/
       copy:
         src: "/tmp/{{ etcd_package_repo.split('.tar.gz')[0] | basename }}/{{ item }}"
         dest: /usr/local/bin/
         mode: u+x,g+x,o+x
-        remote_src: yes
+        remote_src: true
       loop:
         - etcd
         - etcdctl
@@ -42,7 +43,7 @@
         src: "/tmp/{{ etcd_package_file.split('.tar.gz')[0] | basename }}/{{ item }}"
         dest: /usr/local/bin/
         mode: u+x,g+x,o+x
-        remote_src: yes
+        remote_src: true
       loop:
         - etcd
         - etcdctl
@@ -76,9 +77,9 @@
 
 - name: etcd cluster | enable and start systemd service
   systemd:
-    daemon_reload: yes
+    daemon_reload: true
     name: etcd
-    enabled: yes
+    enabled: true
     state: started
   tags: etcd_start
 
@@ -89,7 +90,7 @@
     state: started
     timeout: 120
     delay: 10
-  ignore_errors: no
+  ignore_errors: false
   tags: etcd_start
 
 - block:
@@ -103,11 +104,12 @@
       until: "'cluster is healthy' in etcd_health_result.stdout"
       retries: 10
       delay: 10
-      ignore_errors: no
+      ignore_errors: false
 
     - name: etcd cluster | health
       run_once: true
       debug:
         var: etcd_health_result.stdout_lines
-  tags: [ etcd_start, etcd_status ]
+  tags: etcd_start, etcd_status
 
+...

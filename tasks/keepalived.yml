@@ -4,19 +4,19 @@
   package:
     name: keepalived
   environment: '{{ proxy_env | default({}) }}'
-  tags: [ keepalived_install, keepalived ]
+  tags: keepalived_install, keepalived
 
-- name: keepalived | make sure the kernel parameters "net.ipv4.ip_nonlocal_bind", "net.ipv4.ip_forward" are enabled
+- name: keepalived | make sure the kernel parameters "net.ipv4.ip_nonlocal_bind", "net.ipv4.ip_forward" are enabled  # yamllint disable rule:line-length
   sysctl:
     name: "{{ item }}"
     value: "1"
-    sysctl_set: "yes"
-    state: "present"
-    reload: "yes"
+    sysctl_set: true
+    state: present
+    reload: true
   loop:
     - "net.ipv4.ip_nonlocal_bind"
     - "net.ipv4.ip_forward"
-  tags: [ keepalived_conf, keepalived ]
+  tags: keepalived_conf, keepalived
 
 - name: keepalived | make sure the "/usr/libexec/keepalived" directory exists
   file:
@@ -24,9 +24,9 @@
     state: directory
     owner: root
     group: root
-  tags: [ keepalived_conf, keepalived ]
+  tags: keepalived_conf, keepalived
 
-- name: keepalived | create vrrp_script "/usr/libexec/keepalived/haproxy_check.sh"
+- name: keepalived | create vrrp_script "/usr/libexec/keepalived/haproxy_check.sh"  # yamllint disable rule:line-length
   copy:
     content: |
       #!/bin/bash
@@ -36,7 +36,7 @@
     group: root
     mode: 0700
   register: haproxy_check_result
-  tags: [ keepalived_conf, keepalived ]
+  tags: keepalived_conf, keepalived
 
 - name: keepalived | generate conf file "/etc/keepalived/keepalived.conf"
   template:
@@ -44,16 +44,16 @@
     dest: /etc/keepalived/keepalived.conf
   register: keepalived_conf_result
   when: add_balancer is not defined or not add_balancer|bool
-  tags: [ keepalived_conf, keepalived ]
+  tags: keepalived_conf, keepalived
 
-- block: # for add_balancer.yml
+- block:  # for add_balancer.yml
     - name: keepalived | fetch keepalived.conf conf file from master
       run_once: true
       fetch:
         src: /etc/keepalived/keepalived.conf
         dest: files/keepalived.conf
-        validate_checksum: yes
-        flat: yes
+        validate_checksum: true
+        flat: true
       delegate_to: '{{ groups.master[0] }}'
 
     - name: keepalived | copy keepalived.conf conf file to replica
@@ -67,30 +67,31 @@
         path: /etc/keepalived/keepalived.conf
         regexp: '{{ item.regexp }}'
         line: '{{ item.line }}'
-        backrefs: yes
+        backrefs: true
       loop:
-       - { regexp: '^.*interface', line: '   interface {{ vip_interface }}' }
+        - {regexp: '^.*interface', line: '   interface {{ vip_interface }}'}
       loop_control:
         label: "{{ item.line }}"
       register: keepalived_conf_prepare_result
   when: add_balancer is defined and add_balancer|bool
-  tags: [ keepalived_conf, keepalived ]
+  tags: keepalived_conf, keepalived
 
 - name: keepalived | selinux | change the keepalived_t domain to permissive
   selinux_permissive:
     name: keepalived_t
     permissive: true
-  when: ansible_selinux.status is defined and ansible_selinux.status == 'enabled'
-  ignore_errors: yes
-  tags: [ keepalived, keepalived_selinux ]
+  when: ansible_selinux.status is defined and
+        ansible_selinux.status == 'enabled'
+  ignore_errors: true
+  tags: keepalived, keepalived_selinux
 
 - name: keepalived | restart systemd service
   systemd:
-    daemon_reload: yes
+    daemon_reload: true
     name: keepalived
-    enabled: yes
+    enabled: true
     state: restarted
-  tags: [ keepalived_restart, keepalived ]
+  tags: keepalived_restart, keepalived
 
 - name: wait for the cluster ip address (VIP) "{{ cluster_vip }}" is running
   wait_for:
@@ -99,4 +100,6 @@
     state: started
     timeout: 60
     delay: 2
-  tags: [ keepalived_restart, keepalived ]
+  tags: keepalived_restart, keepalived
+
+...

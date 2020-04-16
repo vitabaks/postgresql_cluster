@@ -1,6 +1,6 @@
 ---
 
-- name: Deploy PostgreSQL High-Availability Cluster (based on "Patroni" and "DCS({{ dcs_type }})")
+- name: Deploy PostgreSQL HA Cluster (based on "Patroni" and "{{ dcs_type }}")
   hosts: postgres_cluster:etcd_cluster:balancers
   become: true
   become_method: sudo
@@ -22,21 +22,23 @@
       apt:
         name: gnupg
         state: present
-        update_cache: yes
+        update_cache: true
       environment: '{{ proxy_env | default({}) }}'
       when: ansible_os_family == "Debian" and installation_method == "repo"
-      tags: [ add_repo, install_packages, install_postgres ]
+      tags: add_repo, install_packages, install_postgres
 
     - name: Firewall | build a firewall_ports_dynamic_var
       set_fact:
-        firewall_ports_dynamic_var: "{{ firewall_ports_dynamic_var |default([]) }} + {{ firewall_allowed_tcp_ports_for[item] }}"
+        firewall_ports_dynamic_var:
+          "{{ firewall_ports_dynamic_var |default([]) }} + {{ firewall_allowed_tcp_ports_for[item] }}" # yamllint disable-line
       loop: '{{ hostvars[inventory_hostname].group_names }}'
       when: firewall_enabled_at_boot|bool
       tags: firewall
 
     - name: Firewall | build a firewall_rules_dynamic_var
       set_fact:
-        firewall_rules_dynamic_var: "{{ firewall_rules_dynamic_var |default([]) }} + {{ firewall_additional_rules_for[item] }}"
+        firewall_rules_dynamic_var:
+          "{{ firewall_rules_dynamic_var |default([]) }} + {{ firewall_additional_rules_for[item] }}" # yamllint disable-line
       loop: '{{ hostvars[inventory_hostname].group_names }}'
       when: firewall_enabled_at_boot|bool
       tags: firewall
@@ -65,21 +67,21 @@
     - meta: flush_handlers
 
     - import_tasks: tasks/sysctl.yml
-      tags: [ sysctl, kernel ]
+      tags: sysctl, kernel
 
     - import_tasks: tasks/timezone.yml
       when: timezone is defined and timezone | length > 0
-      ignore_errors: yes
-      tags: [ timezone, configure ]
+      ignore_errors: true
+      tags: timezone, configure
 
     - import_tasks: tasks/ntp.yml
       when: ntp_enabled is defined and ntp_enabled == "true"
-      ignore_errors: yes
-      tags: [ ntp, configure ]
+      ignore_errors: true
+      tags: ntp, configure
 
     - import_tasks: tasks/etcd.yml
       when: dcs_exists == "false" and dcs_type == "etcd"
-      tags: [ etcd, etcd_cluster ]
+      tags: etcd, etcd_cluster
 
 
 - hosts: balancers
@@ -96,7 +98,7 @@
     - meta: flush_handlers
 
     - import_tasks: tasks/sysctl.yml
-      tags: [ sysctl, kernel ]
+      tags: sysctl, kernel
 
     - import_tasks: tasks/haproxy.yml
       when: with_haproxy_load_balancing == "true"
@@ -117,13 +119,13 @@
     - meta: flush_handlers
 
     - import_tasks: tasks/add-repository.yml
-      tags: [ add_repo ]
+      tags: add_repo
 
     - import_tasks: tasks/packages.yml
-      tags: [ install_packages ]
+      tags: install_packages
 
     - import_tasks: tasks/sudo.yml
-      tags: [ sudo, postgres_sudo ]
+      tags: sudo, postgres_sudo
 
     - import_tasks: tasks/configure.yml
       tags: configure
@@ -141,8 +143,9 @@
       tags: patroni
 
     - import_tasks: tasks/vip-manager.yml
-      when: with_haproxy_load_balancing != "true" and (cluster_vip is defined and cluster_vip | length > 0)
-      tags: [ vip, vip_manager ]
+      when: with_haproxy_load_balancing != "true" and
+            (cluster_vip is defined and cluster_vip | length > 0)
+      tags: vip, vip_manager
 
     # optional
     - import_tasks: tasks/postgresql-users.yml
@@ -159,5 +162,6 @@
 
     # finish (info)
     - import_tasks: tasks/deploy_finish.yml
-      tags: [ cluster_info, cluster_status ]
+      tags: cluster_info, cluster_status
 
+...

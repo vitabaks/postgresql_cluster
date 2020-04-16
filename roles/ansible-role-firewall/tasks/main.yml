@@ -48,14 +48,14 @@
         state: present
       when: ansible_kernel is version('4.19', '>=')
 
-    - name: Configure the kernel to keep connections alive when enabling the firewall
+    - name: sysctl | keep connections alive when enabling the firewall
       sysctl:
         name: net.netfilter.nf_conntrack_tcp_be_liberal
         value: "1"
         state: present
-        sysctl_set: yes
-        reload: yes
-  ignore_errors: yes
+        sysctl_set: true
+        reload: true
+  ignore_errors: true
 
 - name: Configure the firewall service.
   service:
@@ -65,3 +65,5 @@
 
 - import_tasks: disable-other-firewalls.yml
   when: firewall_disable_firewalld|bool or firewall_disable_ufw|bool
+
+...

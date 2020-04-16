@@ -6,32 +6,37 @@
     name: ntp
     state: present
   environment: '{{ proxy_env | default({}) }}'
-  when: ansible_os_family == "Debian" or (ansible_os_family == "RedHat" and ansible_distribution_major_version == '7')
-  tags: [ ntp_install, ntp ]
+  when: ansible_os_family == "Debian" or
+        (ansible_os_family == "RedHat" and
+        ansible_distribution_major_version == '7')
+  tags: ntp_install, ntp
 
 - name: ntp | copy the ntp.conf template file
   template:
     src: ntp.conf.j2
     dest: /etc/ntp.conf
-  when: ansible_os_family == "Debian" or (ansible_os_family == "RedHat" and ansible_distribution_major_version == '7')
-  tags: [ ntp_conf, ntp ]
+  when: ansible_os_family == "Debian" or
+        (ansible_os_family == "RedHat" and
+        ansible_distribution_major_version == '7')
+  tags: ntp_conf, ntp
 
-  # Debian
+# Debian
 - name: ntp | restart ntp service
   systemd:
     name: ntp
-    enabled: yes
+    enabled: true
     state: restarted
   when: ansible_os_family == "Debian"
   tags: ntp
 
-  # RedHat
+# RedHat
 - name: ntp | restart ntpd service
   systemd:
     name: ntpd
-    enabled: yes
+    enabled: true
     state: restarted
-  when: ansible_os_family == "RedHat" and ansible_distribution_major_version == '7'
+  when: ansible_os_family == "RedHat" and
+        ansible_distribution_major_version == '7'
   tags: ntp
 
 # Chrony: Install and Configure (RHEL 8)
@@ -52,8 +57,10 @@
     - name: ntp | restart chrony service
       systemd:
         name: chronyd
-        enabled: yes
+        enabled: true
         state: restarted
-  when: ansible_os_family == "RedHat" and ansible_distribution_major_version >= '8'
+  when: ansible_os_family == "RedHat" and
+        ansible_distribution_major_version >= '8'
   tags: ntp
 
+...

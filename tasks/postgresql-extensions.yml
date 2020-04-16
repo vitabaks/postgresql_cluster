@@ -1,15 +1,17 @@
 ---
-# login_unix_socket requires ansible version 2.8 and higher
+# yamllint disable rule:comments-indentation
 
 - name: PostgreSQL extensions | add extensions to the databases
-  become: yes
+  become: true
   become_user: postgres
   postgresql_ext:
     db: "{{ item.db }}"
     name: "{{ item.ext }}"
-#    login_unix_socket: "{{ postgresql_unix_socket_dir }}"
+#    login_unix_socket: "{{ postgresql_unix_socket_dir }}"  # ansible v2.8+
     port: "{{ postgresql_port }}"
     state: present
-  ignore_errors: yes
+  ignore_errors: true
   loop: "{{ postgresql_extensions | flatten(1) }}"
   when: postgresql_extensions is defined and postgresql_extensions | length > 0
+
+...
