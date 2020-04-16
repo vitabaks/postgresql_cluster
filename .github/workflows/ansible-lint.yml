@@ -1,52 +1,58 @@
+---
+# yamllint disable rule:truthy
+
 name: Ansible-lint
 
 on:
   push:
-    branches: [ master ]
+    branches:
+      -master
   pull_request:
-    branches: [ master ]
+    branches:
+      - master
 
 jobs:
   build:
-
     runs-on: [ubuntu-18.04]
 
     steps:
-    - name: Git clone repo postgresql_cluster
-      uses: actions/checkout@v2
+      - name: Git clone repo postgresql_cluster
+        uses: actions/checkout@v2
 
-    - name: Lint playbook with Ansible v2.9
-      uses: ansible/ansible-lint-action@master
-      with:
-        targets: |
-          deploy_pgcluster.yml
-          add_pgnode.yml
-          add_balancer.yml
-        override-deps: |
-          ansible==2.9.6
-          ansible-lint==4.2.0
-        args: "-x 204,305,403,502,503"
+      - name: Lint playbook with Ansible v2.9
+        uses: ansible/ansible-lint-action@master
+        with:
+          targets: |
+            deploy_pgcluster.yml
+            add_pgnode.yml
+            add_balancer.yml
+          override-deps: |
+            ansible==2.9.6
+            ansible-lint==4.2.0
+          args: "-x 204,305,403,502,503"
 
-    - name: Lint playbook with Ansible v2.8
-      uses: ansible/ansible-lint-action@master
-      with:
-        targets: |
-          deploy_pgcluster.yml
-          add_pgnode.yml
-          add_balancer.yml
-        override-deps: |
-          ansible==2.8.10
-          ansible-lint==4.2.0
-        args: "-x 204,305,403,502,503"
+      - name: Lint playbook with Ansible v2.8
+        uses: ansible/ansible-lint-action@master
+        with:
+          targets: |
+            deploy_pgcluster.yml
+            add_pgnode.yml
+            add_balancer.yml
+          override-deps: |
+            ansible==2.8.10
+            ansible-lint==4.2.0
+          args: "-x 204,305,403,502,503"
 
-    - name: Lint playbook with Ansible v2.7
-      uses: ansible/ansible-lint-action@master
-      with:
-        targets: |
-          deploy_pgcluster.yml
-          add_pgnode.yml
-          add_balancer.yml
-        override-deps: |
-          ansible==2.7.16
-          ansible-lint==4.2.0
-        args: "-x 204,305,403,502,503"
+      - name: Lint playbook with Ansible v2.7
+        uses: ansible/ansible-lint-action@master
+        with:
+          targets: |
+            deploy_pgcluster.yml
+            add_pgnode.yml
+            add_balancer.yml
+          override-deps: |
+            ansible==2.7.16
+            ansible-lint==4.2.0
+          args: "-x 204,305,403,502,503"
+
+...
