@@ -1,7 +1,8 @@
 ---
 # yamllint disable rule:line-length
+# yamllint disable rule:comments-indentation
 
-ntp_enabled: 'false' # specify 'true' if you want to install and configure the ntp service
+ntp_enabled: 'false'  # specify 'true' if you want to install and configure the ntp service
 ntp_servers: []
 #  - "10.128.64.44"
 #  - "10.128.64.45"
