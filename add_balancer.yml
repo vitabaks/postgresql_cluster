@@ -20,28 +20,27 @@
       when: hostname is defined and hostname | length > 0
       tags: hostname
 
-    - import_tasks: tasks/sysctl.yml
-      tags: [ sysctl, kernel ]
-
     - name: Make sure the gnupg package is present
       apt:
         name: gnupg
         state: present
-        update_cache: yes
+        update_cache: true
       environment: '{{ proxy_env | default({}) }}'
       when: ansible_os_family == "Debian" and installation_method == "repo"
-      tags: [ add_repo, install_packages, install_postgres ]
+      tags: add_repo, install_packages, install_postgres
 
     - name: Firewall | build a firewall_ports_dynamic_var
       set_fact:
-        firewall_ports_dynamic_var: "{{ firewall_ports_dynamic_var |default([]) }} + {{ firewall_allowed_tcp_ports_for[item] }}"
+        firewall_ports_dynamic_var:
+          "{{ firewall_ports_dynamic_var |default([]) }} + {{ firewall_allowed_tcp_ports_for[item] }}" # yamllint disable-line
       loop: '{{ hostvars[inventory_hostname].group_names }}'
       when: firewall_enabled_at_boot|bool
       tags: firewall
 
     - name: Firewall | build a firewall_rules_dynamic_var
       set_fact:
-        firewall_rules_dynamic_var: "{{ firewall_rules_dynamic_var |default([]) }} + {{ firewall_additional_rules_for[item] }}"
+        firewall_rules_dynamic_var:
+          "{{ firewall_rules_dynamic_var |default([]) }} + {{ firewall_additional_rules_for[item] }}" # yamllint disable-line
       loop: '{{ hostvars[inventory_hostname].group_names }}'
       when: firewall_enabled_at_boot|bool
       tags: firewall
@@ -58,7 +57,11 @@
   tasks:
     - meta: flush_handlers
 
+    - import_tasks: tasks/sysctl.yml
+      tags: sysctl, kernel
+
     - import_tasks: tasks/haproxy.yml
       when: with_haproxy_load_balancing == "true"
       tags: load_balancing
 
+...
