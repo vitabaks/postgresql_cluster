@@ -1,4 +1,5 @@
 ---
+# yamllint disable rule:line-length
 
 - name: Checking distribution
   fail:
@@ -10,3 +11,4 @@
     msg: "{{ ansible_distribution_version }} of {{ ansible_distribution }} is not supported"
   when: ansible_distribution_version is version_compare(os_minimum_versions[ansible_distribution], '<')
 
+...

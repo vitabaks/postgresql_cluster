@@ -1,27 +1,30 @@
 ---
 
-  # Debian
-- name: Generate locales "{% for set in locales %}{{ set.language_country }}.{{ set.encoding }}{% if not loop.last %},{% endif %}{% endfor %}"
-  become: yes
+# Debian
+- name: Generate locales "{% for set in locales %}{{ set.language_country }}.{{ set.encoding }}{% if not loop.last %},{% endif %}{% endfor %}"  # yamllint disable rule:line-length
+  become: true
   locale_gen:
     name: "{{ item.language_country }}.{{ item.encoding }}"
     state: present
   loop: "{{ locales | flatten(1) }}"
   when: ansible_os_family == "Debian"
 
-  # RedHat
-- name: Generate locales "{% for set in locales %}{{ set.language_country }}.{{ set.encoding }}{% if not loop.last %},{% endif %}{% endfor %}"
-  become: yes
-  command: localedef -c -i {{ item.language_country }} -f {{ item.encoding }} {{ item.language_country }}.{{ item.encoding }}
+# RedHat
+- name: Generate locales "{% for set in locales %}{{ set.language_country }}.{{ set.encoding }}{% if not loop.last %},{% endif %}{% endfor %}"  # yamllint disable rule:line-length
+  become: true
+  command: localedef -c -i {{ item.language_country }} -f {{ item.encoding }} {{ item.language_country }}.{{ item.encoding }}  # yamllint disable rule:line-length
   changed_when: false
   loop: "{{ locales | flatten(1) }}"
-  when: ansible_os_family == "RedHat" and ansible_distribution_major_version != '8'
+  when: ansible_os_family == "RedHat" and
+        ansible_distribution_major_version != '8'
 
-  # RHEL 8
+# RHEL 8
 - name: locales | install glibc-langpack
   dnf:
     name: "{{ item }}"
   loop: "{{ glibc_langpack }}"
   environment: '{{ proxy_env | default({}) }}'
-  when: ansible_os_family == "RedHat" and ansible_distribution_major_version >= '8'
+  when: ansible_os_family == "RedHat" and
+        ansible_distribution_major_version >= '8'
 
+...

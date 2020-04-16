@@ -1,16 +1,16 @@
 ---
 
 # Configure SSH Key-Based Authentication
-- name: ssh-keys | check user "{{ ssh_key_user }}" | create user if not already exist
+- name: ssh-keys | check user "{{ ssh_key_user }}" | create user
   user:
     name: "{{ ssh_key_user }}"
     shell: /bin/bash
     state: present
 
-- name: ssh-keys | create a 2048-bit SSH key for user "{{ ssh_key_user }}" in ~/.ssh/id_rsa (if not already exist)
+- name: ssh-keys | create a 2048-bit SSH key for user "{{ ssh_key_user }}" in ~/.ssh/id_rsa (if not already exist)  # yamllint disable rule:line-length
   user:
     name: "{{ ssh_key_user }}"
-    generate_ssh_key: yes
+    generate_ssh_key: true
     ssh_key_bits: 2048
     ssh_key_file: .ssh/id_rsa
 
@@ -18,7 +18,7 @@
   fetch:
     src: "~{{ ssh_key_user }}/.ssh/id_rsa.pub"
     dest: "files/{{ ansible_hostname }}-id_rsa.pub"
-    flat: yes
+    flat: true
   changed_when: false
 
 - name: ssh-keys | copy key files and add to authorized_keys
@@ -26,7 +26,7 @@
     user: "{{ ssh_key_user }}"
     state: "{{ ssh_key_state }}"
     key: "{{ lookup('pipe','cat files/*id_rsa.pub') }}"
-    exclusive: no
+    exclusive: false
 
 # known_hosts
 - name: known_hosts | for each host, scan for its ssh public key
@@ -35,12 +35,14 @@
   register: ssh_known_host_results
   changed_when: false
 
-- name: known_hosts | for each host, add/update the public key in the "~{{ ssh_key_user }}/.ssh/known_hosts"
-  become: yes
+- name: known_hosts | for each host, add/update the public key in the "~{{ ssh_key_user }}/.ssh/known_hosts"  # yamllint disable rule:line-length
+  become: true
   become_user: "{{ ssh_key_user }}"
   known_hosts:
     name: "{{ item.item }}"
     key: "{{ item.stdout }}"
     path: "~{{ ssh_key_user }}/.ssh/known_hosts"
-  no_log: True
+  no_log: true
   loop: "{{ ssh_known_host_results.results }}"
+
+...

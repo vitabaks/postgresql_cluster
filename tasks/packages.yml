@@ -11,7 +11,7 @@
 
     - name: Install packages
       apt:
-        force_apt_get: yes
+        force_apt_get: true
         deb: '/tmp/{{ item }}'
         state: present
       loop: "{{ packages_from_file | map('basename') | list }}"
@@ -30,7 +30,7 @@
 - name: Install | system packages
   package:
     name: "{{ item }}"
-    update_cache: yes
+    update_cache: true
   loop: "{{ system_packages }}"
   environment: '{{ proxy_env | default({}) }}'
   when: installation_method == "repo"
@@ -38,19 +38,19 @@
 
 # PostgreSQL prepare for install (for Debian based only)
 - block:
-    - name: Install | PostgreSQL | ensure postgresql database-cluster manager package
+    - name: Install | ensure postgresql database-cluster manager package
       package:
         name: postgresql-common
         state: present
       environment: '{{ proxy_env | default({}) }}'
 
-    - name: Install | PostgreSQL | disable initializing of a default postgresql cluster
+    - name: Install | disable initializing of a default postgresql cluster
       replace:
         path: /etc/postgresql-common/createcluster.conf
         replace: create_main_cluster = false
         regexp: ^#?create_main_cluster.*$
 
-    - name: Install | PostgreSQL | disable log rotation with logrotate for postgresql (use logging_collector)
+    - name: Install | disable log rotation with logrotate for postgresql
       file:
         dest: /etc/logrotate.d/postgresql-common
         state: absent
@@ -71,17 +71,21 @@
       args:
         warn: false
       when: "'[x] ' not in postgresql_module_result.stdout"
-  when: installation_method == "repo" and (ansible_os_family == "RedHat" and ansible_distribution_major_version >= '8')
-  ignore_errors: yes
+  when: installation_method == "repo" and
+        ansible_os_family == "RedHat" and
+        ansible_distribution_major_version >= '8'
+  ignore_errors: true
   tags: install_postgres
 
 # Install PostgreSQL from repository
 - name: Install | PostgreSQL packages
   package:
     name: "{{ item }}"
-    update_cache: yes
+    update_cache: true
     state: present
   loop: "{{ postgresql_packages }}"
   environment: '{{ proxy_env | default({}) }}'
   when: installation_method == "repo"
   tags: install_postgres
+
+...

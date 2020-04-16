@@ -1,7 +1,6 @@
 ---
 
-# Debian Ubuntu
-- block:
+- block:  # Debian/Ubuntu
     - name: Add repository apt-key
       apt_key:
         url: "{{ item.key }}"
@@ -13,15 +12,14 @@
       apt_repository:
         repo: "{{ item.repo }}"
         state: present
-        update_cache: yes
+        update_cache: true
       loop: "{{ apt_repository }}"
       when: apt_repository | length > 0
   environment: '{{ proxy_env | default({}) }}'
   when: installation_method == "repo" and ansible_os_family == "Debian"
   tags: add_repo
 
-# RedHat CentOS
-- block:
+- block:  # RedHat/CentOS
     - name: Add repository
       yum_repository:
         name: "{{ item.name }}"
@@ -35,10 +33,10 @@
     # Install Epel Repository
     - name: "install | get epel-release-latest rpm package"
       get_url:
-        url: "http://dl.fedoraproject.org/pub/epel/epel-release-latest-{{ ansible_distribution_major_version }}.noarch.rpm"
+        url: "http://dl.fedoraproject.org/pub/epel/epel-release-latest-{{ ansible_distribution_major_version }}.noarch.rpm"  # yamllint disable rule:line-length
         dest: /tmp/
         timeout: 30
-        validate_certs: no
+        validate_certs: false
       when: install_epel_repo == "true"
       tags: install_epel_repo
 
@@ -52,10 +50,10 @@
     # Install PostgreSQL Repository
     - name: install | get pgdg-redhat-repo-latest.noarch.rpm
       get_url:
-        url: "https://download.postgresql.org/pub/repos/yum/reporpms/EL-{{ ansible_distribution_major_version }}-x86_64/pgdg-redhat-repo-latest.noarch.rpm"
+        url: "https://download.postgresql.org/pub/repos/yum/reporpms/EL-{{ ansible_distribution_major_version }}-x86_64/pgdg-redhat-repo-latest.noarch.rpm"  # yamllint disable rule:line-length
         dest: /tmp/
         timeout: 30
-        validate_certs: no
+        validate_certs: false
       when: install_postgresql_repo == "true"
       tags: install_postgresql_repo
 
@@ -68,3 +66,5 @@
   environment: '{{ proxy_env | default({}) }}'
   when: installation_method == "repo" and ansible_os_family == "RedHat"
   tags: add_repo
+
+...

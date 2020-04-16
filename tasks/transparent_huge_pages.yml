@@ -1,9 +1,10 @@
 ---
+# yamllint disable rule:line-length
 
 - name: Disable Transparent Huge Pages | create systemd service "disable-transparent-huge-pages.service"
   blockinfile:
     path: /etc/systemd/system/disable-transparent-huge-pages.service
-    create: yes
+    create: true
     block: |
       [Unit]
       Description=Disable Transparent Huge Pages
@@ -19,13 +20,15 @@
       [Install]
       WantedBy=basic.target
   register: transparent_huge_pages_result
-  tags: [ disable_thp, transparent_huge_pages ]
+  tags: disable_thp, transparent_huge_pages
 
 - name: Disable Transparent Huge Pages | start disable-transparent-huge-pages service
   systemd:
-    daemon_reload: yes
+    daemon_reload: true
     name: disable-transparent-huge-pages
     state: restarted
-    enabled: yes
+    enabled: true
   when: transparent_huge_pages_result.changed
-  tags: [ disable_thp, transparent_huge_pages ]
+  tags: disable_thp, transparent_huge_pages
+
+...
