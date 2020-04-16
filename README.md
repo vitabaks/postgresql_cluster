@@ -1,6 +1,6 @@
 # PostgreSQL High-Availability Cluster :elephant: :sparkling_heart:
 
-[<img src="https://github.com/vitabaks/postgresql_cluster/workflows/Ansible-lint/badge.svg?branch=master">](https://github.com/vitabaks/postgresql_cluster/actions?query=workflow%3AAnsible-lint) [![GitHub](https://img.shields.io/github/license/vitabaks/postgresql_cluster)](https://github.com/vitabaks/postgresql_cluster/blob/master/LICENSE) ![GitHub stars](https://img.shields.io/github/stars/vitabaks/postgresql_cluster)
+[<img src="https://github.com/vitabaks/postgresql_cluster/workflows/Ansible-lint/badge.svg?branch=master">](https://github.com/vitabaks/postgresql_cluster/actions?query=workflow%3AAnsible-lint) [<img src="https://github.com/vitabaks/postgresql_cluster/workflows/Yamllint/badge.svg?branch=master">](https://github.com/vitabaks/postgresql_cluster/actions?query=workflow%3AYamllint)  [![GitHub license](https://img.shields.io/github/license/vitabaks/postgresql_cluster)](https://github.com/vitabaks/postgresql_cluster/blob/master/LICENSE) ![GitHub stars](https://img.shields.io/github/stars/vitabaks/postgresql_cluster)
 
 ### PostgreSQL High-Availability Cluster (based on "Patroni" and "DCS(etcd)"). Automating deployment with Ansible.
 
