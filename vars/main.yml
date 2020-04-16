@@ -1,5 +1,6 @@
 ---
 # yamllint disable rule:line-length
+# yamllint disable rule:comments-indentation
 
 # Proxy variables (optional) for download packages using a proxy server
 proxy_env: {}
