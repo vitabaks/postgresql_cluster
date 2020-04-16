@@ -24,21 +24,23 @@
       apt:
         name: gnupg
         state: present
-        update_cache: yes
+        update_cache: true
       environment: '{{ proxy_env | default({}) }}'
       when: ansible_os_family == "Debian" and installation_method == "repo"
-      tags: [ add_repo, install_packages, install_postgres ]
+      tags: add_repo, install_packages, install_postgres
 
     - name: Firewall | build a firewall_ports_dynamic_var
       set_fact:
-        firewall_ports_dynamic_var: "{{ firewall_ports_dynamic_var |default([]) }} + {{ firewall_allowed_tcp_ports_for[item] }}"
+        firewall_ports_dynamic_var:
+          "{{ firewall_ports_dynamic_var |default([]) }} + {{ firewall_allowed_tcp_ports_for[item] }}" # yamllint disable-line
       loop: '{{ hostvars[inventory_hostname].group_names }}'
       when: firewall_enabled_at_boot|bool
       tags: firewall
 
     - name: Firewall | build a firewall_rules_dynamic_var
       set_fact:
-        firewall_rules_dynamic_var: "{{ firewall_rules_dynamic_var |default([]) }} + {{ firewall_additional_rules_for[item] }}"
+        firewall_rules_dynamic_var:
+          "{{ firewall_rules_dynamic_var |default([]) }} + {{ firewall_additional_rules_for[item] }}" # yamllint disable-line
       loop: '{{ hostvars[inventory_hostname].group_names }}'
       when: firewall_enabled_at_boot|bool
       tags: firewall
@@ -56,13 +58,13 @@
     - meta: flush_handlers
 
     - import_tasks: tasks/add-repository.yml
-      tags: [ add_repo ]
+      tags: add_repo
 
     - import_tasks: tasks/packages.yml
-      tags: [ install_packages ]
+      tags: install_packages
 
     - import_tasks: tasks/sudo.yml
-      tags: [ sudo, postgres_sudo ]
+      tags: sudo, postgres_sudo
 
     - import_tasks: tasks/configure.yml
       tags: configure
@@ -79,10 +81,12 @@
       tags: patroni
 
     - import_tasks: tasks/vip-manager.yml
-      when: with_haproxy_load_balancing != "true" and (cluster_vip is defined and cluster_vip | length > 0)
-      tags: [ vip, vip_manager ]
+      when: with_haproxy_load_balancing != "true" and
+            (cluster_vip is defined and cluster_vip | length > 0)
+      tags: vip, vip_manager
 
     # finish (info)
     - import_tasks: tasks/deploy_finish.yml
-      tags: [ cluster_info, cluster_status ]
+      tags: cluster_info, cluster_status
 
+...
