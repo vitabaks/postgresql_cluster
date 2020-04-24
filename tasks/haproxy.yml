@@ -23,7 +23,7 @@
         gpgcheck: true
         enabled: true
       when: haproxy_install_repo == "true" and
-            (ansible_distribution == 'OracleLinux' and
+            (ansible_distribution == "OracleLinux" and
             ansible_distribution_major_version == '7')
       tags: haproxy_scl_repo
 
@@ -74,7 +74,7 @@
         url: https://haproxy.debian.net/bernat.debian.org.gpg
         state: present
       when: haproxy_install_repo == "true" and
-            (ansible_distribution == 'Debian' and
+            (ansible_distribution == "Debian" and
             ansible_distribution_major_version is version('10', '<='))
 
     - name: haproxy | add haproxy.debian.net repository
@@ -83,7 +83,7 @@
         state: present
         update_cache: true
       when: haproxy_install_repo == "true" and
-            (ansible_distribution == 'Debian' and
+            (ansible_distribution == "Debian" and
             ansible_distribution_major_version is version('10', '<='))
 
     # Ubuntu
