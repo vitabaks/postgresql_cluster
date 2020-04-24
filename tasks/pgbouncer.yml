@@ -4,7 +4,7 @@
 - name: PgBouncer | install package
   package:
     name: pgbouncer
-  environment: '{{ proxy_env | default({}) }}'
+  environment: "{{ proxy_env | default({}) }}"
   when: ansible_os_family == "Debian" or
         (ansible_os_family == "RedHat" and
         ansible_distribution_major_version == '7')
@@ -15,7 +15,7 @@
   dnf:
     name: pgbouncer
     disablerepo: AppStream
-  environment: '{{ proxy_env | default({}) }}'
+  environment: "{{ proxy_env | default({}) }}"
   when: ansible_os_family == "RedHat" and
         ansible_distribution_major_version >= '8'
   tags: pgbouncer_install, pgbouncer
@@ -85,18 +85,18 @@
     - name: PgBouncer | fetch pgbouncer.ini and userlist.txt conf files from master
       run_once: true
       fetch:
-        src: '{{ item }}'
+        src: "{{ item }}"
         dest: files/
         validate_checksum: true
         flat: true
       loop:
         - /etc/pgbouncer/pgbouncer.ini
         - /etc/pgbouncer/userlist.txt
-      delegate_to: '{{ groups.master[0] }}'
+      delegate_to: "{{ groups.master[0] }}"
 
     - name: PgBouncer | copy pgbouncer.ini and userlist.txt conf files to replica
       copy:
-        src: 'files/{{ item }}'
+        src: "files/{{ item }}"
         dest: /etc/pgbouncer/
         owner: postgres
         group: postgres
@@ -108,8 +108,8 @@
     - name: PgBouncer | prepare pgbouncer.ini conf file (replace "listen_addr")
       lineinfile:
         path: /etc/pgbouncer/pgbouncer.ini
-        regexp: '{{ item.regexp }}'
-        line: '{{ item.line }}'
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
         backrefs: true
       loop:
         - {regexp: '^listen_addr =', line: 'listen_addr = {{ hostvars[inventory_hostname].inventory_hostname }}'}
@@ -121,8 +121,8 @@
     - name: PgBouncer | prepare pgbouncer.ini conf file (replace "listen_addr")
       lineinfile:
         path: /etc/pgbouncer/pgbouncer.ini
-        regexp: '{{ item.regexp }}'
-        line: '{{ item.line }}'
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
         backrefs: true
       loop:
         - {regexp: '^listen_addr =', line: 'listen_addr = {{ hostvars[inventory_hostname].inventory_hostname }},{{ cluster_vip }}'}

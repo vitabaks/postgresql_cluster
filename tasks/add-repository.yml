@@ -15,7 +15,7 @@
         update_cache: true
       loop: "{{ apt_repository }}"
       when: apt_repository | length > 0
-  environment: '{{ proxy_env | default({}) }}'
+  environment: "{{ proxy_env | default({}) }}"
   when: installation_method == "repo" and ansible_os_family == "Debian"
   tags: add_repo
 
@@ -63,7 +63,7 @@
         state: present
       when: install_postgresql_repo == "true"
       tags: install_postgresql_repo
-  environment: '{{ proxy_env | default({}) }}'
+  environment: "{{ proxy_env | default({}) }}"
   when: installation_method == "repo" and ansible_os_family == "RedHat"
   tags: add_repo
 

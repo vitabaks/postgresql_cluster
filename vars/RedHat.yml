@@ -21,8 +21,8 @@ yum_repository: []
 #    gpgkey: "https://my-repo-key.url"
 #    gpgcheck: "yes"
 
-install_epel_repo: 'true'  # or 'false' (installed from the package "epel-release-latest-7.noarch.rpm" tasks/add-repository.yml)
-install_postgresql_repo: 'true'  # or 'false' (installed from the package "pgdg-redhat-repo-latest.noarch.rpm" tasks/add-repository.yml)
+install_epel_repo: "true"  # or 'false' (installed from the package "epel-release-latest-7.noarch.rpm" tasks/add-repository.yml)
+install_postgresql_repo: "true"  # or 'false' (installed from the package "pgdg-redhat-repo-latest.noarch.rpm" tasks/add-repository.yml)
 
 # Packages (for yum repo)
 os_specific_packages:
@@ -74,7 +74,7 @@ wal_g_package_repo: "https://github.com/wal-g/wal-g/releases/download/{{ wal_g_v
 vip_manager_package_repo: "https://github.com/cybertec-postgresql/vip-manager/releases/download/v{{ vip_manager_version }}/vip-manager_{{ vip_manager_version }}-1_amd64.rpm"
 # (if with_haproxy_load_balancing: 'true')
 haproxy_installation_method: "rpm"  # (default)"rpm" or "src"
-haproxy_install_repo: 'true'  # or 'false' # only for RedHat/CentOS version 7.
+haproxy_install_repo: "true"  # or 'false' # only for RedHat/CentOS version 7.
 # for RedHat/CentOS/OracleLinux 7 the haproxy version 1.8 (LTS) will be installed from the "rh-haproxy18" package from the Software Collections (SCL) repository.
 # you can preload the haproxy rpm packages to your YUM repository (in this case specify "haproxy_install_repo: 'false'").
 confd_package_repo: "https://github.com/kelseyhightower/confd/releases/download/v0.16.0/confd-0.16.0-linux-amd64"

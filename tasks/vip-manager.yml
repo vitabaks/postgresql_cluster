@@ -5,13 +5,13 @@
 - block:
     - name: vip-manager | get vip-manager package
       get_url:
-        url: '{{ item }}'
+        url: "{{ item }}"
         dest: /tmp/
         timeout: 60
         validate_certs: false
       loop:
-        - '{{ vip_manager_package_repo }}'
-      environment: '{{ proxy_env | default({}) }}'
+        - "{{ vip_manager_package_repo }}"
+      environment: "{{ proxy_env | default({}) }}"
 
     - name: vip-manager | install package
       apt:
@@ -32,7 +32,7 @@
 - block:
     - name: vip-manager | copy vip-manager package into /tmp
       copy:
-        src: '{{ vip_manager_package_file }}'
+        src: "{{ vip_manager_package_file }}"
         dest: /tmp/
 
     - name: vip-manager | install package
@@ -61,7 +61,7 @@
 - name: vip-manager | generate conf file "{{ vip_manager_conf_dir }}/{{ vip_manager_conf_file }}"
   template:
     src: templates/vip-manager.yml.j2
-    dest: '{{ vip_manager_conf_dir }}/{{ vip_manager_conf_file }}'
+    dest: "{{ vip_manager_conf_dir }}/{{ vip_manager_conf_file }}"
     owner: postgres
     group: postgres
     mode: 0644
@@ -73,23 +73,23 @@
     - name: vip-manager | fetch "{{ vip_manager_conf_file }}" conf file from master
       run_once: true
       fetch:
-        src: '{{ vip_manager_conf_dir }}/{{ vip_manager_conf_file }}'
-        dest: 'files/{{ vip_manager_conf_file }}'
+        src: "{{ vip_manager_conf_dir }}/{{ vip_manager_conf_file }}"
+        dest: "files/{{ vip_manager_conf_file }}"
         validate_checksum: true
         flat: true
-      delegate_to: '{{ groups.master[0] }}'
+      delegate_to: "{{ groups.master[0] }}"
 
     - name: vip-manager | copy "{{ vip_manager_conf_file }}" conf file to replica
       copy:
-        src: 'files/{{ vip_manager_conf_file }}'
-        dest: '{{ vip_manager_conf_dir }}'
+        src: "files/{{ vip_manager_conf_file }}"
+        dest: "{{ vip_manager_conf_dir }}"
       register: vip_manager_conf_result
 
     - name: vip-manager | prepare "{{ vip_manager_conf_file }}" conf file (replace "nodename","iface")
       lineinfile:
-        path: '{{ vip_manager_conf_dir }}/{{ vip_manager_conf_file }}'
-        regexp: '{{ item.regexp }}'
-        line: '{{ item.line }}'
+        path: "{{ vip_manager_conf_dir }}/{{ vip_manager_conf_file }}"
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
         backrefs: true
       loop:
         - {regexp: '^nodename:', line: 'nodename: "{{ ansible_hostname }}"'}

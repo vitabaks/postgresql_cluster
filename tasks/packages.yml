@@ -4,7 +4,7 @@
 - block:
     - name: copy packages into /tmp
       copy:
-        src: '{{ item }}'
+        src: "{{ item }}"
         dest: /tmp/
       loop: "{{ packages_from_file }}"
       register: copy_packages_result
@@ -12,14 +12,14 @@
     - name: Install packages
       apt:
         force_apt_get: true
-        deb: '/tmp/{{ item }}'
+        deb: "/tmp/{{ item }}"
         state: present
       loop: "{{ packages_from_file | map('basename') | list }}"
       when: ansible_os_family == "Debian" and copy_packages_result.changed
 
     - name: Install packages
       package:
-        name: '/tmp/{{ item }}'
+        name: "/tmp/{{ item }}"
         state: present
       loop: "{{ packages_from_file | map('basename') | list }}"
       when: ansible_os_family == "RedHat" and copy_packages_result.changed
@@ -32,7 +32,7 @@
     name: "{{ item }}"
     update_cache: true
   loop: "{{ system_packages }}"
-  environment: '{{ proxy_env | default({}) }}'
+  environment: "{{ proxy_env | default({}) }}"
   when: installation_method == "repo"
   tags: install_packages
 
@@ -42,7 +42,7 @@
       package:
         name: postgresql-common
         state: present
-      environment: '{{ proxy_env | default({}) }}'
+      environment: "{{ proxy_env | default({}) }}"
 
     - name: Install | disable initializing of a default postgresql cluster
       replace:
@@ -84,7 +84,7 @@
     update_cache: true
     state: present
   loop: "{{ postgresql_packages }}"
-  environment: '{{ proxy_env | default({}) }}'
+  environment: "{{ proxy_env | default({}) }}"
   when: installation_method == "repo"
   tags: install_postgres
 

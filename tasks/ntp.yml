@@ -5,7 +5,7 @@
   package:
     name: ntp
     state: present
-  environment: '{{ proxy_env | default({}) }}'
+  environment: "{{ proxy_env | default({}) }}"
   when: ansible_os_family == "Debian" or
         (ansible_os_family == "RedHat" and
         ansible_distribution_major_version == '7')
@@ -45,7 +45,7 @@
       package:
         name: chrony
         state: present
-      environment: '{{ proxy_env | default({}) }}'
+      environment: "{{ proxy_env | default({}) }}"
       tags: ntp_install
 
     - name: ntp | copy the chrony.conf template file

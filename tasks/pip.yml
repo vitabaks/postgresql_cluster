@@ -8,20 +8,20 @@
 - block:  # with get-pip.py
     - name: pip | get-pip.py
       get_url:
-        url: '{{ item }}'
+        url: "{{ item }}"
         dest: /tmp/
         timeout: 60
         validate_certs: false
       loop:
-        - '{{ pip_package_repo }}'
+        - "{{ pip_package_repo }}"
       register: get_pip_result
 
     - name: pip | install pip
-      command: 'python3 {{ pip_package_repo | basename }} --trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org'  # yamllint disable rule:line-length
+      command: "python3 {{ pip_package_repo | basename }} --trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"  # yamllint disable rule:line-length
       args:
         chdir: /tmp/
       when: get_pip_result.changed
-  environment: '{{ proxy_env | default({}) }}'
+  environment: "{{ proxy_env | default({}) }}"
   when: installation_method == "repo" and
         pip_package_repo is search("get-pip.py") and
         proxy_env is defined and proxy_env | length > 0
@@ -30,22 +30,22 @@
 - block:  # with tar.gz
     - name: pip | download pip package
       get_url:
-        url: '{{ item }}'
+        url: "{{ item }}"
         dest: /tmp/
         timeout: 60
         validate_certs: false
       loop:
-        - '{{ pip_package_repo }}'
+        - "{{ pip_package_repo }}"
       register: pip_package_result
 
     - name: pip | extract pip package into /tmp
       unarchive:
-        src: '/tmp/{{ pip_package_repo | basename }}'
+        src: "/tmp/{{ pip_package_repo | basename }}"
         dest: /tmp/
         remote_src: true
 
     - name: pip | install pip
-      command: 'python3 setup.py install'
+      command: "python3 setup.py install"
       args:
         chdir: "/tmp/{{ pip_package_repo.split('.tar.gz')[0] | basename }}"
       when: pip_package_result.changed
@@ -57,12 +57,12 @@
 - block:
     - name: pip | extract pip package into /tmp
       unarchive:
-        src: '{{ pip_package_file }}'
+        src: "{{ pip_package_file }}"
         dest: /tmp/
       register: pip_package_result
 
     - name: pip | install pip
-      command: 'python3 setup.py install'
+      command: python3 setup.py install
       args:
         chdir: "/tmp/{{ pip_package_file.split('.tar.gz')[0] | basename }}"
       when: pip_package_result.changed

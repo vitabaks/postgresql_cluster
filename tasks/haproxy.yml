@@ -48,7 +48,7 @@
         group: root
         state: link
       when: ansible_distribution_major_version == '7'
-  environment: '{{ proxy_env | default({}) }}'
+  environment: "{{ proxy_env | default({}) }}"
   when: ansible_os_family == "RedHat" and
         installation_method == "repo" and
         haproxy_installation_method == "rpm"
@@ -61,7 +61,7 @@
         name: haproxy
         state: present
       when: ansible_distribution_major_version is version('8', '>=')
-  environment: '{{ proxy_env | default({}) }}'
+  environment: "{{ proxy_env | default({}) }}"
   when: ansible_os_family == "RedHat" and
         installation_method == "repo" and
         haproxy_installation_method == "rpm"
@@ -121,7 +121,7 @@
         force_apt_get: true
         name: "haproxy=1.8.*"
         state: present
-  environment: '{{ proxy_env | default({}) }}'
+  environment: "{{ proxy_env | default({}) }}"
   when: ansible_os_family == "Debian" and
         installation_method == "repo" and
         haproxy_installation_method == "deb"
@@ -131,7 +131,7 @@
 - block:
     - name: haproxy | copy packages into /tmp
       copy:
-        src: '{{ item }}'
+        src: "{{ item }}"
         dest: /tmp/
       loop: "{{ haproxy_package_file }}"
       register: copy_packages_result
@@ -139,14 +139,14 @@
     - name: haproxy | install packages
       apt:
         force_apt_get: true
-        deb: '/tmp/{{ item }}'
+        deb: "/tmp/{{ item }}"
         state: present
       loop: "{{ haproxy_package_file | map('basename') | list }}"
       when: ansible_os_family == "Debian" and copy_packages_result.changed
 
     - name: haproxy | install packages
       package:
-        name: '/tmp/{{ item }}'
+        name: "/tmp/{{ item }}"
         state: present
       loop: "{{ haproxy_package_file | map('basename') | list }}"
       when: ansible_os_family == "RedHat" and copy_packages_result.changed
@@ -164,25 +164,25 @@
 - block:
     - name: "haproxy | download HAProxy and lua source files"
       get_url:
-        url: '{{ item }}'
+        url: "{{ item }}"
         dest: /tmp/
         timeout: 120
         validate_certs: false
       loop:
-        - '{{ haproxy_src_repo }}'
-        - '{{ lua_src_repo }}'
-      environment: '{{ proxy_env | default({}) }}'
+        - "{{ haproxy_src_repo }}"
+        - "{{ lua_src_repo }}"
+      environment: "{{ proxy_env | default({}) }}"
 
     - name: "haproxy | extract HAProxy source files into /tmp"
       unarchive:
-        src: '/tmp/{{ haproxy_src_repo | basename }}'
+        src: "/tmp/{{ haproxy_src_repo | basename }}"
         dest: /tmp/
         remote_src: true
       when: haproxy_src_repo | length > 0
 
     - name: "haproxy | extract lua source files into /tmp"
       unarchive:
-        src: '/tmp/{{ lua_src_repo | basename }}'
+        src: "/tmp/{{ lua_src_repo | basename }}"
         dest: /tmp/
         remote_src: true
       when: lua_src_repo | length > 0
@@ -194,13 +194,13 @@
 - block:
     - name: "haproxy | extract HAProxy source files into /tmp"
       unarchive:
-        src: '{{ haproxy_src_file }}'
+        src: "{{ haproxy_src_file }}"
         dest: /tmp/
       when: haproxy_src_file | length > 0
 
     - name: "haproxy | extract lua source files into /tmp"
       unarchive:
-        src: '{{ lua_src_file }}'
+        src: "{{ lua_src_file }}"
         dest: /tmp/
       when: lua_src_file | length > 0
       tags: lua
@@ -211,7 +211,7 @@
   package:
     name: "{{ haproxy_compile_requirements }}"
     state: present
-  environment: '{{ proxy_env | default({}) }}'
+  environment: "{{ proxy_env | default({}) }}"
   when: haproxy_installation_method == "src"
   tags: haproxy, haproxy_requirements
 
@@ -354,7 +354,7 @@
         dest: files/haproxy.cfg
         validate_checksum: true
         flat: true
-      delegate_to: '{{ groups.master[0] }}'
+      delegate_to: "{{ groups.master[0] }}"
 
     - name: haproxy | copy haproxy.cfg file to replica
       copy:
@@ -367,8 +367,8 @@
     - name: haproxy | prepare haproxy.cfg conf file (replace "bind")
       lineinfile:
         path: /etc/haproxy/haproxy.cfg
-        regexp: '{{ item.regexp }}'
-        line: '{{ item.line }}'
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
         backrefs: true
       loop:
         - {regexp: '^.*bind.*:7000$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:7000'}
@@ -383,8 +383,8 @@
     - name: haproxy | prepare haproxy.cfg conf file (replace "bind" for stats)
       lineinfile:
         path: /etc/haproxy/haproxy.cfg
-        regexp: '{{ item.regexp }}'
-        line: '{{ item.line }}'
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
         backrefs: true
       loop:
         - {regexp: '^.*bind.*:7000$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:7000'}
@@ -407,7 +407,7 @@
     packages:
       - libsemanage-python
       - policycoreutils-python
-  environment: '{{ proxy_env | default({}) }}'
+  environment: "{{ proxy_env | default({}) }}"
   when:
     - ansible_os_family == "RedHat"
     - ansible_distribution_major_version == '7'
@@ -424,7 +424,7 @@
     packages:
       - python3-libsemanage
       - python3-policycoreutils
-  environment: '{{ proxy_env | default({}) }}'
+  environment: "{{ proxy_env | default({}) }}"
   when:
     - ansible_os_family == "RedHat"
     - ansible_distribution_major_version is version('8', '>=')

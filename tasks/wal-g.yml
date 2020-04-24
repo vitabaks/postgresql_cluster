@@ -3,17 +3,17 @@
 - block:  # install wal-g package from repo
     - name: wal-g | download "wal-g" binary
       get_url:
-        url: '{{ item }}'
+        url: "{{ item }}"
         dest: /tmp/
         timeout: 60
         validate_certs: false
       loop:
-        - '{{ wal_g_package_repo }}'
-      environment: '{{ proxy_env | default({}) }}'
+        - "{{ wal_g_package_repo }}"
+      environment: "{{ proxy_env | default({}) }}"
 
     - name: wal-g | extract "wal-g" into /tmp
       unarchive:
-        src: '/tmp/{{ wal_g_package_repo | basename }}'
+        src: "/tmp/{{ wal_g_package_repo | basename }}"
         dest: /tmp/
         remote_src: true
 
@@ -30,7 +30,7 @@
 - block:  # install wal-g package from file
     - name: wal-g | extract "wal-g" into /tmp
       unarchive:
-        src: '{{ wal_g_package_file }}'
+        src: "{{ wal_g_package_file }}"
         dest: /tmp/
 
     - name: wal-g | copy "wal-g" binary files to /usr/local/bin/
@@ -46,7 +46,7 @@
 - name: "wal-g | generate conf file {{ postgresql_home_dir }}/.walg.json"
   template:
     src: templates/walg.json.j2
-    dest: '{{ postgresql_home_dir }}/.walg.json'
+    dest: "{{ postgresql_home_dir }}/.walg.json"
     owner: postgres
     group: postgres
     mode: 0644
@@ -54,7 +54,7 @@
 
 - name: wal-g | copy "wal_g_bootstrap.sh" to /etc/patroni/
   copy:
-    src: 'wal_g_bootstrap.sh'
+    src: wal_g_bootstrap.sh
     dest: /etc/patroni/
     owner: postgres
     group: postgres

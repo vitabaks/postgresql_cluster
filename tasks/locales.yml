@@ -23,7 +23,7 @@
   dnf:
     name: "{{ item }}"
   loop: "{{ glibc_langpack }}"
-  environment: '{{ proxy_env | default({}) }}'
+  environment: "{{ proxy_env | default({}) }}"
   when: ansible_os_family == "RedHat" and
         ansible_distribution_major_version >= '8'
 

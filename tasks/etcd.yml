@@ -5,17 +5,17 @@
 - block:
     - name: etcd cluster | download "etcd" package
       get_url:
-        url: '{{ item }}'
+        url: "{{ item }}"
         dest: /tmp/
         timeout: 60
         validate_certs: false
       loop:
-        - '{{ etcd_package_repo }}'
-      environment: '{{ proxy_env | default({}) }}'
+        - "{{ etcd_package_repo }}"
+      environment: "{{ proxy_env | default({}) }}"
 
     - name: etcd cluster | extract "etcd" into /tmp
       unarchive:
-        src: '/tmp/{{ etcd_package_repo | basename }}'
+        src: "/tmp/{{ etcd_package_repo | basename }}"
         dest: /tmp/
         remote_src: true
 
@@ -35,7 +35,7 @@
 - block:
     - name: etcd cluster | extract "etcd" into /tmp
       unarchive:
-        src: '{{ etcd_package_file }}'
+        src: "{{ etcd_package_file }}"
         dest: /tmp/
 
     - name: etcd cluster | copy "etcd" and "etcdctl" binary files to /usr/local/bin/

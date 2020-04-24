@@ -3,7 +3,7 @@
 - name: keepalived | install packages
   package:
     name: keepalived
-  environment: '{{ proxy_env | default({}) }}'
+  environment: "{{ proxy_env | default({}) }}"
   tags: keepalived_install, keepalived
 
 - name: keepalived | make sure the kernel parameters "net.ipv4.ip_nonlocal_bind", "net.ipv4.ip_forward" are enabled  # yamllint disable rule:line-length
@@ -54,7 +54,7 @@
         dest: files/keepalived.conf
         validate_checksum: true
         flat: true
-      delegate_to: '{{ groups.master[0] }}'
+      delegate_to: "{{ groups.master[0] }}"
 
     - name: keepalived | copy keepalived.conf conf file to replica
       copy:
@@ -65,8 +65,8 @@
     - name: keepalived | prepare keepalived.conf conf file (replace "interface")
       lineinfile:
         path: /etc/keepalived/keepalived.conf
-        regexp: '{{ item.regexp }}'
-        line: '{{ item.line }}'
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
         backrefs: true
       loop:
         - {regexp: '^.*interface', line: '   interface {{ vip_interface }}'}
