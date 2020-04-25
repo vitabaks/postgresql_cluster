@@ -335,7 +335,9 @@
       stat:
         path: "{{ postgresql_data_dir }}/PG_VERSION"
       register: pgdata_initialized
-    - fail:
+
+    - name: Patroni | Prepare PostgreSQL | data directory check result
+      fail:
         msg: "Whoops! data directory {{ postgresql_data_dir }} is not initialized"
       when: not pgdata_initialized.stat.exists
       tags: patroni, patroni_check_init
@@ -501,7 +503,9 @@
       stat:
         path: "{{ postgresql_data_dir }}/PG_VERSION"
       register: pgdata_initialized
-    - fail:
+
+    - name: Patroni | Prepare PostgreSQL | data directory check result
+      fail:
         msg: "Whoops! data directory {{ postgresql_data_dir }} is already initialized"
       when: pgdata_initialized.stat.exists
       tags: patroni, patroni_check_init
