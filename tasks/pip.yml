@@ -17,7 +17,11 @@
       register: get_pip_result
 
     - name: pip | install pip
-      command: "python3 {{ pip_package_repo | basename }} --trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"  # yamllint disable rule:line-length
+      command: >
+        python3 {{ pip_package_repo | basename }}
+        --trusted-host=pypi.python.org
+        --trusted-host=pypi.org
+        --trusted-host=files.pythonhosted.org
       args:
         chdir: /tmp/
       when: get_pip_result.changed

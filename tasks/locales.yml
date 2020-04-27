@@ -1,7 +1,7 @@
 ---
 
 # Debian
-- name: Generate locales "{% for set in locales %}{{ set.language_country }}.{{ set.encoding }}{% if not loop.last %},{% endif %}{% endfor %}"  # yamllint disable rule:line-length
+- name: locales | Generate locales
   become: true
   locale_gen:
     name: "{{ item.language_country }}.{{ item.encoding }}"
@@ -10,9 +10,12 @@
   when: ansible_os_family == "Debian"
 
 # RedHat
-- name: Generate locales "{% for set in locales %}{{ set.language_country }}.{{ set.encoding }}{% if not loop.last %},{% endif %}{% endfor %}"  # yamllint disable rule:line-length
+- name: locales | Generate locales
   become: true
-  command: localedef -c -i {{ item.language_country }} -f {{ item.encoding }} {{ item.language_country }}.{{ item.encoding }}  # yamllint disable rule:line-length
+  command: >
+    localedef -c
+    -i {{ item.language_country }}
+    -f {{ item.encoding }} {{ item.language_country }}.{{ item.encoding }}
   changed_when: false
   loop: "{{ locales | flatten(1) }}"
   when: ansible_os_family == "RedHat" and

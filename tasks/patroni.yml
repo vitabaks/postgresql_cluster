@@ -288,7 +288,7 @@
         - {regexp: '^name:', line: 'name: {{ ansible_hostname }}'}
         - {regexp: '^  listen: .*:8008$', line: '  listen: {{ hostvars[inventory_hostname].inventory_hostname }}:8008'}
         - {regexp: '^  connect_address: .*:8008$', line: '  connect_address: {{ hostvars[inventory_hostname].inventory_hostname }}:8008'}
-        - {regexp: '^  listen: ((?!8008).)*$', line: '  listen: {{ hostvars[inventory_hostname].inventory_hostname }},{{ cluster_vip }},127.0.0.1:{{ postgresql_port }}'}
+        - {regexp: '^  listen: ((?!8008).)*$', line: '  listen: {{ hostvars[inventory_hostname].inventory_hostname }},{{ cluster_vip }},127.0.0.1:{{ postgresql_port }}'}  # noqa 204
         - {regexp: '^  connect_address: ((?!8008).)*$', line: '  connect_address: {{ hostvars[inventory_hostname].inventory_hostname }}:{{ postgresql_port }}'}
       loop_control:
         label: "{{ item.line }}"
@@ -521,7 +521,12 @@
     - name: Patroni | Prepare PostgreSQL | generate default postgresql config files
       become: true
       become_user: postgres
-      command: "/usr/bin/pg_createcluster {{ postgresql_version }} {{ postgresql_cluster_name }} -d {{ postgresql_data_dir }} -p {{ postgresql_port }} -e {{ postgresql_encoding }} --locale {{ postgresql_locale }}"
+      command: >
+        /usr/bin/pg_createcluster {{ postgresql_version }} {{ postgresql_cluster_name }}
+        -d {{ postgresql_data_dir }}
+        -p {{ postgresql_port }}
+        -e {{ postgresql_encoding }}
+        --locale {{ postgresql_locale }}
       register: pg_createcluster_result
       failed_when: pg_createcluster_result.rc != 0
       when: ansible_os_family == "Debian" and not postgresql_conf.stat.exists

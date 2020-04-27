@@ -21,7 +21,28 @@
 - block:
     - name: get postgresql database list
       run_once: true
-      command: "{{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U postgres -c \"SELECT d.datname as Name, pg_catalog.pg_get_userbyid(d.datdba) as Owner, pg_catalog.pg_encoding_to_char(d.encoding) as Encoding, d.datcollate as Collate, d.datctype as Ctype, CASE WHEN pg_catalog.has_database_privilege(d.datname, 'CONNECT') THEN pg_catalog.pg_size_pretty(pg_catalog.pg_database_size(d.datname)) ELSE 'No Access' END as Size, t.spcname as Tablespace FROM pg_catalog.pg_database d JOIN pg_catalog.pg_tablespace t on d.dattablespace = t.oid WHERE not datistemplate ORDER BY 1\""  # yamllint disable rule:line-length
+      command:
+        "{{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U postgres -c
+        \"
+          SELECT
+          d.datname as name,
+          pg_get_userbyid(d.datdba) as owner,
+          pg_encoding_to_char(d.encoding) as encoding,
+          d.datcollate as collate,
+          d.datctype as ctype,
+          CASE
+          WHEN has_database_privilege(d.datname, 'CONNECT')
+          THEN pg_size_pretty(pg_database_size(d.datname))
+          ELSE 'No Access'
+          END
+          size,
+          t.spcname as tablespace
+          FROM pg_catalog.pg_database d
+          JOIN pg_catalog.pg_tablespace t
+          ON d.dattablespace = t.oid
+          WHERE NOT datistemplate
+          ORDER BY 1
+        \""
       register: dbs_result
       delegate_to: "{{ groups.master[0] }}"
       changed_when: false
@@ -94,7 +115,9 @@
 
     - name: Virtual IP Address (VIP) info
       debug:
-        msg: "Cluster ip address (VIP) {{ cluster_vip }} is running on server {{ ansible_hostname }}"  # yamllint disable rule:line-length
+        msg:
+          "Cluster ip address (VIP) {{ cluster_vip }}
+           is running on server {{ ansible_hostname }}"
       when: man_ip is defined and man_ip == cluster_vip
   when: cluster_vip is defined and cluster_vip | length > 0
   ignore_errors: true
