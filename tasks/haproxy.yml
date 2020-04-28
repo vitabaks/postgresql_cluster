@@ -219,7 +219,7 @@
     - name: haproxy | build and install lua (required for haproxy)
       become: true
       become_user: root
-      shell: "make INSTALL_TOP=/opt/{{ lua_src_repo.split('.tar.gz')[0] | basename }} linux install"
+      shell: "make INSTALL_TOP=/opt/{{ lua_src_repo.split('.tar.gz')[0] | basename }} linux install"  # noqa 305
       args:
         chdir: "/tmp/{{ lua_src_repo.split('.tar.gz')[0] | basename }}"
       tags: lua
@@ -258,7 +258,7 @@
     - name: haproxy | build and install lua (required for haproxy)
       become: true
       become_user: root
-      shell: "make INSTALL_TOP=/opt/{{ lua_src_file.split('.tar.gz')[0] | basename }} linux install"
+      shell: "make INSTALL_TOP=/opt/{{ lua_src_file.split('.tar.gz')[0] | basename }} linux install"  # noqa 305
       args:
         chdir: "/tmp/{{ lua_src_file.split('.tar.gz')[0] | basename }}"
       tags: lua
