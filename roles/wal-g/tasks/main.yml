@@ -1,0 +1,72 @@
+---
+
+- block:  # install wal-g package from repo
+    - name: Download "wal-g" binary
+      get_url:
+        url: "{{ item }}"
+        dest: /tmp/
+        timeout: 60
+        validate_certs: false
+      loop:
+        - "{{ wal_g_package_repo }}"
+      environment: "{{ proxy_env | default({}) }}"
+
+    - name: Extract "wal-g" into /tmp
+      unarchive:
+        src: "/tmp/{{ wal_g_package_repo | basename }}"
+        dest: /tmp/
+        remote_src: true
+
+    - name: copy "wal-g" binary files to /usr/local/bin/
+      copy:
+        src: "/tmp/wal-g"
+        dest: /usr/local/bin/
+        mode: u+x,g+x,o+x
+        remote_src: true
+
+  when: installation_method == "repo" and wal_g_package_repo | length > 0
+  tags: wal-g, wal_g, wal_g_install
+
+- block:  # install wal-g package from file
+    - name: Extract "wal-g" into /tmp
+      unarchive:
+        src: "{{ wal_g_package_file }}"
+        dest: /tmp/
+
+    - name: Copy "wal-g" binary files to /usr/local/bin/
+      copy:
+        src: "/tmp/wal-g"
+        dest: /usr/local/bin/
+        mode: u+x,g+x,o+x
+        remote_src: true
+
+  when: installation_method == "file" and wal_g_package_file | length > 0
+  tags: wal-g, wal_g, wal_g_install
+
+- name: "Generate conf file {{ postgresql_home_dir }}/.walg.json"
+  template:
+    src: templates/walg.json.j2
+    dest: "{{ postgresql_home_dir }}/.walg.json"
+    owner: postgres
+    group: postgres
+    mode: 0644
+  tags: wal-g, wal_g_install, wal_g_conf
+
+- name: Make sure the wal_g_bootstrap script directory exist
+  file:
+    dest: /etc/patroni
+    state: directory
+    owner: postgres
+    group: postgres
+  tags: wal-g, wal_g, wal_g_install, wal_g_bootstrap
+
+- name: Create /etc/patroni/wal_g_bootstrap.sh script
+  template:
+    src: templates/wal_g_bootstrap.sh.j2
+    dest: /etc/patroni/wal_g_bootstrap.sh
+    owner: postgres
+    group: postgres
+    mode: 0775
+  tags: wal-g, wal_g, wal_g_install, wal_g_bootstrap
+
+...

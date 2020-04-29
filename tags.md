@@ -8,7 +8,6 @@
 - - install_postgres
 - - install_packages_from_file
 - sudo
-- - postgres_sudo
 - firewall
 - configure
 - - hostname

@@ -13,11 +13,15 @@
     - "vars/{{ ansible_os_family }}.yml"
 
   pre_tasks:
-    - import_tasks: tasks/check_system.yml
+    - name: Checking Linux distribution
+      fail:
+        msg: "{{ ansible_distribution }} is not supported"
+      when: ansible_distribution not in os_valid_distributions
 
-    - import_tasks: tasks/hostname.yml
-      when: hostname is defined and hostname | length > 0
-      tags: hostname
+    - name: Checking version of OS Linux
+      fail:
+        msg: "{{ ansible_distribution_version }} of {{ ansible_distribution }} is not supported"
+      when: ansible_distribution_version is version_compare(os_minimum_versions[ansible_distribution], '<')
 
     - name: Make sure the gnupg package is present
       apt:
@@ -28,14 +32,14 @@
       when: ansible_os_family == "Debian" and installation_method == "repo"
       tags: add_repo, install_packages, install_postgres
 
-    - name: Firewall | build a firewall_ports_dynamic_var
+    - name: Build a firewall_ports_dynamic_var
       set_fact:
         firewall_ports_dynamic_var: "{{ firewall_ports_dynamic_var |default([]) }} + {{ firewall_allowed_tcp_ports_for[item] }}"
       loop: "{{ hostvars[inventory_hostname].group_names }}"
       when: firewall_enabled_at_boot|bool
       tags: firewall
 
-    - name: Firewall | build a firewall_rules_dynamic_var
+    - name: Build a firewall_rules_dynamic_var
       set_fact:
         firewall_rules_dynamic_var: "{{ firewall_rules_dynamic_var |default([]) }} + {{ firewall_additional_rules_for[item] }}"
       loop: "{{ hostvars[inventory_hostname].group_names }}"
@@ -62,25 +66,17 @@
     - vars/system.yml
     - "vars/{{ ansible_os_family }}.yml"
 
-  tasks:
+  pre_tasks:
     - meta: flush_handlers
 
-    - import_tasks: tasks/sysctl.yml
-      tags: sysctl, kernel
+  roles:
+    - role: hostname
+    - role: sysctl
+    - role: timezone
+    - role: ntp
 
-    - import_tasks: tasks/timezone.yml
-      when: timezone is defined and timezone | length > 0
-      ignore_errors: true
-      tags: timezone, configure
-
-    - import_tasks: tasks/ntp.yml
-      when: ntp_enabled is defined and ntp_enabled == "true"
-      ignore_errors: true
-      tags: ntp, configure
-
-    - import_tasks: tasks/etcd.yml
+    - role: etcd
       when: dcs_exists == "false" and dcs_type == "etcd"
-      tags: etcd, etcd_cluster
 
 
 - hosts: balancers
@@ -93,15 +89,23 @@
     - vars/system.yml
     - "vars/{{ ansible_os_family }}.yml"
 
-  tasks:
+  pre_tasks:
     - meta: flush_handlers
 
-    - import_tasks: tasks/sysctl.yml
-      tags: sysctl, kernel
+  roles:
+    - role: hostname
+    - role: sysctl
 
-    - import_tasks: tasks/haproxy.yml
+    - role: haproxy
       when: with_haproxy_load_balancing == "true"
-      tags: load_balancing
+
+    - role: confd
+      when: dcs_type == "etcd" and
+            with_haproxy_load_balancing == "true"
+
+    - role: keepalived
+      when: cluster_vip is defined and cluster_vip | length > 0 and
+            with_haproxy_load_balancing == "true"
 
 
 - hosts: postgres_cluster
@@ -117,50 +121,43 @@
   pre_tasks:
     - meta: flush_handlers
 
-    - import_tasks: tasks/add-repository.yml
-      tags: add_repo
+  roles:
+    - role: hostname
+    - role: add-repository
+    - role: packages
+    - role: sudo
+    - role: sysctl
+    - role: transparent_huge_pages
+    - role: pam_limits
+    - role: io-scheduler
+    - role: locales
+    - role: timezone
+    - role: ntp
+    - role: ssh-keys
 
-    - import_tasks: tasks/packages.yml
-      tags: install_packages
-
-    - import_tasks: tasks/sudo.yml
-      tags: sudo, postgres_sudo
-
-    - import_tasks: tasks/configure.yml
-      tags: configure
-
-    - import_tasks: tasks/wal-g.yml
+    - role: wal-g
       when: wal_g_install == "true"
-      tags: wal-g
 
-  tasks:
-    - import_tasks: tasks/pgbouncer.yml
+    - role: pgbouncer
       when: install_pgbouncer == "true"
-      tags: pgbouncer
 
-    - import_tasks: tasks/patroni.yml
-      tags: patroni
+    - role: patroni
 
-    - import_tasks: tasks/vip-manager.yml
+    - role: vip-manager
       when: with_haproxy_load_balancing != "true" and
             (cluster_vip is defined and cluster_vip | length > 0)
-      tags: vip, vip_manager
 
     # optional
-    - import_tasks: tasks/postgresql-users.yml
+    - role: postgresql-users
       when: is_master == "true" and postgresql_users | length > 0
-      tags: postgresql_users
 
-    - import_tasks: tasks/postgresql-databases.yml
+    - role: postgresql-databases
       when: is_master == "true" and postgresql_databases | length > 0
-      tags: postgresql_databases
 
-    - import_tasks: tasks/postgresql-extensions.yml
+    - role: postgresql-extensions
       when: is_master == "true" and postgresql_extensions | length > 0
-      tags: postgresql_extensions
 
     # finish (info)
-    - import_tasks: tasks/deploy_finish.yml
-      tags: cluster_info, cluster_status
+    - role: deploy-finish
 
 ...

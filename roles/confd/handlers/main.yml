@@ -1,0 +1,11 @@
+---
+
+- name: Restart confd service
+  systemd:
+    daemon_reload: true
+    name: confd
+    enabled: true
+    state: restarted
+  listen: "restart confd"
+
+...

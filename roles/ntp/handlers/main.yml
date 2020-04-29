@@ -1,0 +1,24 @@
+---
+
+- name: Restart ntp service
+  systemd:
+    name: ntp
+    enabled: true
+    state: restarted
+  listen: "restart ntp"
+
+- name: Restart ntpd service
+  systemd:
+    name: ntpd
+    enabled: true
+    state: restarted
+  listen: "restart ntpd"
+
+- name: Restart chronyd service
+  systemd:
+    name: chronyd
+    enabled: true
+    state: restarted
+  listen: "restart chronyd"
+
+...

@@ -1,0 +1,129 @@
+---
+# yamllint disable rule:line-length
+
+# install confd package from repo
+- name: Download and copy "confd" binary file to /usr/local/bin/
+  get_url:
+    url: "{{ item }}"
+    dest: /usr/local/bin/confd
+    mode: u+x,g+x,o+x
+    timeout: 60
+    validate_certs: false
+  loop:
+    - "{{ confd_package_repo }}"
+  environment: "{{ proxy_env | default({}) }}"
+  when: installation_method == "repo" and confd_package_repo | length > 0
+  tags: get_confd, confd
+
+# install confd package from file
+- name: Copy "confd" binary file to /usr/local/bin/
+  copy:
+    src: "{{ confd_package_file }}"
+    dest: /usr/local/bin/confd
+    mode: u+x,g+x,o+x
+  when: installation_method == "file" and confd_package_file | length > 0
+  tags: get_confd, confd
+
+- name: Create conf directories
+  file:
+    path: "{{ item }}"
+    state: directory
+  loop:
+    - /etc/confd/conf.d
+    - /etc/confd/templates
+  tags: confd_dir, confd_conf, confd
+
+- block:
+    - name: Generate conf file "/etc/confd/confd.toml"
+      template:
+        src: templates/confd.toml.j2
+        dest: /etc/confd/confd.toml
+      notify: "restart confd"
+      tags: confd_toml
+
+    - name: Generate conf file "/etc/confd/conf.d/haproxy.toml"
+      template:
+        src: templates/haproxy.toml.j2
+        dest: /etc/confd/conf.d/haproxy.toml
+      notify: "restart confd"
+      tags: haproxy_toml
+
+    - name: Generate template "/etc/confd/templates/haproxy.tmpl"
+      template:
+        src: templates/haproxy.tmpl.j2
+        dest: /etc/confd/templates/haproxy.tmpl
+      notify: "restart confd"
+      tags: haproxy_tmpl
+  when: add_balancer is not defined or not add_balancer|bool
+  tags: confd_conf, confd
+
+- block:  # for add_balancer.yml
+    - name: Fetch confd.toml, haproxy.toml, haproxy.tmpl conf files from master
+      run_once: true
+      fetch:
+        src: "{{ item }}"
+        dest: files/
+        validate_checksum: true
+        flat: true
+      loop:
+        - /etc/confd/confd.toml
+        - /etc/confd/conf.d/haproxy.toml
+        - /etc/confd/templates/haproxy.tmpl
+      delegate_to: "{{ groups.master[0] }}"
+
+    - name: Copy confd.toml, haproxy.toml, haproxy.tmpl conf files to replica
+      copy:
+        src: "files/{{ item.conf }}"
+        dest: "{{ item.dest }}"
+      loop:
+        - {conf: 'confd.toml', dest: '/etc/confd/confd.toml'}
+        - {conf: 'haproxy.toml', dest: '/etc/confd/conf.d/haproxy.toml'}
+        - {conf: 'haproxy.tmpl', dest: '/etc/confd/templates/haproxy.tmpl'}
+      loop_control:
+        label: "{{ item.dest }}"
+      notify: "restart confd"
+
+    - name: Prepare haproxy.tmpl template file (replace "bind" for stats)
+      lineinfile:
+        path: /etc/confd/templates/haproxy.tmpl
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+        backrefs: true
+      loop:
+        - {regexp: '^.*bind.*:7000$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:7000'}
+        - {regexp: '^.*bind.*:5000$', line: '    bind {{ cluster_vip }}:5000'}
+        - {regexp: '^.*bind.*:5001$', line: '    bind {{ cluster_vip }}:5001'}
+        - {regexp: '^.*bind.*:5002$', line: '    bind {{ cluster_vip }}:5002'}
+        - {regexp: '^.*bind.*:5003$', line: '    bind {{ cluster_vip }}:5003'}
+      loop_control:
+        label: "{{ item.line }}"
+      notify: "restart confd"
+      when: cluster_vip is defined and cluster_vip | length > 0
+
+    - name: Prepare haproxy.tmpl template file (replace "bind" for stats)
+      lineinfile:
+        path: /etc/confd/templates/haproxy.tmpl
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+        backrefs: true
+      loop:
+        - {regexp: '^.*bind.*:7000$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:7000'}
+        - {regexp: '^.*bind.*:5000$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:5000'}
+        - {regexp: '^.*bind.*:5001$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:5001'}
+        - {regexp: '^.*bind.*:5002$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:5002'}
+        - {regexp: '^.*bind.*:5003$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:5003'}
+      loop_control:
+        label: "{{ item.line }}"
+      notify: "restart confd"
+      when: cluster_vip is not defined or cluster_vip | length < 1
+  when: add_balancer is defined and add_balancer|bool
+  tags: confd_conf, confd
+
+- name: Copy systemd service file
+  template:
+    src: templates/confd.service.j2
+    dest: /etc/systemd/system/confd.service
+  notify: "restart confd"
+  tags: confd_service, confd
+
+...
