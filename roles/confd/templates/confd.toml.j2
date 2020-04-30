@@ -1,0 +1,15 @@
+backend = "etcd"
+interval = 10
+watch = true
+nodes = [
+{% if not dcs_exists|bool and dcs_type == 'etcd' %}
+  {% for host in groups['etcd_cluster'] %}
+  "http://{{ hostvars[host]['inventory_hostname'] }}:2379",
+  {% endfor %}
+{% endif %}
+{% if dcs_exists|bool and dcs_type == 'etcd' %}
+  {% for etcd_hosts in patroni_etcd_hosts %}
+  {{etcd_hosts.host}}:{{etcd_hosts.port}},
+  {% endfor %}
+{% endif %}
+]

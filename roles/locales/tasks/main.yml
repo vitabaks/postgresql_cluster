@@ -1,0 +1,33 @@
+---
+
+- block:
+    - name: Generate locales
+      become: true
+      locale_gen:
+        name: "{{ item.language_country }}.{{ item.encoding }}"
+        state: present
+      loop: "{{ locales | flatten(1) }}"
+      when: ansible_os_family == "Debian"
+
+    - name: Generate locales
+      become: true
+      command: >
+        localedef -c
+        -i {{ item.language_country }}
+        -f {{ item.encoding }} {{ item.language_country }}.{{ item.encoding }}
+      changed_when: false
+      loop: "{{ locales | flatten(1) }}"
+      when: ansible_os_family == "RedHat" and
+            ansible_distribution_major_version != '8'
+
+    - name: Install glibc-langpack
+      dnf:
+        name: "{{ item }}"
+      loop: "{{ glibc_langpack }}"
+      environment: "{{ proxy_env | default({}) }}"
+      when: ansible_os_family == "RedHat" and
+            ansible_distribution_major_version >= '8'
+  when: locales is defined and locales | length > 0
+  tags: locales
+
+...

@@ -2,12 +2,12 @@
 # yamllint disable rule:line-length
 # yamllint disable rule:comments-indentation
 
-ntp_enabled: 'false'  # specify 'true' if you want to install and configure the ntp service
+ntp_enabled: false  # or 'true' if you want to install and configure the ntp service
 ntp_servers: []
 #  - "10.128.64.44"
 #  - "10.128.64.45"
 
-timezone: []
+timezone: ""
 # timezone: "Europe/Moscow"
 
 # Generate locale
@@ -55,18 +55,18 @@ sysctl_conf:
 
 
 # Transparent Huge Pages
-disable_thp: 'true'  # or 'false'
+disable_thp: true  # or 'false'
 
 
 # Max open file limit
-set_limits: 'true'  # or 'false'
+set_limits: true  # or 'false'
 limits_user: "postgres"
 soft_nofile: 65536
 hard_nofile: 200000
 
 
 # I/O Scheduler (optional)
-set_scheduler: 'false'  # or 'true'
+set_scheduler: false  # or 'true'
 scheduler:
   - {sched: "deadline", nr_requests: "1024", device: "sda"}
 #  - {sched: "noop" , nr_requests: "1024", device: "sdb"}
@@ -84,7 +84,7 @@ scheduler:
 
 
 # SSH Keys (optional)
-enable_ssh_key_based_authentication: 'false'  # or 'true' for configure SSH Key-Based Authentication
+enable_ssh_key_based_authentication: false  # or 'true' for configure SSH Key-Based Authentication
 ssh_key_user: "postgres"
 ssh_key_state: "present"
 ssh_known_hosts: "{{ groups['postgres_cluster'] }}"

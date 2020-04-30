@@ -21,16 +21,16 @@ patroni_superuser_password: "postgres-pass"  # please change password
 patroni_replication_username: "replicator"
 patroni_replication_password: "replicator-pass"  # please change password
 
-synchronous_mode: 'false'  # or 'true' for enable synchronous database replication
-synchronous_mode_strict: 'false'  # if 'true' then block all client writes to the master, when a synchronous replica is not available
+synchronous_mode: false  # or 'true' for enable synchronous database replication
+synchronous_mode_strict: false  # if 'true' then block all client writes to the master, when a synchronous replica is not available
 
 
 # Load Balancing
-with_haproxy_load_balancing: 'false'  # or 'true' if you want to install and configure the load-balancing (based on haproxy+confd+keepalived)
-# if variable "with_haproxy_load_balancing: 'true'"
+with_haproxy_load_balancing: false  # or 'true' if you want to install and configure the load-balancing
+# if with_haproxy_load_balancing: true
 keepalived_virtual_router_id: "133"  # specify a unique virtual_router_id
 
-# vip-manager  (if with_haproxy_load_balancing: 'false')
+# vip-manager (if with_haproxy_load_balancing: false)
 vip_manager_version: "0.6"  # version to install
 vip_manager_conf_dir: "/etc/patroni"
 vip_manager_conf_file: "vip-manager.yml"
@@ -38,22 +38,22 @@ vip_manager_interval: "1000"  # time (in milliseconds) after which vip-manager w
 
 
 # DCS (Distributed Consensus Store)
-dcs_exists: 'false'  # or 'true' if you do not want to install and configure the etcd cluster
+dcs_exists: false  # or 'true' if you do not want to install and configure the etcd cluster
 dcs_type: "etcd"
 
-# if variable "dcs_exists=false" and "dcs_type=etcd":
+# if dcs_exists: false and dcs_type: "etcd"
 etcd_ver: "v3.3.19"  # version for deploy etcd cluster
 etcd_data_dir: "/var/lib/etcd"
 etcd_cluster_name: "etcd-{{ patroni_cluster_name }}"  # ETCD_INITIAL_CLUSTER_TOKEN
 
-# if variable "dcs_exists=true" and "dcs_type=etcd" - specify ip-address your etcd cluster in the "patroni_etcd_hosts" variable
+# if dcs_exists: true and dcs_type: "etcd" - specify ip address your etcd cluster in the "patroni_etcd_hosts" variable
 # example (use existing cluster of 3 nodes)
 patroni_etcd_hosts: []
 #  - { host: "10.128.64.140", port: "2379" }
 #  - { host: "10.128.64.142", port: "2379" }
 #  - { host: "10.128.64.143", port: "2379" }
 
-# more options you can specify in the templates/patroni.yml.j2
+# more options you can specify in the roles/patroni/templates/patroni.yml.j2
 # https://patroni.readthedocs.io/en/latest/SETTINGS.html#etcd
 # https://patroni.readthedocs.io/en/latest/SETTINGS.html#consul
 
@@ -64,7 +64,7 @@ postgresql_version: "11"
 postgresql_port: "5432"
 postgresql_encoding: "UTF8"  # for bootstrap only (initdb)
 postgresql_locale: "en_US.UTF-8"  # for bootstrap only (initdb)
-postgresql_data_checksums: 'true'  # for bootstrap only (initdb)
+postgresql_data_checksums: true  # for bootstrap only (initdb)
 
 # (optional) list of users to be created (if not already exists)
 postgresql_users: []
@@ -177,8 +177,8 @@ postgresql_pg_hba:
 #  - {type: "host", database: "mydatabase", user: "mydb-user", address: "192.168.0.0/24", method: "md5"}
 
 
-# PgBouncer parameters (more options in templates/pgbouncer.ini.j2)
-install_pgbouncer: 'true'  # or 'false' if you do not want to install and configure the pgbouncer service
+# PgBouncer parameters
+install_pgbouncer: true  # or 'false' if you do not want to install and configure the pgbouncer service
 pgbouncer_conf_dir: "/etc/pgbouncer"
 pgbouncer_log_dir: "/var/log/pgbouncer"
 pgbouncer_listen_port: 6432
@@ -201,21 +201,21 @@ pgbouncer_users:
 #  - {username: "", password: ""}
 
 
-# Extended patroni variables (optional)
+# Extended variables (optional)
 patroni_ttl: 30
 patroni_loop_wait: 10
 patroni_retry_timeout: 10
 patroni_maximum_lag_on_failover: 1048576
 patroni_master_start_timeout: 300
 
-patroni_postgresql_use_pg_rewind: 'true'  # or 'false'
+patroni_postgresql_use_pg_rewind: true  # or 'false'
 # try to use pg_rewind on the former leader when it joins cluster as a replica.
 
-patroni_remove_data_directory_on_rewind_failure: 'false'  # or 'true' (if use_pg_rewind: 'true')
+patroni_remove_data_directory_on_rewind_failure: false  # or 'true' (if use_pg_rewind: 'true')
 # avoid removing the data directory on an unsuccessful rewind
 # if 'true', Patroni will remove the PostgreSQL data directory and recreate the replica.
 
-patroni_remove_data_directory_on_diverged_timelines: 'false'  # or 'true'
+patroni_remove_data_directory_on_diverged_timelines: false  # or 'true'
 # if 'true', Patroni will remove the PostgreSQL data directory and recreate the replica
 # if it notices that timelines are diverging and the former master can not start streaming from the new master.
 
@@ -251,7 +251,7 @@ postgresql_restore_command: []
 
 
 # WAL-G
-wal_g_install: "false"  # or "true"
+wal_g_install: false  # or 'true'
 wal_g_ver: "v0.2.15"
 wal_g_json:  # more options see https://github.com/wal-g/wal-g#configuration
   - {option: "AWS_ACCESS_KEY_ID", value: "minio"}

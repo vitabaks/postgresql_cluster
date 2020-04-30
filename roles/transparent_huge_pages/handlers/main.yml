@@ -1,0 +1,11 @@
+---
+
+- name: Start disable-transparent-huge-pages service
+  systemd:
+    daemon_reload: true
+    name: disable-transparent-huge-pages
+    state: restarted
+    enabled: true
+  listen: "restart disable-thp"
+
+...

@@ -1,9 +1,0 @@
----
-
-- name: Set timezone to "{{ timezone }}"
-  become: true
-  become_method: sudo
-  timezone:
-    name: "{{ timezone }}"
-
-...

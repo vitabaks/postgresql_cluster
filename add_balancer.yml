@@ -1,4 +1,5 @@
 ---
+# yamllint disable rule:line-length
 
 - name: Add haproxy balancer node
   hosts: balancers
@@ -14,54 +15,60 @@
     add_balancer: true
 
   pre_tasks:
-    - import_tasks: tasks/check_system.yml
+    - name: Checking Linux distribution
+      fail:
+        msg: "{{ ansible_distribution }} is not supported"
+      when: ansible_distribution not in os_valid_distributions
 
-    - import_tasks: tasks/hostname.yml
-      when: hostname is defined and hostname | length > 0
-      tags: hostname
+    - name: Checking version of OS Linux
+      fail:
+        msg: "{{ ansible_distribution_version }} of {{ ansible_distribution }} is not supported"
+      when: ansible_distribution_version is version_compare(os_minimum_versions[ansible_distribution], '<')
 
     - name: Make sure the gnupg package is present
       apt:
         name: gnupg
         state: present
         update_cache: true
-      environment: '{{ proxy_env | default({}) }}'
+      environment: "{{ proxy_env | default({}) }}"
       when: ansible_os_family == "Debian" and installation_method == "repo"
       tags: add_repo, install_packages, install_postgres
 
-    - name: Firewall | build a firewall_ports_dynamic_var
+    - name: Build a firewall_ports_dynamic_var
       set_fact:
-        firewall_ports_dynamic_var:
-          "{{ firewall_ports_dynamic_var |default([]) }} + {{ firewall_allowed_tcp_ports_for[item] }}" # yamllint disable-line
-      loop: '{{ hostvars[inventory_hostname].group_names }}'
+        firewall_ports_dynamic_var: "{{ firewall_ports_dynamic_var |default([]) }} + {{ firewall_allowed_tcp_ports_for[item] }}"
+      loop: "{{ hostvars[inventory_hostname].group_names }}"
       when: firewall_enabled_at_boot|bool
       tags: firewall
 
-    - name: Firewall | build a firewall_rules_dynamic_var
+    - name: Build a firewall_rules_dynamic_var
       set_fact:
-        firewall_rules_dynamic_var:
-          "{{ firewall_rules_dynamic_var |default([]) }} + {{ firewall_additional_rules_for[item] }}" # yamllint disable-line
-      loop: '{{ hostvars[inventory_hostname].group_names }}'
+        firewall_rules_dynamic_var: "{{ firewall_rules_dynamic_var |default([]) }} + {{ firewall_additional_rules_for[item] }}"
+      loop: "{{ hostvars[inventory_hostname].group_names }}"
       when: firewall_enabled_at_boot|bool
       tags: firewall
 
   roles:
     - role: ansible-role-firewall
-      environment: '{{ proxy_env | default({}) }}'
+      environment: "{{ proxy_env | default({}) }}"
       vars:
-        firewall_allowed_tcp_ports: '{{ firewall_ports_dynamic_var | unique }}'
-        firewall_additional_rules: '{{ firewall_rules_dynamic_var | unique }}'
+        firewall_allowed_tcp_ports: "{{ firewall_ports_dynamic_var|list | unique }}"
+        firewall_additional_rules: "{{ firewall_rules_dynamic_var|list | unique }}"
       when: firewall_enabled_at_boot|bool
       tags: firewall
 
-  tasks:
-    - meta: flush_handlers
+    - role: hostname
+    - role: sysctl
 
-    - import_tasks: tasks/sysctl.yml
-      tags: sysctl, kernel
+    - role: haproxy
+      when: with_haproxy_load_balancing|bool
 
-    - import_tasks: tasks/haproxy.yml
-      when: with_haproxy_load_balancing == "true"
-      tags: load_balancing
+    - role: confd
+      when: dcs_type == "etcd" and
+            with_haproxy_load_balancing|bool
+
+    - role: keepalived
+      when: cluster_vip is defined and cluster_vip | length > 0 and
+            with_haproxy_load_balancing|bool
 
 ...

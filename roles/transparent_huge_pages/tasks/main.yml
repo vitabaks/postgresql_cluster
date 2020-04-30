@@ -1,0 +1,29 @@
+---
+# yamllint disable rule:line-length
+
+- name: Create systemd service "disable-transparent-huge-pages.service"
+  blockinfile:
+    path: /etc/systemd/system/disable-transparent-huge-pages.service
+    create: true
+    block: |
+      [Unit]
+      Description=Disable Transparent Huge Pages
+      DefaultDependencies=no
+      After=sysinit.target local-fs.target
+      Before=basic.target
+
+      [Service]
+      Type=oneshot
+      ExecStart=/bin/bash -c 'echo never > /sys/kernel/mm/transparent_hugepage/enabled'
+      ExecStart=/bin/bash -c 'echo never > /sys/kernel/mm/transparent_hugepage/defrag'
+
+      [Install]
+      WantedBy=basic.target
+  notify: "restart disable-thp"
+  when: disable_thp is defined and disable_thp|bool
+  tags: disable_thp, transparent_huge_pages
+
+- name: Make sure handlers are flushed immediately
+  meta: flush_handlers
+
+...

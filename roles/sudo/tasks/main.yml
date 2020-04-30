@@ -1,0 +1,51 @@
+---
+
+# if nopasswd = "yes"
+- name: Add user to /etc/sudoers.d/
+  copy:
+    dest: "/etc/sudoers.d/{{ item.name }}"
+    content: |
+      {{ item.name }}  ALL=(ALL)  NOPASSWD: ALL
+    force: true
+  when: item.nopasswd == "yes" and
+        ( item.commands is not defined or item.commands == "ALL")
+  loop: "{{ sudo_users | list }}"
+  tags: sudo
+
+# if nopasswd = "yes" and commands is defined
+- name: Add user to /etc/sudoers.d/
+  copy:
+    dest: "/etc/sudoers.d/{{ item.name }}"
+    content: |
+      {{ item.name }}  ALL=(ALL)  NOPASSWD: {{ item.commands }}
+    force: true
+  when: item.nopasswd == "yes" and
+        ( item.commands is defined and item.commands != "ALL" )
+  loop: "{{ sudo_users | list }}"
+  tags: sudo
+
+# if nopasswd = "no"
+- name: Add user to /etc/sudoers.d/
+  copy:
+    dest: "/etc/sudoers.d/{{ item.name }}"
+    content: |
+      {{ item.name }}  ALL=(ALL)  ALL
+    force: true
+  when: item.nopasswd != "yes" and
+        ( item.commands is not defined or item.commands == "ALL" )
+  loop: "{{ sudo_users | list }}"
+  tags: sudo
+
+# if nopasswd = "no" and commands is defined
+- name: Add user to /etc/sudoers.d/
+  copy:
+    dest: "/etc/sudoers.d/{{ item.name }}"
+    content: |
+      {{ item.name }}  ALL=(ALL)  {{ item.commands }}
+    force: true
+  when: item.nopasswd != "yes" and
+        ( item.commands is defined and item.commands != "ALL" )
+  loop: "{{ sudo_users | list }}"
+  tags: sudo
+
+...

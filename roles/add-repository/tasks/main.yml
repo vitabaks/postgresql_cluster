@@ -1,0 +1,71 @@
+---
+# yamllint disable rule:line-length
+
+- block:  # Debian/Ubuntu
+    - name: Add repository apt-key
+      apt_key:
+        url: "{{ item.key }}"
+        state: present
+      loop: "{{ apt_repository_keys }}"
+      when: apt_repository_keys | length > 0
+
+    - name: Add repository
+      apt_repository:
+        repo: "{{ item.repo }}"
+        state: present
+        update_cache: true
+      loop: "{{ apt_repository }}"
+      when: apt_repository | length > 0
+  environment: "{{ proxy_env | default({}) }}"
+  when: installation_method == "repo" and ansible_os_family == "Debian"
+  tags: add_repo
+
+- block:  # RedHat/CentOS
+    - name: Add repository
+      yum_repository:
+        name: "{{ item.name }}"
+        description: "{{ item.description }}"
+        baseurl: "{{ item.baseurl }}"
+        gpgkey: "{{ item.gpgkey }}"
+        gpgcheck: "{{ item.gpgcheck }}"
+      loop: "{{ yum_repository | flatten(1) }}"
+      when: yum_repository | length > 0
+
+    # Install Epel Repository
+    - name: Get epel-release-latest rpm package
+      get_url:
+        url: "http://dl.fedoraproject.org/pub/epel/epel-release-latest-{{ ansible_distribution_major_version }}.noarch.rpm"  # noqa 204
+        dest: /tmp/
+        timeout: 30
+        validate_certs: false
+      when: install_epel_repo|bool
+      tags: install_epel_repo
+
+    - name: Install EPEL repository
+      package:
+        name: "/tmp/epel-release-latest-{{ ansible_distribution_major_version }}.noarch.rpm"
+        state: present
+      when: install_epel_repo|bool
+      tags: install_epel_repo
+
+    # Install PostgreSQL Repository
+    - name: Get pgdg-redhat-repo-latest.noarch.rpm
+      get_url:
+        url: "https://download.postgresql.org/pub/repos/yum/reporpms/EL-{{ ansible_distribution_major_version }}-x86_64/pgdg-redhat-repo-latest.noarch.rpm"  # noqa 204
+        dest: /tmp/
+        timeout: 30
+        validate_certs: false
+      when: install_postgresql_repo|bool
+      tags: install_postgresql_repo
+
+    - name: Install PostgreSQL repository
+      package:
+        name: /tmp/pgdg-redhat-repo-latest.noarch.rpm
+        state: present
+      when: install_postgresql_repo|bool
+      tags: install_postgresql_repo
+  environment: "{{ proxy_env | default({}) }}"
+  when: installation_method == "repo" and ansible_os_family == "RedHat"
+  tags: add_repo
+
+...

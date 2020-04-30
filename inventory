@@ -5,14 +5,14 @@
 # "postgresql_exists='true'" if PostgreSQL is already exists and runing
 # "hostname=" variable is optional (used to change the server name)
 
-# (if dcs_exists: 'false' and dcs_type: 'etcd')
+# (if dcs_exists: false and dcs_type: "etcd")
 [etcd_cluster]  # recommendation: 3 or 5-7 nodes
 10.128.64.140
 10.128.64.142
 10.128.64.143
 
 
-# (if with_haproxy_load_balancing: 'true')
+# (if with_haproxy_load_balancing: true)
 [balancers]
 10.128.64.140
 10.128.64.142

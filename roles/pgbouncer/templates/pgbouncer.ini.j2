@@ -1,0 +1,36 @@
+[databases]
+{% for pool in pgbouncer_pools %}
+{{ pool.name }} = host=127.0.0.1 port={{ postgresql_port }} dbname={{ pool.dbname }} {{ pool.pool_parameters }}
+{% endfor %}
+
+* = host=127.0.0.1 port={{ postgresql_port }}
+
+[pgbouncer]
+logfile = {{ pgbouncer_log_dir }}/pgbouncer.log
+pidfile = /var/run/pgbouncer/pgbouncer.pid
+{% if not with_haproxy_load_balancing|bool and cluster_vip is defined and cluster_vip | length > 0 %}
+listen_addr = {{ hostvars[inventory_hostname]['inventory_hostname'] }},{{ cluster_vip }}
+{% else %}
+listen_addr = {{ hostvars[inventory_hostname]['inventory_hostname'] }}
+{% endif %}
+listen_port = {{ pgbouncer_listen_port | default(6432) }}
+unix_socket_dir = /var/run/postgresql
+auth_type = md5
+auth_file = /etc/pgbouncer/userlist.txt
+admin_users = postgres
+ignore_startup_parameters = extra_float_digits,geqo
+ 
+pool_mode = {{ pgbouncer_default_pool_mode }}
+server_reset_query = DISCARD ALL
+max_client_conn = {{ pgbouncer_max_client_conn }}
+default_pool_size = {{ pgbouncer_default_pool_size }}
+reserve_pool_size = 1
+reserve_pool_timeout = 1
+max_db_connections = {{ pgbouncer_max_db_connections }}
+pkt_buf = 8192
+listen_backlog = 4096
+
+log_connections = 0
+log_disconnections = 0
+
+# Documentation https://pgbouncer.github.io/config.html 

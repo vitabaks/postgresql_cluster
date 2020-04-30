@@ -1,0 +1,21 @@
+---
+
+- name: Make sure the PostgreSQL databases are present
+  become: true
+  become_user: postgres
+  postgresql_db:
+    name: "{{ item.db }}"
+    owner: "{{ item.owner }}"
+    encoding: "{{ item.encoding }}"
+    lc_collate: "{{ item.lc_collate }}"
+    lc_ctype: "{{ item.lc_ctype }}"
+    login_unix_socket: "{{ postgresql_unix_socket_dir }}"
+    port: "{{ postgresql_port }}"
+    template: "template0"
+    state: present
+  ignore_errors: true
+  loop: "{{ postgresql_databases | flatten(1) }}"
+  when: postgresql_databases is defined and postgresql_databases | length > 0
+  tags: postgresql_databases
+
+...

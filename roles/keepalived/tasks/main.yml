@@ -1,0 +1,88 @@
+---
+
+- name: Install keepalived packages
+  package:
+    name: keepalived
+  environment: "{{ proxy_env | default({}) }}"
+  tags: keepalived_install, keepalived
+
+- name: Make sure the kernel parameters "net.ipv4.ip_nonlocal_bind", "net.ipv4.ip_forward" are enabled  # yamllint disable rule:line-length
+  sysctl:
+    name: "{{ item }}"
+    value: "1"
+    sysctl_set: true
+    state: present
+    reload: true
+  loop:
+    - "net.ipv4.ip_nonlocal_bind"
+    - "net.ipv4.ip_forward"
+  tags: keepalived_conf, keepalived
+
+- name: Make sure the "/usr/libexec/keepalived" directory exists
+  file:
+    dest: /usr/libexec/keepalived
+    state: directory
+    owner: root
+    group: root
+  tags: keepalived_conf, keepalived
+
+- name: Create vrrp_script "/usr/libexec/keepalived/haproxy_check.sh"  # yamllint disable rule:line-length
+  copy:
+    content: |
+      #!/bin/bash
+      /bin/kill -0 `cat /var/run/haproxy/haproxy.pid`
+    dest: /usr/libexec/keepalived/haproxy_check.sh
+    owner: root
+    group: root
+    mode: 0700
+  notify: "restart keepalived"
+  tags: keepalived_conf, keepalived
+
+- name: Generate conf file "/etc/keepalived/keepalived.conf"
+  template:
+    src: templates/keepalived.conf.j2
+    dest: /etc/keepalived/keepalived.conf
+  notify: "restart keepalived"
+  when: add_balancer is not defined or not add_balancer|bool
+  tags: keepalived_conf, keepalived
+
+- block:  # for add_balancer.yml
+    - name: Fetch keepalived.conf conf file from master
+      run_once: true
+      fetch:
+        src: /etc/keepalived/keepalived.conf
+        dest: files/keepalived.conf
+        validate_checksum: true
+        flat: true
+      delegate_to: "{{ groups.master[0] }}"
+
+    - name: Copy keepalived.conf conf file to replica
+      copy:
+        src: files/keepalived.conf
+        dest: /etc/keepalived/keepalived.conf
+      notify: "restart keepalived"
+
+    - name: Prepare keepalived.conf conf file (replace "interface")
+      lineinfile:
+        path: /etc/keepalived/keepalived.conf
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+        backrefs: true
+      loop:
+        - {regexp: '^.*interface', line: '   interface {{ vip_interface }}'}
+      loop_control:
+        label: "{{ item.line }}"
+      notify: "restart keepalived"
+  when: add_balancer is defined and add_balancer|bool
+  tags: keepalived_conf, keepalived
+
+- name: selinux | change the keepalived_t domain to permissive
+  selinux_permissive:
+    name: keepalived_t
+    permissive: true
+  when: ansible_selinux.status is defined and
+        ansible_selinux.status == 'enabled'
+  ignore_errors: true
+  tags: keepalived, keepalived_selinux
+
+...
