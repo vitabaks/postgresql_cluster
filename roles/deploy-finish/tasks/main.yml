@@ -66,8 +66,8 @@
           - port 5002 (read only)  synchronous replica only
           - port 5003 (read only)  asynchronous replicas only
           - +------------------------------------------------+
-      when: with_haproxy_load_balancing == "true" and
-            synchronous_mode == "true"
+      when: with_haproxy_load_balancing|bool and
+            synchronous_mode|bool
 
     - name: PostgreSQL Cluster connection info
       run_once: true
@@ -78,8 +78,8 @@
           - port 5000 (read/write) master
           - port 5001 (read only)  all replicas
           - +------------------------------------------------+
-      when: with_haproxy_load_balancing == "true" and
-            synchronous_mode != "true"
+      when: with_haproxy_load_balancing|bool and
+            not synchronous_mode|bool
 
     - name: PostgreSQL Cluster connection info
       run_once: true
@@ -89,8 +89,8 @@
           - address (VIP) {{ cluster_vip }}
           - port {{ pgbouncer_listen_port }} (pgbouncer)
           - +------------------------------------------------+
-      when: with_haproxy_load_balancing == "false" and
-            install_pgbouncer == "true"
+      when: not with_haproxy_load_balancing|bool and
+            install_pgbouncer|bool
 
     - name: PostgreSQL Cluster connection info
       run_once: true
@@ -100,8 +100,8 @@
           - address (VIP) {{ cluster_vip }}
           - port {{ postgresql_port }}
           - +------------------------------------------------+
-      when: with_haproxy_load_balancing == "false" and
-            install_pgbouncer != "true"
+      when: not with_haproxy_load_balancing|bool and
+            not install_pgbouncer|bool
   when: cluster_vip is defined and cluster_vip | length > 0
   ignore_errors: true
   tags: conn_info, cluster_info, cluster_status

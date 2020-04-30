@@ -71,15 +71,15 @@
     - role: ssh-keys
 
     - role: wal-g
-      when: wal_g_install == "true"
+      when: wal_g_install|bool
 
     - role: pgbouncer
-      when: install_pgbouncer == "true"
+      when: install_pgbouncer|bool
 
     - role: patroni
 
     - role: vip-manager
-      when: with_haproxy_load_balancing != "true" and
+      when: not with_haproxy_load_balancing|bool and
             (cluster_vip is defined and cluster_vip | length > 0)
 
     # finish (info)

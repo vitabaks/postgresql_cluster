@@ -45,7 +45,7 @@
       tags: ntp_conf
       when: ansible_os_family == "RedHat" and
             ansible_distribution_major_version >= '8'
-  when: ntp_enabled is defined and ntp_enabled == "true"
+  when: ntp_enabled is defined and ntp_enabled|bool
   tags: ntp
 
 - name: Make sure handlers are flushed immediately

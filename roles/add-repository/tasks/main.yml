@@ -38,14 +38,14 @@
         dest: /tmp/
         timeout: 30
         validate_certs: false
-      when: install_epel_repo == "true"
+      when: install_epel_repo|bool
       tags: install_epel_repo
 
     - name: Install EPEL repository
       package:
         name: "/tmp/epel-release-latest-{{ ansible_distribution_major_version }}.noarch.rpm"
         state: present
-      when: install_epel_repo == "true"
+      when: install_epel_repo|bool
       tags: install_epel_repo
 
     # Install PostgreSQL Repository
@@ -55,14 +55,14 @@
         dest: /tmp/
         timeout: 30
         validate_certs: false
-      when: install_postgresql_repo == "true"
+      when: install_postgresql_repo|bool
       tags: install_postgresql_repo
 
     - name: Install PostgreSQL repository
       package:
         name: /tmp/pgdg-redhat-repo-latest.noarch.rpm
         state: present
-      when: install_postgresql_repo == "true"
+      when: install_postgresql_repo|bool
       tags: install_postgresql_repo
   environment: "{{ proxy_env | default({}) }}"
   when: installation_method == "repo" and ansible_os_family == "RedHat"

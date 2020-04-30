@@ -276,7 +276,7 @@
         - {regexp: '^  connect_address: ((?!8008).)*$', line: '  connect_address: {{ hostvars[inventory_hostname].inventory_hostname }}:{{ postgresql_port }}'}
       loop_control:
         label: "{{ item.line }}"
-      when: with_haproxy_load_balancing == "true" or install_pgbouncer == "true" or (cluster_vip is not defined or cluster_vip | length < 1)
+      when: with_haproxy_load_balancing|bool or install_pgbouncer|bool or (cluster_vip is not defined or cluster_vip | length < 1)
 
     - name: Prepare patroni.yml conf file (replace "name","listen","connect_address")
       lineinfile:
@@ -292,7 +292,7 @@
         - {regexp: '^  connect_address: ((?!8008).)*$', line: '  connect_address: {{ hostvars[inventory_hostname].inventory_hostname }}:{{ postgresql_port }}'}
       loop_control:
         label: "{{ item.line }}"
-      when: with_haproxy_load_balancing != "true" and install_pgbouncer != "true" and (cluster_vip is defined and cluster_vip | length > 0)
+      when: not with_haproxy_load_balancing|bool and not install_pgbouncer|bool and (cluster_vip is defined and cluster_vip | length > 0)
   when: existing_pgcluster is defined and existing_pgcluster|bool
   tags: patroni, patroni_conf
 

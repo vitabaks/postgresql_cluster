@@ -120,7 +120,7 @@
       loop_control:
         label: "{{ item.line }}"
       notify: "restart pgbouncer"
-      when: with_haproxy_load_balancing == 'true' or
+      when: with_haproxy_load_balancing|bool or
             (cluster_vip is not defined or cluster_vip | length < 1)
 
     - name: Prepare pgbouncer.ini conf file (replace "listen_addr")
@@ -134,7 +134,7 @@
       loop_control:
         label: "{{ item.line }}"
       notify: "restart pgbouncer"
-      when: with_haproxy_load_balancing != 'true' and (cluster_vip is defined and cluster_vip | length > 0 )
+      when: not with_haproxy_load_balancing|bool and (cluster_vip is defined and cluster_vip | length > 0 )
   when: existing_pgcluster is defined and existing_pgcluster|bool
   tags: pgbouncer_conf, pgbouncer
 

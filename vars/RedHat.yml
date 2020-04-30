@@ -21,8 +21,8 @@ yum_repository: []
 #    gpgkey: "https://my-repo-key.url"
 #    gpgcheck: "yes"
 
-install_epel_repo: "true"  # or 'false' (installed from the package "epel-release-latest-7.noarch.rpm" tasks/add-repository.yml)
-install_postgresql_repo: "true"  # or 'false' (installed from the package "pgdg-redhat-repo-latest.noarch.rpm" tasks/add-repository.yml)
+install_epel_repo: true  # or 'false' (installed from the package "epel-release-latest.noarch.rpm")
+install_postgresql_repo: true  # or 'false' (installed from the package "pgdg-redhat-repo-latest.noarch.rpm")
 
 # Packages (for yum repo)
 os_specific_packages:
@@ -72,11 +72,11 @@ postgresql_packages:
 etcd_package_repo: "https://github.com/etcd-io/etcd/releases/download/{{ etcd_ver }}/etcd-{{ etcd_ver }}-linux-amd64.tar.gz"
 wal_g_package_repo: "https://github.com/wal-g/wal-g/releases/download/{{ wal_g_ver }}/wal-g.linux-amd64.tar.gz"
 vip_manager_package_repo: "https://github.com/cybertec-postgresql/vip-manager/releases/download/v{{ vip_manager_version }}/vip-manager_{{ vip_manager_version }}-1_amd64.rpm"
-# (if with_haproxy_load_balancing: 'true')
+# (if with_haproxy_load_balancing: true)
 haproxy_installation_method: "rpm"  # (default)"rpm" or "src"
-haproxy_install_repo: "true"  # or 'false' # only for RedHat/CentOS version 7.
+haproxy_install_repo: true  # or 'false' # only for RedHat/CentOS version 7.
 # for RedHat/CentOS/OracleLinux 7 the haproxy version 1.8 (LTS) will be installed from the "rh-haproxy18" package from the Software Collections (SCL) repository.
-# you can preload the haproxy rpm packages to your YUM repository (in this case specify "haproxy_install_repo: 'false'").
+# you can preload the haproxy rpm packages to your YUM repository (in this case specify "haproxy_install_repo: false").
 confd_package_repo: "https://github.com/kelseyhightower/confd/releases/download/v0.16.0/confd-0.16.0-linux-amd64"
 
 # (optional) if haproxy_installation_method: 'src'
@@ -176,7 +176,7 @@ patroni_rpm_package_file: "patroni-1.6.0-1.rhel7.x86_64.rpm"  # (package for RHE
 etcd_package_file: "etcd-v3.3.15-linux-amd64.tar.gz"  # https://github.com/etcd-io/etcd/releases
 wal_g_package_file: "wal-g.linux-amd64.tar.gz"  # https://github.com/wal-g/wal-g/releases
 vip_manager_package_file: "vip-manager_0.6-1_amd64.rpm"  # https://github.com/cybertec-postgresql/vip-manager/releases
-## (if with_haproxy_load_balancing: 'true')
+## (if with_haproxy_load_balancing: true)
 haproxy_package_file: []
 #  - "rh-haproxy18-runtime-3.1-2.el7.x86_64.rpm"
 #  - "rh-haproxy18-haproxy-1.8.17-1.el7.x86_64.rpm"

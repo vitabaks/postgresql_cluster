@@ -61,14 +61,14 @@
     - role: sysctl
 
     - role: haproxy
-      when: with_haproxy_load_balancing == "true"
+      when: with_haproxy_load_balancing|bool
 
     - role: confd
       when: dcs_type == "etcd" and
-            with_haproxy_load_balancing == "true"
+            with_haproxy_load_balancing|bool
 
     - role: keepalived
       when: cluster_vip is defined and cluster_vip | length > 0 and
-            with_haproxy_load_balancing == "true"
+            with_haproxy_load_balancing|bool
 
 ...

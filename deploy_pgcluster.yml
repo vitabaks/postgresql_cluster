@@ -76,7 +76,7 @@
     - role: ntp
 
     - role: etcd
-      when: dcs_exists == "false" and dcs_type == "etcd"
+      when: not dcs_exists|bool and dcs_type == "etcd"
 
 
 - hosts: balancers
@@ -97,15 +97,15 @@
     - role: sysctl
 
     - role: haproxy
-      when: with_haproxy_load_balancing == "true"
+      when: with_haproxy_load_balancing|bool
 
     - role: confd
       when: dcs_type == "etcd" and
-            with_haproxy_load_balancing == "true"
+            with_haproxy_load_balancing|bool
 
     - role: keepalived
       when: cluster_vip is defined and cluster_vip | length > 0 and
-            with_haproxy_load_balancing == "true"
+            with_haproxy_load_balancing|bool
 
 
 - hosts: postgres_cluster
@@ -136,15 +136,15 @@
     - role: ssh-keys
 
     - role: wal-g
-      when: wal_g_install == "true"
+      when: wal_g_install|bool
 
     - role: pgbouncer
-      when: install_pgbouncer == "true"
+      when: install_pgbouncer|bool
 
     - role: patroni
 
     - role: vip-manager
-      when: with_haproxy_load_balancing != "true" and
+      when: not with_haproxy_load_balancing|bool and
             (cluster_vip is defined and cluster_vip | length > 0)
 
     # optional

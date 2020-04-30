@@ -9,7 +9,7 @@
       package:
         name: centos-release-scl-rh
         state: present
-      when: haproxy_install_repo == "true" and
+      when: haproxy_install_repo|bool and
             (ansible_distribution == 'CentOS' and
             ansible_distribution_major_version == '7')
       tags: haproxy_scl_repo
@@ -22,14 +22,14 @@
         gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-oracle
         gpgcheck: true
         enabled: true
-      when: haproxy_install_repo == "true" and
+      when: haproxy_install_repo|bool and
             (ansible_distribution == "OracleLinux" and
             ansible_distribution_major_version == '7')
       tags: haproxy_scl_repo
 
     - name: Enable Software Collections (SCL) repository for RedHat 7
       command: 'sudo yum-config-manager --enable rhel-server-rhscl-7-rpms'
-      when: haproxy_install_repo == "true" and
+      when: haproxy_install_repo|bool and
             (ansible_distribution == 'Red Hat Enterprise Linux' and
             ansible_distribution_major_version == '7')
       tags: haproxy_scl_repo
@@ -73,7 +73,7 @@
       apt_key:
         url: https://haproxy.debian.net/bernat.debian.org.gpg
         state: present
-      when: haproxy_install_repo == "true" and
+      when: haproxy_install_repo|bool and
             (ansible_distribution == "Debian" and
             ansible_distribution_major_version is version('10', '<='))
 
@@ -82,7 +82,7 @@
         repo: "deb http://haproxy.debian.net {{ ansible_distribution_release }}-backports-1.8 main"
         state: present
         update_cache: true
-      when: haproxy_install_repo == "true" and
+      when: haproxy_install_repo|bool and
             (ansible_distribution == "Debian" and
             ansible_distribution_major_version is version('10', '<='))
 
@@ -103,7 +103,7 @@
           =ZiOf
           -----END PGP PUBLIC KEY BLOCK-----
         state: present
-      when: haproxy_install_repo == "true" and
+      when: haproxy_install_repo|bool and
             (ansible_distribution == 'Ubuntu' and
             ansible_distribution_major_version is version('18', '<='))
 
@@ -112,7 +112,7 @@
         repo: "deb http://ppa.launchpad.net/vbernat/haproxy-1.8/ubuntu {{ ansible_distribution_release }} main"
         state: present
         update_cache: true
-      when: haproxy_install_repo == "true" and
+      when: haproxy_install_repo|bool and
             (ansible_distribution == 'Ubuntu' and
             ansible_distribution_major_version is version('18', '<='))
 
