@@ -10,7 +10,7 @@ proxy_env: {}
 # -------------------------------------------
 
 # Cluster variables
-cluster_vip: "10.128.64.145"  # for client access to databases in the cluster (optional)
+cluster_vip: ""  # for client access to databases in the cluster (optional)
 vip_interface: "{{ ansible_default_ipv4.interface }}"  # interface name (ex. "ens32")
 
 patroni_cluster_name: "postgres-cluster"  # specify the cluster name
@@ -27,10 +27,10 @@ synchronous_mode_strict: false  # if 'true' then block all client writes to the 
 
 # Load Balancing
 with_haproxy_load_balancing: false  # or 'true' if you want to install and configure the load-balancing
-# if with_haproxy_load_balancing: true
+# if with_haproxy_load_balancing: true and cluster_vip is specified
 keepalived_virtual_router_id: "133"  # specify a unique virtual_router_id
 
-# vip-manager (if with_haproxy_load_balancing: false)
+# vip-manager (if cluster_vip is specified and with_haproxy_load_balancing: false)
 vip_manager_version: "0.6"  # version to install
 vip_manager_conf_dir: "/etc/patroni"
 vip_manager_conf_file: "vip-manager.yml"
