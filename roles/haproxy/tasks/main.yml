@@ -121,6 +121,13 @@
         force_apt_get: true
         name: "haproxy=1.8.*"
         state: present
+      when: ansible_distribution_major_version is version('18', '<=')
+
+    - name: Install HAProxy package
+      apt:
+        name: haproxy
+        state: present
+      when: ansible_distribution_major_version is version('20', '>=')
   environment: "{{ proxy_env | default({}) }}"
   when: ansible_os_family == "Debian" and
         installation_method == "repo" and
