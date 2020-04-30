@@ -24,11 +24,11 @@ apt_repository:
 
 # Packages (for apt repo)
 os_specific_packages:
-  Debian-8: [python,python-dev,python-psycopg2,python-setuptools]
-  Debian-9: [python,python-dev,python-psycopg2,python-setuptools]
-  Debian-10: [python,python-dev,python-psycopg2,python-setuptools]
-  Ubuntu-16: [python,python-dev,python-psycopg2,python-setuptools]
-  Ubuntu-18: [python,python-dev,python-psycopg2,python-setuptools]
+  Debian-8: [python, python-dev, python-psycopg2, python-setuptools]
+  Debian-9: [python, python-dev, python-psycopg2, python-setuptools]
+  Debian-10: [python, python-dev, python-psycopg2, python-setuptools]
+  Ubuntu-16: [python, python-dev, python-psycopg2, python-setuptools]
+  Ubuntu-18: [python, python-dev, python-psycopg2, python-setuptools]
   Ubuntu-20: [python3]  # python 2 is not required
 system_packages:
   - "{{ os_specific_packages[ansible_distribution ~ '-' ~ ansible_distribution_major_version] }}"
