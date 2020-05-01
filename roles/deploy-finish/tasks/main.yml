@@ -1,4 +1,5 @@
 ---
+# yamllint disable rule:line-length
 
 - block:
     - name: Check postgresql cluster health
@@ -122,5 +123,64 @@
   when: cluster_vip is defined and cluster_vip | length > 0
   ignore_errors: true
   tags: vip_owner, vip_status, cluster_info, cluster_status
+
+
+- block:  # if cluster_vip is not defined
+    - name: Create list of nodes
+      run_once: true
+      set_fact:
+        haproxy_nodes: "{% for host in groups['balancers'] %}{{ hostvars[host]['inventory_hostname'] }}{% if not loop.last %},{% endif %}{% endfor %}"  # noqa 204
+        postgres_cluster_nodes: "{% for host in groups['postgres_cluster'] %}{{ hostvars[host]['inventory_hostname'] }}{% if not loop.last %},{% endif %}{% endfor %}"  # noqa 204
+
+    - name: PostgreSQL Cluster connection info
+      run_once: true
+      debug:
+        msg:
+          - +------------------------------------------------+
+          - address {{ haproxy_nodes }}
+          - port 5000 (read/write) master
+          - port 5001 (read only)  all replicas
+          - port 5002 (read only)  synchronous replica only
+          - port 5003 (read only)  asynchronous replicas only
+          - +------------------------------------------------+
+      when: with_haproxy_load_balancing|bool and
+            synchronous_mode|bool
+
+    - name: PostgreSQL Cluster connection info
+      run_once: true
+      debug:
+        msg:
+          - +------------------------------------------------+
+          - address {{ haproxy_nodes }}
+          - port 5000 (read/write) master
+          - port 5001 (read only)  all replicas
+          - +------------------------------------------------+
+      when: with_haproxy_load_balancing|bool and
+            not synchronous_mode|bool
+
+    - name: PostgreSQL Cluster connection info
+      run_once: true
+      debug:
+        msg:
+          - +------------------------------------------------+
+          - address {{ postgres_cluster_nodes }}
+          - port {{ pgbouncer_listen_port }} (pgbouncer)
+          - +------------------------------------------------+
+      when: not with_haproxy_load_balancing|bool and
+            install_pgbouncer|bool
+
+    - name: PostgreSQL Cluster connection info
+      run_once: true
+      debug:
+        msg:
+          - +------------------------------------------------+
+          - address {{ postgres_cluster_nodes }}
+          - port {{ postgresql_port }}
+          - +------------------------------------------------+
+      when: not with_haproxy_load_balancing|bool and
+            not install_pgbouncer|bool
+  ignore_errors: true
+  when: cluster_vip is not defined or cluster_vip | length < 1
+  tags: conn_info, cluster_info, cluster_status
 
 ...
