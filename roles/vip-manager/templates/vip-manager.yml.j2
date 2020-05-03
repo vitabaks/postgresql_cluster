@@ -8,9 +8,9 @@ key: "/service/{{ patroni_cluster_name }}/leader"
 # if the value of the above key matches the NodeName (often the hostname of this host), vip-manager will try to add the virtual ip address to the interface specified in Iface
 nodename: "{{ ansible_hostname }}"
 
-ip: {{ cluster_vip }} # the virtual ip address to manage
-mask: 24 # netmask for the virtual ip
-iface: {{ vip_interface }} #interface to which the virtual ip will be added
+ip: {{ vip_manager_ip }} # the virtual ip address to manage
+mask: {{ vip_manager_mask }} # netmask for the virtual ip
+iface: {{ vip_manager_iface }} # interface to which the virtual ip will be added
 
 # how the virtual ip should be managed. we currently support "ip addr add/remove" through shell commands or the Hetzner api
 hosting_type: basic # possible values: basic, hetzner .

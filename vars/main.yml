@@ -35,6 +35,9 @@ vip_manager_version: "0.6"  # version to install
 vip_manager_conf_dir: "/etc/patroni"
 vip_manager_conf_file: "vip-manager.yml"
 vip_manager_interval: "1000"  # time (in milliseconds) after which vip-manager wakes up and checks if it needs to register or release ip addresses.
+vip_manager_iface: "{{ vip_interface }}"  # interface to which the virtual ip will be added
+vip_manager_ip: "{{ cluster_vip }}"  # the virtual ip address to manage
+vip_manager_mask: "24"  # netmask for the virtual ip
 
 
 # DCS (Distributed Consensus Store)
