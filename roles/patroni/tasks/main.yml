@@ -2,6 +2,9 @@
 # yamllint disable rule:line-length
 # yamllint disable rule:comments-indentation
 
+- name: Make sure handlers are flushed immediately
+  meta: flush_handlers
+
 # pip install
 - import_tasks: pip.yml
   when: patroni_installation_method == "pip"

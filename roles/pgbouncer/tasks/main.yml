@@ -138,7 +138,4 @@
   when: existing_pgcluster is defined and existing_pgcluster|bool
   tags: pgbouncer_conf, pgbouncer
 
-- name: Make sure handlers are flushed immediately
-  meta: flush_handlers
-
 ...
