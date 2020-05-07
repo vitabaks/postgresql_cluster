@@ -48,7 +48,4 @@
   when: ntp_enabled is defined and ntp_enabled|bool
   tags: ntp
 
-- name: Make sure handlers are flushed immediately
-  meta: flush_handlers
-
 ...
