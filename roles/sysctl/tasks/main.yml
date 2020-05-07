@@ -13,7 +13,7 @@
     sysctl_set: true
     state: present
     reload: true
-  loop: "{{ sysctl_conf_dynamic_var | unique }}"
+  loop: "{{ sysctl_conf_dynamic_var|list | unique }}"
   ignore_errors: true
   when: sysctl_conf_dynamic_var  | length > 0
   tags: sysctl, kernel
