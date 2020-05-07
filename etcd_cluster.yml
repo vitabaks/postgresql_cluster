@@ -1,0 +1,45 @@
+---
+# yamllint disable rule:line-length
+
+- hosts: etcd_cluster
+  become: true
+  become_method: sudo
+  any_errors_fatal: true
+  gather_facts: true
+  vars_files:
+    - vars/main.yml
+    - vars/system.yml
+    - "vars/{{ ansible_os_family }}.yml"
+
+  pre_tasks:
+    - name: Build a firewall_ports_dynamic_var
+      set_fact:
+        firewall_ports_dynamic_var: "{{ firewall_ports_dynamic_var |default([]) }} + {{ firewall_allowed_tcp_ports_for[item] }}"
+      loop: "{{ hostvars[inventory_hostname].group_names }}"
+      when: firewall_enabled_at_boot|bool
+      tags: firewall
+
+    - name: Build a firewall_rules_dynamic_var
+      set_fact:
+        firewall_rules_dynamic_var: "{{ firewall_rules_dynamic_var |default([]) }} + {{ firewall_additional_rules_for[item] }}"
+      loop: "{{ hostvars[inventory_hostname].group_names }}"
+      when: firewall_enabled_at_boot|bool
+      tags: firewall
+
+  roles:
+    - role: ansible-role-firewall
+      environment: "{{ proxy_env | default({}) }}"
+      vars:
+        firewall_allowed_tcp_ports: "{{ firewall_ports_dynamic_var|list | unique }}"
+        firewall_additional_rules: "{{ firewall_rules_dynamic_var|list | unique }}"
+      when: firewall_enabled_at_boot|bool
+      tags: firewall
+
+    - role: hostname
+    - role: sysctl
+    - role: timezone
+    - role: ntp
+
+    - role: etcd
+
+...

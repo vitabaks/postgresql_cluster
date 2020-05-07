@@ -1,23 +1,11 @@
 ---
 # yamllint disable rule:line-length
 
-- name: Deploy PostgreSQL HA Cluster (based on "Patroni" and "{{ dcs_type }}")
-  hosts: localhost
-  gather_facts: false
-  vars_files:
-    - vars/main.yml
-
-- import_playbook: etcd_cluster.yml
-  when: not dcs_exists|bool and dcs_type == "etcd"
-
-- import_playbook: balancers.yml
-  when: with_haproxy_load_balancing|bool
-
-- hosts: postgres_cluster
+- hosts: balancers
   become: true
   become_method: sudo
-  gather_facts: true
   any_errors_fatal: true
+  gather_facts: true
   vars_files:
     - vars/main.yml
     - vars/system.yml
@@ -67,41 +55,14 @@
       tags: firewall
 
     - role: hostname
-    - role: add-repository
-    - role: packages
-    - role: sudo
     - role: sysctl
-    - role: transparent_huge_pages
-    - role: pam_limits
-    - role: io-scheduler
-    - role: locales
-    - role: timezone
-    - role: ntp
-    - role: ssh-keys
 
-    - role: wal-g
-      when: wal_g_install|bool
+    - role: haproxy
 
-    - role: pgbouncer
-      when: install_pgbouncer|bool
+    - role: confd
+      when: dcs_type == "etcd"
 
-    - role: patroni
-
-    - role: vip-manager
-      when: not with_haproxy_load_balancing|bool and
-            (cluster_vip is defined and cluster_vip | length > 0)
-
-    # optional
-    - role: postgresql-users
-      when: is_master == "true" and postgresql_users | length > 0
-
-    - role: postgresql-databases
-      when: is_master == "true" and postgresql_databases | length > 0
-
-    - role: postgresql-extensions
-      when: is_master == "true" and postgresql_extensions | length > 0
-
-    # finish (info)
-    - role: deploy-finish
+    - role: keepalived
+      when: cluster_vip is defined and cluster_vip | length > 0
 
 ...
