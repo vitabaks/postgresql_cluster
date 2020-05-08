@@ -1,6 +1,9 @@
 ---
 # yamllint disable rule:line-length
 
+- name: Make sure handlers are flushed immediately
+  meta: flush_handlers
+
 - block:  # install etcd package from repo
     - name: Download "etcd" package
       get_url:
