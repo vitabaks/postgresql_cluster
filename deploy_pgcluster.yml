@@ -9,9 +9,11 @@
 
 - import_playbook: etcd_cluster.yml
   when: not dcs_exists|bool and dcs_type == "etcd"
+  tags: etcd
 
 - import_playbook: balancers.yml
   when: with_haproxy_load_balancing|bool
+  tags: load_balancing, haproxy
 
 - hosts: postgres_cluster
   become: true
