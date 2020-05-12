@@ -26,7 +26,7 @@
   args:
     warn: false
   register: ufw_installed
-  ignore_errors: true
+  failed_when: false
   changed_when: false
   when:
     - ansible_distribution == "Ubuntu"
