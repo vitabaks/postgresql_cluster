@@ -21,6 +21,10 @@ Available variables are listed below, along with default values (see `defaults/m
 
 Controls the state of the firewall service; whether it should be running (`firewall_state`) and/or enabled on system boot (`firewall_enabled_at_boot`).
 
+    firewall_flush_rules_and_chains: true
+
+Whether to flush all rules and chains whenever the firewall is restarted. Set this to `false` if there are other processes managing iptables (e.g. Docker).
+
     firewall_allowed_tcp_ports:
       - "22"
       - "80"
@@ -59,6 +63,10 @@ Whether to log dropped packets to syslog (messages will be prefixed with "Droppe
     firewall_disable_ufw: false
 
 Set to `true` to disable firewalld (installed by default on RHEL/CentOS) or ufw (installed by default on Ubuntu), respectively.
+
+    firewall_enable_ipv6: true
+
+Set to `false` to disable configuration of ip6tables (for example, if your `GRUB_CMDLINE_LINUX` contains `ipv6.disable=1`).
 
 ## Dependencies
 

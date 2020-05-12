@@ -1,0 +1,21 @@
+---
+- name: Converge
+  hosts: all
+  become: true
+
+  vars:
+    # Added to prevent test failures in CI.
+    firewall_enable_ipv6: false
+
+    # Added for a test.
+    firewall_allowed_tcp_ports:
+      - "9123"
+
+  pre_tasks:
+    - name: Update apt cache.
+      apt: update_cache=true cache_valid_time=1200
+      when: ansible_os_family == 'Debian'
+      changed_when: false
+
+  roles:
+    - role: geerlingguy.firewall

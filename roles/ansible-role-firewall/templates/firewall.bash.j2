@@ -1,8 +1,8 @@
 #!/bin/bash
-# iptables firewall for common LAMP servers.
+# iptables firewall.
 #
 # This file should be located at /etc/firewall.bash, and is meant to work with
-# Jeff Geerling's firewall init script.
+# the `geerlingguy.firewall` Ansible role.
 #
 # Common port reference:
 #   22: SSH
@@ -11,12 +11,7 @@
 #   123: NTP
 #   443: HTTPS
 #   2222: SSH alternate
-#   4949: Munin
-#   6082: Varnish admin
-#   8080: HTTP alternate (often used with Tomcat)
-#   8983: Tomcat HTTP
-#   8443: Tomcat HTTPS
-#   9000: SonarQube
+#   8080: HTTP alternate
 #
 # @author Jeff Geerling
 
@@ -29,14 +24,18 @@ echo 1 > $filter
 done
 fi
 
-# Completely reset the firewall by removing all rules and chains.
+# Set the default rules.
 iptables -P INPUT ACCEPT
 iptables -P FORWARD ACCEPT
 iptables -P OUTPUT ACCEPT
+
+{% if firewall_flush_rules_and_chains %}
+# Remove all rules and chains.
 iptables -t nat -F
 iptables -t mangle -F
 iptables -F
 iptables -X
+{% endif %}
 
 # Accept traffic from loopback interface (localhost).
 iptables -A INPUT -i lo -j ACCEPT
@@ -87,37 +86,39 @@ iptables -A INPUT -m limit --limit 15/minute -j LOG --log-level 7 --log-prefix "
 # Drop all other traffic.
 iptables -A INPUT -j DROP
 
-
+{% if firewall_enable_ipv6 %}
 # Configure IPv6 if ip6tables is present.
 if [ -x "$(which ip6tables 2>/dev/null)" ]; then
 
+{% if firewall_flush_rules_and_chains %}
   # Remove all rules and chains.
   ip6tables -F
   ip6tables -X
+{% endif %}
 
   # Accept traffic from loopback interface (localhost).
   ip6tables -A INPUT -i lo -j ACCEPT
 
   # Open ports.
-  {# Add a rule for each open port #}
-  {% for port in firewall_allowed_tcp_ports %}
+{# Add a rule for each open port #}
+{% for port in firewall_allowed_tcp_ports %}
   ip6tables -A INPUT -p tcp -m tcp --dport {{ port }} -j ACCEPT
-  {% endfor %}
-  {% for port in firewall_allowed_udp_ports %}
+{% endfor %}
+{% for port in firewall_allowed_udp_ports %}
   ip6tables -A INPUT -p udp -m udp --dport {{ port }} -j ACCEPT
-  {% endfor %}
+{% endfor %}
 
   # Accept icmp ping requests.
-  ip6tables -A INPUT -p icmp -j ACCEPT
+  ip6tables -A INPUT -p icmpv6 -j ACCEPT
 
   # Allow NTP traffic for time synchronization.
   ip6tables -A OUTPUT -p udp --dport 123 -j ACCEPT
   ip6tables -A INPUT -p udp --sport 123 -j ACCEPT
 
   # Additional custom rules.
-  {% for rule in firewall_ip6_additional_rules %}
+{% for rule in firewall_ip6_additional_rules %}
   {{ rule }}
-  {% endfor %}
+{% endfor %}
 
   # Allow established connections:
   ip6tables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
@@ -125,12 +126,13 @@ if [ -x "$(which ip6tables 2>/dev/null)" ]; then
   # Log EVERYTHING (ONLY for Debug).
   # ip6tables -A INPUT -j LOG
 
-  {% if firewall_log_dropped_packets %}
+{% if firewall_log_dropped_packets %}
   # Log other incoming requests (all of which are dropped) at 15/minute max.
   ip6tables -A INPUT -m limit --limit 15/minute -j LOG --log-level 7 --log-prefix "Dropped by firewall: "
-  {% endif %}
+{% endif %}
 
   # Drop all other traffic.
   ip6tables -A INPUT -j DROP
 
 fi
+{% endif %}
