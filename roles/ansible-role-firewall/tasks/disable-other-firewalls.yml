@@ -4,7 +4,7 @@
   args:
     warn: false
   register: firewalld_installed
-  ignore_errors: true
+  failed_when: false
   changed_when: false
   when:
     - ansible_os_family == "RedHat"
