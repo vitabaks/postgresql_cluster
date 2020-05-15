@@ -26,6 +26,9 @@ platforms:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
     privileged: true
     pre_build_image: true
+    env:
+      LANG: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
     groups:
       - etcd_cluster
 
@@ -43,6 +46,9 @@ platforms:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
     privileged: true
     pre_build_image: true
+    env:
+      LANG: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
     groups:
       - etcd_cluster
 
@@ -60,6 +66,9 @@ platforms:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
     privileged: true
     pre_build_image: true
+    env:
+      LANG: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
     groups:
       - etcd_cluster
 
@@ -78,6 +87,9 @@ platforms:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
     privileged: true
     pre_build_image: true
+    env:
+      LANG: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
     groups:
       - master
       - postgres_cluster
@@ -98,6 +110,9 @@ platforms:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
     privileged: true
     pre_build_image: true
+    env:
+      LANG: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
     groups:
       - replica
       - postgres_cluster
