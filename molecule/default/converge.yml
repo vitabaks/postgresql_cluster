@@ -1,0 +1,8 @@
+---
+- name: Converge
+  hosts: all
+  gather_facts: false
+
+- import_playbook: ../../deploy_pgcluster.yml
+
+...
