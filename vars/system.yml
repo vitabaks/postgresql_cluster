@@ -107,16 +107,16 @@ firewall_allowed_tcp_ports_for:
   master: []
   replica: []
   postgres_cluster:
-    - "{{ ansible_ssh_port }}"
+    - "{{ ansible_ssh_port | default(22) }}"
     - "{{ postgresql_port }}"
     - "{{ pgbouncer_listen_port }}"
     - "8008"  # Patroni REST API port
   etcd_cluster:
-    - "{{ ansible_ssh_port }}"
+    - "{{ ansible_ssh_port | default(22) }}"
     - "2379"  # ETCD port
     - "2380"  # ETCD port
   balancers:
-    - "{{ ansible_ssh_port }}"
+    - "{{ ansible_ssh_port | default(22) }}"
     - "5000"  # HAProxy (read/write) master
     - "5001"  # HAProxy (read only) all replicas
     - "5002"  # HAProxy (read only) synchronous replica only
