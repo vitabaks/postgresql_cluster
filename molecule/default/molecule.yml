@@ -1,7 +1,9 @@
 ---
+# yamllint disable rule:comments-indentation
+
 dependency:
   name: galaxy
-  enabled: False
+  enabled: false
 driver:
   name: docker
 platforms:
@@ -140,6 +142,6 @@ scenario:
 
 verifier:
   name: ansible
-  enabled: False  # TODO
+  enabled: false  # TODO
 
 ...
