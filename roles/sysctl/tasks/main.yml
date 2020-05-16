@@ -1,5 +1,8 @@
 ---
 
+- name: Make sure handlers are flushed immediately
+  meta: flush_handlers
+
 - name: Build a sysctl_conf dynamic variable
   set_fact:
     sysctl_conf_dynamic_var: "{{ sysctl_conf_dynamic_var |default([]) }} + {{ sysctl_conf[item] | flatten(1) }}"  # yamllint disable rule:line-length
