@@ -127,14 +127,8 @@ provisioner:
       allow_world_readable_tmpfiles: false
       timeout: 60
   inventory:
-    group_vars:
-      all:
-        firewall_enable_ipv6: false  # Added to prevent test failures in CI.
-        postgresql_exists: false
-      master:
-        is_master: true
-      replica:
-        is_master: false
+    links:
+      group_vars: ../../group_vars/
   playbooks:
     prepare: prepare.yml
 
