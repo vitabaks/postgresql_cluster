@@ -1,0 +1,35 @@
+---
+# yamllint disable rule:truthy
+
+name: Molecule
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        distro:
+          - debian10
+          - ubuntu2004
+          - centos8
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+        with:
+          path: "${{ github.repository }}"
+
+      - name: molecule
+        uses: robertdebock/molecule-action@2.2.0
+        env:
+          MOLECULE_DISTRO: ${{ matrix.distro }}
+
+...
