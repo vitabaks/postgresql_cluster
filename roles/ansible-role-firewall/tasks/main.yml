@@ -57,6 +57,7 @@
         reload: true
       when:
         - ansible_virtualization_type != "docker"  # to prevent failures in CI
+        - ansible_virtualization_type != "container"
   ignore_errors: true
 
 - name: Configure the firewall service.
