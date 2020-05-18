@@ -48,6 +48,36 @@
       when: install_epel_repo|bool
       tags: install_epel_repo
 
+    # Install SCL Repository
+    - name: Install Software Collections (SCL) repository for CentOS 7
+      package:
+        name: centos-release-scl-rh
+        state: present
+      when: install_scl_repo|bool and
+            (ansible_distribution == 'CentOS' and
+            ansible_distribution_major_version == '7')
+      tags: install_scl_repo
+
+    - name: Install Software Collections (SCL) repository for OracleLinux 7
+      yum_repository:
+        name: ol7_software_collections
+        description: Software Collection Library packages for Oracle Linux 7 (x86_64)
+        baseurl: https://yum.oracle.com/repo/OracleLinux/OL7/SoftwareCollections/x86_64/
+        gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-oracle
+        gpgcheck: true
+        enabled: true
+      when: install_scl_repo|bool and
+            (ansible_distribution == "OracleLinux" and
+            ansible_distribution_major_version == '7')
+      tags: install_scl_repo
+
+    - name: Enable Software Collections (SCL) repository for RedHat 7
+      command: 'sudo yum-config-manager --enable rhel-server-rhscl-7-rpms'
+      when: install_scl_repo|bool and
+            (ansible_distribution == 'Red Hat Enterprise Linux' and
+            ansible_distribution_major_version == '7')
+      tags: install_scl_repo
+
     # Install PostgreSQL Repository
     - name: Get pgdg-redhat-repo-latest.noarch.rpm
       get_url:
