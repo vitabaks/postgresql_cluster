@@ -4,11 +4,6 @@
   gather_facts: false
 
   tasks:
-    - name: debug ansible_virtualization_type
-      run_once: true
-      debug:
-        var: ansible_virtualization_type
-
     - name: Set variables for molecule
       set_fact:
         firewall_enable_ipv6: false  # Added to prevent test failures in CI.
