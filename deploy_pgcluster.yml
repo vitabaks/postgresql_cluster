@@ -76,6 +76,7 @@
       tags: firewall
 
     - role: hostname
+    - role: resolv_conf
     - role: add-repository
     - role: packages
     - role: sudo

@@ -2,6 +2,11 @@
 # yamllint disable rule:line-length
 # yamllint disable rule:comments-indentation
 
+# DNS servers (/etc/resolv.conf)
+nameservers:
+  - "8.8.8.8"  # example (Google Public DNS)
+  - "9.9.9.9"  # (Quad9 Public DNS)
+
 ntp_enabled: false  # or 'true' if you want to install and configure the ntp service
 ntp_servers: []
 #  - "10.128.64.44"

@@ -1,0 +1,16 @@
+---
+
+- name: Add DNS server(s) into /etc/resolv.conf
+  lineinfile:
+    path: /etc/resolv.conf
+    regexp: "^nameserver {{ item }}"
+    insertbefore: '^options'
+    line: "nameserver {{ item }}"
+    unsafe_writes: true  # to prevent failures in CI
+  loop: "{{ nameservers }}"
+  when:
+    - nameservers is defined
+    - nameservers | length > 0
+  tags: dns, nameservers
+
+...
