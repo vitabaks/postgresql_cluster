@@ -1,7 +1,7 @@
 ---
 - name: Converge
   hosts: all
-  gather_facts: true
+  gather_facts: false
 
   tasks:
     - name: debug ansible_virtualization_type
