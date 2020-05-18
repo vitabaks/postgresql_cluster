@@ -1,7 +1,7 @@
 ---
 - name: Converge
   hosts: all
-  gather_facts: false
+  gather_facts: true
 
   tasks:
     - name: Set variables for molecule
@@ -9,6 +9,29 @@
         firewall_enable_ipv6: false  # Added to prevent test failures in CI.
         sysctl_set: false  # Added to prevent test failures in CI.
         cacheable: true
+
+    - name: Prepare | Remove epel-release package
+      package:
+        name: epel-release
+        state: absent
+      when:
+        - ansible_os_family == "RedHat"
+
+    - name: Prepare | Clean yum cache
+      command: yum clean all
+      args:
+        warn: false
+      when:
+        - ansible_os_family == "RedHat"
+        - ansible_distribution_major_version == '7'
+
+    - name: Prepare | Clean dnf cache
+      command: dnf clean all
+      args:
+        warn: false
+      when:
+        - ansible_os_family == "RedHat"
+        - ansible_distribution_major_version is version('8', '>=')
 
 - import_playbook: ../../deploy_pgcluster.yml
 
