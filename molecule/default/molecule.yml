@@ -1,0 +1,162 @@
+---
+# yamllint disable rule:comments-indentation
+
+dependency:
+  name: galaxy
+  enabled: false
+driver:
+  name: docker
+platforms:
+  - name: 10.172.0.17
+    hostname: etcd01
+    image: geerlingguy/docker-${MOLECULE_DISTRO:-centos8}-ansible:latest
+    # docker_networks:  # TODO github.com/ansible-community/molecule/pull/2696
+      # - name: test_docker_network
+        # ipam_config:
+          # - subnet: 10.172.0.0/24
+            # gateway: 10.172.0.1
+    networks:
+      - name: test_docker_network
+        ipv4_address: 10.172.0.17
+    exposed_ports:
+      - 2379/tcp
+      - 2380/tcp
+    command: ""
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    privileged: true
+    pre_build_image: true
+    env:
+      LANG: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
+    groups:
+      - etcd_cluster
+
+  - name: 10.172.0.18
+    hostname: etcd02
+    image: geerlingguy/docker-${MOLECULE_DISTRO:-centos8}-ansible:latest
+    networks:
+      - name: test_docker_network
+        ipv4_address: 10.172.0.18
+    exposed_ports:
+      - 2379/tcp
+      - 2380/tcp
+    command: ""
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    privileged: true
+    pre_build_image: true
+    env:
+      LANG: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
+    groups:
+      - etcd_cluster
+
+  - name: 10.172.0.19
+    hostname: etcd03
+    image: geerlingguy/docker-${MOLECULE_DISTRO:-centos8}-ansible:latest
+    networks:
+      - name: test_docker_network
+        ipv4_address: 10.172.0.19
+    exposed_ports:
+      - 2379/tcp
+      - 2380/tcp
+    command: ""
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    privileged: true
+    pre_build_image: true
+    env:
+      LANG: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
+    groups:
+      - etcd_cluster
+
+  - name: 10.172.0.20
+    hostname: pgnode01
+    image: geerlingguy/docker-${MOLECULE_DISTRO:-centos8}-ansible:latest
+    networks:
+      - name: test_docker_network
+        ipv4_address: 10.172.0.20
+    exposed_ports:
+      - 8008/tcp
+      - 5432/tcp
+      - 6432/tcp
+    command: ""
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    privileged: true
+    pre_build_image: true
+    env:
+      LANG: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
+    groups:
+      - master
+      - postgres_cluster
+      - balancers
+
+  - name: 10.172.0.21
+    hostname: pgnode02
+    image: geerlingguy/docker-${MOLECULE_DISTRO:-centos8}-ansible:latest
+    networks:
+      - name: test_docker_network
+        ipv4_address: 10.172.0.21
+    exposed_ports:
+      - 8008/tcp
+      - 5432/tcp
+      - 6432/tcp
+    command: ""
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    privileged: true
+    pre_build_image: true
+    env:
+      LANG: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
+    groups:
+      - replica
+      - postgres_cluster
+      - balancers
+
+provisioner:
+  name: ansible
+  config_options:
+    defaults:
+      display_skipped_hosts: false
+      remote_tmp: "~/.ansible/tmp"
+      allow_world_readable_tmpfiles: false
+      timeout: 60
+  inventory:
+    links:
+      group_vars: ../../group_vars/
+  playbooks:
+    prepare: prepare.yml
+
+scenario:
+  create_sequence:
+    - prepare
+    - create
+  converge_sequence:
+    - prepare
+    - create
+    - converge
+  destroy_sequence:
+    - cleanup
+    - destroy
+  test_sequence:
+    - cleanup
+    - destroy
+    - syntax
+    - prepare
+    - create
+    - converge
+#    - idempotence  # >> role:patroni,task:"data directory check result"
+    - verify
+    - cleanup
+    - destroy
+
+verifier:
+  name: ansible
+  enabled: false  # TODO
+
+...

@@ -26,14 +26,41 @@
   when: packages_from_file is defined and packages_from_file | length > 0
   tags: install_packages_from_file
 
+- block:  # RedHat (update cache)
+    - name: Clean yum cache
+      command: yum clean all
+      args:
+        warn: false
+      when: ansible_distribution_major_version == '7'
+
+    - name: Clean dnf cache
+      command: dnf clean all
+      args:
+        warn: false
+      when: ansible_distribution_major_version is version('8', '>=')
+  environment: "{{ proxy_env | default({}) }}"
+  when: ansible_os_family == "RedHat" and installation_method == "repo"
+  tags: install_packages, install_postgres
+
 # Install packages from repository
+# RedHat
 - name: Install system packages
   package:
     name: "{{ item }}"
-    update_cache: true
+    state: present
   loop: "{{ system_packages }}"
   environment: "{{ proxy_env | default({}) }}"
-  when: installation_method == "repo"
+  when: ansible_os_family == "RedHat" and installation_method == "repo"
+  tags: install_packages
+
+# Debian
+- name: Install system packages
+  apt:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ system_packages }}"
+  environment: "{{ proxy_env | default({}) }}"
+  when: ansible_os_family == "Debian" and installation_method == "repo"
   tags: install_packages
 
 # PostgreSQL prepare for install (for Debian based only)
@@ -78,14 +105,24 @@
   tags: install_postgres
 
 # Install PostgreSQL from repository
+# RedHat
 - name: Install PostgreSQL packages
   package:
     name: "{{ item }}"
-    update_cache: true
     state: present
   loop: "{{ postgresql_packages }}"
   environment: "{{ proxy_env | default({}) }}"
-  when: installation_method == "repo"
+  when: ansible_os_family == "RedHat" and installation_method == "repo"
+  tags: install_postgres
+
+# Debian
+- name: Install PostgreSQL packages
+  apt:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ postgresql_packages }}"
+  environment: "{{ proxy_env | default({}) }}"
+  when: ansible_os_family == "Debian" and installation_method == "repo"
   tags: install_postgres
 
 ...

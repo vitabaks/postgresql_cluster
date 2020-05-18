@@ -1,0 +1,49 @@
+---
+# yamllint disable rule:truthy
+
+name: Molecule
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+  schedule:
+    - cron: '0 0 * * 0'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        distro:
+          - debian10
+          - debian9
+          - ubuntu2004
+          - ubuntu1804
+          - centos8
+          - centos7
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Python 3
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: pip3 install molecule docker ansible
+
+      - name: Run Molecule tests
+        run: molecule test
+        env:
+          PY_COLORS: '1'
+          ANSIBLE_FORCE_COLOR: '1'
+          MOLECULE_DISTRO: ${{ matrix.distro }}
+
+...

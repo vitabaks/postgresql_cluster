@@ -1,0 +1,15 @@
+---
+- name: Converge
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Set variables for molecule
+      set_fact:
+        firewall_enable_ipv6: false  # Added to prevent test failures in CI.
+        sysctl_set: false  # Added to prevent test failures in CI.
+        cacheable: true
+
+- import_playbook: ../../deploy_pgcluster.yml
+
+...

@@ -36,11 +36,18 @@
         msg: "{{ ansible_distribution_version }} of {{ ansible_distribution }} is not supported"
       when: ansible_distribution_version is version_compare(os_minimum_versions[ansible_distribution], '<')
 
+    - name: Update apt cache
+      apt:
+        update_cache: true
+        cache_valid_time: 3600
+      environment: "{{ proxy_env | default({}) }}"
+      when: ansible_os_family == "Debian" and installation_method == "repo"
+      tags: add_repo, install_packages, install_postgres
+
     - name: Make sure the gnupg package is present
       apt:
         name: gnupg
         state: present
-        update_cache: true
       environment: "{{ proxy_env | default({}) }}"
       when: ansible_os_family == "Debian" and installation_method == "repo"
       tags: add_repo, install_packages, install_postgres
@@ -69,6 +76,7 @@
       tags: firewall
 
     - role: hostname
+    - role: resolv_conf
     - role: add-repository
     - role: packages
     - role: sudo

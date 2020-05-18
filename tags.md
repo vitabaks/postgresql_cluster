@@ -4,23 +4,24 @@
 - add_repo
 - - install_epel_repo
 - - install_postgresql_repo
+- - install_scl_repo
 - install_packages
 - - install_postgres
 - - install_packages_from_file
 - sudo
 - firewall
-- configure
-- - hostname
-- - sysctl, kernel
-- - disable_thp
-- - limits
-- - scheduler
-- - locales
-- - timezone
-- - ntp
-- - - ntp_install
-- - - ntp_conf
-- - ssh_keys
+- hostname
+- dns, nameservers
+- sysctl, kernel
+- disable_thp
+- limits
+- scheduler
+- locales
+- timezone
+- ntp
+- - ntp_install
+- - ntp_conf
+- ssh_keys
 - etcd
 - - etcd_install
 - - etcd_conf

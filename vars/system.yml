@@ -2,6 +2,11 @@
 # yamllint disable rule:line-length
 # yamllint disable rule:comments-indentation
 
+# DNS servers (/etc/resolv.conf)
+nameservers:
+  - "8.8.8.8"  # example (Google Public DNS)
+  - "9.9.9.9"  # (Quad9 Public DNS)
+
 ntp_enabled: false  # or 'true' if you want to install and configure the ntp service
 ntp_servers: []
 #  - "10.128.64.44"
@@ -19,6 +24,7 @@ locales:
 
 
 # Kernel parameters
+sysctl_set: true  # or 'false'
 # these parameters for example! Specify kernel options for your system
 sysctl_conf:
   etcd_cluster: []
@@ -107,16 +113,16 @@ firewall_allowed_tcp_ports_for:
   master: []
   replica: []
   postgres_cluster:
-    - "{{ ansible_ssh_port }}"
+    - "{{ ansible_ssh_port | default(22) }}"
     - "{{ postgresql_port }}"
     - "{{ pgbouncer_listen_port }}"
     - "8008"  # Patroni REST API port
   etcd_cluster:
-    - "{{ ansible_ssh_port }}"
+    - "{{ ansible_ssh_port | default(22) }}"
     - "2379"  # ETCD port
     - "2380"  # ETCD port
   balancers:
-    - "{{ ansible_ssh_port }}"
+    - "{{ ansible_ssh_port | default(22) }}"
     - "5000"  # HAProxy (read/write) master
     - "5001"  # HAProxy (read only) all replicas
     - "5002"  # HAProxy (read only) synchronous replica only

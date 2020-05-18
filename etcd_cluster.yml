@@ -12,6 +12,20 @@
     - "vars/{{ ansible_os_family }}.yml"
 
   pre_tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: true
+        cache_valid_time: 3600
+      environment: "{{ proxy_env | default({}) }}"
+      when: ansible_os_family == "Debian" and installation_method == "repo"
+
+    - name: Make sure the gnupg package is present
+      apt:
+        name: gnupg
+        state: present
+      environment: "{{ proxy_env | default({}) }}"
+      when: ansible_os_family == "Debian" and installation_method == "repo"
+
     - name: Build a firewall_ports_dynamic_var
       set_fact:
         firewall_ports_dynamic_var: "{{ firewall_ports_dynamic_var |default([]) }} + {{ firewall_allowed_tcp_ports_for[item] }}"
@@ -36,6 +50,7 @@
       tags: firewall
 
     - role: hostname
+    - role: resolv_conf
     - role: sysctl
     - role: timezone
     - role: ntp

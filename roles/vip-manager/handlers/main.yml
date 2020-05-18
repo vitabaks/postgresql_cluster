@@ -11,7 +11,7 @@
 - name: Wait for the cluster ip address (VIP) "{{ cluster_vip }}" is running
   wait_for:
     host: "{{ cluster_vip }}"
-    port: "{{ ansible_ssh_port }}"
+    port: "{{ ansible_ssh_port | default(22) }}"
     state: started
     timeout: 60
     delay: 2

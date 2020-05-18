@@ -31,7 +31,7 @@
 
     # known_hosts
     - name: known_hosts | for each host, scan for its ssh public key
-      command: "ssh-keyscan -trsa -p {{ ansible_ssh_port }} {{ item }}"
+      command: "ssh-keyscan -trsa -p {{ ansible_ssh_port | default(22) }} {{ item }}"
       loop: "{{ ssh_known_hosts }}"
       register: ssh_known_host_results
       changed_when: false
