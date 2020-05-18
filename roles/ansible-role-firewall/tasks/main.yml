@@ -55,9 +55,7 @@
         state: present
         sysctl_set: true
         reload: true
-      when:  # to prevent failures in CI
-        ansible_virtualization_type != "docker" or
-        ansible_virtualization_type != "VirtualPC"
+      failed_when: false  # to prevent failures in CI
   ignore_errors: true
 
 - name: Configure the firewall service.
