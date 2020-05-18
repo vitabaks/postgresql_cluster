@@ -11,7 +11,7 @@ on:
     branches:
       - master
   schedule:
-    - cron: '7 7 * * 7'
+    - cron: '0 0 * * 0'
 
 jobs:
   test:
