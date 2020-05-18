@@ -32,6 +32,13 @@
       when: yum_repository | length > 0
 
     # Install Epel Repository
+    - name: Remove epel-release package (if exists)
+      package:
+        name: epel-release
+        state: absent
+      when: install_epel_repo|bool
+      tags: install_epel_repo
+
     - name: Get epel-release-latest rpm package
       get_url:
         url: "http://dl.fedoraproject.org/pub/epel/epel-release-latest-{{ ansible_distribution_major_version }}.noarch.rpm"  # noqa 204
