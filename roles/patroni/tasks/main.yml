@@ -682,7 +682,17 @@
     name: "postgresql-{{ postgresql_version }}"
     enabled: false
     daemon_reload: true
-  when: ansible_os_family == "RedHat"
+  when: ansible_os_family == "RedHat" and
+        postgresql_packages is not search("postgrespro")
+  tags: patroni, postgresql_disable
+
+- name: Disable "postgrespro-std-{{ postgresql_version }}" service (will be managed by patroni)
+  systemd:
+    name: "postgrespro-std-{{ postgresql_version }}"
+    enabled: false
+    daemon_reload: true
+  when: ansible_os_family == "RedHat" and
+        postgresql_packages is search("postgrespro")
   tags: patroni, postgresql_disable
 
 # PATRONICTL_CONFIG_FILE (patroni v1.6.1 and higher)
