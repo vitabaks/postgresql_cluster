@@ -123,7 +123,7 @@ patroni_pip_package_repo: []
 # ( if patroni_installation_type: "deb" )
 # You can preload the patroni deb package to your APT repository, or explicitly specify the path to the package in this variable:
 patroni_deb_package_repo: []
-#  - "https://apt.postgresql.org/pub/repos/apt/pool/main/p/patroni/patroni_1.6.0-2.pgdg90%2b1_all.deb"  # (package for Debian 9)
+#  - "https://apt.postgresql.org/pub/repos/apt/pool/main/p/patroni/patroni_1.6.5-2.pgdg100%2B1_all.deb"  # (package for Debian 10)
 
 
 # ================================================================================================= #
