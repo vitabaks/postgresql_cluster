@@ -30,7 +30,7 @@ jobs:
         run: pip3 install molecule docker ansible
 
       - name: Run Molecule tests for PostgresPro
-        run: molecule test --scenario-name posgrespro
+        run: molecule test --scenario-name postgrespro
         env:
           PY_COLORS: '1'
           ANSIBLE_FORCE_COLOR: '1'
