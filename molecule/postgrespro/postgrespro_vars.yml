@@ -33,10 +33,10 @@ install_postgresql_repo: false
 # PostgreSQL packages
 os_specific_pgpro_packages:
   RedHat:
-  - postgrespro-std-{{ postgresql_version }}-devel
+    - postgrespro-std-{{ postgresql_version }}-devel
   Debian:
-  - postgrespro-std-{{ postgresql_version }}-dev
-postgresql_packages: 
+    - postgrespro-std-{{ postgresql_version }}-dev
+postgresql_packages:
   - postgrespro-std-{{ postgresql_version }}-server
   - postgrespro-std-{{ postgresql_version }}-client
   - postgrespro-std-{{ postgresql_version }}-contrib
