@@ -1,0 +1,42 @@
+---
+# yamllint disable rule:truthy
+
+name: Molecule PostgresPro
+
+on:
+  schedule:
+    - cron: '0 0 * * 0'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        distro:
+          - centos8
+          - centos7
+          - debian10
+          - debian9
+          - ubuntu1804
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Python 3
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: pip3 install molecule docker ansible
+
+      - name: Run Molecule tests for PostgresPro
+        run: molecule test --scenario-name postgrespro
+        env:
+          PY_COLORS: '1'
+          ANSIBLE_FORCE_COLOR: '1'
+          MOLECULE_DISTRO: ${{ matrix.distro }}
+
+...

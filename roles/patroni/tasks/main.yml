@@ -345,37 +345,29 @@
       when: not pgdata_initialized.stat.exists
       tags: patroni, patroni_check_init
 
-      # "Debian"
-    - name: Prepare PostgreSQL | check PostgreSQL is started
-      become: true
-      become_user: postgres
-      command: "/usr/bin/pg_ctlcluster {{ postgresql_version }} {{ postgresql_cluster_name }} status"
-      register: pg_ctlcluster_status_result
-      changed_when: false
-      ignore_errors: true
-      when: ansible_os_family == "Debian"
-
-    - name: Prepare PostgreSQL | start PostgreSQL
-      become: true
-      become_user: postgres
-      command: "/usr/bin/pg_ctlcluster {{ postgresql_version }} {{ postgresql_cluster_name }} start"
-      when: ansible_os_family == "Debian" and pg_ctlcluster_status_result.rc == 3
-
-      # "RedHat"
     - name: Prepare PostgreSQL | check PostgreSQL is started
       become: true
       become_user: postgres
       command: "{{ postgresql_bin_dir }}/pg_ctl status -D {{ postgresql_data_dir }}"
       register: pg_ctl_status_result
       changed_when: false
-      ignore_errors: true
-      when: ansible_os_family == "RedHat"
 
+      # "Debian"
+    - name: Prepare PostgreSQL | start PostgreSQL
+      become: true
+      become_user: postgres
+      command: "/usr/bin/pg_ctlcluster {{ postgresql_version }} {{ postgresql_cluster_name }} start"
+      when: pg_ctl_status_result.rc == 3 and
+            ansible_os_family == "Debian"
+
+      # "RedHat" or PostgresPro
     - name: Prepare PostgreSQL | start PostgreSQL
       become: true
       become_user: postgres
       command: "{{ postgresql_bin_dir }}/pg_ctl start -D {{ postgresql_data_dir }}"
-      when: ansible_os_family == "RedHat" and pg_ctl_status_result.rc == 3
+      when: pg_ctl_status_result.rc == 3 and
+            (ansible_os_family == "RedHat" or
+            postgresql_packages is search("postgrespro"))
 
     - name: Prepare PostgreSQL | check PostgreSQL is accepting connections
       become: true
@@ -395,23 +387,12 @@
         group: postgres
         mode: 0640
 
-    # "Debian"
     - name: Prepare PostgreSQL | reload for apply the pg_hba.conf
       become: true
       become_user: postgres
-      command: "/usr/bin/pg_ctlcluster {{ postgresql_version }} {{ postgresql_cluster_name }} reload"
-      register: pg_ctlcluster_result
-      failed_when: pg_ctlcluster_result.rc != 0
-      when: ansible_os_family == "Debian"
-
-    # "RedHat"
-    - name: Prepare PostgreSQL | reload for apply the pg_hba.conf
-      become: true
-      become_user: postgres
-      command: "{{ postgresql_bin_dir }}/pg_ctl reload -D {{ postgresql_data_dir }}"
-      register: pg_ctlcluster_result
-      failed_when: pg_ctlcluster_result.rc != 0
-      when: ansible_os_family == "RedHat"
+      command: "{{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -c 'SELECT pg_reload_conf()'"
+      register: psql_reload_result
+      failed_when: psql_reload_result.rc != 0
 
     - name: Prepare PostgreSQL | make sure the user "{{ patroni_superuser_username }}" are present, and password does not differ from the specified
       postgresql_user:
@@ -457,9 +438,10 @@
       until: stop_result.rc == 0
       retries: 10
       delay: 30
-      when: ansible_os_family == "Debian"
+      when: ansible_os_family == "Debian" and
+            postgresql_packages is not search("postgrespro")
 
-      # "RedHat"
+      # "RedHat" or PostgresPro
     - name: Prepare PostgreSQL | stop PostgreSQL (will be managed by patroni)
       become: true
       become_user: postgres
@@ -468,28 +450,16 @@
       until: stop_result.rc == 0
       retries: 30
       delay: 10
-      when: ansible_os_family == "RedHat"
+      when: ansible_os_family == "RedHat" or
+            postgresql_packages is search("postgrespro")
 
-      # "Debian"
-    - name: Prepare PostgreSQL | check PostgreSQL is stopped
-      become: true
-      become_user: postgres
-      command: "/usr/bin/pg_ctlcluster {{ postgresql_version }} {{ postgresql_cluster_name }} status"
-      register: pg_ctlcluster_result
-      failed_when: pg_ctlcluster_result.rc != 3
-      changed_when: false
-      when: ansible_os_family == "Debian"
-
-      # "RedHat"
     - name: Prepare PostgreSQL | check PostgreSQL is stopped
       become: true
       become_user: postgres
       command: "{{ postgresql_bin_dir }}/pg_ctl status -D {{ postgresql_data_dir }}"
-      register: pg_ctlcluster_result
-      failed_when: pg_ctlcluster_result.rc != 3
+      register: pg_ctl_stop_result
+      failed_when: pg_ctl_stop_result.rc != 3
       changed_when: false
-      when: ansible_os_family == "RedHat"
-
   when: is_master == "true" and postgresql_exists == "true"
   tags: patroni, patroni_start_master
 
@@ -513,13 +483,14 @@
       when: pgdata_initialized.stat.exists
       tags: patroni, patroni_check_init
 
-      # "Debian" only
+      # for Debian based distros only
       # patroni bootstrap failure is possible if the postgresql config files are missing
     - name: Prepare PostgreSQL | make sure the postgresql config files exists
       stat:
         path: "{{ postgresql_conf_dir }}/postgresql.conf"
-      register: postgresql_conf
-      when: ansible_os_family == "Debian"
+      register: postgresql_conf_file
+      when: ansible_os_family == "Debian" and
+            postgresql_packages is not search("postgrespro")
 
     - name: Prepare PostgreSQL | generate default postgresql config files
       become: true
@@ -532,7 +503,9 @@
         --locale {{ postgresql_locale }}
       register: pg_createcluster_result
       failed_when: pg_createcluster_result.rc != 0
-      when: ansible_os_family == "Debian" and not postgresql_conf.stat.exists
+      when: ansible_os_family == "Debian" and
+            (postgresql_conf_file.stat.exists is defined) and
+            not postgresql_conf_file.stat.exists
 
     - name: Prepare PostgreSQL | make sure the data directory "{{ postgresql_data_dir }}" is empty on Master
       file:
@@ -586,25 +559,13 @@
         group: postgres
         mode: 0640
 
-    # "Debian"
     - name: Prepare PostgreSQL | reload for apply the pg_hba.conf
       become: true
       become_user: postgres
-      command: "/usr/bin/pg_ctlcluster {{ postgresql_version }} {{ postgresql_cluster_name }} reload"
-      register: pg_ctlcluster_result
-      failed_when: pg_ctlcluster_result.rc != 0
-      when: ansible_os_family == "Debian" and is_master == "true"
-
-    # "RedHat"
-    - name: Prepare PostgreSQL | reload for apply the pg_hba.conf
-      become: true
-      become_user: postgres
-      command: "{{ postgresql_bin_dir }}/pg_ctl reload -D {{ postgresql_data_dir }}"
-      register: pg_ctlcluster_result
-      failed_when: pg_ctlcluster_result.rc != 0
-      when: ansible_os_family == "RedHat" and is_master == "true"
+      command: "{{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -c 'SELECT pg_reload_conf()'"
+      failed_when: false  # exec pg_reload_conf on all running postgres (to re-run with --tag pg_hba).
   when: existing_pgcluster is not defined or not existing_pgcluster|bool
-  tags: patroni, pg_hba_generate
+  tags: patroni, pg_hba, pg_hba_generate
 
 - block:  # for add_pgnode.yml
     - name: Prepare PostgreSQL | fetch pg_hba.conf file from master
@@ -624,7 +585,7 @@
         group: postgres
         mode: 0640
   when: existing_pgcluster is defined and existing_pgcluster|bool
-  tags: patroni, pg_hba_generate
+  tags: patroni, pg_hba, pg_hba_generate
 
 - block:  # start patroni on replica
     - name: Prepare PostgreSQL | make sure the data directory "{{ postgresql_data_dir }}" is empty on Replica
@@ -657,23 +618,22 @@
   tags: patroni, patroni_start_replica
 
 # disable postgresql from autostart
-# "Debian"
-- name: Turning off postgresql autostart from config "start.conf" (will be managed by patroni)
-  copy:
-    dest: "{{ postgresql_conf_dir }}/start.conf"
-    content: "manual"
-    owner: postgres
-    group: postgres
-    mode: 0644
-  when: ansible_os_family == "Debian"
-  tags: patroni, postgresql_disable
+- block:  # "Debian"
+    - name: Turning off postgresql autostart from config "start.conf" (will be managed by patroni)
+      copy:
+        dest: "{{ postgresql_conf_dir }}/start.conf"
+        content: "manual"
+        owner: postgres
+        group: postgres
+        mode: 0644
 
-- name: Disable "postgresql@{{ postgresql_version }}-{{ postgresql_cluster_name }}" service
-  systemd:
-    name: "postgresql@{{ postgresql_version }}-{{ postgresql_cluster_name }}"
-    enabled: false
-    daemon_reload: true
-  when: ansible_os_family == "Debian"
+    - name: Disable "postgresql@{{ postgresql_version }}-{{ postgresql_cluster_name }}" service
+      systemd:
+        name: "postgresql@{{ postgresql_version }}-{{ postgresql_cluster_name }}"
+        enabled: false
+        daemon_reload: true
+  when: ansible_os_family == "Debian" and
+        postgresql_packages is not search("postgrespro")
   tags: patroni, postgresql_disable
 
 # "RedHat"
@@ -682,7 +642,17 @@
     name: "postgresql-{{ postgresql_version }}"
     enabled: false
     daemon_reload: true
-  when: ansible_os_family == "RedHat"
+  when: ansible_os_family == "RedHat" and
+        postgresql_packages is not search("postgrespro")
+  tags: patroni, postgresql_disable
+
+# PostgresPro
+- name: Disable "postgrespro-std-{{ postgresql_version }}" service (will be managed by patroni)
+  systemd:
+    name: "postgrespro-std-{{ postgresql_version }}"
+    enabled: false
+    daemon_reload: true
+  when: postgresql_packages is search("postgrespro-std")
   tags: patroni, postgresql_disable
 
 # PATRONICTL_CONFIG_FILE (patroni v1.6.1 and higher)

@@ -47,6 +47,24 @@
   notify: "restart pgbouncer"
   tags: pgbouncer_service, pgbouncer
 
+- block:  # workaround for pgbouncer from postgrespro repo
+    - name: Check that /usr/bin/pgbouncer is exists
+      stat:
+        path: /usr/bin/pgbouncer
+      register: pgbouncer_bin
+
+    - name: create a symlink to /usr/sbin/pgbouncer
+      file:
+        src: /usr/sbin/pgbouncer
+        dest: /usr/bin/pgbouncer
+        owner: root
+        group: root
+        state: link
+      when: not pgbouncer_bin.stat.exists
+  when: ansible_os_family == "RedHat" and
+        postgresql_packages is search("postgrespro")
+  tags: pgbouncer_service, pgbouncer
+
 - name: Enable log rotation with logrotate
   copy:
     content: |

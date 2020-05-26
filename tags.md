@@ -33,7 +33,7 @@
 - - patroni_conf
 - - - patroni_service
 - - pgsql_stats_tmp
-- - pg_hba_generate
+- - pg_hba, pg_hba_generate
 - - patroni_start_master
 - - patroni_start_replica
 - - postgresql_disable
