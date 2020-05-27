@@ -1,0 +1,106 @@
+---
+# yamllint disable rule:line-length
+
+- block:  # Debian pgdg repo
+    - name: Make sure pgdg apt key is installed
+      apt_key:
+        id: ACCC4CF8
+        url: http://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
+
+    - name: Make sure pgdg repository is installed
+      apt_repository:
+        repo: "deb http://apt.postgresql.org/pub/repos/apt/ {{ ansible_distribution_release }}-pgdg main"
+
+    - name: Update apt cache
+      apt:
+        update_cache: true
+  environment: "{{ proxy_env | default({}) }}"
+  when:
+    - installation_method == "repo"
+    - ansible_os_family == "Debian"
+    - pgbackrest_install_from_pgdg_repo|bool
+  tags: pgbackrest, pgbackrest_repo, pgbackrest_install
+
+- block:  # RedHat pgdg repo
+    - name: Get pgdg-redhat-repo-latest.noarch.rpm
+      get_url:
+        url: "https://download.postgresql.org/pub/repos/yum/reporpms/EL-{{ ansible_distribution_major_version }}-x86_64/pgdg-redhat-repo-latest.noarch.rpm"  # noqa 204
+        dest: /tmp/
+        timeout: 30
+        validate_certs: false
+
+    - name: Make sure pgdg repository is installed
+      package:
+        name: /tmp/pgdg-redhat-repo-latest.noarch.rpm
+        state: present
+
+    - name: Clean yum cache
+      command: yum clean all
+      args:
+        warn: false
+      when: ansible_distribution_major_version == '7'
+
+    - name: Clean dnf cache
+      command: dnf clean all
+      args:
+        warn: false
+      when: ansible_distribution_major_version is version('8', '>=')
+  environment: "{{ proxy_env | default({}) }}"
+  when:
+    - installation_method == "repo"
+    - ansible_os_family == "RedHat"
+    - pgbackrest_install_from_pgdg_repo|bool
+  tags: pgbackrest, pgbackrest_repo, pgbackrest_install
+
+- name: Install pgbackrest
+  package:
+    name: pgbackrest
+    state: latest
+  tags: pgbackrest, pgbackrest_install
+
+- block:
+    - name: Ensure config directory exist
+      file:
+        path: "{{ pgbackrest_conf_file | dirname }}"
+        state: directory
+
+    - name: "Generate conf file {{ pgbackrest_conf_file }}"
+      template:
+        src: pgbackrest.conf.j2
+        dest: "{{ pgbackrest_conf_file }}"
+        owner: root
+        group: root
+        mode: 0644
+  when: "'postgres_cluster' in group_names"
+  tags: pgbackrest, pgbackrest_conf
+
+# if pgbackrest_repo_type: "posix" and pgbackrest_repo_host is set
+- import_tasks: ssh_keys.yml
+  when:
+    - pgbackrest_repo_type|lower != "s3"
+    - pgbackrest_repo_host is defined
+    - pgbackrest_repo_host | length > 0
+  tags: pgbackrest, pgbackrest_ssh_keys
+
+- block:  # if patroni_cluster_bootstrap_method: "pgbackrest"
+    - name: Make sure the pgbackrest bootstrap script directory exist
+      file:
+        dest: /etc/patroni
+        state: directory
+        owner: postgres
+        group: postgres
+
+    - name: Create /etc/patroni/pgbackrest_bootstrap.sh script
+      template:
+        src: templates/pgbackrest_bootstrap.sh.j2
+        dest: /etc/patroni/pgbackrest_bootstrap.sh
+        owner: postgres
+        group: postgres
+        mode: 0775
+  when:
+    - patroni_cluster_bootstrap_method is defined
+    - patroni_cluster_bootstrap_method == "pgbackrest"
+    - "'postgres_cluster' in group_names"
+  tags: pgbackrest, pgbackrest_bootstrap_script
+
+...

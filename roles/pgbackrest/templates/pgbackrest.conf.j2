@@ -1,0 +1,10 @@
+[global]
+{% for global in pgbackrest_conf.global %}
+{{ global.option }}={{ global.value }}
+{% endfor %}
+
+[{{ pgbackrest_stanza }}]
+{% for stanza in pgbackrest_conf.stanza %}
+{{ stanza.option }}={{ stanza.value }}
+{% endfor %}
+

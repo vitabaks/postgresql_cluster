@@ -89,6 +89,29 @@
     - role: ntp
     - role: ssh-keys
 
+- hosts: pgbackrest:postgres_cluster
+  become: true
+  become_method: sudo
+  gather_facts: true
+  any_errors_fatal: true
+  vars_files:
+    - vars/main.yml
+    - "vars/{{ ansible_os_family }}.yml"
+  roles:
+    - role: pgbackrest
+      when: pgbackrest_install|bool
+
+- hosts: postgres_cluster
+  become: true
+  become_method: sudo
+  gather_facts: true
+  any_errors_fatal: true
+  vars_files:
+    - vars/main.yml
+    - vars/system.yml
+    - "vars/{{ ansible_os_family }}.yml"
+
+  roles:
     - role: wal-g
       when: wal_g_install|bool
 

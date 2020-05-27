@@ -11,8 +11,6 @@
     - vars/main.yml
     - vars/system.yml
     - "vars/{{ ansible_os_family }}.yml"
-  vars:
-    existing_pgcluster: true
 
   pre_tasks:
     - name: Checking Linux distribution
@@ -76,6 +74,31 @@
     - role: ntp
     - role: ssh-keys
 
+- hosts: pgbackrest:postgres_cluster
+  become: true
+  become_method: sudo
+  gather_facts: true
+  any_errors_fatal: true
+  vars_files:
+    - vars/main.yml
+    - "vars/{{ ansible_os_family }}.yml"
+  roles:
+    - role: pgbackrest
+      when: pgbackrest_install|bool
+
+- hosts: replica
+  become: true
+  become_method: sudo
+  gather_facts: true
+  any_errors_fatal: true
+  vars_files:
+    - vars/main.yml
+    - vars/system.yml
+    - "vars/{{ ansible_os_family }}.yml"
+  vars:
+    existing_pgcluster: true
+
+  roles:
     - role: wal-g
       when: wal_g_install|bool
 

@@ -78,3 +78,9 @@
 - wal_g
 - - wal_g_install
 - - wal_g_conf
+- pgbackrest
+- - pgbackrest_repo
+- - pgbackrest_install
+- - pgbackrest_conf
+- - pgbackrest_ssh_keys
+- - pgbackrest_bootstrap_script
