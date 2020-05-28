@@ -547,6 +547,15 @@
       retries: 1000
       delay: 30
       changed_when: false
+
+    - name: Wait for the new cluster to initialize before generating the custom pg_hba.conf
+      uri:
+        url: "http://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:8008/leader"
+        status_code: 200
+      register: result
+      until: result.status == 200
+      retries: 10
+      delay: 2
   when: is_master == "true"
   tags: patroni, patroni_start_master
 
