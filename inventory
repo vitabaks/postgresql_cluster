@@ -2,7 +2,7 @@
 # Please specify the ip addresses and connection settings for your environment
 # The specified ip addresses will be used to listen by the cluster components.
 
-# "postgresql_exists='true'" if PostgreSQL is already exists and runing
+# "postgresql_exists='true'" if PostgreSQL is already exists and running on master (for initial deployment only)
 # "hostname=" variable is optional (used to change the server name)
 
 # if dcs_exists: false and dcs_type: "etcd" (in vars/main.yml)

@@ -463,7 +463,7 @@
   when: is_master == "true" and postgresql_exists == "true"
   tags: patroni, patroni_start_master
 
-- block:  # wheh postgresql NOT exists
+- block:  # wheh postgresql NOT exists or PITR
     - name: Prepare PostgreSQL | make sure PostgreSQL data directory "{{ postgresql_data_dir }}" exists
       file:
         path: "{{ postgresql_data_dir }}"
@@ -476,11 +476,13 @@
       stat:
         path: "{{ postgresql_data_dir }}/PG_VERSION"
       register: pgdata_initialized
+      when: not patroni_cluster_point_in_time_recovery|bool
 
     - name: Prepare PostgreSQL | data directory check result
       fail:
         msg: "Whoops! data directory {{ postgresql_data_dir }} is already initialized"
-      when: pgdata_initialized.stat.exists
+      when: pgdata_initialized.stat.exists is defined and
+            pgdata_initialized.stat.exists
       tags: patroni, patroni_check_init
 
       # for Debian based distros only
@@ -490,7 +492,8 @@
         path: "{{ postgresql_conf_dir }}/postgresql.conf"
       register: postgresql_conf_file
       when: ansible_os_family == "Debian" and
-            postgresql_packages is not search("postgrespro")
+            postgresql_packages is not search("postgrespro") and
+            not patroni_cluster_point_in_time_recovery|bool
 
     - name: Prepare PostgreSQL | generate default postgresql config files
       become: true
@@ -517,9 +520,85 @@
       loop:
         - absent
         - directory
-      when: is_master == "true"
+      when: is_master == "true" and
+            patroni_cluster_bootstrap_method != "pgbackrest"  # --delta restore
   when: postgresql_exists != "true"
-  tags: patroni
+  tags: patroni, point_in_time_recovery
+
+- block:  # PITR
+# Prepare (install pexpect)
+    - name: Prepare | Ensure the ansible required python library (jmespath) is exist
+      pip:
+        name: jmespath
+        state: present
+        executable: pip3
+        extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
+        umask: "0022"
+      environment:
+        PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
+      delegate_to: "{{ item }}"
+      loop:
+        - localhost
+        - "{{ groups.master[0] }}"
+      when: is_master == "true" and
+            (pgbackrest_install|bool or patroni_cluster_bootstrap_method == "pgbackrest")
+
+    - name: Prepare | Ensure the ansible required python library (pexpect) is exist
+      pip:
+        name: pexpect
+        state: present
+        executable: pip3
+        extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
+        umask: "0022"
+      environment:
+        PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
+      when: is_master == "true"
+
+# Run PITR
+    - name: Stop patroni service on the Replica servers (if running)
+      systemd:
+        name: patroni
+        state: stopped
+      when: is_master != "true"
+
+    - name: Stop patroni service on the Master server (if running)
+      systemd:
+        name: patroni
+        state: stopped
+      when: is_master == "true"
+
+    - name: Remove patroni cluster "{{ patroni_cluster_name }}" from DCS (if exist)
+      become: true
+      become_user: postgres
+      expect:
+        command: "patronictl -c /etc/patroni/patroni.yml remove {{ patroni_cluster_name }}"
+        responses:
+          'Please confirm the cluster name to remove': '{{ patroni_cluster_name }}'
+          'You are about to remove all information in DCS': 'Yes I am aware'
+      register: patronictl_remove_result
+      changed_when:
+        patronictl_remove_result.rc == 0 and
+        patronictl_remove_result.stdout|lower is not search("key not found")
+      failed_when:
+        patronictl_remove_result.rc != 0
+      environment:
+        PATH: "{{ ansible_env.PATH }}:/usr/bin:/usr/local/bin"
+      when: is_master == "true"
+
+    - block:  # for pgbackrest only (for use --delta restore)
+        - name: Run "{{ pgbackrest_patroni_cluster_restore_command }}" on master
+          debug:
+            msg: waiting for recovery to complete
+
+        - name: "{{ pgbackrest_patroni_cluster_restore_command }}"
+          become: true
+          become_user: postgres
+          command: "{{ pgbackrest_patroni_cluster_restore_command }}"
+      when: is_master == "true" and
+            (pgbackrest_install|bool or patroni_cluster_bootstrap_method == "pgbackrest")
+  environment: "{{ proxy_env | default({}) }}"
+  when: patroni_cluster_point_in_time_recovery|bool
+  tags: patroni, point_in_time_recovery
 
 - block:  # start patroni on master
     - name: Start patroni service on the Master server
@@ -548,7 +627,7 @@
       delay: 30
       changed_when: false
 
-    - name: Wait for the new cluster to initialize before generating the custom pg_hba.conf
+    - name: Wait for the cluster to initialize (master is the leader with the lock)
       uri:
         url: "http://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:8008/leader"
         status_code: 200
@@ -557,7 +636,7 @@
       retries: 10
       delay: 2
   when: is_master == "true"
-  tags: patroni, patroni_start_master
+  tags: patroni, patroni_start_master, point_in_time_recovery
 
 - block:  # pg_hba (using a templates/pg_hba.conf.j2)
     - name: Prepare PostgreSQL | generate pg_hba.conf
@@ -609,6 +688,7 @@
       loop:
         - absent
         - directory
+      when: not 'pgbackrest' in patroni_create_replica_methods  # --delta restore
 
     - name: Start patroni service on Replica servers
       systemd:
@@ -626,7 +706,49 @@
         delay: 10
       ignore_errors: false
   when: is_master != "true"
-  tags: patroni, patroni_start_replica
+  tags: patroni, patroni_start_replica, point_in_time_recovery
+
+# PITR
+- block:  # for pgbackrest only (for use --delta restore)
+    - name: List the Patroni members (get replicas)
+      become: true
+      become_user: postgres
+      command: "patronictl -c /etc/patroni/patroni.yml list {{ patroni_cluster_name }} -f json"
+      register: patronictl_list_result
+      changed_when: false
+      tags: patronictl_list
+
+    - name: Reinitialize cluster members (replicas)
+      become: true
+      become_user: postgres
+      expect:
+        command: "patronictl -c /etc/patroni/patroni.yml reinit {{ patroni_cluster_name }} {{ item }}"
+        responses:
+          'Are you sure you want to reinitialize members': 'y'
+          'Do you want to cancel it and reinitialize anyway': 'y'
+      loop: "{{ patronictl_list_result.stdout |from_json |json_query('[?Role != `Leader`].Member') | list }}"
+      register: patronictl_reinit_result
+      changed_when:
+        patronictl_reinit_result.rc == 0
+      failed_when:
+        patronictl_reinit_result.rc != 0
+
+    - name: Check that the patroni on the "{{ item }}" replica server is healthy
+      uri:
+        url: "http://{{ item }}:8008/health"
+        status_code: 200
+      loop: "{{ patronictl_list_result.stdout |from_json |json_query('[?Role != `Leader`].Host') | list }}"
+      register: result
+      until: result.status == 200
+      retries: 1000
+      delay: 10
+  environment:
+    PATH: "{{ ansible_env.PATH }}:/usr/bin:/usr/local/bin"
+  when:
+    - is_master == "true"
+    - patroni_cluster_point_in_time_recovery|bool
+    - (pgbackrest_install|bool or patroni_cluster_bootstrap_method == "pgbackrest")
+  tags: patroni, point_in_time_recovery
 
 # disable postgresql from autostart
 - block:  # "Debian"

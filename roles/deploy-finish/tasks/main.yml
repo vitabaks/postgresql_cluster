@@ -17,7 +17,7 @@
       debug:
         var: patronictl_result.stdout_lines
   ignore_errors: true
-  tags: patroni_status, cluster_info, cluster_status
+  tags: patroni_status, cluster_info, cluster_status, point_in_time_recovery
 
 - block:
     - name: Get postgresql database list
@@ -53,7 +53,7 @@
       debug:
         var: dbs_result.stdout_lines
   ignore_errors: true
-  tags: databases, db_list, cluster_info, cluster_status
+  tags: databases, db_list, cluster_info, cluster_status, point_in_time_recovery
 
 - block:
     - name: PostgreSQL Cluster connection info
