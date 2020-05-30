@@ -527,22 +527,6 @@
 
 - block:  # PITR
 # Prepare (install pexpect)
-    - name: Prepare | Ensure the ansible required python library (jmespath) is exist
-      pip:
-        name: jmespath
-        state: present
-        executable: pip3
-        extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
-        umask: "0022"
-      environment:
-        PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
-      delegate_to: "{{ item }}"
-      loop:
-        - localhost
-        - "{{ groups.master[0] }}"
-      when: is_master == "true" and
-            (pgbackrest_install|bool or patroni_cluster_bootstrap_method == "pgbackrest")
-
     - name: Prepare | Ensure the ansible required python library (pexpect) is exist
       pip:
         name: pexpect
@@ -710,38 +694,43 @@
 
 # PITR
 - block:  # for pgbackrest only (for use --delta restore)
-    - name: List the Patroni members (get replicas)
+    - name: List the patroni cluster members
       become: true
       become_user: postgres
       command: "patronictl -c /etc/patroni/patroni.yml list {{ patroni_cluster_name }} -f json"
       register: patronictl_list_result
       changed_when: false
-      tags: patronictl_list
 
     - name: Reinitialize cluster members (replicas)
       become: true
       become_user: postgres
       expect:
-        command: "patronictl -c /etc/patroni/patroni.yml reinit {{ patroni_cluster_name }} {{ item }}"
+        command: "patronictl -c /etc/patroni/patroni.yml reinit {{ patroni_cluster_name }} {{ item.Member }}"
         responses:
           'Are you sure you want to reinitialize members': 'y'
           'Do you want to cancel it and reinitialize anyway': 'y'
-      loop: "{{ patronictl_list_result.stdout |from_json |json_query('[?Role != `Leader`].Member') | list }}"
+      loop: "{{ patronictl_list_result.stdout |from_json }}"
+      loop_control:
+        label: "{{ item.Member, item.Host }}"
       register: patronictl_reinit_result
       changed_when:
         patronictl_reinit_result.rc == 0
       failed_when:
         patronictl_reinit_result.rc != 0
+      when: item.Role is not defined or item.Role != 'Leader'
 
-    - name: Check that the patroni on the "{{ item }}" replica server is healthy
+    - name: Check that the patroni on the replica server is healthy
       uri:
-        url: "http://{{ item }}:8008/health"
+        url: "http://{{ item.Host }}:8008/health"
         status_code: 200
-      loop: "{{ patronictl_list_result.stdout |from_json |json_query('[?Role != `Leader`].Host') | list }}"
+      loop: "{{ patronictl_list_result.stdout |from_json }}"
+      loop_control:
+        label: "{{ item.Member, item.Host }}"
       register: result
       until: result.status == 200
       retries: 1000
       delay: 10
+      when: item.Role is not defined or item.Role != 'Leader'
   environment:
     PATH: "{{ ansible_env.PATH }}:/usr/bin:/usr/local/bin"
   when:
