@@ -494,7 +494,6 @@
       when: ansible_os_family == "Debian" and
             patroni_cluster_bootstrap_method == "initdb" and
             postgresql_packages is not search("postgrespro")
-            
 
     - name: Prepare PostgreSQL | generate default postgresql config files
       become: true
