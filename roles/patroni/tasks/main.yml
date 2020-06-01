@@ -476,7 +476,7 @@
       stat:
         path: "{{ postgresql_data_dir }}/PG_VERSION"
       register: pgdata_initialized
-      when: not patroni_cluster_point_in_time_recovery|bool
+      when: patroni_cluster_bootstrap_method == "initdb"
 
     - name: Prepare PostgreSQL | data directory check result
       fail:
@@ -492,8 +492,9 @@
         path: "{{ postgresql_conf_dir }}/postgresql.conf"
       register: postgresql_conf_file
       when: ansible_os_family == "Debian" and
-            postgresql_packages is not search("postgrespro") and
-            not patroni_cluster_point_in_time_recovery|bool
+            patroni_cluster_bootstrap_method == "initdb" and
+            postgresql_packages is not search("postgrespro")
+            
 
     - name: Prepare PostgreSQL | generate default postgresql config files
       become: true
@@ -581,7 +582,8 @@
       when: is_master == "true" and
             (pgbackrest_install|bool or patroni_cluster_bootstrap_method == "pgbackrest")
   environment: "{{ proxy_env | default({}) }}"
-  when: patroni_cluster_point_in_time_recovery|bool
+  when: patroni_cluster_bootstrap_method != "initdb" and
+        (pgbackrest_install|bool or wal_g_install|bool)
   tags: patroni, point_in_time_recovery
 
 - block:  # start patroni on master
@@ -735,7 +737,6 @@
     PATH: "{{ ansible_env.PATH }}:/usr/bin:/usr/local/bin"
   when:
     - is_master == "true"
-    - patroni_cluster_point_in_time_recovery|bool
     - (pgbackrest_install|bool or patroni_cluster_bootstrap_method == "pgbackrest")
   tags: patroni, point_in_time_recovery
 

@@ -300,13 +300,12 @@ pgbackrest_conf:
     - {option: "process-max", value: "2"}
     - {option: "recovery-option", value: "recovery_target_action=promote"}
 #    - {option: "", value: ""}
-pgbackrest_patroni_cluster_restore_command:  # if patroni_cluster_bootstrap_method: "pgbackrest" or PITR
-  "/usr/bin/pgbackrest --stanza={{ pgbackrest_stanza }} --delta restore"
+pgbackrest_patroni_cluster_restore_command:
+  '/usr/bin/pgbackrest --stanza={{ pgbackrest_stanza }} --delta restore'  # restore from latest backup
+#  '/usr/bin/pgbackrest --stanza={{ pgbackrest_stanza }} --type=time "--target=2020-06-01 11:00:00+03" --delta restore'  # Point-in-Time Recovery (example)
 
-# PITR mode
-patroni_cluster_point_in_time_recovery: false  # or 'true'
-# if true, the database cluster directory will be cleaned (for "wal-g") or overwritten (for "pgbackrest" --delta restore).
-# And also the patroni cluster "{{ patroni_cluster_name }}" will be removed from the DCS.
-# Do not use during initial deployment of a cluster. This mode is intended for the PITR of an existing patroni cluster only.
+# PITR mode (if patroni_cluster_bootstrap_method: "pgbackrest" or "wal-g"):
+# 1) The database cluster directory will be cleaned (for "wal-g") or overwritten (for "pgbackrest" --delta restore).
+# 2) And also the patroni cluster "{{ patroni_cluster_name }}" will be removed from the DCS (if exist) before recovery.
 
 ...
