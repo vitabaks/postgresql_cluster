@@ -492,7 +492,6 @@
         path: "{{ postgresql_conf_dir }}/postgresql.conf"
       register: postgresql_conf_file
       when: ansible_os_family == "Debian" and
-            patroni_cluster_bootstrap_method == "initdb" and
             postgresql_packages is not search("postgrespro")
 
     - name: Prepare PostgreSQL | generate default postgresql config files
@@ -506,9 +505,9 @@
         --locale {{ postgresql_locale }}
       register: pg_createcluster_result
       failed_when: pg_createcluster_result.rc != 0
-      when: ansible_os_family == "Debian" and
-            (postgresql_conf_file.stat.exists is defined) and
-            not postgresql_conf_file.stat.exists
+      when: not postgresql_conf_file.stat.exists and
+            (ansible_os_family == "Debian" and
+            postgresql_packages is not search("postgrespro"))
 
     - name: Prepare PostgreSQL | make sure the data directory "{{ postgresql_data_dir }}" is empty on Master
       file:
@@ -525,7 +524,7 @@
   when: postgresql_exists != "true"
   tags: patroni, point_in_time_recovery
 
-- block:  # PITR
+- block:  # PITR (custom bootstrap)
 # Prepare (install pexpect)
     - name: Prepare | Ensure the ansible required python library (pexpect) is exist
       pip:
@@ -570,16 +569,84 @@
       when: is_master == "true"
 
     - block:  # for pgbackrest only (for use --delta restore)
-        - name: Run "{{ pgbackrest_patroni_cluster_restore_command }}" on master
-          debug:
-            msg: waiting for recovery to complete
+        - name: Run "{{ pgbackrest_patroni_cluster_restore_command }}" on Master
+          command: "{{ pgbackrest_patroni_cluster_restore_command }} --target-action=promote"
+          async: 86400  # timeout 24 hours
+          poll: 0
+          register: pgbackrest_restore_master
+          when: is_master == "true"
 
-        - name: "{{ pgbackrest_patroni_cluster_restore_command }}"
-          become: true
-          become_user: postgres
-          command: "{{ pgbackrest_patroni_cluster_restore_command }}"
-      when: is_master == "true" and
-            (pgbackrest_install|bool or patroni_cluster_bootstrap_method == "pgbackrest")
+          # if patroni_create_replica_methods: "pgbackrest"
+        - name: Run "{{ pgbackrest_patroni_cluster_restore_command }}" on Replica
+          command: "{{ pgbackrest_patroni_cluster_restore_command }} --target-action=shutdown"  # shutdown when recovery target is reached
+          async: 86400  # timeout 24 hours
+          poll: 0
+          register: pgbackrest_restore_replica
+          when: is_master != "true" and 'pgbackrest' in patroni_create_replica_methods
+
+        - name: Waiting for restore from backup
+          async_status:
+            jid: "{{ item.ansible_job_id }}"
+          loop:
+            - "{{ pgbackrest_restore_master }}"
+            - "{{ pgbackrest_restore_replica }}"
+          loop_control:
+            label: "{{ item.changed }}"
+          register: pgbackrest_restore_jobs_result
+          until: pgbackrest_restore_jobs_result.finished
+          retries: 2880  # timeout 24 hours
+          delay: 30
+          when: item.ansible_job_id is defined
+
+        - name: Start PostgreSQL for Recovery  # Debian
+          command: "/usr/bin/pg_ctlcluster {{ postgresql_version }} {{ postgresql_cluster_name }} start"
+          when: ansible_os_family == "Debian" and
+                (is_master == "true" or
+                (is_master != "true" and 'pgbackrest' in patroni_create_replica_methods))
+
+        - name: Start PostgreSQL for Recovery  # RedHat or PostgresPro
+          command: "{{ postgresql_bin_dir }}/pg_ctl start -D {{ postgresql_data_dir }}"
+          when: (ansible_os_family == "RedHat" or postgresql_packages is search("postgrespro")) and
+                (is_master == "true" or
+                (is_master != "true" and 'pgbackrest' in patroni_create_replica_methods))
+
+        - name: Waiting for PostgreSQL Recovery to complete (WAL apply)
+          command: "{{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -tAc 'SELECT pg_is_in_recovery()'"
+          register: pg_is_in_recovery
+          until: pg_is_in_recovery.stdout != "t"
+          retries: 1200  # timeout 10 hours
+          delay: 30
+          changed_when: false
+          failed_when: false
+          when: is_master == "true" or
+                (is_master != "true" and 'pgbackrest' in patroni_create_replica_methods)
+
+        - name: Check that PostgreSQL is stopped
+          command: "{{ postgresql_bin_dir }}/pg_ctl status -D {{ postgresql_data_dir }}"
+          register: pg_ctl_status_result
+          changed_when: false
+          failed_when: false
+
+        - name: Stop PostgreSQL  # "Debian"
+          command: "/usr/bin/pg_ctlcluster {{ postgresql_version }} {{ postgresql_cluster_name }} stop -m fast"
+          register: stop_result
+          until: stop_result.rc == 0
+          retries: 10
+          delay: 10
+          when: ansible_os_family == "Debian" and
+                (pg_ctl_status_result.rc is defined and pg_ctl_status_result.rc != 3)
+
+        - name: Stop PostgreSQL  # "RedHat" or PostgresPro
+          command: "{{ postgresql_bin_dir }}/pg_ctl stop -D {{ postgresql_data_dir }} -m fast"
+          register: stop_result
+          until: stop_result.rc == 0
+          retries: 10
+          delay: 10
+          when: (ansible_os_family == "RedHat" or postgresql_packages is search("postgrespro")) and
+                (pg_ctl_status_result.rc is defined and pg_ctl_status_result.rc != 3)
+      when: patroni_cluster_bootstrap_method == "pgbackrest"
+      become: true
+      become_user: postgres
   environment: "{{ proxy_env | default({}) }}"
   when: patroni_cluster_bootstrap_method != "initdb" and
         (pgbackrest_install|bool or wal_g_install|bool)
@@ -692,52 +759,6 @@
       ignore_errors: false
   when: is_master != "true"
   tags: patroni, patroni_start_replica, point_in_time_recovery
-
-# PITR
-- block:  # for pgbackrest only (for use --delta restore)
-    - name: List the patroni cluster members
-      become: true
-      become_user: postgres
-      command: "patronictl -c /etc/patroni/patroni.yml list {{ patroni_cluster_name }} -f json"
-      register: patronictl_list_result
-      changed_when: false
-
-    - name: Reinitialize cluster members (replicas)
-      become: true
-      become_user: postgres
-      expect:
-        command: "patronictl -c /etc/patroni/patroni.yml reinit {{ patroni_cluster_name }} {{ item.Member }}"
-        responses:
-          'Are you sure you want to reinitialize members': 'y'
-          'Do you want to cancel it and reinitialize anyway': 'y'
-      loop: "{{ patronictl_list_result.stdout |from_json }}"
-      loop_control:
-        label: "{{ item.Member, item.Host }}"
-      register: patronictl_reinit_result
-      changed_when:
-        patronictl_reinit_result.rc == 0
-      failed_when:
-        patronictl_reinit_result.rc != 0
-      when: item.Role is not defined or item.Role != 'Leader'
-
-    - name: Check that the patroni on the replica server is healthy
-      uri:
-        url: "http://{{ item.Host }}:8008/health"
-        status_code: 200
-      loop: "{{ patronictl_list_result.stdout |from_json }}"
-      loop_control:
-        label: "{{ item.Member, item.Host }}"
-      register: result
-      until: result.status == 200
-      retries: 1000
-      delay: 10
-      when: item.Role is not defined or item.Role != 'Leader'
-  environment:
-    PATH: "{{ ansible_env.PATH }}:/usr/bin:/usr/local/bin"
-  when:
-    - is_master == "true"
-    - (pgbackrest_install|bool or patroni_cluster_bootstrap_method == "pgbackrest")
-  tags: patroni, point_in_time_recovery
 
 # disable postgresql from autostart
 - block:  # "Debian"
