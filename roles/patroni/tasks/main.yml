@@ -572,7 +572,9 @@
 
     - block:  # for pgbackrest only (for use --delta restore)
         - name: Run "{{ pgbackrest_patroni_cluster_restore_command }}" on Master
-          command: "{{ pgbackrest_patroni_cluster_restore_command }} --target-action=promote"
+          command: >
+            {{ pgbackrest_patroni_cluster_restore_command }}
+            {{ '--target-action=promote' if pgbackrest_patroni_cluster_restore_command is search('--type=') else '' }}
           async: 86400  # timeout 24 hours
           poll: 0
           register: pgbackrest_restore_master
@@ -580,7 +582,9 @@
 
           # if patroni_create_replica_methods: "pgbackrest"
         - name: Run "{{ pgbackrest_patroni_cluster_restore_command }}" on Replica
-          command: "{{ pgbackrest_patroni_cluster_restore_command }} --target-action=shutdown"  # shutdown when recovery target is reached
+          command: >
+            {{ pgbackrest_patroni_cluster_restore_command }}
+            {{ '--target-action=shutdown' if pgbackrest_patroni_cluster_restore_command is search('--type=') else '' }}
           async: 86400  # timeout 24 hours
           poll: 0
           register: pgbackrest_restore_replica
