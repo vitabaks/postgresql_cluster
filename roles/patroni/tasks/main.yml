@@ -759,6 +759,15 @@
         timeout: 120
         delay: 10
       ignore_errors: false
+
+    - name: Check that the patroni is healthy on the replica server
+      uri:
+        url: "http://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:8008/health"
+        status_code: 200
+      register: replica_result
+      until: replica_result.status == 200
+      retries: 100
+      delay: 10
   when: is_master != "true"
   tags: patroni, patroni_start_replica, point_in_time_recovery
 
