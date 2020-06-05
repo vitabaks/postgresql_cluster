@@ -567,6 +567,8 @@
       environment:
         PATH: "{{ ansible_env.PATH }}:/usr/bin:/usr/local/bin"
       when: is_master == "true"
+      vars:
+        ansible_python_interpreter: /usr/bin/python3
 
     - block:  # for pgbackrest only (for use --delta restore)
         - name: Run "{{ pgbackrest_patroni_cluster_restore_command }}" on Master
