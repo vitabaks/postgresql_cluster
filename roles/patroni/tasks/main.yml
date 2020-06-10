@@ -525,18 +525,19 @@
   tags: patroni, point_in_time_recovery
 
 - block:  # PITR (custom bootstrap)
-# Prepare (install pexpect)
-    - name: Prepare | Ensure the ansible required python library (pexpect) is exist
+# Prepare (install pexpect, ruamel.yaml)
+    - name: Prepare | Ensure the ansible required python library is exist
       pip:
-        name: pexpect
+        name: "{{ item }}"
         state: present
         executable: pip3
         extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
         umask: "0022"
+      loop:
+        - pexpect
+        - ruamel.yaml
       environment:
         PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
-      when: is_master == "true"
-
 # Run PITR
     - name: Stop patroni service on the Replica servers (if running)
       systemd:
@@ -714,6 +715,52 @@
       failed_when: false  # exec pg_reload_conf on all running postgres (to re-run with --tag pg_hba).
   when: existing_pgcluster is not defined or not existing_pgcluster|bool
   tags: patroni, pg_hba, pg_hba_generate
+
+- block:  # PITR (custom bootstrap) - superuser and replication
+    - name: Ensure that archive recovery complete
+      command: "{{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -tAc 'SELECT pg_is_in_recovery()'"
+      register: pg_is_in_recovery
+      until: pg_is_in_recovery.stdout != "t"
+      retries: 1200  # timeout 10 hours
+      delay: 30
+      changed_when: false
+      when: is_master == "true"
+
+    - name: Make sure the postgresql users are present, and password does not differ from the specified
+      postgresql_user:
+        db: postgres
+        name: "{{ item.role }}"
+        password: "{{ item.pass }}"
+        role_attr_flags: "{{ item.role_attr }}"
+        login_unix_socket: "{{ postgresql_unix_socket_dir }}"
+        port: "{{ postgresql_port }}"
+      loop:
+        - {role: '{{ patroni_superuser_username }}', pass: '{{ patroni_superuser_password }}', role_attr: 'SUPERUSER'}
+        - {role: '{{ patroni_replication_username }}', pass: '{{ patroni_replication_password }}', role_attr: 'LOGIN,REPLICATION'}
+      loop_control:
+        label: "{{ item.role }}"
+      when: is_master == "true"
+
+    - name: Update postgresql authentication in patroni.yml
+      yedit:
+        src: /etc/patroni/patroni.yml
+        edits:
+          - key: postgresql.authentication.replication.username
+            value: "{{ patroni_replication_username }}"
+          - key: postgresql.authentication.replication.password
+            value: "{{ patroni_replication_password }}"
+          - key: postgresql.authentication.superuser.username
+            value: "{{ patroni_superuser_username }}"
+          - key: postgresql.authentication.superuser.password
+            value: "{{ patroni_superuser_password }}"
+        state: present
+      vars:
+        ansible_python_interpreter: /usr/bin/python3
+  when: patroni_cluster_bootstrap_method != "initdb" and
+        (pgbackrest_install|bool or wal_g_install|bool)
+  become: true
+  become_user: postgres
+  tags: patroni, point_in_time_recovery
 
 - block:  # for add_pgnode.yml
     - name: Prepare PostgreSQL | fetch pg_hba.conf file from master
