@@ -606,13 +606,13 @@
           when: item.ansible_job_id is defined
 
         - name: Start PostgreSQL for Recovery  # Debian
-          command: "/usr/bin/pg_ctlcluster {{ postgresql_version }} {{ postgresql_cluster_name }} start"
+          command: "/usr/bin/pg_ctlcluster {{ postgresql_version }} {{ postgresql_cluster_name }} start -o '-c hot_standby=off'"
           when: ansible_os_family == "Debian" and
                 (is_master == "true" or
                 (is_master != "true" and 'pgbackrest' in patroni_create_replica_methods))
 
         - name: Start PostgreSQL for Recovery  # RedHat or PostgresPro
-          command: "{{ postgresql_bin_dir }}/pg_ctl start -D {{ postgresql_data_dir }}"
+          command: "{{ postgresql_bin_dir }}/pg_ctl start -D {{ postgresql_data_dir }} -o '-c hot_standby=off'"
           when: (ansible_os_family == "RedHat" or postgresql_packages is search("postgrespro")) and
                 (is_master == "true" or
                 (is_master != "true" and 'pgbackrest' in patroni_create_replica_methods))
