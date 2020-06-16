@@ -22,6 +22,8 @@
 - block:
     - name: Get postgresql database list
       run_once: true
+      become: true
+      become_user: postgres
       command:
         "{{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U postgres -c
         \"
