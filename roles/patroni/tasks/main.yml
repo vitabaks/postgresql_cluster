@@ -526,7 +526,7 @@
 
 - block:  # PITR (custom bootstrap)
 # Prepare (install pexpect, ruamel.yaml)
-    - name: Prepare | Ensure the ansible required python library is exist
+    - name: Prepare | Make sure the ansible required python library is exist
       pip:
         name: "{{ item }}"
         state: present
@@ -717,7 +717,7 @@
   tags: patroni, pg_hba, pg_hba_generate
 
 - block:  # PITR (custom bootstrap) - superuser and replication
-    - name: Ensure that archive recovery complete
+    - name: Make sure the Master is not in recovery mode
       command: "{{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -tAc 'SELECT pg_is_in_recovery()'"
       register: pg_is_in_recovery
       until: pg_is_in_recovery.stdout != "t"
@@ -734,6 +734,7 @@
         role_attr_flags: "{{ item.role_attr }}"
         login_unix_socket: "{{ postgresql_unix_socket_dir }}"
         port: "{{ postgresql_port }}"
+      register: postgresql_user_result
       loop:
         - {role: '{{ patroni_superuser_username }}', pass: '{{ patroni_superuser_password }}', role_attr: 'SUPERUSER'}
         - {role: '{{ patroni_replication_username }}', pass: '{{ patroni_replication_password }}', role_attr: 'LOGIN,REPLICATION'}
@@ -756,6 +757,7 @@
         state: present
       vars:
         ansible_python_interpreter: /usr/bin/python3
+      when: hostvars[groups['master'][0]]['postgresql_user_result'] is changed
   when: patroni_cluster_bootstrap_method != "initdb" and
         (pgbackrest_install|bool or wal_g_install|bool)
   become: true
