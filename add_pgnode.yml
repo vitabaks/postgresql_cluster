@@ -62,6 +62,7 @@
 
     - role: hostname
     - role: resolv_conf
+    - role: etc_hosts
     - role: add-repository
     - role: packages
     - role: sudo

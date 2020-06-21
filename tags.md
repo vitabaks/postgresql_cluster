@@ -12,6 +12,7 @@
 - firewall
 - hostname
 - dns, nameservers
+- etc_hosts
 - sysctl, kernel
 - disable_thp
 - limits

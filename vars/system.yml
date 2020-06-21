@@ -7,6 +7,11 @@ nameservers:
   - "8.8.8.8"  # example (Google Public DNS)
   - "9.9.9.9"  # (Quad9 Public DNS)
 
+# /etc/hosts (optional)
+etc_hosts: []
+#  - "10.128.64.143 pgbackrest.minio.local minio.local s3.eu-west-3.amazonaws.com"  # example (MinIO)
+#  - ""
+
 ntp_enabled: false  # or 'true' if you want to install and configure the ntp service
 ntp_servers: []
 #  - "10.128.64.44"
