@@ -288,7 +288,7 @@ pgbackrest_conf:
     - {option: "repo1-host", value: "{{ pgbackrest_repo_host }}"}
     - {option: "repo1-host-user", value: "{{ pgbackrest_repo_user }}"}
 #    - {option: "repo1-path", value: "/repo"}
-#    - {option: "repo1-s3-endpoint", value: "http://172.26.9.200:9000"}
+#    - {option: "repo1-s3-endpoint", value: "minio.local"}
 #    - {option: "repo1-s3-bucket", value: "pgbackrest"}
 #    - {option: "repo1-s3-verify-tls", value: "n"}
 #    - {option: "repo1-s3-key", value: "accessKey"}
