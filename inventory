@@ -2,7 +2,7 @@
 # Please specify the ip addresses and connection settings for your environment
 # The specified ip addresses will be used to listen by the cluster components.
 
-# "postgresql_exists='true'" if PostgreSQL is already exists and runing
+# "postgresql_exists='true'" if PostgreSQL is already exists and running on master (for initial deployment only)
 # "hostname=" variable is optional (used to change the server name)
 
 # if dcs_exists: false and dcs_type: "etcd" (in vars/main.yml)
@@ -36,12 +36,20 @@ replica
 # You can deploy the etcd cluster and the haproxy balancers on other dedicated servers. 
 
 
+# if pgbackrest_install: true and "repo_host" is set (in vars/main.yml)
+[pgbackrest]  # optional (Dedicated Repository Host)
+
+
 # Connection settings
 [all:vars]
 ansible_connection='ssh'
 ansible_ssh_port='22'
 ansible_user='root'
-ansible_ssh_pass='testpas'  # "sshpass" package is required for use "ansible_ssh_pass"
-#ansible_ssh_private_key_file=
+ansible_ssh_pass='secretpassword'  # "sshpass" package is required for use "ansible_ssh_pass"
+# ansible_ssh_private_key_file=
 # ansible_python_interpreter='/usr/bin/python3'  # is required for use python3
+
+[pgbackrest:vars]
+ansible_user='postgres'
+ansible_ssh_pass='secretpassword'
 

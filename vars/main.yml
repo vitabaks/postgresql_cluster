@@ -127,6 +127,7 @@ postgresql_parameters:
   - {option: "archive_timeout", value: "1800s"}
   - {option: "archive_command", value: "cd ."}  # not doing anything yet with WAL-s
 #  - {option: "archive_command", value: "wal-g wal-push %p"}  # archive WAL-s using WAL-G
+#  - {option: "archive_command", value: "pgbackrest --stanza={{ pgbackrest_stanza }} archive-push %p"}  # archive WAL-s using pgbackrest
   - {option: "wal_level", value: "replica"}  # "replica" for PostgreSQL 9.6 and above (for 9.4, 9.5 use "hot_standby")
   - {option: "wal_keep_segments", value: "130"}
   - {option: "max_wal_senders", value: "10"}
@@ -223,7 +224,7 @@ patroni_remove_data_directory_on_diverged_timelines: false  # or 'true'
 # if it notices that timelines are diverging and the former master can not start streaming from the new master.
 
 # https://patroni.readthedocs.io/en/latest/replica_bootstrap.html#bootstrap
-patroni_cluster_bootstrap_method: "initdb"  # or "wal-g"
+patroni_cluster_bootstrap_method: "initdb"  # or "wal-g", "pgbackrest"
 
 # https://patroni.readthedocs.io/en/latest/replica_bootstrap.html#building-replicas
 patroni_create_replica_methods:
@@ -233,7 +234,7 @@ patroni_create_replica_methods:
   - basebackup
 
 pgbackrest:
-  - {option: "command", value: "/usr/bin/pgbackrest --stanza=<stanza_name> --delta restore"}
+  - {option: "command", value: "/usr/bin/pgbackrest --stanza={{ pgbackrest_stanza }} --delta restore"}
   - {option: "keep_data", value: "True"}
   - {option: "no_params", value: "True"}
 wal_e:
@@ -249,8 +250,9 @@ basebackup:
   - {option: "checkpoint", value: "fast"}
 
 # "restore_command" written to recovery.conf when configuring follower (create replica)
-postgresql_restore_command: []
-# postgresql_restore_command: 'wal-g wal-fetch %f %p' # restore WAL-s using WAL-G
+postgresql_restore_command: ""
+# postgresql_restore_command: "wal-g wal-fetch %f %p"  # restore WAL-s using WAL-G
+# postgresql_restore_command: "pgbackrest --stanza={{ pgbackrest_stanza }} archive-get %f %p"  # restore WAL-s using pgbackrest
 
 
 # WAL-G
@@ -268,5 +270,35 @@ wal_g_json:  # more options see https://github.com/wal-g/wal-g#configuration
 #  - {option: "AWS_REGION", value: "us-east-1"}
 #  - {option: "WALG_S3_CA_CERT_FILE", value: "/path/to/custom/ca/file"}
 #  - {option: "", value: ""}
+
+# pgBackRest
+pgbackrest_install: false  # or 'true'
+pgbackrest_install_from_pgdg_repo: true  # or 'false'
+pgbackrest_stanza: "stanza_name"  # specify your --stanza
+pgbackrest_repo_type: "posix"  # or "s3"
+pgbackrest_repo_host: "10.128.64.50"  # dedicated repository host (if repo_type: "posix")
+pgbackrest_repo_user: "postgres"  # if "repo_host" is set
+pgbackrest_conf_file: "/etc/pgbackrest/pgbackrest.conf"
+# see more options https://pgbackrest.org/configuration.html
+pgbackrest_conf:
+  global:  # [global] section
+    - {option: "log-level-file", value: "detail"}
+    - {option: "log-path", value: "/var/log/pgbackrest"}
+    - {option: "repo1-type", value: "{{ pgbackrest_repo_type |lower }}"}
+    - {option: "repo1-host", value: "{{ pgbackrest_repo_host }}"}
+    - {option: "repo1-host-user", value: "{{ pgbackrest_repo_user }}"}
+#    - {option: "", value: ""}
+  stanza:  # [stanza_name] section
+    - {option: "pg1-path", value: "{{ postgresql_data_dir }}"}
+    - {option: "process-max", value: "2"}
+    - {option: "recovery-option", value: "recovery_target_action=promote"}
+#    - {option: "", value: ""}
+pgbackrest_patroni_cluster_restore_command:
+  '/usr/bin/pgbackrest --stanza={{ pgbackrest_stanza }} --delta restore'  # restore from latest backup
+#  '/usr/bin/pgbackrest --stanza={{ pgbackrest_stanza }} --type=time "--target=2020-06-01 11:00:00+03" --delta restore'  # Point-in-Time Recovery (example)
+
+# PITR mode (if patroni_cluster_bootstrap_method: "pgbackrest" or "wal-g"):
+# 1) The database cluster directory will be cleaned (for "wal-g") or overwritten (for "pgbackrest" --delta restore).
+# 2) And also the patroni cluster "{{ patroni_cluster_name }}" will be removed from the DCS (if exist) before recovery.
 
 ...

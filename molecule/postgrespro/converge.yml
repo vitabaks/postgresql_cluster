@@ -10,13 +10,6 @@
         sysctl_set: false  # Added to prevent test failures in CI.
         cacheable: true
 
-    - name: Prepare | Remove epel-release package
-      package:
-        name: epel-release
-        state: absent
-      when:
-        - ansible_os_family == "RedHat"
-
     - name: Prepare | Clean yum cache
       command: yum clean all
       args:

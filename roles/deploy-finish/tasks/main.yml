@@ -17,11 +17,13 @@
       debug:
         var: patronictl_result.stdout_lines
   ignore_errors: true
-  tags: patroni_status, cluster_info, cluster_status
+  tags: patroni_status, cluster_info, cluster_status, point_in_time_recovery
 
 - block:
     - name: Get postgresql database list
       run_once: true
+      become: true
+      become_user: postgres
       command:
         "{{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U postgres -c
         \"
@@ -53,7 +55,7 @@
       debug:
         var: dbs_result.stdout_lines
   ignore_errors: true
-  tags: databases, db_list, cluster_info, cluster_status
+  tags: databases, db_list, cluster_info, cluster_status, point_in_time_recovery
 
 - block:
     - name: PostgreSQL Cluster connection info

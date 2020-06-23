@@ -1,0 +1,15 @@
+---
+
+- name: Add entries into /etc/hosts file
+  lineinfile:
+    path: /etc/hosts
+    regexp: "^{{ item }}"
+    line: "{{ item }}"
+    unsafe_writes: true  # to prevent failures in CI
+  loop: "{{ etc_hosts }}"
+  when:
+    - etc_hosts is defined
+    - etc_hosts | length > 0
+  tags: etc_hosts
+
+...
