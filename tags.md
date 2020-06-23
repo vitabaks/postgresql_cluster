@@ -84,4 +84,4 @@
 - - pgbackrest_install
 - - pgbackrest_conf
 - - pgbackrest_ssh_keys
-- - pgbackrest_bootstrap_script
+
