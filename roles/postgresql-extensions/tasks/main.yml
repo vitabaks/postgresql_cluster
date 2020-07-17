@@ -34,7 +34,7 @@
   ignore_errors: true
   loop: "{{ postgresql_extensions | flatten(1) }}"
   when:
-    - ansible_version.full is version('2.7.0', '<=')
+    - ansible_version.full is version('2.8.0', '<')
     - postgresql_extensions is defined
     - postgresql_extensions | length > 0
   tags: postgresql_extensions
