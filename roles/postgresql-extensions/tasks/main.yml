@@ -7,12 +7,36 @@
   postgresql_ext:
     db: "{{ item.db }}"
     name: "{{ item.ext }}"
-#    login_unix_socket: "{{ postgresql_unix_socket_dir }}"  # ansible v2.8+
+    login_unix_socket: "{{ postgresql_unix_socket_dir }}"  # added in 2.8
     port: "{{ postgresql_port }}"
     state: present
   ignore_errors: true
   loop: "{{ postgresql_extensions | flatten(1) }}"
-  when: postgresql_extensions is defined and postgresql_extensions | length > 0
+  when:
+    - ansible_version.full is version('2.8.0', '>=')
+    - postgresql_extensions is defined
+    - postgresql_extensions | length > 0
+  tags: postgresql_extensions
+
+
+# if Ansible version 2.7 (for compatibility)
+- name: Add extensions to the databases
+  become: true
+  become_user: postgres
+  postgresql_ext:
+    db: "{{ item.db }}"
+    name: "{{ item.ext }}"
+    login_host: "127.0.0.1"
+    login_port: "{{ postgresql_port }}"
+    login_user: "{{ patroni_superuser_username }}"
+    login_password: "{{ patroni_superuser_password }}"
+    state: present
+  ignore_errors: true
+  loop: "{{ postgresql_extensions | flatten(1) }}"
+  when:
+    - ansible_version.full is version('2.7.0', '<=')
+    - postgresql_extensions is defined
+    - postgresql_extensions | length > 0
   tags: postgresql_extensions
 
 ...
