@@ -13,4 +13,4 @@ os_minimum_versions:
   CentOS: 7
   OracleLinux: 7
   Ubuntu: 16.04
-  Debian: 8
+  Debian: 9
