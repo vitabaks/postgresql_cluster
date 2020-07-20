@@ -12,7 +12,7 @@ vrrp_script haproxy_check {
  
 vrrp_instance VI_1 {
    interface {{ vip_interface }}
-   virtual_router_id {{ keepalived_virtual_router_id }}
+   virtual_router_id {{ cluster_vip.split('.')[3] | int }}
    priority  100
    advert_int 2
    state  BACKUP
