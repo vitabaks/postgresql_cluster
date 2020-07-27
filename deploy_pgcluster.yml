@@ -142,6 +142,9 @@
     - role: postgresql-extensions
       when: is_master == "true" and postgresql_extensions | length > 0
 
+    - role: pgbouncer/userlist
+      when: install_pgbouncer|bool and pgbouncer_generate_userlist|bool
+
     # finish (info)
     - role: deploy-finish
 

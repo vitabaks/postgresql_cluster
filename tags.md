@@ -44,6 +44,7 @@
 - - pgbouncer_service
 - - pgbouncer_logrotate
 - - pgbouncer_restart
+- - pgbouncer_generate_userlist
 - load_balancing
 - - haproxy
 - - - haproxy_requirements

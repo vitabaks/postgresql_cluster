@@ -187,19 +187,13 @@ pgbouncer_max_client_conn: 10000
 pgbouncer_max_db_connections: 1000
 pgbouncer_default_pool_size: 20
 pgbouncer_default_pool_mode: "session"
+pgbouncer_generate_userlist: true  # generate userlist.txt (all users and passwords md5) FROM pg_shadow
 
 pgbouncer_pools:
   - {name: "postgres", dbname: "postgres", pool_parameters: ""}
 #  - {name: "mydatabase", dbname: "mydatabase", pool_parameters: "pool_size=20 pool_mode=transaction"}
 #  - {name: "", dbname: "", pool_parameters: ""}
 #  - {name: "", dbname: "", pool_parameters: ""}
-
-pgbouncer_users:
-  - {username: "{{ patroni_superuser_username }}", password: "{{ patroni_superuser_password }}"}
-#  - {username: "mydb-user", password: "mydb-user-pass"}
-#  - {username: "", password: ""}
-#  - {username: "", password: ""}
-#  - {username: "", password: ""}
 
 
 # Extended variables (optional)

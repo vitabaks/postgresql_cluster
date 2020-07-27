@@ -1,0 +1,9 @@
+---
+
+- name: Reload pgbouncer service
+  systemd:
+    name: pgbouncer
+    state: reloaded
+  listen: "reload pgbouncer"
+
+...

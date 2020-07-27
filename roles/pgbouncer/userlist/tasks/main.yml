@@ -1,0 +1,33 @@
+---
+# yamllint disable rule:line-length
+
+- name: Get users and password md5 from pg_shadow
+  run_once: true
+  become: true
+  become_user: postgres
+  command: >
+    {{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U postgres -Atq
+    -c "SELECT concat('\"', usename, '\" \"', passwd, '\"') FROM pg_shadow where usename != '{{ patroni_replication_username }}'"
+  register: pg_shadow_result
+  changed_when: false
+  delegate_to: "{{ groups.master[0] }}"
+  when: pgbouncer_generate_userlist|bool
+  tags: pgbouncer, pgbouncer_generate_userlist
+
+- name: Generate /etc/pgbouncer/userlist.txt
+  become: true
+  become_user: postgres
+  copy:
+    content: |
+      {{ pg_shadow_result.stdout }}
+
+    dest: /etc/pgbouncer/userlist.txt
+  notify: "reload pgbouncer"
+  when:
+    - pg_shadow_result.rc == 0
+    - pg_shadow_result.stdout is defined
+    - pg_shadow_result.stdout | length > 0
+    - pgbouncer_generate_userlist|bool
+  tags: pgbouncer, pgbouncer_generate_userlist
+
+...

@@ -92,16 +92,15 @@
   when: existing_pgcluster is not defined or not existing_pgcluster|bool
   tags: pgbouncer_conf, pgbouncer
 
-- name: Configure userlist.txt
+- name: Create userlist.txt
   template:
     src: templates/userlist.txt.j2
     dest: "{{ pgbouncer_conf_dir }}/userlist.txt"
     owner: postgres
     group: postgres
     mode: 0640
-  notify: "restart pgbouncer"
   when: existing_pgcluster is not defined or not existing_pgcluster|bool
-  tags: pgbouncer_conf, pgbouncer
+  tags: pgbouncer
 
 - block:  # for add_pgnode.yml
     - name: Fetch pgbouncer.ini and userlist.txt conf files from master
