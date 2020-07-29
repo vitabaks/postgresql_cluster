@@ -820,8 +820,8 @@
         status_code: 200
       register: replica_result
       until: replica_result.status == 200
-      retries: 100
-      delay: 10
+      retries: 1200  # timeout 10 hours
+      delay: 30
   when: is_master != "true"
   tags: patroni, patroni_start_replica, point_in_time_recovery
 
