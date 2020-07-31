@@ -68,6 +68,8 @@
     - role: confd
       when: dcs_type == "etcd"
 
+    - role: vip-manager-disable
+
     - role: keepalived
       when: cluster_vip is defined and cluster_vip | length > 0
 

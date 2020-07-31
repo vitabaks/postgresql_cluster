@@ -1,0 +1,7 @@
+---
+- name: Disabe vip-manager service
+  systemd:
+    daemon_reload: true
+    name: vip-manager
+    state: stopped
+    enabled: false
