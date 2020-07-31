@@ -659,6 +659,34 @@
         (pgbackrest_install|bool or wal_g_install|bool)
   tags: patroni, point_in_time_recovery
 
+- block:  # PITR (custom bootstrap) - disable archive_command
+    - name: Check the patroni.dynamic.json exists
+      stat:
+        path: "{{ postgresql_data_dir }}/patroni.dynamic.json"
+      register: patroni_dynamic_json
+
+    - name: Edit patroni.dynamic.json | disable archive_command (if enabled)
+      yedit:
+        src: "{{ postgresql_data_dir }}/patroni.dynamic.json"
+        key: postgresql.parameters.archive_command
+        value: "cd ."  # not doing anything yet with WAL-s
+        content_type: json
+      vars:
+        ansible_python_interpreter: /usr/bin/python3
+      when: patroni_dynamic_json.stat.exists
+
+    - name: Edit patroni.yml | disable archive_command (if enabled)
+      yedit:
+        src: /etc/patroni/patroni.yml
+        key: bootstrap.dcs.postgresql.parameters.archive_command
+        value: "cd ."  # not doing anything yet with WAL-s
+      vars:
+        ansible_python_interpreter: /usr/bin/python3
+  when: patroni_cluster_bootstrap_method != "initdb" and
+        (pgbackrest_install|bool or wal_g_install|bool) and
+        (existing_pgcluster is not defined or not existing_pgcluster|bool)
+  tags: patroni, point_in_time_recovery
+
 - block:  # start patroni on master
     - name: Start patroni service on the Master server
       systemd:
