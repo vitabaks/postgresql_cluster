@@ -10,6 +10,8 @@
     - vars/main.yml
     - vars/system.yml
     - "vars/{{ ansible_os_family }}.yml"
+  vars:
+    vip_manager_disable: false  # or 'true' for disable vip-manager service (if installed)
 
   pre_tasks:
     - name: Checking Linux distribution
@@ -67,6 +69,9 @@
 
     - role: confd
       when: dcs_type == "etcd"
+
+    - role: vip-manager-disable
+      when: vip_manager_disable|bool
 
     - role: keepalived
       when: cluster_vip is defined and cluster_vip | length > 0
