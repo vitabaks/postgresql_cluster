@@ -186,7 +186,8 @@ proxy_env:
 See the vars/[main.yml](./vars/main.yml), [system.yml](./vars/system.yml) and ([Debian.yml](./vars/Debian.yml) or [RedHat.yml](./vars/RedHat.yml)) files for more details.
 
 
-## Scaling: add new postgresql node to existing cluster
+## Cluster Scaling
+Add new postgresql node to existing cluster
 <details><summary>Click here to expand...</summary><p>
 
 After you successfully deployed your PostgreSQL HA cluster, you may need to scale it further. \
@@ -219,8 +220,7 @@ Variables that should be the same on all cluster nodes: \
 
 </p></details>
 
-
-## Scaling: add new haproxy balancer node
+Add new haproxy balancer node
 <details><summary>Click here to expand...</summary><p>
 
 Use the `add_balancer.yml` playbook for this.
@@ -252,6 +252,99 @@ Specify `with_haproxy_load_balancing: true`
 </p></details>
 
 
+## Restore and Cloning
+Create new clusters from your existing backups with [pgBackRest](https://github.com/pgbackrest/pgbackrest) or [WAL-G](https://github.com/wal-g/wal-g) \
+Point-In-Time-Recovery
+
+<details><summary>Click here to expand...</summary><p>
+
+##### Create cluster with pgBackRest:
+1. Edit the `main.yml` variable file
+```
+patroni_cluster_bootstrap_method: "pgbackrest"
+
+patroni_create_replica_methods:
+  - pgbackrest
+  - basebackup
+
+postgresql_restore_command: "pgbackrest --stanza={{ pgbackrest_stanza }} archive-get %f %p"
+
+pgbackrest_install: true
+pgbackrest_stanza: "stanza_name"  # specify your --stanza
+pgbackrest_repo_type: "posix"  # or "s3"
+pgbackrest_repo_host: "ip-address"  # dedicated repository host (if repo_type: "posix")
+pgbackrest_repo_user: "postgres"  # if "repo_host" is set
+pgbackrest_conf:  # see more options https://pgbackrest.org/configuration.html
+  global:  # [global] section
+    - {option: "xxxxxxx", value: "xxxxxxx"}
+    ...
+  stanza:  # [stanza_name] section
+    - {option: "xxxxxxx", value: "xxxxxxx"}
+    ...
+    
+pgbackrest_patroni_cluster_restore_command:
+  '/usr/bin/pgbackrest --stanza={{ pgbackrest_stanza }} --type=time "--target=2020-06-01 11:00:00+03" --delta restore'
+```
+example for S3 https://github.com/vitabaks/postgresql_cluster/pull/40#issuecomment-647146432
+
+2. Run playbook:
+
+`ansible-playbook deploy_pgcluster.yml`
+
+
+##### Create cluster with WAL-G:
+1. Edit the `main.yml` variable file
+```
+patroni_cluster_bootstrap_method: "wal-g"
+
+patroni_create_replica_methods:
+  - wal_g
+  - basebackup
+
+postgresql_restore_command: "wal-g wal-fetch %f %p"
+
+wal_g_install: true
+wal_g_ver: "v0.2.15"  # version to install
+wal_g_json:  # see more options https://github.com/wal-g/wal-g#configuration
+  - {option: "xxxxxxx", value: "xxxxxxx"}
+  - {option: "xxxxxxx", value: "xxxxxxx"}
+  ...
+```
+2. Run playbook:
+
+`ansible-playbook deploy_pgcluster.yml`
+
+
+##### Point-In-Time-Recovery:
+You can run automatic restore of your existing patroni cluster \
+for PITR, specify the required parameters in the main.yml variable file and run the playbook with the tag:
+```
+ansible-playbook deploy_pgcluster.yml --tags point_in_time_recovery
+```
+Recovery steps with pgBackRest:
+```
+1. Stop patroni service on the Replica servers (if running);
+2. Stop patroni service on the Master server;
+3. Remove patroni cluster "xxxxxxx" from DCS (if exist);
+4. Run "/usr/bin/pgbackrest --stanza=xxxxxxx --delta restore" on Master;
+5. Run "/usr/bin/pgbackrest --stanza=xxxxxxx --delta restore" on Replica (if patroni_create_replica_methods: "pgbackrest");
+6. Waiting for restore from backup (timeout 24 hours);
+7. Start PostgreSQL for Recovery (master and replicas);
+8. Waiting for PostgreSQL Recovery to complete (WAL apply);
+9. Stop PostgreSQL instance (if running);
+10. Disable PostgreSQL archive_command (if enabled);
+11. Start patroni service on the Master server;
+12. Check PostgreSQL is started and accepting connections on Master;
+13. Make sure the postgresql users (superuser and replication) are present, and password does not differ from the specified in vars/main.yml;
+14. Update postgresql authentication parameter in patroni.yml (if superuser or replication users is changed);
+15. Reload patroni service (if patroni.yml is updated);
+16. Start patroni service on Replica servers;
+17. Check that the patroni is healthy on the replica server (timeout 10 hours);
+18. Check postgresql cluster health (finish).
+```
+</p></details>
+
+
 ## Maintenance
 Please note that the original design goal of this playbook was more concerned with the initial deploiment of a PostgreSQL HA Cluster and so it does not currently concern itself with performing ongoing maintenance of a cluster.
 
@@ -278,6 +371,7 @@ I can recommend the following backup and restore tools:
 * [wal-g](https://github.com/wal-g/wal-g)
 
 Do not forget to validate your backups (for example [pgbackrest auto](https://github.com/vitabaks/pgbackrest_auto)).
+
 
 ---
 
