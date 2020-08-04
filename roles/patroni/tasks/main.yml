@@ -685,6 +685,8 @@
   when: patroni_cluster_bootstrap_method != "initdb" and
         (pgbackrest_install|bool or wal_g_install|bool) and
         (existing_pgcluster is not defined or not existing_pgcluster|bool)
+  become: true
+  become_user: postgres
   tags: patroni, point_in_time_recovery
 
 - block:  # start patroni on master
