@@ -34,11 +34,6 @@ bootstrap:
        recovery_target_timeline: latest
        restore_command: wal-g wal-fetch %f %p
 {% endif %}
-{% if patroni_cluster_bootstrap_method == 'pgbackrest' %}
-  pgbackrest:
-    command: /etc/patroni/pgbackrest_bootstrap.sh
-    keep_existing_recovery_conf: True
-{% endif %}
   dcs:
     ttl: {{ patroni_ttl |d(30, true) |int }}
     loop_wait: {{ patroni_loop_wait |d(10, true) |int }}
