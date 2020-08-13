@@ -235,6 +235,9 @@
   file:
     path: /etc/patroni
     state: directory
+    owner: postgres
+    group: postgres
+    mode: 0750
   tags: patroni, patroni_conf
 
 - name: Generate conf file "/etc/patroni/patroni.yml"
