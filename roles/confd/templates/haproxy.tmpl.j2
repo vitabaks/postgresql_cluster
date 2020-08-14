@@ -36,11 +36,11 @@ listen master
     option httpchk OPTIONS /master
     http-check expect status 200
     default-server inter 3s fastinter 1s fall 3 rise 4 on-marked-down shutdown-sessions
-{% if install_pgbouncer|bool %}
+{% if pgbouncer_install|bool %}
 {% raw %}{{range gets "/members/*"}} server {{base .Key}} {{$data := json .Value}}{{base (replace (index (split (index (split $data.conn_url ":") 1) "/") 2) "@" "/" -1)}}:{% endraw %}{{ pgbouncer_listen_port }}{% raw %} check port {{index (split (index (split $data.api_url "/") 2) ":") 1}}
 {{end}}{% endraw %}
 {% endif %}
-{% if ( install_pgbouncer is not defined ) or ( not install_pgbouncer|bool ) %}
+{% if ( pgbouncer_install is not defined ) or ( not pgbouncer_install|bool ) %}
 {% raw %}{{range gets "/members/*"}} server {{base .Key}} {{$data := json .Value}}{{base (replace (index (split $data.conn_url "/") 2) "@" "/" -1)}} check port {{index (split (index (split $data.api_url "/") 2) ":") 1}}
 {{end}}{% endraw %}
 {% endif %}
@@ -58,11 +58,11 @@ listen replicas
     balance roundrobin
     http-check expect status 200
     default-server inter 3s fastinter 1s fall 3 rise 2 on-marked-down shutdown-sessions
-{% if install_pgbouncer|bool %}
+{% if pgbouncer_install|bool %}
 {% raw %}{{range gets "/members/*"}} server {{base .Key}} {{$data := json .Value}}{{base (replace (index (split (index (split $data.conn_url ":") 1) "/") 2) "@" "/" -1)}}:{% endraw %}{{ pgbouncer_listen_port }}{% raw %} check port {{index (split (index (split $data.api_url "/") 2) ":") 1}}
 {{end}}{% endraw %}
 {% endif %}
-{% if ( install_pgbouncer is not defined ) or ( not install_pgbouncer|bool ) %}
+{% if ( pgbouncer_install is not defined ) or ( not pgbouncer_install|bool ) %}
 {% raw %}{{range gets "/members/*"}} server {{base .Key}} {{$data := json .Value}}{{base (replace (index (split $data.conn_url "/") 2) "@" "/" -1)}} check port {{index (split (index (split $data.api_url "/") 2) ":") 1}}
 {{end}}{% endraw %}
 {% endif %}
@@ -80,11 +80,11 @@ listen replicas_sync
     balance roundrobin
     http-check expect status 200
     default-server inter 3s fastinter 1s fall 3 rise 2 on-marked-down shutdown-sessions
-{% if install_pgbouncer|bool %}
+{% if pgbouncer_install|bool %}
 {% raw %}{{range gets "/members/*"}} server {{base .Key}} {{$data := json .Value}}{{base (replace (index (split (index (split $data.conn_url ":") 1) "/") 2) "@" "/" -1)}}:{% endraw %}{{ pgbouncer_listen_port }}{% raw %} check port {{index (split (index (split $data.api_url "/") 2) ":") 1}}
 {{end}}{% endraw %}
 {% endif %}
-{% if ( install_pgbouncer is not defined ) or ( not install_pgbouncer|bool ) %}
+{% if ( pgbouncer_install is not defined ) or ( not pgbouncer_install|bool ) %}
 {% raw %}{{range gets "/members/*"}} server {{base .Key}} {{$data := json .Value}}{{base (replace (index (split $data.conn_url "/") 2) "@" "/" -1)}} check port {{index (split (index (split $data.api_url "/") 2) ":") 1}}
 {{end}}{% endraw %}
 {% endif %}
@@ -102,11 +102,11 @@ listen replicas_async
     balance roundrobin
     http-check expect status 200
     default-server inter 3s fastinter 1s fall 3 rise 2 on-marked-down shutdown-sessions
-{% if install_pgbouncer|bool %}
+{% if pgbouncer_install|bool %}
 {% raw %}{{range gets "/members/*"}} server {{base .Key}} {{$data := json .Value}}{{base (replace (index (split (index (split $data.conn_url ":") 1) "/") 2) "@" "/" -1)}}:{% endraw %}{{ pgbouncer_listen_port }}{% raw %} check port {{index (split (index (split $data.api_url "/") 2) ":") 1}}
 {{end}}{% endraw %}
 {% endif %}
-{% if ( install_pgbouncer is not defined ) or ( not install_pgbouncer|bool ) %}
+{% if ( pgbouncer_install is not defined ) or ( not pgbouncer_install|bool ) %}
 {% raw %}{{range gets "/members/*"}} server {{base .Key}} {{$data := json .Value}}{{base (replace (index (split $data.conn_url "/") 2) "@" "/" -1)}} check port {{index (split (index (split $data.api_url "/") 2) ":") 1}}
 {{end}}{% endraw %}
 {% endif %}

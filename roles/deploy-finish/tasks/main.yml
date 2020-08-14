@@ -96,7 +96,7 @@
           - port {{ pgbouncer_listen_port }} (pgbouncer)
           - +------------------------------------------------+
       when: not with_haproxy_load_balancing|bool and
-            install_pgbouncer|bool
+            pgbouncer_install|bool
 
     - name: PostgreSQL Cluster connection info
       run_once: true
@@ -107,7 +107,7 @@
           - port {{ postgresql_port }}
           - +------------------------------------------------+
       when: not with_haproxy_load_balancing|bool and
-            not install_pgbouncer|bool
+            not pgbouncer_install|bool
   when: cluster_vip is defined and cluster_vip | length > 0
   ignore_errors: true
   tags: conn_info, cluster_info, cluster_status
@@ -172,7 +172,7 @@
           - port {{ pgbouncer_listen_port }} (pgbouncer)
           - +------------------------------------------------+
       when: not with_haproxy_load_balancing|bool and
-            install_pgbouncer|bool
+            pgbouncer_install|bool
 
     - name: PostgreSQL Cluster connection info
       run_once: true
@@ -183,7 +183,7 @@
           - port {{ postgresql_port }}
           - +------------------------------------------------+
       when: not with_haproxy_load_balancing|bool and
-            not install_pgbouncer|bool
+            not pgbouncer_install|bool
   ignore_errors: true
   when: cluster_vip is not defined or cluster_vip | length < 1
   tags: conn_info, cluster_info, cluster_status

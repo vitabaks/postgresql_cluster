@@ -104,7 +104,7 @@
       when: wal_g_install|bool
 
     - role: pgbouncer
-      when: install_pgbouncer|bool
+      when: pgbouncer_install|bool
 
     - role: patroni
 

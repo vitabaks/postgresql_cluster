@@ -124,7 +124,7 @@
       when: wal_g_install|bool
 
     - role: pgbouncer
-      when: install_pgbouncer|bool
+      when: pgbouncer_install|bool
 
     - role: patroni
 
@@ -143,7 +143,7 @@
       when: is_master == "true" and postgresql_extensions | length > 0
 
     - role: pgbouncer/userlist
-      when: install_pgbouncer|bool and pgbouncer_generate_userlist|bool
+      when: pgbouncer_install|bool and pgbouncer_generate_userlist|bool
 
     # finish (info)
     - role: deploy-finish

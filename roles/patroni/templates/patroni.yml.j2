@@ -74,7 +74,7 @@ bootstrap:
 
 
 postgresql:
-{% if not with_haproxy_load_balancing|bool and not install_pgbouncer|bool and (cluster_vip is defined and cluster_vip | length > 0) %}
+{% if not with_haproxy_load_balancing|bool and not pgbouncer_install|bool and (cluster_vip is defined and cluster_vip | length > 0) %}
   listen: {{ hostvars[inventory_hostname]['inventory_hostname'] }},{{ cluster_vip }},127.0.0.1:{{ postgresql_port }}
 {% else %}
   listen: {{ hostvars[inventory_hostname]['inventory_hostname'] }},127.0.0.1:{{ postgresql_port }}
