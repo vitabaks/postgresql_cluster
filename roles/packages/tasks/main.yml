@@ -47,7 +47,7 @@
 - name: Install system packages
   package:
     name: "{{ item }}"
-    state: present
+    state: latest
   loop: "{{ system_packages }}"
   environment: "{{ proxy_env | default({}) }}"
   when: ansible_os_family == "RedHat" and installation_method == "repo"
@@ -57,7 +57,7 @@
 - name: Install system packages
   apt:
     name: "{{ item }}"
-    state: present
+    state: latest
   loop: "{{ system_packages }}"
   environment: "{{ proxy_env | default({}) }}"
   when: ansible_os_family == "Debian" and installation_method == "repo"
