@@ -313,18 +313,24 @@
 
 - name: Prepare PostgreSQL | create statistics directory (if not already exists)
   file:
-    path: /var/lib/pgsql_stats_tmp
+    path: "{{ postgresql_stats_temp_directory_path }}"
     state: directory
     mode: 01777
+  when:
+    - postgresql_stats_temp_directory_path is defined
+    - postgresql_stats_temp_directory_path != 'none'
   tags: patroni, pgsql_stats_tmp
 
 - name: Prepare PostgreSQL | mount the statistics directory in memory (tmpfs)
   mount:
-    path: /var/lib/pgsql_stats_tmp
+    path: "{{ postgresql_stats_temp_directory_path }}"
     src: tmpfs
     fstype: tmpfs
-    opts: "size=1024m,uid=postgres,gid=postgres"
+    opts: "size={{ postgresql_stats_temp_directory_size }},uid=postgres,gid=postgres"
     state: mounted
+  when:
+    - postgresql_stats_temp_directory_path is defined
+    - postgresql_stats_temp_directory_path != 'none'
   tags: patroni, pgsql_stats_tmp
 
 - name: Prepare PostgreSQL | make sure the postgresql log directory "{{ postgresql_log_dir }}" exists

@@ -97,7 +97,9 @@ postgresql:
 #      password: rewind_password
   parameters:
     unix_socket_directories: {{ postgresql_unix_socket_dir }}
-    stats_temp_directory: /var/lib/pgsql_stats_tmp
+{% if postgresql_stats_temp_directory_path is defined and postgresql_stats_temp_directory_path != 'none' %}
+    stats_temp_directory: {{ postgresql_stats_temp_directory_path }}
+{% endif %}
 
   remove_data_directory_on_rewind_failure: {{ patroni_remove_data_directory_on_rewind_failure |string |d(false, true) |lower }}
   remove_data_directory_on_diverged_timelines: {{ patroni_remove_data_directory_on_diverged_timelines |string |d(false, true) |lower }}
