@@ -32,9 +32,11 @@
       environment: "{{ proxy_env | default({}) }}"
       when: ansible_os_family == "Debian" and installation_method == "repo"
 
-    - name: Make sure the gnupg package is present
+    - name: Make sure the gnupg and apt-transport-https packages are present
       apt:
-        name: gnupg
+        pkg:
+          - gnupg
+          - apt-transport-https
         state: present
       environment: "{{ proxy_env | default({}) }}"
       when: ansible_os_family == "Debian" and installation_method == "repo"
