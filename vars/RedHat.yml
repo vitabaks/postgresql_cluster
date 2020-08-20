@@ -88,7 +88,7 @@ confd_package_repo: "https://github.com/kelseyhightower/confd/releases/download/
 haproxy_major: "1.8"
 haproxy_version: "1.8.25"  # version to build from source
 lua_src_repo: "https://www.lua.org/ftp/lua-5.3.5.tar.gz"  # required for build haproxy
-haproxy_src_repo: "http://www.haproxy.org/download/{{ haproxy_major }}/src/haproxy-{{ haproxy_version }}.tar.gz"
+haproxy_src_repo: "https://www.haproxy.org/download/{{ haproxy_major }}/src/haproxy-{{ haproxy_version }}.tar.gz"
 haproxy_compile_requirements:
   - unzip
   - gzip

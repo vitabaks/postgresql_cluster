@@ -21,10 +21,10 @@ postgresql_version_terse: "{{ postgresql_version | replace('.', '') }}"
 apt_repository_keys:
   - key: "https://www.postgresql.org/media/keys/ACCC4CF8.asc"  # postgresql repository apt key
 apt_repository:
-  - repo: "deb http://apt.postgresql.org/pub/repos/apt/ {{ ansible_distribution_release }}-pgdg main"  # postgresql apt repository
-#  - repo: "deb http://deb.debian.org/debian/ {{ ansible_distribution_release }} main"  # debian repo (optional)
-#  - repo: "deb http://deb.debian.org/debian/ {{ ansible_distribution_release }}-updates main"  # debian repo (optional)
-#  - repo: "deb http://security.debian.org/debian-security/ {{ ansible_distribution_release }}/updates main"  # debian repo (optional)
+  - repo: "deb https://apt.postgresql.org/pub/repos/apt/ {{ ansible_distribution_release }}-pgdg main"  # postgresql apt repository
+#  - repo: "deb https://deb.debian.org/debian/ {{ ansible_distribution_release }} main"  # debian repo (optional)
+#  - repo: "deb https://deb.debian.org/debian/ {{ ansible_distribution_release }}-updates main"  # debian repo (optional)
+#  - repo: "deb https://security.debian.org/debian-security/ {{ ansible_distribution_release }}/updates main"  # debian repo (optional)
 
 # Packages (for apt repo)
 os_specific_packages:
@@ -72,7 +72,7 @@ confd_package_repo: "https://github.com/kelseyhightower/confd/releases/download/
 haproxy_major: "1.8"
 haproxy_version: "1.8.25"  # version to build from source
 lua_src_repo: "https://www.lua.org/ftp/lua-5.3.5.tar.gz"  # required for build haproxy
-haproxy_src_repo: "http://www.haproxy.org/download/{{ haproxy_major }}/src/haproxy-{{ haproxy_version }}.tar.gz"
+haproxy_src_repo: "https://www.haproxy.org/download/{{ haproxy_major }}/src/haproxy-{{ haproxy_version }}.tar.gz"
 haproxy_compile_requirements:
   - unzip
   - gzip

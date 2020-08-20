@@ -79,7 +79,7 @@
 
     - name: Add haproxy.debian.net repository
       apt_repository:
-        repo: "deb http://haproxy.debian.net {{ ansible_distribution_release }}-backports-1.8 main"
+        repo: "deb https://haproxy.debian.net {{ ansible_distribution_release }}-backports-1.8 main"
         state: present
         update_cache: true
       when: haproxy_install_repo|bool and

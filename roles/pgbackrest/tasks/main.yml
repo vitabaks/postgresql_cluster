@@ -5,11 +5,11 @@
     - name: Make sure pgdg apt key is installed
       apt_key:
         id: ACCC4CF8
-        url: http://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
+        url: https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
 
     - name: Make sure pgdg repository is installed
       apt_repository:
-        repo: "deb http://apt.postgresql.org/pub/repos/apt/ {{ ansible_distribution_release }}-pgdg main"
+        repo: "deb https://apt.postgresql.org/pub/repos/apt/ {{ ansible_distribution_release }}-pgdg main"
 
     - name: Update apt cache
       apt:
