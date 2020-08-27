@@ -79,9 +79,11 @@
       tags: install_scl_repo
 
     - name: Enable Software Collections (SCL) repository for RedHat 7
-      command: 'sudo yum-config-manager --enable rhel-server-rhscl-7-rpms'
+      become: true
+      become_user: root
+      command: subscription-manager repos --enable rhel-server-rhscl-7-rpms
       when: install_scl_repo|bool and
-            (ansible_distribution == 'Red Hat Enterprise Linux' and
+            (ansible_distribution == 'RedHat' and
             ansible_distribution_major_version == '7')
       tags: install_scl_repo
 
