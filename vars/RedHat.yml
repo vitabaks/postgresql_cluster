@@ -8,7 +8,6 @@ postgresql_bin_dir: "/usr/pgsql-{{ postgresql_version }}/bin"
 postgresql_log_dir: "/var/log/postgresql"
 postgresql_unix_socket_dir: "/var/run/postgresql"
 postgresql_home_dir: "/var/lib/pgsql"
-postgresql_pgpass: "{{ postgresql_home_dir }}/.pgpass"
 
 # stats_temp_directory (mount the statistics directory in tmpfs)
 postgresql_stats_temp_directory_path: "/var/lib/pgsql_stats_tmp"  # or 'none'
