@@ -52,6 +52,7 @@
       package:
         name: "/tmp/epel-release-latest-{{ ansible_distribution_major_version }}.noarch.rpm"
         state: present
+        disable_gpg_check: true
       when: install_epel_repo|bool
       tags: install_epel_repo
 
@@ -101,6 +102,7 @@
       package:
         name: /tmp/pgdg-redhat-repo-latest.noarch.rpm
         state: present
+        disable_gpg_check: true
       when: install_postgresql_repo|bool
       tags: install_postgresql_repo
   environment: "{{ proxy_env | default({}) }}"
