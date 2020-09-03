@@ -101,6 +101,13 @@ postgresql:
     stats_temp_directory: {{ postgresql_stats_temp_directory_path }}
 {% endif %}
 
+{% if postgresql_pg_ident is defined and postgresql_pg_ident | length > 0 %}
+  pg_ident:
+  {% for ident in postgresql_pg_ident %}
+    - {{ ident.mapname }} {{ ident.system_username }} {{ ident.pg_username }}
+  {% endfor %}
+{% endif %}
+
   remove_data_directory_on_rewind_failure: {{ patroni_remove_data_directory_on_rewind_failure |string |d(false, true) |lower }}
   remove_data_directory_on_diverged_timelines: {{ patroni_remove_data_directory_on_diverged_timelines |string |d(false, true) |lower }}
 

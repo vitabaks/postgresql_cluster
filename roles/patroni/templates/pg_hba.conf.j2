@@ -85,7 +85,7 @@
 
 # TYPE      DATABASE                 USER                     ADDRESS                  METHOD
 {% for client in postgresql_pg_hba %}
-  {{ client.type.ljust(10) |default('host') }}{{ client.database.ljust(25) |default('all') }}{{ client.user.ljust(25) |default('all') }}{{ client.address.ljust(25) |default('') }}{{ client.method |default('md5') }}
+  {{ client.type.ljust(10) |default('host') }}{{ client.database.ljust(25) |default('all') }}{{ client.user.ljust(25) |default('all') }}{{ client.address.ljust(25) |default('') }}{{ client.method |default('md5') }} {{ client.options |default(None) }}
 {% endfor %}
 {% for patroni in groups['postgres_cluster'] %}
   host      all                      all                      {{ hostvars[patroni]['inventory_hostname'] }}/32         md5
