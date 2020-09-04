@@ -23,6 +23,7 @@ patroni_replication_password: "replicator-pass"  # please change password
 
 synchronous_mode: false  # or 'true' for enable synchronous database replication
 synchronous_mode_strict: false  # if 'true' then block all client writes to the master, when a synchronous replica is not available
+synchronous_node_count: 1  # number of synchronous standby databases
 
 
 # Load Balancing

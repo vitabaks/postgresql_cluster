@@ -42,6 +42,7 @@ bootstrap:
     master_start_timeout: {{ patroni_master_start_timeout |d(300, true) |int }}
     synchronous_mode: {{ synchronous_mode |string |d(false, true) |lower }}
     synchronous_mode_strict: {{ synchronous_mode_strict |string |d(false, true) |lower }}
+    synchronous_node_count: {{ synchronous_node_count |d(1, true) |int }}
     # standby_cluster:
       # host: 127.0.0.1
       # port: 1111
