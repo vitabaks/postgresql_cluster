@@ -52,21 +52,4 @@
     mode: 0644
   tags: wal-g, wal_g_install, wal_g_conf
 
-- name: Make sure the wal_g_bootstrap script directory exist
-  file:
-    dest: /etc/patroni
-    state: directory
-    owner: postgres
-    group: postgres
-  tags: wal-g, wal_g, wal_g_install, wal_g_bootstrap
-
-- name: Create /etc/patroni/wal_g_bootstrap.sh script
-  template:
-    src: templates/wal_g_bootstrap.sh.j2
-    dest: /etc/patroni/wal_g_bootstrap.sh
-    owner: postgres
-    group: postgres
-    mode: 0775
-  tags: wal-g, wal_g, wal_g_install, wal_g_bootstrap
-
 ...
