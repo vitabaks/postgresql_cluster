@@ -3,7 +3,7 @@
 
 # PostgreSQL variables
 postgresql_version: "12"  # major version
-postgrespro_minor_version: "{{ postgresql_version }}.2.1"
+postgrespro_minor_version: "{{ postgresql_version }}.4.1"
 
 postgresql_data_dir: "/var/lib/pgpro/std-{{ postgresql_version }}/data"
 postgresql_conf_dir: "{{ postgresql_data_dir }}"
