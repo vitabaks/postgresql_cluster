@@ -1,5 +1,6 @@
 [Unit]
 Description=Manages Virtual IP for Patroni
+After=network-online.target
 Before=patroni.service
 
 [Service]
