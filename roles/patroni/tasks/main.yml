@@ -360,6 +360,9 @@
       command: "{{ postgresql_bin_dir }}/pg_ctl status -D {{ postgresql_data_dir }}"
       register: pg_ctl_status_result
       changed_when: false
+      failed_when:
+        - pg_ctl_status_result.rc != 0
+        - pg_ctl_status_result.rc != 3
 
       # "Debian"
     - name: Prepare PostgreSQL | start PostgreSQL
