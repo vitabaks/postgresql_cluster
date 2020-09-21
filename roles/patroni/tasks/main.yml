@@ -701,6 +701,18 @@
   become_user: postgres
   tags: patroni, point_in_time_recovery
 
+- block:  # PITR (custom bootstrap) - generate pg_hba.conf
+    - name: Generate pg_hba.conf (before start patroni)
+      template:
+        src: templates/pg_hba.conf.j2
+        dest: "{{ postgresql_conf_dir }}/pg_hba.conf"
+        owner: postgres
+        group: postgres
+        mode: 0640
+  when: patroni_cluster_bootstrap_method != "initdb" and
+        (existing_pgcluster is not defined or not existing_pgcluster|bool)
+  tags: patroni, point_in_time_recovery
+
 - block:  # start patroni on master
     - name: Start patroni service on the Master server
       systemd:

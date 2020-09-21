@@ -92,7 +92,7 @@
 {% endfor %}
 # Allow replication connections from localhost, by a user with the
 # replication privilege.
-  host      replication              {{ patroni_replication_username }}               127.0.0.1/32             md5
+  host      replication              {{ patroni_replication_username }}               localhost                trust
 {% for host in groups['postgres_cluster'] %}
   host      replication              {{ patroni_replication_username }}               {{ hostvars[host]['inventory_hostname'] }}/32         md5
 {% endfor %}
