@@ -28,34 +28,34 @@ jobs:
             add_balancer.yml
           args: "-x 106,208,403"
 
-      - name: Lint playbook with Ansible v2.9
-        uses: ansible/ansible-lint-action@master
-        with:
-          targets: |
-            deploy_pgcluster.yml
-            add_pgnode.yml
-            add_balancer.yml
-          override-deps: ansible==2.9.14
-          args: "-x 106,208,403"
-
-      - name: Lint playbook with Ansible v2.8
-        uses: ansible/ansible-lint-action@master
-        with:
-          targets: |
-            deploy_pgcluster.yml
-            add_pgnode.yml
-            add_balancer.yml
-          override-deps: ansible==2.8.16
-          args: "-x 106,208,403"
-
-      - name: Lint playbook with Ansible v2.7
-        uses: ansible/ansible-lint-action@master
-        with:
-          targets: |
-            deploy_pgcluster.yml
-            add_pgnode.yml
-            add_balancer.yml
-          override-deps: ansible==2.7.18
-          args: "-x 106,208,403"
+#      - name: Lint playbook with Ansible v2.9
+#        uses: ansible/ansible-lint-action@master
+#        with:
+#          targets: |
+#            deploy_pgcluster.yml
+#            add_pgnode.yml
+#            add_balancer.yml
+#          override-deps: ansible==2.9.14
+#          args: "-x 106,208,403"
+#
+#      - name: Lint playbook with Ansible v2.8
+#        uses: ansible/ansible-lint-action@master
+#        with:
+#          targets: |
+#            deploy_pgcluster.yml
+#            add_pgnode.yml
+#            add_balancer.yml
+#          override-deps: ansible==2.8.16
+#          args: "-x 106,208,403"
+#
+#      - name: Lint playbook with Ansible v2.7
+#        uses: ansible/ansible-lint-action@master
+#        with:
+#          targets: |
+#            deploy_pgcluster.yml
+#            add_pgnode.yml
+#            add_balancer.yml
+#          override-deps: ansible==2.7.18
+#          args: "-x 106,208,403"
 
 ...
