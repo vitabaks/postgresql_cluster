@@ -31,7 +31,7 @@ jobs:
           python-version: '3.x'
 
       - name: Install dependencies
-        run: pip3 install molecule docker ansible
+        run: pip3 install molecule[docker] ansible
 
       - name: Run Molecule tests for PostgresPro
         run: molecule test --scenario-name postgrespro
