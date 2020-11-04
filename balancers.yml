@@ -72,7 +72,7 @@
     - role: confd
       when: dcs_type == "etcd"
 
-    - role: vip-manager-disable
+    - role: vip-manager/disable
       when: vip_manager_disable|bool
 
     - role: keepalived
