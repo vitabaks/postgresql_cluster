@@ -23,6 +23,7 @@
       package:
         name: "/tmp/{{ vip_manager_package_repo | basename }}"
         state: present
+        disable_gpg_check: true
       when: ansible_os_family == "RedHat"
   when: installation_method == "repo" and vip_manager_package_repo | length > 0
   tags: vip, vip_manager, vip_manager_install
@@ -44,6 +45,7 @@
       package:
         name: "/tmp/{{ vip_manager_package_file | basename }}"
         state: present
+        disable_gpg_check: true
       when: ansible_os_family == "RedHat"
   when: installation_method == "file" and vip_manager_package_file | length > 0
   tags: vip, vip_manager, vip_manager_install
