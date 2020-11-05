@@ -711,7 +711,7 @@
         mode: 0640
   when: patroni_cluster_bootstrap_method != "initdb" and
         (existing_pgcluster is not defined or not existing_pgcluster|bool)
-  tags: patroni, point_in_time_recovery
+  tags: patroni
 
 - block:  # start patroni on master
     - name: Start patroni service on the Master server
