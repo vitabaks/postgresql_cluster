@@ -87,14 +87,16 @@
 # PostgreSQL prepare for install (for RHEL 8)
 - block:
     - name: PostgreSQL | check if appstream module is enabled
-      command: 'dnf -y -C module list postgresql'
+      command: 'dnf -yq module list postgresql'
+      environment: "{{ proxy_env | default({}) }}"
       register: postgresql_module_result
       changed_when: false
       args:
         warn: false
 
     - name: PostgreSQL | disable appstream module
-      command: 'dnf -y -C module disable postgresql'
+      command: 'dnf -yq module disable postgresql'
+      environment: "{{ proxy_env | default({}) }}"
       args:
         warn: false
       when: "'[x] ' not in postgresql_module_result.stdout"
