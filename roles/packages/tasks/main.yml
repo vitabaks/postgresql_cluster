@@ -58,6 +58,7 @@
   apt:
     name: "{{ item }}"
     state: latest
+    update_cache: yes
   loop: "{{ system_packages }}"
   environment: "{{ proxy_env | default({}) }}"
   when: ansible_os_family == "Debian" and installation_method == "repo"
@@ -120,6 +121,7 @@
   apt:
     name: "{{ item }}"
     state: present
+    update_cache: yes
   loop: "{{ postgresql_packages }}"
   environment: "{{ proxy_env | default({}) }}"
   when: ansible_os_family == "Debian" and installation_method == "repo"
