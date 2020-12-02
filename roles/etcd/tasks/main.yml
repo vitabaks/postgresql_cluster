@@ -19,6 +19,8 @@
       unarchive:
         src: "/tmp/{{ etcd_package_repo | basename }}"
         dest: /tmp/
+        extra_opts:
+          - --no-same-owner
         remote_src: true
 
     - name: Copy "etcd" and "etcdctl" binary files to /usr/local/bin/
@@ -38,6 +40,8 @@
       unarchive:
         src: "{{ etcd_package_file }}"
         dest: /tmp/
+        extra_opts:
+          - --no-same-owner
 
     - name: Copy "etcd" and "etcdctl" binary files to /usr/local/bin/
       copy:

@@ -15,6 +15,8 @@
       unarchive:
         src: "/tmp/{{ wal_g_package_repo | basename }}"
         dest: /tmp/
+        extra_opts:
+          - --no-same-owner
         remote_src: true
 
     - name: copy "wal-g" binary files to /usr/local/bin/
@@ -32,6 +34,8 @@
       unarchive:
         src: "{{ wal_g_package_file }}"
         dest: /tmp/
+        extra_opts:
+          - --no-same-owner
 
     - name: Copy "wal-g" binary files to /usr/local/bin/
       copy:

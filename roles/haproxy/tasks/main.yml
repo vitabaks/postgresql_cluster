@@ -186,6 +186,8 @@
       unarchive:
         src: "/tmp/{{ haproxy_src_repo | basename }}"
         dest: /tmp/
+        extra_opts:
+          - --no-same-owner
         remote_src: true
       when: haproxy_src_repo | length > 0
 
@@ -193,6 +195,8 @@
       unarchive:
         src: "/tmp/{{ lua_src_repo | basename }}"
         dest: /tmp/
+        extra_opts:
+          - --no-same-owner
         remote_src: true
       when: lua_src_repo | length > 0
       tags: lua
@@ -205,12 +209,16 @@
       unarchive:
         src: "{{ haproxy_src_file }}"
         dest: /tmp/
+        extra_opts:
+          - --no-same-owner
       when: haproxy_src_file | length > 0
 
     - name: "Extract lua source files into /tmp"
       unarchive:
         src: "{{ lua_src_file }}"
         dest: /tmp/
+        extra_opts:
+          - --no-same-owner
       when: lua_src_file | length > 0
       tags: lua
   when: installation_method == "file" and haproxy_installation_method == "src"
