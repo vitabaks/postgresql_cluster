@@ -379,7 +379,7 @@
       command: "{{ postgresql_bin_dir }}/pg_ctl start -D {{ postgresql_data_dir }}"
       when: pg_ctl_status_result.rc == 3 and
             (ansible_os_family == "RedHat" or
-            postgresql_packages is search("postgrespro"))
+            postgresql_packages|join(" ") is search("postgrespro"))
 
     - name: Prepare PostgreSQL | check PostgreSQL is accepting connections
       become: true
@@ -451,7 +451,7 @@
       retries: 10
       delay: 30
       when: ansible_os_family == "Debian" and
-            postgresql_packages is not search("postgrespro")
+            postgresql_packages|join(" ") is not search("postgrespro")
 
       # "RedHat" or PostgresPro
     - name: Prepare PostgreSQL | stop PostgreSQL (will be managed by patroni)
@@ -463,7 +463,7 @@
       retries: 30
       delay: 10
       when: ansible_os_family == "RedHat" or
-            postgresql_packages is search("postgrespro")
+            postgresql_packages|join(" ") is search("postgrespro")
 
     - name: Prepare PostgreSQL | check PostgreSQL is stopped
       become: true
@@ -504,7 +504,7 @@
         path: "{{ postgresql_conf_dir }}/postgresql.conf"
       register: postgresql_conf_file
       when: ansible_os_family == "Debian" and
-            postgresql_packages is not search("postgrespro")
+            postgresql_packages|join(" ") is not search("postgrespro")
 
     - name: Prepare PostgreSQL | generate default postgresql config files
       become: true
@@ -518,7 +518,7 @@
       register: pg_createcluster_result
       failed_when: pg_createcluster_result.rc != 0
       when: (ansible_os_family == "Debian" and
-            postgresql_packages is not search("postgrespro")) and
+            postgresql_packages|join(" ") is not search("postgrespro")) and
             not postgresql_conf_file.stat.exists
 
     - name: Prepare PostgreSQL | make sure the data directory "{{ postgresql_data_dir }}" is empty on Master
@@ -625,7 +625,7 @@
 
         - name: Start PostgreSQL for Recovery  # RedHat or PostgresPro
           command: "{{ postgresql_bin_dir }}/pg_ctl start -D {{ postgresql_data_dir }} -o '-c hot_standby=off'"
-          when: (ansible_os_family == "RedHat" or postgresql_packages is search("postgrespro")) and
+          when: (ansible_os_family == "RedHat" or postgresql_packages|join(" ") is search("postgrespro")) and
                 (is_master == "true" or
                 (is_master != "true" and 'pgbackrest' in patroni_create_replica_methods))
 
@@ -661,7 +661,7 @@
           until: stop_result.rc == 0
           retries: 10
           delay: 10
-          when: (ansible_os_family == "RedHat" or postgresql_packages is search("postgrespro")) and
+          when: (ansible_os_family == "RedHat" or postgresql_packages|join(" ") is search("postgrespro")) and
                 (pg_ctl_status_result.rc is defined and pg_ctl_status_result.rc != 3)
       when: patroni_cluster_bootstrap_method == "pgbackrest"
       become: true
@@ -895,7 +895,7 @@
         enabled: false
         daemon_reload: true
   when: ansible_os_family == "Debian" and
-        postgresql_packages is not search("postgrespro")
+        postgresql_packages|join(" ") is not search("postgrespro")
   tags: patroni, postgresql_disable
 
 # "RedHat"
@@ -905,7 +905,7 @@
     enabled: false
     daemon_reload: true
   when: ansible_os_family == "RedHat" and
-        postgresql_packages is not search("postgrespro")
+        postgresql_packages|join(" ") is not search("postgrespro")
   tags: patroni, postgresql_disable
 
 # PostgresPro
@@ -914,7 +914,7 @@
     name: "postgrespro-std-{{ postgresql_version }}"
     enabled: false
     daemon_reload: true
-  when: postgresql_packages is search("postgrespro-std")
+  when: postgresql_packages|join(" ") is search("postgrespro-std")
   tags: patroni, postgresql_disable
 
 # PATRONICTL_CONFIG_FILE (patroni v1.6.1 and higher)
