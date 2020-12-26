@@ -42,7 +42,7 @@
       delegate_to: "{{ inventory_hostname }}"
 
     - name: "Rename {{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }} to {{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }}_old"  # noqa 204
-      command: mv {{ postgresql_data_dir }}/{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }} {{ postgresql_data_dir }}/{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }}_old # noqa 204
+      command: mv {{ postgresql_data_dir }}/{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }} {{ postgresql_data_dir }}/{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }}_old  # noqa 204
       register: mv_result
   when: sym.stat.exists and not sym.stat.islnk|bool
 
