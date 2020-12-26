@@ -3,7 +3,8 @@
 
 # PostgreSQL variables
 postgresql_cluster_name: "main"
-postgresql_data_dir: "/var/lib/postgresql/{{ postgresql_version }}/{{ postgresql_cluster_name }}"
+postgresql_data_dir: "/var/lib/postgresql/{{ postgresql_version }}/{{ postgresql_cluster_name }}"  # You can specify custom data dir path
+postgresql_wal_dir: ""  # custom WAL dir path (symlink will be created) [optional]
 postgresql_conf_dir: "/etc/postgresql/{{ postgresql_version }}/{{ postgresql_cluster_name }}"
 postgresql_bin_dir: "/usr/lib/postgresql/{{ postgresql_version }}/bin"
 postgresql_log_dir: "/var/log/postgresql"
