@@ -732,6 +732,7 @@
         group: postgres
         mode: 0640
   when: patroni_cluster_bootstrap_method != "initdb" and
+        postgresql_conf_dir != postgresql_data_dir and
         (existing_pgcluster is not defined or not existing_pgcluster|bool)
   tags: patroni
 
@@ -774,13 +775,24 @@
   tags: patroni, patroni_start_master, point_in_time_recovery
 
 - block:  # pg_hba (using a templates/pg_hba.conf.j2)
-    - name: Prepare PostgreSQL | generate pg_hba.conf
+    - name: Prepare PostgreSQL | generate pg_hba.conf on Master
       template:
         src: templates/pg_hba.conf.j2
         dest: "{{ postgresql_conf_dir }}/pg_hba.conf"
         owner: postgres
         group: postgres
         mode: 0640
+      when: is_master == "true"
+
+    - name: Prepare PostgreSQL | generate pg_hba.conf on Replica
+      template:
+        src: templates/pg_hba.conf.j2
+        dest: "{{ postgresql_conf_dir }}/pg_hba.conf"
+        owner: postgres
+        group: postgres
+        mode: 0640
+      when: is_master != "true" and
+            postgresql_conf_dir != postgresql_data_dir
 
     - name: Prepare PostgreSQL | reload for apply the pg_hba.conf
       become: true
@@ -859,6 +871,7 @@
         group: postgres
         mode: 0640
   when: existing_pgcluster is defined and existing_pgcluster|bool
+        and postgresql_conf_dir != postgresql_data_dir
   tags: patroni, pg_hba, pg_hba_generate
 
 - block:  # start patroni on replica
