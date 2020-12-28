@@ -342,6 +342,16 @@
     mode: 0700
   tags: patroni
 
+- name: Prepare PostgreSQL | make sure the custom WAL directory "{{ postgresql_wal_dir }}" exists
+  file:
+    path: "{{ postgresql_wal_dir }}"
+    owner: postgres
+    group: postgres
+    state: directory
+    mode: 0700
+  when: postgresql_wal_dir is defined and postgresql_wal_dir | length > 0
+  tags: patroni, custom_wal_dir
+
 - block:  # when postgresql exists (master)
     - name: Prepare PostgreSQL | check that data directory "{{ postgresql_data_dir }}" is initialized on Master
       stat:
@@ -521,7 +531,7 @@
             postgresql_packages|join(" ") is not search("postgrespro")) and
             not postgresql_conf_file.stat.exists
 
-    - name: Prepare PostgreSQL | make sure the data directory "{{ postgresql_data_dir }}" is empty on Master
+    - name: Prepare PostgreSQL | make sure the data directory "{{ postgresql_data_dir }}" is empty
       file:
         path: "{{ postgresql_data_dir }}"
         state: "{{ item }}"
@@ -531,7 +541,19 @@
       loop:
         - absent
         - directory
-      when: is_master == "true" and
+      when: patroni_cluster_bootstrap_method != "pgbackrest"  # --delta restore
+
+    - name: Prepare PostgreSQL | make sure the custom WAL directory "{{ postgresql_wal_dir }}" is empty
+      file:
+        path: "{{ postgresql_wal_dir }}"
+        state: "{{ item }}"
+        owner: postgres
+        group: postgres
+        mode: 0700
+      loop:
+        - absent
+        - directory
+      when: (postgresql_wal_dir is defined and postgresql_wal_dir | length > 0) and
             patroni_cluster_bootstrap_method != "pgbackrest"  # --delta restore
   when: postgresql_exists != "true"
   tags: patroni, point_in_time_recovery
@@ -710,6 +732,7 @@
         group: postgres
         mode: 0640
   when: patroni_cluster_bootstrap_method != "initdb" and
+        postgresql_conf_dir != postgresql_data_dir and
         (existing_pgcluster is not defined or not existing_pgcluster|bool)
   tags: patroni
 
@@ -752,13 +775,24 @@
   tags: patroni, patroni_start_master, point_in_time_recovery
 
 - block:  # pg_hba (using a templates/pg_hba.conf.j2)
-    - name: Prepare PostgreSQL | generate pg_hba.conf
+    - name: Prepare PostgreSQL | generate pg_hba.conf on Master
       template:
         src: templates/pg_hba.conf.j2
         dest: "{{ postgresql_conf_dir }}/pg_hba.conf"
         owner: postgres
         group: postgres
         mode: 0640
+      when: is_master == "true"
+
+    - name: Prepare PostgreSQL | generate pg_hba.conf on Replica
+      template:
+        src: templates/pg_hba.conf.j2
+        dest: "{{ postgresql_conf_dir }}/pg_hba.conf"
+        owner: postgres
+        group: postgres
+        mode: 0640
+      when: is_master != "true" and
+            postgresql_conf_dir != postgresql_data_dir
 
     - name: Prepare PostgreSQL | reload for apply the pg_hba.conf
       become: true
@@ -837,21 +871,10 @@
         group: postgres
         mode: 0640
   when: existing_pgcluster is defined and existing_pgcluster|bool
+        and postgresql_conf_dir != postgresql_data_dir
   tags: patroni, pg_hba, pg_hba_generate
 
 - block:  # start patroni on replica
-    - name: Prepare PostgreSQL | make sure the data directory "{{ postgresql_data_dir }}" is empty on Replica
-      file:
-        path: "{{ postgresql_data_dir }}"
-        state: "{{ item }}"
-        owner: postgres
-        group: postgres
-        mode: 0700
-      loop:
-        - absent
-        - directory
-      when: not 'pgbackrest' in patroni_create_replica_methods  # --delta restore
-
     - name: Start patroni service on Replica servers
       systemd:
         daemon_reload: true
@@ -878,6 +901,11 @@
       delay: 30
   when: is_master != "true"
   tags: patroni, patroni_start_replica, point_in_time_recovery
+
+# create symlink pg_xlog/pg_wal to custom WAL dir
+- import_tasks: custom_wal_dir.yml
+  when: postgresql_wal_dir is defined and postgresql_wal_dir | length > 0
+  tags: patroni, custom_wal_dir
 
 # disable postgresql from autostart
 - block:  # "Debian"

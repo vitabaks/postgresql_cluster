@@ -2,7 +2,8 @@
 # yamllint disable rule:line-length
 
 # PostgreSQL variables
-postgresql_data_dir: "/var/lib/pgsql/{{ postgresql_version }}/data"
+postgresql_data_dir: "/var/lib/pgsql/{{ postgresql_version }}/data"  # You can specify custom data dir path
+postgresql_wal_dir: ""  # custom WAL dir path (symlink will be created) [optional]
 postgresql_conf_dir: "{{ postgresql_data_dir }}"
 postgresql_bin_dir: "/usr/pgsql-{{ postgresql_version }}/bin"
 postgresql_log_dir: "/var/log/postgresql"

@@ -1,0 +1,91 @@
+---
+# yamllint disable rule:line-length
+# yamllint disable rule:comments-indentation
+
+- name: "Make sure {{ postgresql_data_dir }}/{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }} is symlink"  # noqa 204
+  stat:
+    path: "{{ postgresql_data_dir }}/{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }}"
+  register: sym
+
+- block:  # synchronize WAL`s if wal dir exist (and is not symlink)
+    - name: Make sure rsync is installed (for synchronize wal dir)
+      package:
+        name:
+          - rsync
+          - sshpass
+        state: present
+      environment: "{{ proxy_env | default({}) }}"
+
+    - name: Stop patroni service (for create symlink)
+      systemd:
+        name: patroni
+        state: stopped
+      register: patroni_stop_result
+
+    - name: Make sure PostgreSQL is stopped
+      become: true
+      become_user: postgres
+      command: "{{ postgresql_bin_dir }}/pg_ctl status -D {{ postgresql_data_dir }}"
+      register: stop_result
+      changed_when: false
+      failed_when: false
+      until: stop_result.rc == 3
+      retries: 100
+      delay: 6
+
+    - name: "Synchronize {{ postgresql_data_dir }}/{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }} to {{ postgresql_wal_dir }}"  # noqa 204
+      become: true
+      become_user: postgres
+      synchronize:
+        src: "{{ postgresql_data_dir }}/{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }}/"
+        dest: "{{ postgresql_wal_dir }}/"
+      delegate_to: "{{ inventory_hostname }}"
+
+    - name: "Rename {{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }} to {{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }}_old"  # noqa 204
+      command: mv {{ postgresql_data_dir }}/{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }} {{ postgresql_data_dir }}/{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }}_old  # noqa 204
+      register: mv_result
+  when: sym.stat.exists and not sym.stat.islnk|bool
+
+- name: "Create symlink {{ postgresql_data_dir }}/{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }} -> {{ postgresql_wal_dir }}"  # noqa 204
+  become: true
+  become_user: postgres
+  file:
+    src: "{{ postgresql_wal_dir }}"
+    dest: "{{ postgresql_data_dir }}/{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }}"
+    state: link
+  when: sym.stat.islnk is not defined or not sym.stat.islnk|bool
+
+- block:  # start patroni
+    - name: Start patroni service
+      systemd:
+        name: patroni
+        state: started
+
+    - name: Wait for port 8008 to become open on the host
+      wait_for:
+        port: 8008
+        host: "{{ hostvars[inventory_hostname]['inventory_hostname'] }}"
+        state: started
+        timeout: 120
+        delay: 10
+      ignore_errors: false
+
+    - name: Check that the patroni is healthy
+      uri:
+        url: "http://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:8008/health"
+        status_code: 200
+      register: replica_result
+      until: replica_result.status == 200
+      retries: 120
+      delay: 10
+  when: patroni_stop_result is changed
+
+- name: "Remove {{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }}_old directory"
+  file:
+    path: "{{ postgresql_data_dir }}/{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }}_old"
+    state: absent
+  when:
+    - replica_result.status is defined
+    - replica_result.status == 200
+
+...

@@ -38,6 +38,7 @@
 - - patroni_start_master
 - - patroni_start_replica
 - - postgresql_disable
+- - custom_wal_dir
 - pgbouncer
 - - pgbouncer_install
 - - pgbouncer_conf
