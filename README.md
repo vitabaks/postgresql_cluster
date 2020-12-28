@@ -342,6 +342,14 @@ Recovery steps with pgBackRest:
 17. Check that the patroni is healthy on the replica server (timeout 10 hours);
 18. Check postgresql cluster health (finish).
 ```
+
+**Why disable archive_command?**
+
+This is necessary to avoid conflicts in the archived log storage when archiving WALs. When multiple clusters try to send WALs to the same storage. \
+For example, when you make multiple clones of a cluster from one backup.
+
+You can change this parameter using `patronictl edit-config` after restore. \
+Or set `disable_archive_command: false` to not disable archive_command after restore.
 </p></details>
 
 

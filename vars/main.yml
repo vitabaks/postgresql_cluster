@@ -300,4 +300,7 @@ pgbackrest_patroni_cluster_restore_command:
 # 1) The database cluster directory will be cleaned (for "wal-g") or overwritten (for "pgbackrest" --delta restore).
 # 2) And also the patroni cluster "{{ patroni_cluster_name }}" will be removed from the DCS (if exist) before recovery.
 
+disable_archive_command: true  # or 'false' to not disable archive_command after restore
+keep_patroni_dynamic_json: true  # or 'false' to remove patroni.dynamic.json after restore (if exists)
+
 ...

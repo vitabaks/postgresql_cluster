@@ -699,6 +699,12 @@
         path: "{{ postgresql_data_dir }}/patroni.dynamic.json"
       register: patroni_dynamic_json
 
+    - name: Remove patroni.dynamic.json file
+      file:
+        path: "{{ postgresql_data_dir }}/patroni.dynamic.json"
+        state: absent
+      when: not keep_patroni_dynamic_json|bool
+
     - name: Edit patroni.dynamic.json | disable archive_command (if enabled)
       yedit:
         src: "{{ postgresql_data_dir }}/patroni.dynamic.json"
@@ -707,7 +713,8 @@
         content_type: json
       vars:
         ansible_python_interpreter: /usr/bin/python3
-      when: patroni_dynamic_json.stat.exists
+      when: patroni_dynamic_json.stat.exists and
+            keep_patroni_dynamic_json|bool and disable_archive_command|bool
 
     - name: Edit patroni.yml | disable archive_command (if enabled)
       yedit:
@@ -716,6 +723,7 @@
         value: "cd ."  # not doing anything yet with WAL-s
       vars:
         ansible_python_interpreter: /usr/bin/python3
+      when: disable_archive_command|bool
   when: patroni_cluster_bootstrap_method != "initdb" and
         (pgbackrest_install|bool or wal_g_install|bool) and
         (existing_pgcluster is not defined or not existing_pgcluster|bool)
