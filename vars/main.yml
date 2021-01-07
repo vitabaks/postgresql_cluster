@@ -255,7 +255,7 @@ postgresql_restore_command: ""
 
 # WAL-G
 wal_g_install: false  # or 'true'
-wal_g_ver: "v0.2.15"
+wal_g_ver: "v0.2.19"
 wal_g_json:  # more options see https://github.com/wal-g/wal-g#configuration
   - {option: "AWS_ACCESS_KEY_ID", value: "minio"}
   - {option: "AWS_SECRET_ACCESS_KEY", value: "miniosecret"}
