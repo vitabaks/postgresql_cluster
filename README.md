@@ -137,8 +137,8 @@ To minimize the risk of losing data on autofailover, you can configure settings 
 ## Deployment: quick start
 0. [Install Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) to the managed machine
 ###### Example: install latest release using [pip](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html#latest-releases-via-pip)
-
-`pip install ansible`
+`sudo apt install python3-pip sshpass git -y` \
+`sudo pip3 install ansible`
 
 1. Download or clone this repository
 
