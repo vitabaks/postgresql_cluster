@@ -15,7 +15,7 @@ vip_interface: "{{ ansible_default_ipv4.interface }}"  # interface name (ex. "en
 
 patroni_cluster_name: "postgres-cluster"  # specify the cluster name
 patroni_install_version: "latest"  # or specific version (example 1.5.6)
-
+patroni_restapi_port: "8008"  # specify a port for the Patroni REST API
 patroni_superuser_username: "postgres"
 patroni_superuser_password: "postgres-pass"  # please change password
 patroni_replication_username: "replicator"

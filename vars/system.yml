@@ -124,7 +124,7 @@ firewall_allowed_tcp_ports_for:
     - "{{ ansible_ssh_port | default(22) }}"
     - "{{ postgresql_port }}"
     - "{{ pgbouncer_listen_port }}"
-    - "8008"  # Patroni REST API port
+    - "{{ patroni_restapi_port }}"
 #    - "10050"  # Zabbix agent
 #    - ""
   etcd_cluster:
