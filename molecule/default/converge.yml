@@ -8,6 +8,7 @@
       set_fact:
         firewall_enable_ipv6: false  # Added to prevent test failures in CI.
         sysctl_set: false  # Added to prevent test failures in CI.
+        nameservers: ["8.8.8.8", "9.9.9.9"]
         cacheable: true
 
     - name: Prepare | Clean yum cache
