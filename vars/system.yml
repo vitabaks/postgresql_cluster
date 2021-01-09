@@ -3,9 +3,9 @@
 # yamllint disable rule:comments-indentation
 
 # DNS servers (/etc/resolv.conf)
-nameservers:
-  - "8.8.8.8"  # example (Google Public DNS)
-  - "9.9.9.9"  # (Quad9 Public DNS)
+nameservers: []
+#  - "8.8.8.8"  # example (Google Public DNS)
+#  - "9.9.9.9"  # (Quad9 Public DNS)
 
 # /etc/hosts (optional)
 etc_hosts: []
