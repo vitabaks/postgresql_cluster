@@ -250,6 +250,16 @@
   when: existing_pgcluster is not defined or not existing_pgcluster|bool
   tags: patroni, patroni_conf
 
+- name: Create patroni log directory
+  file:
+    path: "{{ patroni_log_dir }}"
+    owner: postgres
+    group: postgres
+    state: directory
+    mode: 0750
+  when: patroni_log_destination == 'logfile'
+  tags: patroni, patroni_conf
+
 - block:  # for add_pgnode.yml
     - name: Fetch patroni.yml conf file from master
       run_once: true
