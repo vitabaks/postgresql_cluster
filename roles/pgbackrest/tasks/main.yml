@@ -2,6 +2,13 @@
 # yamllint disable rule:line-length
 
 - block:  # Debian pgdg repo
+    - name: Make sure the gnupg and apt-transport-https packages are present
+      apt:
+        pkg:
+          - gnupg
+          - apt-transport-https
+        state: present
+
     - name: Make sure pgdg apt key is installed
       apt_key:
         id: ACCC4CF8
