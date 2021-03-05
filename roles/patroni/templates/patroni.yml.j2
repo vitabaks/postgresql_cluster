@@ -146,12 +146,6 @@ postgresql:
     {{ item.option }}: {{ item.value }}
     {% endfor %}
   {% endif %}
-  {% if 'wal_e' in patroni_create_replica_methods %}
-  wal_e:
-    {% for item in wal_e %}
-    {{ item.option }}: {{ item.value }}
-    {% endfor %}
-  {% endif %}
   {% if 'wal_g' in patroni_create_replica_methods %}
   wal_g:
     {% for item in wal_g %}

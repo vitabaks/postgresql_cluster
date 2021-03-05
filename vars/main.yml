@@ -240,7 +240,6 @@ patroni_cluster_bootstrap_method: "initdb"  # or "wal-g", "pgbackrest"
 # https://patroni.readthedocs.io/en/latest/replica_bootstrap.html#building-replicas
 patroni_create_replica_methods:
 #  - pgbackrest
-#  - wal_e
 #  - wal_g
   - basebackup
 
@@ -248,11 +247,6 @@ pgbackrest:
   - {option: "command", value: "/usr/bin/pgbackrest --stanza={{ pgbackrest_stanza }} --delta restore"}
   - {option: "keep_data", value: "True"}
   - {option: "no_params", value: "True"}
-wal_e:
-  - {option: "command", value: "patroni_wale_restore"}
-  - {option: "no_master", value: "1"}
-  - {option: "envdir", value: "/etc/wal_e/envdir"}
-  - {option: "use_iam", value: "1"}
 wal_g:
   - {option: "command", value: "wal-g backup-fetch {{ postgresql_data_dir }} LATEST"}
   - {option: "no_params", value: "True"}
