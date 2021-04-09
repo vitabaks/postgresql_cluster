@@ -362,139 +362,6 @@
   when: postgresql_wal_dir is defined and postgresql_wal_dir | length > 0
   tags: patroni, custom_wal_dir
 
-- block:  # when postgresql exists (master)
-    - name: Prepare PostgreSQL | check that data directory "{{ postgresql_data_dir }}" is initialized on Master
-      stat:
-        path: "{{ postgresql_data_dir }}/PG_VERSION"
-      register: pgdata_initialized
-
-    - name: Prepare PostgreSQL | data directory check result
-      fail:
-        msg: "Whoops! data directory {{ postgresql_data_dir }} is not initialized"
-      when: not pgdata_initialized.stat.exists
-      tags: patroni, patroni_check_init
-
-    - name: Prepare PostgreSQL | check PostgreSQL is started
-      become: true
-      become_user: postgres
-      command: "{{ postgresql_bin_dir }}/pg_ctl status -D {{ postgresql_data_dir }}"
-      register: pg_ctl_status_result
-      changed_when: false
-      failed_when:
-        - pg_ctl_status_result.rc != 0
-        - pg_ctl_status_result.rc != 3
-
-      # "Debian"
-    - name: Prepare PostgreSQL | start PostgreSQL
-      become: true
-      become_user: postgres
-      command: "/usr/bin/pg_ctlcluster {{ postgresql_version }} {{ postgresql_cluster_name }} start"
-      when: pg_ctl_status_result.rc == 3 and
-            ansible_os_family == "Debian"
-
-      # "RedHat" or PostgresPro
-    - name: Prepare PostgreSQL | start PostgreSQL
-      become: true
-      become_user: postgres
-      command: "{{ postgresql_bin_dir }}/pg_ctl start -D {{ postgresql_data_dir }}"
-      when: pg_ctl_status_result.rc == 3 and
-            (ansible_os_family == "RedHat" or
-            postgresql_packages|join(" ") is search("postgrespro"))
-
-    - name: Prepare PostgreSQL | check PostgreSQL is accepting connections
-      become: true
-      become_user: postgres
-      command: "{{ postgresql_bin_dir }}/pg_isready -p {{ postgresql_port }}"
-      register: pg_isready_result
-      until: pg_isready_result.rc == 0
-      retries: 30
-      delay: 10
-      changed_when: false
-
-    - name: Prepare PostgreSQL | generate pg_hba.conf on Master
-      template:
-        src: templates/pg_hba.conf.j2
-        dest: "{{ postgresql_conf_dir }}/pg_hba.conf"
-        owner: postgres
-        group: postgres
-        mode: 0640
-
-    - name: Prepare PostgreSQL | reload for apply the pg_hba.conf
-      become: true
-      become_user: postgres
-      command: "{{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -c 'SELECT pg_reload_conf()'"
-      register: psql_reload_result
-      failed_when: psql_reload_result.rc != 0
-
-    - name: Prepare PostgreSQL | make sure the user "{{ patroni_superuser_username }}" are present, and password does not differ from the specified
-      postgresql_user:
-        db: postgres
-        name: "{{ patroni_superuser_username }}"
-        password: "{{ patroni_superuser_password }}"
-        encrypted: true
-        role_attr_flags: "SUPERUSER"
-        login_unix_socket: "{{ postgresql_unix_socket_dir }}"
-        port: "{{ postgresql_port }}"
-        state: present
-      become: true
-      become_user: postgres
-
-    - name: Prepare PostgreSQL | make sure the user "{{ patroni_replication_username }}" are present, and password does not differ from the specified
-      postgresql_user:
-        db: postgres
-        name: "{{ patroni_replication_username }}"
-        password: "{{ patroni_replication_password }}"
-        encrypted: true
-        role_attr_flags: "LOGIN,REPLICATION"
-        login_unix_socket: "{{ postgresql_unix_socket_dir }}"
-        port: "{{ postgresql_port }}"
-        state: present
-      become: true
-      become_user: postgres
-
-    - name: Prepare PostgreSQL | waiting for CHECKPOINT to complete before stopping postgresql
-      become: true
-      become_user: postgres
-      command: "{{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -c 'CHECKPOINT'"
-      register: checkpoint_result
-      until: checkpoint_result.rc == 0
-      retries: 180
-      delay: 15
-
-      # "Debian"
-    - name: Prepare PostgreSQL | stop PostgreSQL (will be managed by patroni)
-      become: true
-      become_user: postgres
-      command: "/usr/bin/pg_ctlcluster {{ postgresql_version }} {{ postgresql_cluster_name }} stop -m fast"
-      register: stop_result
-      until: stop_result.rc == 0
-      retries: 10
-      delay: 30
-      when: ansible_os_family == "Debian" and
-            postgresql_packages|join(" ") is not search("postgrespro")
-
-      # "RedHat" or PostgresPro
-    - name: Prepare PostgreSQL | stop PostgreSQL (will be managed by patroni)
-      become: true
-      become_user: postgres
-      command: "{{ postgresql_bin_dir }}/pg_ctl stop -D {{ postgresql_data_dir }} -m fast"
-      register: stop_result
-      until: stop_result.rc == 0
-      retries: 30
-      delay: 10
-      when: ansible_os_family == "RedHat" or
-            postgresql_packages|join(" ") is search("postgrespro")
-
-    - name: Prepare PostgreSQL | check PostgreSQL is stopped
-      become: true
-      become_user: postgres
-      command: "{{ postgresql_bin_dir }}/pg_ctl status -D {{ postgresql_data_dir }}"
-      register: pg_ctl_stop_result
-      failed_when: pg_ctl_stop_result.rc != 3
-      changed_when: false
-  when: is_master == "true" and postgresql_exists == "true"
-  tags: patroni, patroni_start_master
-
 - block:  # wheh postgresql NOT exists or PITR
     - name: Prepare PostgreSQL | make sure PostgreSQL data directory "{{ postgresql_data_dir }}" exists
       file:
@@ -565,8 +432,155 @@
         - directory
       when: (postgresql_wal_dir is defined and postgresql_wal_dir | length > 0) and
             patroni_cluster_bootstrap_method != "pgbackrest"  # --delta restore
-  when: postgresql_exists != "true"
+  when: postgresql_exists != "true" or patroni_cluster_bootstrap_method != "initdb"
   tags: patroni, point_in_time_recovery
+
+- block:  # when postgresql exists
+    - name: Prepare PostgreSQL | check that data directory "{{ postgresql_data_dir }}" is initialized
+      stat:
+        path: "{{ postgresql_data_dir }}/PG_VERSION"
+      register: pgdata_initialized
+
+    - name: Prepare PostgreSQL | data directory check result
+      fail:
+        msg: "Whoops! data directory {{ postgresql_data_dir }} is not initialized"
+      when: not pgdata_initialized.stat.exists
+      tags: patroni, patroni_check_init
+
+    - block:  # for master only
+        - name: Prepare PostgreSQL | check PostgreSQL is started on Master
+          become: true
+          become_user: postgres
+          command: "{{ postgresql_bin_dir }}/pg_ctl status -D {{ postgresql_data_dir }}"
+          register: pg_ctl_status_result
+          changed_when: false
+          failed_when:
+            - pg_ctl_status_result.rc != 0
+            - pg_ctl_status_result.rc != 3
+
+          # "Debian"
+        - name: Prepare PostgreSQL | start PostgreSQL on Master
+          become: true
+          become_user: postgres
+          command: "/usr/bin/pg_ctlcluster {{ postgresql_version }} {{ postgresql_cluster_name }} start"
+          register: pg_start_on_master
+          when: pg_ctl_status_result.rc == 3 and
+                (ansible_os_family == "Debian" and postgresql_packages|join(" ") is not search("postgrespro"))
+
+          # "RedHat" or PostgresPro
+        - name: Prepare PostgreSQL | start PostgreSQL on Master
+          become: true
+          become_user: postgres
+          command: "{{ postgresql_bin_dir }}/pg_ctl start -D {{ postgresql_data_dir }}"
+          register: pg_start_on_master
+          when: pg_ctl_status_result.rc == 3 and
+                (ansible_os_family == "RedHat" or postgresql_packages|join(" ") is search("postgrespro"))
+
+        - name: Prepare PostgreSQL | check PostgreSQL is accepting connections
+          become: true
+          become_user: postgres
+          command: "{{ postgresql_bin_dir }}/pg_isready -p {{ postgresql_port }}"
+          register: pg_isready_result
+          until: pg_isready_result.rc == 0
+          retries: 30
+          delay: 10
+          changed_when: false
+
+        - name: Prepare PostgreSQL | generate pg_hba.conf on Master
+          template:
+            src: templates/pg_hba.conf.j2
+            dest: "{{ postgresql_conf_dir }}/pg_hba.conf"
+            owner: postgres
+            group: postgres
+            mode: 0640
+
+        - name: Prepare PostgreSQL | reload for apply the pg_hba.conf
+          become: true
+          become_user: postgres
+          command: "{{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -c 'SELECT pg_reload_conf()'"
+          register: psql_reload_result
+          failed_when: psql_reload_result.rc != 0
+
+        - name: Prepare PostgreSQL | make sure the user "{{ patroni_superuser_username }}" are present, and password does not differ from the specified
+          postgresql_user:
+            db: postgres
+            name: "{{ patroni_superuser_username }}"
+            password: "{{ patroni_superuser_password }}"
+            encrypted: true
+            role_attr_flags: "SUPERUSER"
+            login_unix_socket: "{{ postgresql_unix_socket_dir }}"
+            port: "{{ postgresql_port }}"
+            state: present
+          become: true
+          become_user: postgres
+
+        - name: Prepare PostgreSQL | make sure the user "{{ patroni_replication_username }}" are present, and password does not differ from the specified
+          postgresql_user:
+            db: postgres
+            name: "{{ patroni_replication_username }}"
+            password: "{{ patroni_replication_password }}"
+            encrypted: true
+            role_attr_flags: "LOGIN,REPLICATION"
+            login_unix_socket: "{{ postgresql_unix_socket_dir }}"
+            port: "{{ postgresql_port }}"
+            state: present
+          become: true
+          become_user: postgres
+      when: is_master == "true"
+
+    - name: Prepare PostgreSQL | check PostgreSQL is started
+      become: true
+      become_user: postgres
+      command: "{{ postgresql_bin_dir }}/pg_ctl status -D {{ postgresql_data_dir }}"
+      register: pg_ctl_status_result
+      changed_when: false
+      failed_when:
+        - pg_ctl_status_result.rc != 0
+        - pg_ctl_status_result.rc != 3
+
+    - name: Prepare PostgreSQL | waiting for CHECKPOINT to complete before stopping postgresql
+      become: true
+      become_user: postgres
+      command: "{{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -c 'CHECKPOINT'"
+      register: checkpoint_result
+      until: checkpoint_result.rc == 0
+      retries: 300
+      delay: 10
+      when: pg_ctl_status_result.rc == 0
+
+      # "Debian"
+    - name: Prepare PostgreSQL | stop PostgreSQL (will be managed by patroni)
+      become: true
+      become_user: postgres
+      command: "/usr/bin/pg_ctlcluster {{ postgresql_version }} {{ postgresql_cluster_name }} stop -m fast"
+      register: stop_result
+      until: stop_result.rc == 0
+      retries: 300
+      delay: 10
+      when: (checkpoint_result.rc is defined and checkpoint_result.rc == 0) and
+            (ansible_os_family == "Debian" and postgresql_packages|join(" ") is not search("postgrespro"))
+
+      # "RedHat" or PostgresPro
+    - name: Prepare PostgreSQL | stop PostgreSQL (will be managed by patroni)
+      become: true
+      become_user: postgres
+      command: "{{ postgresql_bin_dir }}/pg_ctl stop -D {{ postgresql_data_dir }} -m fast"
+      register: stop_result
+      until: stop_result.rc == 0
+      retries: 300
+      delay: 10
+      when: (checkpoint_result.rc is defined and checkpoint_result.rc == 0) and
+            (ansible_os_family == "RedHat" or postgresql_packages|join(" ") is search("postgrespro"))
+
+    - name: Prepare PostgreSQL | check PostgreSQL is stopped
+      become: true
+      become_user: postgres
+      command: "{{ postgresql_bin_dir }}/pg_ctl status -D {{ postgresql_data_dir }}"
+      register: pg_ctl_stop_result
+      failed_when: pg_ctl_stop_result.rc != 3
+      changed_when: false
+  when: postgresql_exists == "true" and patroni_cluster_bootstrap_method == "initdb"
+  tags: patroni, patroni_start_master
 
 - block:  # PITR (custom bootstrap)
 # Prepare (install pexpect, ruamel.yaml)
