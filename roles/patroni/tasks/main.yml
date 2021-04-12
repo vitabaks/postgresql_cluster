@@ -827,7 +827,6 @@
         owner: postgres
         group: postgres
         mode: 0640
-      register: generate_pg_hba
       when: is_master == "true"
 
     - name: Prepare PostgreSQL | generate pg_hba.conf on Replica
@@ -837,9 +836,8 @@
         owner: postgres
         group: postgres
         mode: 0640
-      register: generate_pg_hba
-      when: (is_master != "true" and postgresql_conf_dir != postgresql_data_dir)
-            or postgresql_exists == "true"
+      when: is_master != "true" and
+            postgresql_conf_dir != postgresql_data_dir
 
     - name: Prepare PostgreSQL | reload for apply the pg_hba.conf
       become: true
@@ -848,7 +846,6 @@
       register: psql_reload_result
       changed_when: psql_reload_result.rc == 0
       failed_when: false  # exec pg_reload_conf on all running postgres (to re-run with --tag pg_hba).
-      when: generate_pg_hba is changed
   when: existing_pgcluster is not defined or not existing_pgcluster|bool
   tags: patroni, pg_hba, pg_hba_generate
 
