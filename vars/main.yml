@@ -28,6 +28,13 @@ synchronous_node_count: 1  # number of synchronous standby databases
 
 # Load Balancing
 with_haproxy_load_balancing: false  # or 'true' if you want to install and configure the load-balancing
+haproxy_maxconn:
+  global: 100000
+  master: 10000
+  replica: 10000
+haproxy_timeout:
+  client: "60m"
+  server: "60m"
 
 # vip-manager (if cluster_vip is specified and with_haproxy_load_balancing: false)
 vip_manager_version: "1.0"  # version to install

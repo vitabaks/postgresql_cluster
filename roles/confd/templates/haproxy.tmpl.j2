@@ -1,5 +1,5 @@
 global
-    maxconn 100000
+    maxconn {{ haproxy_maxconn.global }}
     log /dev/log    local0
     log /dev/log    local1 notice
     chroot /var/lib/haproxy
@@ -8,7 +8,7 @@ global
     user haproxy
     group haproxy
     daemon
-  
+
 defaults
     mode               tcp
     log                global
@@ -18,20 +18,20 @@ defaults
     timeout client     60m
     timeout server     60m
     timeout check      15s
-     
+
 listen stats
     mode http
     bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:7000
     stats enable
     stats uri /
- 
+
 listen master
 {% if cluster_vip is defined and cluster_vip | length > 0 %}
     bind {{ cluster_vip }}:5000
 {% else %}
     bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:5000
 {% endif %}
-    maxconn 10000
+    maxconn {{ haproxy_maxconn.master }}
     option tcplog
     option httpchk OPTIONS /master
     http-check expect status 200
@@ -52,7 +52,7 @@ listen replicas
 {% else %}
     bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:5001
 {% endif %}
-    maxconn 10000
+    maxconn {{ haproxy_maxconn.replica }}
     option tcplog
     option httpchk OPTIONS /replica
     balance roundrobin
@@ -74,7 +74,7 @@ listen replicas_sync
 {% else %}
     bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:5002
 {% endif %}
-    maxconn 10000
+    maxconn {{ haproxy_maxconn.replica }}
     option tcplog
     option httpchk OPTIONS /sync
     balance roundrobin
@@ -96,7 +96,7 @@ listen replicas_async
 {% else %}
     bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:5003
 {% endif %}
-    maxconn 10000
+    maxconn {{ haproxy_maxconn.replica }}
     option tcplog
     option httpchk OPTIONS /async
     balance roundrobin
