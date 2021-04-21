@@ -15,8 +15,8 @@ defaults
     retries            2
     timeout queue      5s
     timeout connect    5s
-    timeout client     60m
-    timeout server     60m
+    timeout client     {{ haproxy_timeout.client }}
+    timeout server     {{ haproxy_timeout.server }}
     timeout check      15s
 
 listen stats
