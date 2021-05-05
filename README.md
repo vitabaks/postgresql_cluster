@@ -69,7 +69,7 @@ RedHat and Debian based distros (x86_64)
 
 ###### Minimum OS versions:
 - CentOS: 7
-- Ubuntu: 16.04
+- Ubuntu: 18.04
 - Debian: 9
 
 :white_check_mark: tested, works fine: `Debian 9/10, Ubuntu 18.04/20.04, CentOS 7.x/8.x`

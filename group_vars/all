@@ -12,5 +12,5 @@ os_minimum_versions:
   RedHat: 7
   CentOS: 7
   OracleLinux: 7
-  Ubuntu: 16.04
+  Ubuntu: 18.04
   Debian: 9
