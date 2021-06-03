@@ -552,11 +552,7 @@
     - name: Prepare PostgreSQL | stop PostgreSQL (will be managed by patroni)
       become: true
       become_user: postgres
-      command: "/usr/bin/pg_ctlcluster {{ postgresql_version }} {{ postgresql_cluster_name }} stop -m fast"
-      register: stop_result
-      until: stop_result.rc == 0
-      retries: 300
-      delay: 10
+      command: "/usr/bin/pg_ctlcluster {{ postgresql_version }} {{ postgresql_cluster_name }} stop -m fast -- -w -t 600"
       when: (checkpoint_result.rc is defined and checkpoint_result.rc == 0) and
             (ansible_os_family == "Debian" and postgresql_packages|join(" ") is not search("postgrespro"))
 
@@ -564,11 +560,7 @@
     - name: Prepare PostgreSQL | stop PostgreSQL (will be managed by patroni)
       become: true
       become_user: postgres
-      command: "{{ postgresql_bin_dir }}/pg_ctl stop -D {{ postgresql_data_dir }} -m fast"
-      register: stop_result
-      until: stop_result.rc == 0
-      retries: 300
-      delay: 10
+      command: "{{ postgresql_bin_dir }}/pg_ctl stop -D {{ postgresql_data_dir }} -m fast -w -t 600"
       when: (checkpoint_result.rc is defined and checkpoint_result.rc == 0) and
             (ansible_os_family == "RedHat" or postgresql_packages|join(" ") is search("postgrespro"))
 
@@ -693,20 +685,12 @@
           failed_when: false
 
         - name: Stop PostgreSQL  # "Debian"
-          command: "/usr/bin/pg_ctlcluster {{ postgresql_version }} {{ postgresql_cluster_name }} stop -m fast"
-          register: stop_result
-          until: stop_result.rc == 0
-          retries: 10
-          delay: 10
+          command: "/usr/bin/pg_ctlcluster {{ postgresql_version }} {{ postgresql_cluster_name }} stop -m fast -- -w -t 600"
           when: ansible_os_family == "Debian" and
                 (pg_ctl_status_result.rc is defined and pg_ctl_status_result.rc != 3)
 
         - name: Stop PostgreSQL  # "RedHat" or PostgresPro
-          command: "{{ postgresql_bin_dir }}/pg_ctl stop -D {{ postgresql_data_dir }} -m fast"
-          register: stop_result
-          until: stop_result.rc == 0
-          retries: 10
-          delay: 10
+          command: "{{ postgresql_bin_dir }}/pg_ctl stop -D {{ postgresql_data_dir }} -m fast -w -t 600"
           when: (ansible_os_family == "RedHat" or postgresql_packages|join(" ") is search("postgrespro")) and
                 (pg_ctl_status_result.rc is defined and pg_ctl_status_result.rc != 3)
       when: patroni_cluster_bootstrap_method == "pgbackrest"
