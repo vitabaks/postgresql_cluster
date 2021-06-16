@@ -1,0 +1,36 @@
+---
+- name: Converge
+  hosts: all
+  gather_facts: true
+
+  tasks:
+    - name: Set variables for molecule
+      set_fact:
+        firewall_enable_ipv6: false  # Added to prevent test failures in CI.
+        sysctl_set: false  # Added to prevent test failures in CI.
+        nameservers: ["8.8.8.8", "9.9.9.9"]
+        cacheable: true
+
+    - name: Prepare | Clean yum cache
+      command: yum clean all
+      args:
+        warn: false
+      when:
+        - ansible_os_family == "RedHat"
+        - ansible_distribution_major_version == '7'
+
+    - name: Prepare | Clean dnf cache
+      command: dnf clean all
+      args:
+        warn: false
+      when:
+        - ansible_os_family == "RedHat"
+        - ansible_distribution_major_version is version('8', '>=')
+
+    - name: Prepare | Check that sudo package is exists
+      package:
+        name: sudo
+
+- import_playbook: ../../deploy_pgcluster.yml
+
+...
