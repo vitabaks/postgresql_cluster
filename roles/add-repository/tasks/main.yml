@@ -66,7 +66,7 @@
             ansible_distribution_major_version == '7')
       tags: install_scl_repo
 
-    - name: Install Software Collections (SCL) repository for OracleLinux 7
+    - name: Add Software Collections (SCL) repository for OracleLinux 7
       yum_repository:
         name: ol7_software_collections
         description: Software Collection Library packages for Oracle Linux 7 (x86_64)
@@ -78,6 +78,30 @@
             (ansible_distribution == "OracleLinux" and
             ansible_distribution_major_version == '7')
       tags: install_scl_repo
+
+      # Development repository (for llvm-toolset-7-clang)
+    - name: Add Development repository for OracleLinux 7
+      yum_repository:
+        name: ol7_developer
+        description: Packages for test and development - Oracle Linux 7 (x86_64)
+        baseurl: https://yum.oracle.com/repo/OracleLinux/OL7/developer/x86_64
+        gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-oracle
+        gpgcheck: true
+        enabled: true
+      when: (ansible_distribution == "OracleLinux" and
+            ansible_distribution_major_version == '7')
+
+      # Optional Development repository (for libedit-devel)
+    - name: Add Optional Development repository for OracleLinux 7
+      yum_repository:
+        name: ol7_optional_developer
+        description: Developer preview optional packages for Development on Oracle Linux 7 (x86_64)
+        baseurl: https://yum.oracle.com/repo/OracleLinux/OL7/optional/developer/x86_64
+        gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-oracle
+        gpgcheck: true
+        enabled: true
+      when: (ansible_distribution == "OracleLinux" and
+            ansible_distribution_major_version == '7')
 
     - name: Enable Software Collections (SCL) repository for RedHat 7
       become: true
