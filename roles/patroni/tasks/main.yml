@@ -61,6 +61,8 @@
       when: patroni_pip_package_repo | length < 1 and patroni_install_version != "latest"
   when: installation_method == "repo" and patroni_installation_method == "pip"
   environment: "{{ proxy_env | default({}) }}"
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   tags: patroni, patroni_install
 
 - block:  # when "patroni_pip_requirements_repo" and "patroni_pip_package_repo" is defined
@@ -104,6 +106,8 @@
         PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
       when: patroni_pip_package_repo | length > 0
   when: installation_method == "repo" and patroni_installation_method == "pip"
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   tags: patroni, patroni_install
 
 - block:  # installation_method: "file" and patroni_installation_method: "pip"
@@ -143,6 +147,8 @@
         PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
       when: patroni_pip_package_file | length > 0
   when: installation_method == "file" and patroni_installation_method == "pip"
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   tags: patroni, patroni_install
 
 - block:  # installation_method: "repo" and patroni_installation_method: "rpm/deb"
@@ -588,6 +594,8 @@
         - ruamel.yaml
       environment:
         PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
+      vars:
+        ansible_python_interpreter: /usr/bin/python3
 # Run PITR
     - name: Stop patroni service on the Replica servers (if running)
       systemd:
