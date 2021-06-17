@@ -60,7 +60,7 @@ jobs:
             add_balancer.yml
           override-deps: |
             ansible==2.7.18
-            ansible-lint==4.3.7
+            ansible-lint==4.2.0
           args: "-x 106,208,403"
 
 ...
