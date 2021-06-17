@@ -46,7 +46,9 @@ jobs:
             deploy_pgcluster.yml
             add_pgnode.yml
             add_balancer.yml
-          override-deps: ansible==2.8.20
+          override-deps: |
+            ansible==2.8.20
+            ansible-lint==4.3.7
           args: ""
 
       - name: Lint playbook with Ansible v2.7
@@ -56,7 +58,9 @@ jobs:
             deploy_pgcluster.yml
             add_pgnode.yml
             add_balancer.yml
-          override-deps: ansible==2.7.18
+          override-deps: |
+            ansible==2.7.18
+            ansible-lint==4.3.7
           args: ""
 
 ...
