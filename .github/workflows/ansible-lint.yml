@@ -49,7 +49,7 @@ jobs:
           override-deps: |
             ansible==2.8.20
             ansible-lint==4.3.7
-          args: ""
+          args: "-x 106,208,403"
 
       - name: Lint playbook with Ansible v2.7
         uses: iranzo/ansible-lint-action@v4.1.1
@@ -61,6 +61,6 @@ jobs:
           override-deps: |
             ansible==2.7.18
             ansible-lint==4.3.7
-          args: ""
+          args: "-x 106,208,403"
 
 ...
