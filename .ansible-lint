@@ -1,0 +1,7 @@
+skip_list:
+  - 'yaml'
+  - 'role-name'
+  - 'ignore-errors'
+  - 'package-latest'
+  - 'risky-file-permissions' # TODO
+  - 'no-log-password' # We do not display passwords 

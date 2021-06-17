@@ -27,7 +27,7 @@ jobs:
             add_pgnode.yml
             add_balancer.yml
           override-deps: ansible==2.10.7
-          args: "-x 106,208,403"
+          args: ""
 
       - name: Lint playbook with Ansible v2.9
         uses: iranzo/ansible-lint-action@v4.1.1
@@ -37,7 +37,7 @@ jobs:
             add_pgnode.yml
             add_balancer.yml
           override-deps: ansible==2.9.22
-          args: "-x 106,208,403"
+          args: ""
 
       - name: Lint playbook with Ansible v2.8
         uses: iranzo/ansible-lint-action@v4.1.1
@@ -47,7 +47,7 @@ jobs:
             add_pgnode.yml
             add_balancer.yml
           override-deps: ansible==2.8.20
-          args: "-x 106,208,403"
+          args: ""
 
       - name: Lint playbook with Ansible v2.7
         uses: iranzo/ansible-lint-action@v4.1.1
@@ -57,6 +57,6 @@ jobs:
             add_pgnode.yml
             add_balancer.yml
           override-deps: ansible==2.7.18
-          args: "-x 106,208,403"
+          args: ""
 
 ...
