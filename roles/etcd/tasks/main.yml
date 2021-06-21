@@ -4,6 +4,15 @@
 - name: Make sure handlers are flushed immediately
   meta: flush_handlers
 
+- name: Make sure the unzip/tar packages are present
+  package:
+    name:
+      - unzip
+      - tar
+    state: present
+  environment: "{{ proxy_env | default({}) }}"
+  tags: etcd, etcd_install
+
 - block:  # install etcd package from repo
     - name: Download "etcd" package
       get_url:
