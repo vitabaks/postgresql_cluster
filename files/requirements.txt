@@ -1,4 +1,4 @@
-urllib3>=1.24.2,<1.25
+urllib3>=1.25.9
 boto
 PyYAML
 six >= 1.7
