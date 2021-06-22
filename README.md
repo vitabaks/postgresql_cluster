@@ -73,7 +73,7 @@ RedHat and Debian based distros (x86_64)
 - CentOS: 7
 - OracleLinux 7
 
-:white_check_mark: tested, works fine: `Debian 9/10, Ubuntu 18.04/20.04, CentOS 7/8, OracleLinux 7`
+:white_check_mark: tested, works fine: `Debian 9/10, Ubuntu 18.04/20.04, CentOS 7/8, OracleLinux 7/8`
 
 ###### PostgreSQL versions: 
 all supported PostgreSQL versions
@@ -90,6 +90,7 @@ _Table of results of daily automated testing of cluster deployment:_
 | CentOS 7     | [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/vitabaks/postgresql_cluster/scheduled%20PostgreSQL%20(CentOS%207))](https://github.com/vitabaks/postgresql_cluster/actions?query=workflow%3A%22scheduled+PostgreSQL+%28CentOS+7%29%22) |
 | CentOS 8     | [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/vitabaks/postgresql_cluster/scheduled%20PostgreSQL%20(CentOS%208))](https://github.com/vitabaks/postgresql_cluster/actions?query=workflow%3A%22scheduled+PostgreSQL+%28CentOS+8%29%22) |
 | Oracle Linux 7 | [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/vitabaks/postgresql_cluster/scheduled%20PostgreSQL%20(OracleLinux%207))](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_oracle_linux7.yml) |
+| Oracle Linux 8 | [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/vitabaks/postgresql_cluster/scheduled%20PostgreSQL%20(OracleLinux%208))](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_oracle_linux8.yml) |
 
 
 ###### Ansible version 
