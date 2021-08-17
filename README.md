@@ -384,6 +384,13 @@ I can recommend the following backup and restore tools:
 
 Do not forget to validate your backups (for example [pgbackrest auto](https://github.com/vitabaks/pgbackrest_auto)).
 
+## How to start from scratch
+Should you need to start from very beginning, use the following to clean up:
+```shell
+sudo systemctl stop patroni
+sudo rm -rf /var/lib/postgresql/ # be careful with this if there are other PG clusters
+etcdctl rm --dir --recursive /service/postgres-cluster # adjust if you changed the cluster's name
+```
 
 ---
 
