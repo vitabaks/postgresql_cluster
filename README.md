@@ -386,11 +386,15 @@ Do not forget to validate your backups (for example [pgbackrest auto](https://gi
 
 ## How to start from scratch
 Should you need to start from very beginning, use the following to clean up:
-```shell
-sudo systemctl stop patroni
-sudo rm -rf /var/lib/postgresql/ # be careful with this if there are other PG clusters
-etcdctl rm --dir --recursive /service/postgres-cluster # adjust if you changed the cluster's name
-```
+- on all nodes, stop Patroni and remove PGDATA:
+    ```shell
+    sudo systemctl stop patroni
+    sudo rm -rf /var/lib/postgresql/ # be careful with this if there are other PG clusters
+    ```
+- then delete etcd entry (can be run on any node):
+    ```shell 
+    etcdctl rm --dir --recursive /service/postgres-cluster # adjust if you changed the cluster's name
+    ```
 
 ---
 
