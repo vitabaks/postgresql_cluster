@@ -112,6 +112,7 @@ postgresql_parameters:
   - {option: "effective_cache_size", value: "4GB"}  # please change this value
   - {option: "checkpoint_timeout", value: "15min"}
   - {option: "checkpoint_completion_target", value: "0.9"}
+  - {option: "wal_compression", value: "on"}
   - {option: "min_wal_size", value: "2GB"}  # for PostgreSQL 9.5 and above (for 9.4 use "checkpoint_segments")
   - {option: "max_wal_size", value: "4GB"}  # for PostgreSQL 9.5 and above (for 9.4 use "checkpoint_segments")
   - {option: "wal_buffers", value: "32MB"}
