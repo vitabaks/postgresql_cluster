@@ -218,6 +218,14 @@ patroni_retry_timeout: 10
 patroni_maximum_lag_on_failover: 1048576
 patroni_master_start_timeout: 300
 
+# https://patroni.readthedocs.io/en/latest/replica_bootstrap.html#standby-cluster
+patroni_standby_cluster:
+  host: ""  # an address of remote master
+  port: "5432"  # a port of remote master
+#  primary_slot_name: ""  # which slot on the remote master to use for replication (optional)
+#  restore_command: ""  # command to restore WAL records from the remote master to standby leader (optional)
+#  recovery_min_apply_delay: ""  # how long to wait before actually apply WAL records on a standby leader (optional)
+
 patroni_log_destination: stderr  # or 'logfile'
 # if patroni_log_destination: logfile
 patroni_log_dir: /var/log/patroni
