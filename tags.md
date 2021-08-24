@@ -86,4 +86,5 @@
 - - pgbackrest_install
 - - pgbackrest_conf
 - - pgbackrest_ssh_keys
+- netdata
 

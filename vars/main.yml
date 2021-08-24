@@ -326,4 +326,15 @@ pgbackrest_patroni_cluster_restore_command:
 disable_archive_command: true  # or 'false' to not disable archive_command after restore
 keep_patroni_dynamic_json: true  # or 'false' to remove patroni.dynamic.json after restore (if exists)
 
+
+# Netdata - https://github.com/netdata/netdata
+netdata_install: false  # or 'true' for install Netdata on postgresql cluster nodes (with kickstart.sh)
+netdata_install_options: "--stable-channel --disable-telemetry --dont-wait"
+netdata_conf:
+  web_bind_to: "*"
+  # https://learn.netdata.cloud/docs/store/change-metrics-storage
+  memory_mode: "dbengine"  # The long-term metrics storage with efficient RAM and disk usage.
+  page_cache_size: 64  # Determines the amount of RAM in MiB that is dedicated to caching Netdata metric values.
+  dbengine_disk_space: 1024  # Determines the amount of disk space in MiB that is dedicated to storing Netdata metric values.
+
 ...
