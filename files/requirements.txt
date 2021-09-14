@@ -1,7 +1,8 @@
 urllib3>=1.25.9
 boto
 PyYAML
-six >= 1.7
+requests>=2.26.0
+six>=1.7
 python-etcd>=0.4.3,<0.5
 python-consul>=0.7.1
 click>=4.1
