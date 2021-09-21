@@ -21,15 +21,15 @@ defaults
 
 listen stats
     mode http
-    bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:7000
+    bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ haproxy_listen_port.stats }}
     stats enable
     stats uri /
 
 listen master
 {% if cluster_vip is defined and cluster_vip | length > 0 %}
-    bind {{ cluster_vip }}:5000
+    bind {{ cluster_vip }}:{{ haproxy_listen_port.master }}
 {% else %}
-    bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:5000
+    bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ haproxy_listen_port.master }}
 {% endif %}
     maxconn {{ haproxy_maxconn.master }}
     option tcplog
@@ -49,9 +49,9 @@ server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hos
 
 listen replicas
 {% if cluster_vip is defined and cluster_vip | length > 0 %}
-    bind {{ cluster_vip }}:5001
+    bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas }}
 {% else %}
-    bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:5001
+    bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ haproxy_listen_port.replicas }}
 {% endif %}
     maxconn {{ haproxy_maxconn.replica }}
     option tcplog
@@ -72,9 +72,9 @@ server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hos
 
 listen replicas_sync
 {% if cluster_vip is defined and cluster_vip | length > 0 %}
-    bind {{ cluster_vip }}:5002
+    bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas_sync }}
 {% else %}
-    bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:5002
+    bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ haproxy_listen_port.replicas_sync }}
 {% endif %}
     maxconn {{ haproxy_maxconn.replica }}
     option tcplog
@@ -95,9 +95,9 @@ server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hos
 
 listen replicas_async
 {% if cluster_vip is defined and cluster_vip | length > 0 %}
-    bind {{ cluster_vip }}:5003
+    bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas_async }}
 {% else %}
-    bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:5003
+    bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ haproxy_listen_port.replicas_async }}
 {% endif %}
     maxconn {{ haproxy_maxconn.replica }}
     option tcplog

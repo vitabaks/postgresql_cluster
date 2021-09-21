@@ -28,6 +28,12 @@ synchronous_node_count: 1  # number of synchronous standby databases
 
 # Load Balancing
 with_haproxy_load_balancing: false  # or 'true' if you want to install and configure the load-balancing
+haproxy_listen_port:
+  master: 5000
+  replicas: 5001
+  replicas_sync: 5002
+  replicas_async: 5003
+  stats: 7000
 haproxy_maxconn:
   global: 100000
   master: 10000
