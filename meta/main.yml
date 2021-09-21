@@ -1,7 +1,8 @@
 ---
 galaxy_info:
   role_name: postgresql_cluster
-  description: PostgreSQL High-Availability Cluster (based on Patroni).
+  description: PostgreSQL High-Availability Cluster (based on Patroni)
+  namespace: vitabaks
   author: Vitaliy Kukharik (vitabaks@gmail.com)
   license: MIT
 
