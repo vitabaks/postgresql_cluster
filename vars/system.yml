@@ -137,11 +137,11 @@ firewall_allowed_tcp_ports_for:
 #    - ""
   balancers:
     - "{{ ansible_ssh_port | default(22) }}"
-    - "5000"  # HAProxy (read/write) master
-    - "5001"  # HAProxy (read only) all replicas
-    - "5002"  # HAProxy (read only) synchronous replica only
-    - "5003"  # HAProxy (read only) asynchronous replicas only
-    - "7000"  # HAProxy stats
+    - "{{ haproxy_listen_port.master }}"  # HAProxy (read/write) master
+    - "{{ haproxy_listen_port.replicas }}"  # HAProxy (read only) all replicas
+    - "{{ haproxy_listen_port.replicas_sync }}"  # HAProxy (read only) synchronous replica only
+    - "{{ haproxy_listen_port.replicas_async }}"  # HAProxy (read only) asynchronous replicas only
+    - "{{ haproxy_listen_port.stats }}"  # HAProxy stats
 #    - ""
 
 firewall_additional_rules_for:
