@@ -67,10 +67,10 @@
         msg:
           - +------------------------------------------------+
           - address (VIP) {{ cluster_vip }}
-          - port 5000 (read/write) master
-          - port 5001 (read only)  all replicas
-          - port 5002 (read only)  synchronous replica only
-          - port 5003 (read only)  asynchronous replicas only
+          - port {{ haproxy_listen_port.master }} (read/write) master
+          - port {{ haproxy_listen_port.replicas }} (read only)  all replicas
+          - port {{ haproxy_listen_port.replicas_sync }} (read only)  synchronous replica only
+          - port {{ haproxy_listen_port.replicas_async }} (read only)  asynchronous replicas only
           - +------------------------------------------------+
       when: with_haproxy_load_balancing|bool and
             synchronous_mode|bool
@@ -81,8 +81,8 @@
         msg:
           - +------------------------------------------------+
           - address (VIP) {{ cluster_vip }}
-          - port 5000 (read/write) master
-          - port 5001 (read only)  all replicas
+          - port {{ haproxy_listen_port.master }} (read/write) master
+          - port {{ haproxy_listen_port.replicas }} (read only)  all replicas
           - +------------------------------------------------+
       when: with_haproxy_load_balancing|bool and
             not synchronous_mode|bool
@@ -143,10 +143,10 @@
         msg:
           - +------------------------------------------------+
           - address {{ haproxy_nodes }}
-          - port 5000 (read/write) master
-          - port 5001 (read only)  all replicas
-          - port 5002 (read only)  synchronous replica only
-          - port 5003 (read only)  asynchronous replicas only
+          - port {{ haproxy_listen_port.master }} (read/write) master
+          - port {{ haproxy_listen_port.replicas }} (read only)  all replicas
+          - port {{ haproxy_listen_port.replicas_sync }} (read only)  synchronous replica only
+          - port {{ haproxy_listen_port.replicas_async }} (read only)  asynchronous replicas only
           - +------------------------------------------------+
       when: with_haproxy_load_balancing|bool and
             synchronous_mode|bool
@@ -157,8 +157,8 @@
         msg:
           - +------------------------------------------------+
           - address {{ haproxy_nodes }}
-          - port 5000 (read/write) master
-          - port 5001 (read only)  all replicas
+          - port {{ haproxy_listen_port.master }} (read/write) master
+          - port {{ haproxy_listen_port.replicas }} (read only)  all replicas
           - +------------------------------------------------+
       when: with_haproxy_load_balancing|bool and
             not synchronous_mode|bool

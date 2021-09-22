@@ -390,11 +390,11 @@
         line: "{{ item.line }}"
         backrefs: true
       loop:
-        - {regexp: '^.*bind.*:7000$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:7000'}
-        - {regexp: '^.*bind.*:5000$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:5000'}
-        - {regexp: '^.*bind.*:5001$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:5001'}
-        - {regexp: '^.*bind.*:5002$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:5002'}
-        - {regexp: '^.*bind.*:5003$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:5003'}
+        - {regexp: '^.*bind.*:{{ haproxy_listen_port.stats }}$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:{{ haproxy_listen_port.stats }}'}
+        - {regexp: '^.*bind.*:{{ haproxy_listen_port.master }}$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:{{ haproxy_listen_port.master }}'}
+        - {regexp: '^.*bind.*:{{ haproxy_listen_port.replicas }}$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:{{ haproxy_listen_port.replicas }}'}
+        - {regexp: '^.*bind.*:{{ haproxy_listen_port.replicas_sync }}$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:{{ haproxy_listen_port.replicas_sync }}'}
+        - {regexp: '^.*bind.*:{{ haproxy_listen_port.replicas_async }}$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:{{ haproxy_listen_port.replicas_async }}'}
       loop_control:
         label: "{{ item.line }}"
       notify: "restart haproxy"
@@ -407,11 +407,11 @@
         line: "{{ item.line }}"
         backrefs: true
       loop:
-        - {regexp: '^.*bind.*:7000$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:7000'}
-        - {regexp: '^.*bind.*:5000$', line: '    bind {{ cluster_vip }}:5000'}
-        - {regexp: '^.*bind.*:5001$', line: '    bind {{ cluster_vip }}:5001'}
-        - {regexp: '^.*bind.*:5002$', line: '    bind {{ cluster_vip }}:5002'}
-        - {regexp: '^.*bind.*:5003$', line: '    bind {{ cluster_vip }}:5003'}
+        - {regexp: '^.*bind.*:{{ haproxy_listen_port.stats }}$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:{{ haproxy_listen_port.stats }}'}
+        - {regexp: '^.*bind.*:{{ haproxy_listen_port.master }}$', line: '    bind {{ cluster_vip }}:{{ haproxy_listen_port.master }}'}
+        - {regexp: '^.*bind.*:{{ haproxy_listen_port.replicas }}$', line: '    bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas }}'}
+        - {regexp: '^.*bind.*:{{ haproxy_listen_port.replicas_sync }}$', line: '    bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas_sync }}'}
+        - {regexp: '^.*bind.*:{{ haproxy_listen_port.replicas_async }}$', line: '    bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas_async }}'}
       loop_control:
         label: "{{ item.line }}"
       notify: "restart haproxy"
