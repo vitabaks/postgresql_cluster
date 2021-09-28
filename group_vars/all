@@ -4,6 +4,7 @@
 os_valid_distributions:
   - RedHat
   - CentOS
+  - Rocky
   - OracleLinux
   - Ubuntu
   - Debian
@@ -11,6 +12,7 @@ os_valid_distributions:
 os_minimum_versions:
   RedHat: 7
   CentOS: 7
+  Rocky: 8.4
   OracleLinux: 7
   Ubuntu: 18.04
   Debian: 9
