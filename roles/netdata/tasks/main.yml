@@ -9,6 +9,12 @@
         dest: /tmp/kickstart.sh
         mode: +x
 
+    - name: Enable PowerTools repository
+      command: dnf config-manager --set-enabled "[Pp]ower[Tt]ools"
+      when:
+        - ansible_os_family == "RedHat"
+        - ansible_distribution_major_version is version('8', '>=')
+
     - name: Install Netdata
       command: /tmp/kickstart.sh {{ netdata_install_options | default('--dont-wait') }}
 
