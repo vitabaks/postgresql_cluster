@@ -1,4 +1,6 @@
 ---
+# yamllint disable rule:line-length
+
 - name: Ensure iptables is present.
   package: name=iptables state=present
 
@@ -40,13 +42,15 @@
       modprobe:
         name: nf_conntrack_ipv4
         state: present
-      when: ansible_kernel is version('4.19', '<')
+      when: ansible_kernel is version('4.19', '<') and
+            not (ansible_os_family == "RedHat" and ansible_distribution_version is version('8.3', '>='))
 
     - name: Load the nf_conntrack module
       modprobe:
         name: nf_conntrack
         state: present
-      when: ansible_kernel is version('4.19', '>=')
+      when: ansible_kernel is version('4.19', '>=') or
+            (ansible_os_family == "RedHat" and ansible_distribution_version is version('8.3', '>='))
 
     - name: sysctl | keep connections alive when enabling the firewall
       sysctl:
