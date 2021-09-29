@@ -10,11 +10,13 @@
   vars_files:
     - vars/main.yml
     - vars/system.yml
-    - "vars/{{ ansible_os_family }}.yml"
   vars:
     add_balancer: true
 
   pre_tasks:
+    - name: Include OS-specific variables
+      include_vars: "vars/{{ ansible_os_family }}.yml"
+
     - name: Checking Linux distribution
       fail:
         msg: "{{ ansible_distribution }} is not supported"
