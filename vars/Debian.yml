@@ -30,7 +30,7 @@ apt_repository:
 os_specific_packages:
   Debian-9: [python, python-dev, python-psycopg2, python-setuptools]
   Debian-10: [python, python-dev, python-psycopg2, python-setuptools]
-  Ubuntu-16: [python, python-dev, python-psycopg2, python-setuptools]
+  Debian-11: [python3]  # python 2 is not required
   Ubuntu-18: [python, python-dev, python-psycopg2, python-setuptools]
   Ubuntu-20: [python3]  # python 2 is not required
 system_packages:
