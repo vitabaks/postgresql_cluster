@@ -68,14 +68,12 @@ Written in Go. Cybertec Schönig & Schönig GmbH https://www.cybertec-postgresql
 ## Compatibility
 RedHat and Debian based distros (x86_64)
 
-###### Minimum OS versions:
-- Debian: 9
-- Ubuntu: 18.04
-- CentOS: 7
-- OracleLinux 7
-- RockyLinux 8.4
-
-:white_check_mark: tested, works fine: `Debian 9/10, Ubuntu 18.04/20.04, CentOS 7/8, OracleLinux 7/8, RockyLinux 8.4`
+###### Supported Linux Distributions:
+- **Debian**: 9, 10, 11
+- **Ubuntu**: 18.04, 20.04
+- **CentOS**: 7, 8
+- **Oracle Linux**: 7, 8
+- **Rocky Linux**: 8
 
 ###### PostgreSQL versions: 
 all supported PostgreSQL versions
@@ -87,6 +85,7 @@ _Table of results of daily automated testing of cluster deployment:_
 |--------------|:----------:|
 | Debian 9     | [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/vitabaks/postgresql_cluster/scheduled%20PostgreSQL%20(Debian%209))](https://github.com/vitabaks/postgresql_cluster/actions?query=workflow%3A%22scheduled+PostgreSQL+%28Debian+9%29%22) |
 | Debian 10    | [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/vitabaks/postgresql_cluster/scheduled%20PostgreSQL%20(Debian%2010))](https://github.com/vitabaks/postgresql_cluster/actions?query=workflow%3A%22scheduled+PostgreSQL+%28Debian+10%29%22) |
+| Debian 11    | [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/vitabaks/postgresql_cluster/scheduled%20PostgreSQL%20(Debian%2011))](https://github.com/vitabaks/postgresql_cluster/actions?query=workflow%3A%22scheduled+PostgreSQL+%28Debian+11%29%22) |
 | Ubuntu 18.04 | [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/vitabaks/postgresql_cluster/scheduled%20PostgreSQL%20(Ubuntu%2018.04))](https://github.com/vitabaks/postgresql_cluster/actions?query=workflow%3A%22scheduled+PostgreSQL+%28Ubuntu+18.04%29%22) |
 | Ubuntu 20.04 | [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/vitabaks/postgresql_cluster/scheduled%20PostgreSQL%20(Ubuntu%2020.04))](https://github.com/vitabaks/postgresql_cluster/actions?query=workflow%3A%22scheduled+PostgreSQL+%28Ubuntu+20.04%29%22) |
 | CentOS 7     | [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/vitabaks/postgresql_cluster/scheduled%20PostgreSQL%20(CentOS%207))](https://github.com/vitabaks/postgresql_cluster/actions?query=workflow%3A%22scheduled+PostgreSQL+%28CentOS+7%29%22) |

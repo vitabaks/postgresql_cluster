@@ -1,31 +1,15 @@
 ---
 # yamllint disable rule:truthy
-# yamllint disable rule:line-length
 
-name: Molecule
+name: scheduled PostgreSQL (Debian 11)
 
 on:
-  push:
-    branches:
-      - master
-  pull_request:
-    branches:
-      - master
+  schedule:
+    - cron: '15 0 * * *'
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        distro:
-          - debian11
-          - debian10
-          - ubuntu2004
-          - ubuntu1804
-          - centos8
-          - centos7
-          - rockylinux8
 
     steps:
       - name: checkout
@@ -44,6 +28,6 @@ jobs:
         env:
           PY_COLORS: '1'
           ANSIBLE_FORCE_COLOR: '1'
-          MOLECULE_DISTRO: ${{ matrix.distro }}
+          MOLECULE_DISTRO: debian11
 
 ...
