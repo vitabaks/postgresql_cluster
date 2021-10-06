@@ -58,7 +58,7 @@
 
 - block:
     # RedHat os family version 8 (and higher)
-    - name: Install HAProxy v1.8 package
+    - name: Install HAProxy package
       package:
         name: haproxy
         state: present
@@ -123,13 +123,15 @@
         force_apt_get: true
         name: "haproxy=1.8.*"
         state: present
-      when: ansible_distribution_major_version is version('18', '<=')
+      when: (ansible_distribution == "Debian" and ansible_distribution_major_version is version('10', '<=')) or
+            (ansible_distribution == 'Ubuntu' and ansible_distribution_major_version is version('18', '<='))
 
     - name: Install HAProxy package
       apt:
         name: haproxy
         state: present
-      when: ansible_distribution_major_version is version('20', '>=')
+      when: (ansible_distribution == "Debian" and ansible_distribution_major_version is version('11', '>=')) or
+            (ansible_distribution == 'Ubuntu' and ansible_distribution_major_version is version('20', '>='))
   environment: "{{ proxy_env | default({}) }}"
   when: ansible_os_family == "Debian" and
         installation_method == "repo" and
