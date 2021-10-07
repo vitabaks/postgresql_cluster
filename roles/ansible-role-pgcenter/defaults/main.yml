@@ -1,0 +1,15 @@
+---
+# Proxy variables (optional) for download package using a proxy server
+proxy_env: {}
+#  http_proxy: http://10.128.64.9:3128
+#  https_proxy: http://10.128.64.9:3128
+
+# -------------------------------------------
+
+pgcenter_version: "0.9.2"
+
+# Alias (optional)
+set_pgcenter_alias: false  # or true
+bash_alias: "alias pgcenter_top='pgcenter top -h /var/run/postgresql/ -U postgres -d postgres'"
+bash_alias_for: "postgres"
+bash_alias_path: "~{{ bash_alias_for }}/.bashrc"

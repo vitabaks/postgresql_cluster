@@ -32,7 +32,7 @@ os_specific_packages:
   Debian-10: [python, python-dev, python-psycopg2, python-setuptools]
   Debian-11: [python3]  # python 2 is not required
   Ubuntu-18: [python, python-dev, python-psycopg2, python-setuptools]
-  Ubuntu-20: [python3]  # python 2 is not required
+  Ubuntu-20: [python3, linux-tools-5.4.0-1045-aws]  # python 2 is not required
 system_packages:
   - "{{ os_specific_packages[ansible_distribution ~ '-' ~ ansible_distribution_major_version] }}"
   - python3
@@ -48,13 +48,18 @@ system_packages:
   - jq
   - iptables
   - acl
+  - moreutils
+  - libpq-dev
+  - linux-tools-common
 
 postgresql_packages:
   - postgresql-{{ postgresql_version }}
   - postgresql-client-{{ postgresql_version }}
   - postgresql-server-dev-{{ postgresql_version }}
   - postgresql-contrib-{{ postgresql_version }}
-#  - postgresql-{{ postgresql_version }}-repack"
+  - postgresql-{{ postgresql_version }}-pg-wait-sampling
+  - postgresql-{{ postgresql_version }}-pg-stat-kcache
+  - postgresql-{{ postgresql_version }}-dbgsym
 
 # Extra packages
 etcd_package_repo: "https://github.com/etcd-io/etcd/releases/download/{{ etcd_ver }}/etcd-{{ etcd_ver }}-linux-amd64.tar.gz"

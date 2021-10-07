@@ -175,6 +175,9 @@
     - role: pgbouncer/userlist
       when: pgbouncer_install|bool and pgbouncer_generate_userlist|bool
 
+    # https://github.com/vitabaks/ansible-role-pgcenter
+    - role: ansible-role-pgcenter
+
     - role: netdata
       when: netdata_install is defined and netdata_install|bool
 
