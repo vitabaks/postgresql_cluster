@@ -181,7 +181,7 @@ postgresql_parameters:
   - {option: "max_standby_streaming_delay", value: "30s"}
 #  - {option: "wal_receiver_status_interval", value: "10s"}
 #  - {option: "old_snapshot_threshold", value: "60min"}  # for PostgreSQL 9.6 and above (1min-60d)
-#  - {option: "", value: ""}
+  - {option: "ssl", value: "off"}
 #  - {option: "", value: ""}
 
 
