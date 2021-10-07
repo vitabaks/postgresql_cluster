@@ -32,7 +32,7 @@ os_specific_packages:
   Debian-10: [python, python-dev, python-psycopg2, python-setuptools]
   Debian-11: [python3]  # python 2 is not required
   Ubuntu-18: [python, python-dev, python-psycopg2, python-setuptools]
-  Ubuntu-20: [python3, linux-tools-5.4.0-1045-aws]  # python 2 is not required
+  Ubuntu-20: [python3, linux-tools-common, linux-tools-5.4.0-1045-aws]  # python 2 is not required
 system_packages:
   - "{{ os_specific_packages[ansible_distribution ~ '-' ~ ansible_distribution_major_version] }}"
   - python3
@@ -50,7 +50,6 @@ system_packages:
   - acl
   - moreutils
   - libpq-dev
-  - linux-tools-common
   - build-essential
   - libreadline-dev
   - zlib1g-dev
