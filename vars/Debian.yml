@@ -51,6 +51,16 @@ system_packages:
   - moreutils
   - libpq-dev
   - linux-tools-common
+  - build-essential
+  - libreadline-dev
+  - zlib1g-dev
+  - flex
+  - bison
+  - libxml2-dev
+  - libxslt-dev
+  - libssl-dev
+  - libxml2-utils
+  - xsltproc
 
 postgresql_packages:
   - postgresql-{{ postgresql_version }}
