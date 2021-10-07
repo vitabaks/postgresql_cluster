@@ -146,7 +146,7 @@ postgresql_parameters:
   - {option: "max_replication_slots", value: "10"}
   - {option: "hot_standby", value: "on"}
   - {option: "wal_log_hints", value: "on"}
-  - {option: "shared_preload_libraries", value: "pg_stat_statements,auto_explain,pg_wait_sampling"}
+  - {option: "shared_preload_libraries", value: "pg_stat_statements,auto_explain,pg_wait_sampling,pg_stat_kcache"}
   - {option: "pg_wait_sampling.profile_pid", value: "false"}
   - {option: "pg_wait_sampling.profile_queries", value: "true"}
   - {option: "pg_stat_statements.track", value: "all"}
