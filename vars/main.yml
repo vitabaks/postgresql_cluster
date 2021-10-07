@@ -97,7 +97,7 @@ postgresql_databases:
 postgresql_extensions:
   - {ext: "pg_stat_statements", db: "test"}
   - {ext: "pg_stat_kcache", db: "test"}
-  - {ext: "pg_waittest_sampling", db: "test"}
+  - {ext: "pg_wait_sampling", db: "test"}
 #  - {ext: "pg_stat_statements", db: ""}
 #  - {ext: "pg_repack", db: ""}  # postgresql-<version>-repack package is required
 #  - {ext: "pg_stat_kcache", db: ""}  # postgresql-<version>-pg-stat-kcache package is required
