@@ -213,7 +213,7 @@ pgbouncer_generate_userlist: true  # generate userlist.txt (all users and passwo
 
 pgbouncer_pools:
   - {name: "postgres", dbname: "postgres", pool_parameters: ""}
-#  - {name: "mydatabase", dbname: "mydatabase", pool_parameters: "pool_size=20 pool_mode=transaction"}
+  - {name: "test", dbname: "test", pool_parameters: "pool_size=40 pool_mode=transaction"}
 #  - {name: "", dbname: "", pool_parameters: ""}
 #  - {name: "", dbname: "", pool_parameters: ""}
 
