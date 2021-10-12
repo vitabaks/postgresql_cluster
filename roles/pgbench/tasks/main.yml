@@ -1,0 +1,26 @@
+---
+# yamllint disable rule:line-length
+
+- block:
+    - name: "Initialize database {{ pgbench.database }}"
+      command: "{{ postgresql_bin_dir }}/pgbench -h {{ postgresql_unix_socket_dir }} -U postgres -i -q -s {{ pgbench.scale }} {{ pgbench.database }}"
+      async: 36000  # timeout 10 hours
+      poll: 0
+      register: pgbench_init_job
+
+    - name: Waiting for initialize database finished
+      async_status:
+        jid: "{{ pgbench_init_job.ansible_job_id  }}"
+      register: pgbench_init_job_result
+      until: pgbench_init_job_result.finished
+      retries: 36000  # timeout 10 hours
+      delay: 10
+  become: true
+  become_user: postgres
+  when:
+    - is_master == "true"
+    - pgbench.initialize is defined
+    - pgbench.initialize|bool
+  tags: pgbench
+
+...

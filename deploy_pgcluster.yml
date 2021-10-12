@@ -175,6 +175,9 @@
     - role: pgbouncer/userlist
       when: pgbouncer_install|bool and pgbouncer_generate_userlist|bool
 
+    - role: pgbench
+      when: pgbench.initialize is defined and pgbench.initialize|bool
+
     # https://github.com/vitabaks/ansible-role-pgcenter
     - role: ansible-role-pgcenter
 

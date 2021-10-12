@@ -218,6 +218,13 @@ pgbouncer_pools:
 #  - {name: "", dbname: "", pool_parameters: ""}
 
 
+# pgbench - initialize database for tests
+pgbench:
+  initialize: false  # or 'true' for initialize database
+  scale: 100  # ~1.4 GB (10000000 tuples)
+  database: test
+
+
 # Extended variables (optional)
 patroni_ttl: 30
 patroni_loop_wait: 10
