@@ -201,7 +201,7 @@ postgresql_pg_ident: []
 
 
 # PgBouncer parameters
-pgbouncer_install: true  # or 'false' if you do not want to install and configure the pgbouncer service
+pgbouncer_install: false  # or 'false' if you do not want to install and configure the pgbouncer service
 pgbouncer_conf_dir: "/etc/pgbouncer"
 pgbouncer_log_dir: "/var/log/pgbouncer"
 pgbouncer_listen_port: 6432
@@ -213,7 +213,7 @@ pgbouncer_generate_userlist: true  # generate userlist.txt (all users and passwo
 
 pgbouncer_pools:
   - {name: "postgres", dbname: "postgres", pool_parameters: ""}
-  - {name: "test", dbname: "test", pool_parameters: "pool_size=40 pool_mode=transaction"}
+#  - {name: "test", dbname: "test", pool_parameters: "pool_size=40 pool_mode=transaction"}
 #  - {name: "", dbname: "", pool_parameters: ""}
 #  - {name: "", dbname: "", pool_parameters: ""}
 
