@@ -7,23 +7,24 @@
 
 # if dcs_exists: false and dcs_type: "etcd" (in vars/main.yml)
 [etcd_cluster]  # recommendation: 3 or 5-7 nodes
-172.31.15.90  # one etcd node for test only
+172.31.4.11  # one etcd node for test only
 
 # if with_haproxy_load_balancing: true (in vars/main.yml)
 [balancers]
 
 # PostgreSQL nodes
 [master]
-172.31.15.90 hostname=pgnode01 postgresql_exists='false'
+172.31.4.11 hostname=pgnode01 subtrans_buffers=false  # without SLRU patches
 
 [replica]
-172.31.4.12 hostname=pgnode02 postgresql_exists='false'
-172.31.4.12 hostname=pgnode02 postgresql_exists='false'
-172.31.4.12 hostname=pgnode02 postgresql_exists='false'
-172.31.4.12 hostname=pgnode02 postgresql_exists='false'
-172.31.4.12 hostname=pgnode02 postgresql_exists='false'
-172.31.4.12 hostname=pgnode02 postgresql_exists='false'
-172.31.4.12 hostname=pgnode02 postgresql_exists='false'
+172.31.4.12 hostname=pgnode02 subtrans_buffers=256kB only_guc=true  # only GUC-config patch is applied
+172.31.4.13 hostname=pgnode03 subtrans_buffers=1MB only_guc=true  # only GUC-config patch is applied
+172.31.4.14 hostname=pgnode04 subtrans_buffers=10MB only_guc=true  # only GUC-config patch is applied
+172.31.4.15 hostname=pgnode05 subtrans_buffers=100MB only_guc=true  # only GUC-config patch is applied
+172.31.4.16 hostname=pgnode06 subtrans_buffers=256kB  # both v17 patches are applied: GUC-config and changes SLRU algo
+172.31.4.17 hostname=pgnode07 subtrans_buffers=1MB  # both v17 patches are applied: GUC-config and changes SLRU algo
+172.31.4.18 hostname=pgnode08 subtrans_buffers=10MB  # both v17 patches are applied: GUC-config and changes SLRU algo
+172.31.4.19 hostname=pgnode09 subtrans_buffers=100MB  # both v17 patches are applied: GUC-config and changes SLRU algo
 
 [postgres_cluster:children]
 master

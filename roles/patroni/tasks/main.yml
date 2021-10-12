@@ -933,6 +933,19 @@
   when: is_master != "true"
   tags: patroni, patroni_start_replica, point_in_time_recovery
 
+- block:  # set subtrans_buffers for slru-x4mmm-v17-pg14 patches
+    - name: Set subtrans_buffers parameter
+      lineinfile:
+        dest: "{{ postgresql_conf_dir }}/postgresql.base.conf"
+        regexp: subtrans_buffers
+        line: "subtrans_buffers = {{ subtrans_buffers }}"
+
+    - name: Restart patroni service for apply subtrans_buffers changes
+      systemd:
+        name: patroni
+        state: restarted
+  when: subtrans_buffers is defined and not subtrans_buffers == "false"
+
 # create symlink pg_xlog/pg_wal to custom WAL dir
 - import_tasks: custom_wal_dir.yml
   when: postgresql_wal_dir is defined and postgresql_wal_dir | length > 0

@@ -188,4 +188,21 @@
   when: cluster_vip is not defined or cluster_vip | length < 1
   tags: conn_info, cluster_info, cluster_status
 
+# (optional) show subtrans_buffers
+- block:
+    - name: Get subtrans_buffers
+      become: true
+      become_user: postgres
+      command: '{{ postgresql_bin_dir }}/psql -h {{ postgresql_unix_socket_dir }} -p {{ postgresql_port }} -U postgres -tAc "show subtrans_buffers"'
+      register: subtrans_buffers_result
+      changed_when: false
+
+    - name: Show subtrans_buffers
+      debug:
+        msg: "{{ ansible_hostname }}: subtrans_buffers={{ subtrans_buffers_result.stdout }}"
+  ignore_errors: true
+  when:
+    - subtrans_buffers is defined
+    - not subtrans_buffers == "false"
+
 ...

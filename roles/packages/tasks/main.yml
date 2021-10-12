@@ -1,4 +1,5 @@
 ---
+# yamllint disable rule:line-length
 
 # Install packages from files
 - block:
@@ -124,5 +125,35 @@
   environment: "{{ proxy_env | default({}) }}"
   when: ansible_os_family == "Debian" and installation_method == "repo"
   tags: install_postgres
+
+- block:  # replace binaries with slru-x4mmm-v17-pg14 patches
+    - name: "Clone postgres repository --branch slru-x4mmm-v17-pg14"
+      git:
+        repo: https://gitlab.com/NikolayS/postgres.git
+        dest: /tmp/postgres
+        version: slru-x4mmm-v17-pg14
+      when: only_guc is not defined or not only_guc == "true"
+
+    - name: "Clone postgres repository --branch slru-x4mmm-v17-pg14-only-guc"
+      git:
+        repo: https://gitlab.com/NikolayS/postgres.git
+        dest: /tmp/postgres
+        version: slru-x4mmm-v17-pg14-only-guc
+      when: only_guc is defined and only_guc == "true"
+
+    - name: Replace postgres binaries with patched ones
+      become: true
+      become_user: root
+      command: "{{ item }}"
+      loop:
+        - ./configure --prefix=/usr/lib/postgresql/{{ postgresql_version }} --exec-prefix=/usr/lib/postgresql/{{ postgresql_version }}
+        - make
+        - make install
+      args:
+        chdir: /tmp/postgres
+  when:
+    - ansible_os_family == "Debian"
+    - subtrans_buffers is defined
+    - not subtrans_buffers == "false"
 
 ...
