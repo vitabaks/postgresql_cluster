@@ -1,4 +1,7 @@
 ---
+# yamllint disable rule:line-length
+# yamllint disable rule:brackets
+# yamllint disable rule:truthy
 
 - name: download and extract "pgcenter_{{ pgcenter_version }}_linux_amd64.tar.gz" into /tmp
   unarchive:

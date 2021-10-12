@@ -18,6 +18,12 @@
 
 [replica]
 172.31.4.12 hostname=pgnode02 postgresql_exists='false'
+172.31.4.12 hostname=pgnode02 postgresql_exists='false'
+172.31.4.12 hostname=pgnode02 postgresql_exists='false'
+172.31.4.12 hostname=pgnode02 postgresql_exists='false'
+172.31.4.12 hostname=pgnode02 postgresql_exists='false'
+172.31.4.12 hostname=pgnode02 postgresql_exists='false'
+172.31.4.12 hostname=pgnode02 postgresql_exists='false'
 
 [postgres_cluster:children]
 master

@@ -1,4 +1,6 @@
 ---
+# yamllint disable rule:brackets
+# yamllint disable rule:truthy
 
 - name: check user "{{ bash_alias_for }}" | create user if not already exist
   user:

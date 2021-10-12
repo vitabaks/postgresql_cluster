@@ -1,4 +1,6 @@
 ---
+# yamllint disable rule:truthy
+
 # tasks file for ansible-role-pgcenter
 
 - import_tasks: pgcenter.yml

@@ -1,4 +1,6 @@
 ---
+# yamllint disable rule:line-length
+
 # Proxy variables (optional) for download package using a proxy server
 proxy_env: {}
 #  http_proxy: http://10.128.64.9:3128
