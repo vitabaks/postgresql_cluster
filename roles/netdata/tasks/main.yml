@@ -26,6 +26,11 @@
         group: root
         mode: u=wrx,g=rx,o=r,+x
 
+    - name: replace netdata postgres.chart.py with the pg_stat_slru and wait_event_subtrans charts
+      get_url:
+        url: https://raw.githubusercontent.com/postgres-ai/netdata/extend-postgres/collectors/python.d.plugin/postgres/postgres.chart.py
+        dest: /usr/libexec/netdata/python.d/postgres.chart.py
+
     - name: Restart Netdata
       service:
         name: netdata
