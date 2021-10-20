@@ -107,7 +107,7 @@ postgresql_extensions: []
 
 # postgresql parameters to bootstrap dcs (are parameters for example)
 postgresql_parameters:
-  - {option: "max_connections", value: "100"}
+  - {option: "max_connections", value: "500"}
   - {option: "superuser_reserved_connections", value: "5"}
   - {option: "max_locks_per_transaction", value: "64"}  # raise this value (ex. 512) if you have queries that touch many different tables (partitioning)
   - {option: "max_prepared_transactions", value: "0"}
@@ -118,9 +118,8 @@ postgresql_parameters:
   - {option: "effective_cache_size", value: "4GB"}  # please change this value
   - {option: "checkpoint_timeout", value: "15min"}
   - {option: "checkpoint_completion_target", value: "0.9"}
-  - {option: "wal_compression", value: "on"}
-  - {option: "min_wal_size", value: "2GB"}  # for PostgreSQL 9.5 and above (for 9.4 use "checkpoint_segments")
-  - {option: "max_wal_size", value: "4GB"}  # for PostgreSQL 9.5 and above (for 9.4 use "checkpoint_segments")
+  - {option: "min_wal_size", value: "2GB"}
+  - {option: "max_wal_size", value: "8GB"}  # or 16GB/32GB
   - {option: "wal_buffers", value: "32MB"}
   - {option: "default_statistics_target", value: "1000"}
   - {option: "seq_page_cost", value: "1"}
@@ -129,10 +128,10 @@ postgresql_parameters:
   - {option: "synchronous_commit", value: "on"}  # or 'off' if you can you lose single transactions in case of a crash
   - {option: "autovacuum", value: "on"}  # never turn off the autovacuum!
   - {option: "autovacuum_max_workers", value: "5"}
-  - {option: "autovacuum_vacuum_scale_factor", value: "0.01"}
-  - {option: "autovacuum_analyze_scale_factor", value: "0.02"}
-  - {option: "autovacuum_vacuum_cost_limit", value: "200"}  # or 500/1000
-  - {option: "autovacuum_vacuum_cost_delay", value: "20"}
+  - {option: "autovacuum_vacuum_scale_factor", value: "0.01"}  # or 0.005/0.001
+  - {option: "autovacuum_analyze_scale_factor", value: "0.01"}
+  - {option: "autovacuum_vacuum_cost_limit", value: "500"}  # or 1000/5000
+  - {option: "autovacuum_vacuum_cost_delay", value: "2"}
   - {option: "autovacuum_naptime", value: "1s"}
   - {option: "max_files_per_process", value: "4096"}
   - {option: "archive_mode", value: "on"}
@@ -140,16 +139,18 @@ postgresql_parameters:
   - {option: "archive_command", value: "cd ."}  # not doing anything yet with WAL-s
 #  - {option: "archive_command", value: "wal-g wal-push %p"}  # archive WAL-s using WAL-G
 #  - {option: "archive_command", value: "pgbackrest --stanza={{ pgbackrest_stanza }} archive-push %p"}  # archive WAL-s using pgbackrest
-  - {option: "wal_level", value: "replica"}  # "replica" for PostgreSQL 9.6 and above (for 9.4, 9.5 use "hot_standby")
-  - {option: "wal_keep_segments", value: "130"}
+  - {option: "wal_level", value: "replica"}
+  - {option: "wal_keep_size", value: "2GB"}
   - {option: "max_wal_senders", value: "10"}
   - {option: "max_replication_slots", value: "10"}
   - {option: "hot_standby", value: "on"}
   - {option: "wal_log_hints", value: "on"}
+  - {option: "wal_compression", value: "on"}
   - {option: "shared_preload_libraries", value: "pg_stat_statements,auto_explain"}
   - {option: "pg_stat_statements.max", value: "10000"}
   - {option: "pg_stat_statements.track", value: "all"}
-  - {option: "pg_stat_statements.save", value: "off"}
+  - {option: "pg_stat_statements.track_utility", value: "false"}
+  - {option: "pg_stat_statements.save", value: "true"}
   - {option: "auto_explain.log_min_duration", value: "10s"}  # 10 sec (by default). Decrease this value if necessary
   - {option: "auto_explain.log_analyze", value: "true"}
   - {option: "auto_explain.log_buffers", value: "true"}
@@ -171,15 +172,15 @@ postgresql_parameters:
   - {option: "log_line_prefix", value: "'%t [%p-%l] %r %q%u@%d '"}
   - {option: "log_filename", value: "'postgresql-%a.log'"}
   - {option: "log_directory", value: "{{ postgresql_log_dir }}"}
-#  - {option: "idle_in_transaction_session_timeout", value: "600000"}  # for PostgreSQL 9.6 and above
+  - {option: "hot_standby_feedback", value: "on"}  # allows feedback from a hot standby to the primary that will avoid query conflicts
+  - {option: "max_standby_streaming_delay", value: "30s"}
+  - {option: "wal_receiver_status_interval", value: "10s"}
+  - {option: "idle_in_transaction_session_timeout", value: "10min"}  # reduce this timeout if possible
 #  - {option: "max_worker_processes", value: "24"}
-#  - {option: "max_parallel_workers", value: "24"}  # for PostgreSQL 10 and above
-#  - {option: "max_parallel_workers_per_gather", value: "4"}  # for PostgreSQL 9.6 and above
-#  - {option: "max_parallel_maintenance_workers", value: "2"}  # for PostgreSQL 11 and above
-#  - {option: "hot_standby_feedback", value: "on"}  # allows feedback from a hot standby to the primary that will avoid query conflicts
-#  - {option: "max_standby_streaming_delay", value: "30s"}
-#  - {option: "wal_receiver_status_interval", value: "10s"}
-#  - {option: "old_snapshot_threshold", value: "60min"}  # for PostgreSQL 9.6 and above (1min-60d)
+#  - {option: "max_parallel_workers", value: "12"}
+#  - {option: "max_parallel_workers_per_gather", value: "2"}
+#  - {option: "max_parallel_maintenance_workers", value: "2"}
+#  - {option: "old_snapshot_threshold", value: "60min"}
 #  - {option: "", value: ""}
 #  - {option: "", value: ""}
 
