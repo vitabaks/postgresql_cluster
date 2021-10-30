@@ -19,16 +19,10 @@
       when: not ansible_os_family == 'Rocky' and not ansible_os_family == 'AlmaLinux'
 
     # For compatibility with Ansible old versions
-    # (support for Rocky Linux has been added to Ansible 2.11)
+    # (support for RockyLinux and AlmaLinux has been added to Ansible 2.11)
     - name: Include OS-specific variables
       include_vars: "vars/RedHat.yml"
-      when: ansible_os_family == 'Rocky'
-
-    # For compatibility with Ansible old versions
-    # (support for AlmaLinux has been added to Ansible 2.11)
-    - name: Include OS-specific variables
-      include_vars: "vars/RedHat.yml"
-      when: ansible_os_family == 'AlmaLinux'
+      when: ansible_os_family == 'Rocky' or ansible_os_family == 'AlmaLinux'
 
     - name: Checking Linux distribution
       fail:
