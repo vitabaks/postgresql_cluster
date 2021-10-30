@@ -74,6 +74,7 @@ RedHat and Debian based distros (x86_64)
 - **CentOS**: 7, 8
 - **Oracle Linux**: 7, 8
 - **Rocky Linux**: 8
+- **AlmaLinux**: 8
 
 ###### PostgreSQL versions: 
 all supported PostgreSQL versions

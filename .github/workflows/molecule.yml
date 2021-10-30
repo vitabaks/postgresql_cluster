@@ -26,6 +26,7 @@ jobs:
           - centos8
           - centos7
           - rockylinux8
+          # - almalinux8  #TODO
 
     steps:
       - name: checkout
