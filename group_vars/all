@@ -8,6 +8,7 @@ os_valid_distributions:
   - OracleLinux
   - Ubuntu
   - Debian
+  - AlmaLinux
 
 os_minimum_versions:
   RedHat: 7
@@ -16,3 +17,4 @@ os_minimum_versions:
   OracleLinux: 7
   Ubuntu: 18.04
   Debian: 9
+  AlmaLinux: 8.3
