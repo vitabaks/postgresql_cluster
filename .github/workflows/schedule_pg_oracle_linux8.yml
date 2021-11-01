@@ -24,10 +24,11 @@ jobs:
         run: pip3 install molecule[docker] ansible
 
       - name: Run Molecule tests
-        run: molecule test --scenario-name oraclelinux
+        run: molecule test
         env:
           PY_COLORS: '1'
           ANSIBLE_FORCE_COLOR: '1'
-          MOLECULE_DISTRO_TAG: latest
+          IMAGE_DISTRO: oraclelinux8
+          IMAGE_NAMESPACE: glillico
 
 ...

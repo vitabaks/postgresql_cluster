@@ -18,15 +18,37 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        distro:
-          - debian11
-          - debian10
-          - ubuntu2004
-          - ubuntu1804
-          - centos8
-          - centos7
-          - rockylinux8
-          # - almalinux8  #TODO
+        config:
+          - distro: debian11
+            tag: latest
+            namespace: geerlingguy
+          - distro: debian10
+            tag: latest
+            namespace: geerlingguy
+          - distro: ubuntu2004
+            tag: latest
+            namespace: geerlingguy
+          - distro: ubuntu1804
+            tag: latest
+            namespace: geerlingguy
+          - distro: centos8
+            tag: latest
+            namespace: geerlingguy
+          - distro: centos7
+            tag: latest
+            namespace: geerlingguy
+          - distro: rockylinux8
+            tag: latest
+            namespace: geerlingguy
+          - distro: almalinux8
+            tag: latest
+            namespace: glillico
+          - distro: oraclelinux8
+            tag: latest
+            namespace: glillico
+          - distro: oraclelinux7
+            tag: latest
+            namespace: glillico
 
     steps:
       - name: checkout
@@ -45,6 +67,8 @@ jobs:
         env:
           PY_COLORS: '1'
           ANSIBLE_FORCE_COLOR: '1'
-          MOLECULE_DISTRO: ${{ matrix.distro }}
+          IMAGE_DISTRO: ${{ matrix.config.distro }}
+          IMAGE_TAG: ${{ matrix.config.tag }}
+          IMAGE_NAMESPACE: ${{ matrix.config.namespace }}
 
 ...

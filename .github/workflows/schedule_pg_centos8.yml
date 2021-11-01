@@ -28,6 +28,6 @@ jobs:
         env:
           PY_COLORS: '1'
           ANSIBLE_FORCE_COLOR: '1'
-          MOLECULE_DISTRO: centos8
+          IMAGE_DISTRO: centos8
 
 ...
