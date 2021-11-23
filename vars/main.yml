@@ -176,6 +176,7 @@ postgresql_parameters:
   - {option: "max_standby_streaming_delay", value: "30s"}
   - {option: "wal_receiver_status_interval", value: "10s"}
   - {option: "idle_in_transaction_session_timeout", value: "10min"}  # reduce this timeout if possible
+  - {option: "jit", value: "off"}
 #  - {option: "max_worker_processes", value: "24"}
 #  - {option: "max_parallel_workers", value: "12"}
 #  - {option: "max_parallel_workers_per_gather", value: "2"}
