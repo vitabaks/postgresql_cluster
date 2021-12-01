@@ -50,6 +50,11 @@ bootstrap:
        recovery_target_timeline: latest
        restore_command: wal-g wal-fetch %f %p
 {% endif %}
+{% if patroni_cluster_bootstrap_method == 'pg_probackup' %}
+  pg_probackup:
+    command: {{ pg_probackup_patroni_cluster_bootstrap_command }}
+    no_params: true
+{% endif %}
   dcs:
     ttl: {{ patroni_ttl |d(30, true) |int }}
     loop_wait: {{ patroni_loop_wait |d(10, true) |int }}
@@ -170,6 +175,12 @@ postgresql:
     {% if postgresql_version is version('10', '>=') and postgresql_wal_dir is defined and postgresql_wal_dir | length > 0 %}
     waldir: {{ postgresql_wal_dir }}
     {% endif %}
+  {% endif %}
+  {% if 'pg_probackup' in patroni_create_replica_methods %}
+  pg_probackup:
+    {% for item in pg_probackup %}
+    {{ item.option }}: {{ item.value }}
+    {% endfor %}
   {% endif %}
 {% else %}
     - basebackup
