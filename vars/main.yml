@@ -282,7 +282,6 @@ pg_probackup:
   - {option: "command", value: "pg_probackup-{{ pg_probackup_version }} restore -B {{ pg_probackup_dir }} --instance {{ pg_probackup_instance }} -j {{ pg_probackup_threads }} {{ pg_probackup_add_keys }}"}
   - {option: "no_params", value: "true"}
 
-
 # "restore_command" written to recovery.conf when configuring follower (create replica)
 postgresql_restore_command: ""
 # postgresql_restore_command: "wal-g wal-fetch %f %p"  # restore WAL-s using WAL-G
@@ -291,14 +290,13 @@ postgresql_restore_command: ""
 
 # pg_probackup
 pg_probackup_install: false  # or 'true'
-pg_probackup_install_from_pgdg_repo: true  # or 'false'
+pg_probackup_install_from_postgrespro_repo: true  # or 'false'
 pg_probackup_version: "13"
 pg_probackup_instance: "pg_probackup_instance_name"
 pg_probackup_dir: "/mnt/backup_dir"
 pg_probackup_threads: "4"
 pg_probackup_add_keys: "--recovery-target=latest --skip-external-dirs --no-validate"
 pg_probackup_patroni_cluster_bootstrap_command: "pg_probackup-{{ pg_probackup_version }} restore -B {{ pg_probackup_dir }} --instance {{ pg_probackup_instance }} -j {{ pg_probackup_threads }} {{ pg_probackup_add_keys }}"
-
 
 # WAL-G
 wal_g_install: false  # or 'true'

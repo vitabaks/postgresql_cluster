@@ -25,7 +25,7 @@
   when:
     - installation_method == "repo"
     - ansible_os_family == "Debian"
-    - pg_probackup_install_from_pgdg_repo|bool
+    - pg_probackup_install_from_postgrespro_repo|bool
   tags: pg_probackup, pg_probackup_repo, pg_probackup_install
 
 - block:  # RedHat pgdg repo
@@ -56,7 +56,7 @@
   when:
     - installation_method == "repo"
     - ansible_os_family == "RedHat"
-    - pg_probackup_install_from_pgdg_repo|bool
+    - pg_probackup_install_from_postgrespro_repo|bool
   tags: pg_probackup, pg_probackup_repo, pg_probackup_install
 
 - name: Install pg_probackup
@@ -69,7 +69,6 @@
   when:
     - installation_method == "repo"
     - ansible_os_family == "Debian"
-    - pg_probackup_install_from_pgdg_repo|bool
   tags: pg_probackup, pg_probackup_install
 
 - name: Install pg_probackup
@@ -82,7 +81,6 @@
   when:
     - installation_method == "repo"
     - ansible_os_family == "RedHat"
-    - pg_probackup_install_from_pgdg_repo|bool
   tags: pg_probackup, pg_probackup_install
 
 ...
