@@ -132,6 +132,9 @@
   roles:
     - role: wal-g
       when: wal_g_install|bool
+      
+    - role: pg_probackup
+      when: pg_probackup_install|bool
 
     - role: pgbouncer
       when: pgbouncer_install|bool
