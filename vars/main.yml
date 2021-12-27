@@ -26,7 +26,7 @@ synchronous_mode_strict: false  # if 'true' then block all client writes to the 
 synchronous_node_count: 1  # number of synchronous standby databases
 
 # Password encryption
-password_encryption: "scram-sha-256" # or "md5" if your clients do not work with passwords encrypted with SCRAM-SHA-256
+password_encryption: "scram-sha-256"  # or "md5" if your clients do not work with passwords encrypted with SCRAM-SHA-256
 
 # Load Balancing
 with_haproxy_load_balancing: false  # or 'true' if you want to install and configure the load-balancing
