@@ -25,6 +25,8 @@ synchronous_mode: false  # or 'true' for enable synchronous database replication
 synchronous_mode_strict: false  # if 'true' then block all client writes to the master, when a synchronous replica is not available
 synchronous_node_count: 1  # number of synchronous standby databases
 
+# Password encryption
+password_encryption: "scram-sha-256" # or "md5" if your clients do not work with passwords encrypted with SCRAM-SHA-256
 
 # Load Balancing
 with_haproxy_load_balancing: false  # or 'true' if you want to install and configure the load-balancing
@@ -109,7 +111,7 @@ postgresql_extensions: []
 postgresql_parameters:
   - {option: "max_connections", value: "500"}
   - {option: "superuser_reserved_connections", value: "5"}
-  - {option: "password_encryption", value: "scram-sha-256"}
+  - {option: "password_encryption", value: "{{ password_encryption }}"}
   - {option: "max_locks_per_transaction", value: "64"}  # raise this value (ex. 512) if you have queries that touch many different tables (partitioning)
   - {option: "max_prepared_transactions", value: "0"}
   - {option: "huge_pages", value: "try"}  # or "on" if you set "vm_nr_hugepages" in kernel parameters
@@ -191,9 +193,9 @@ postgresql_parameters:
 postgresql_pg_hba:
   - {type: "local", database: "all", user: "postgres", address: "", method: "trust"}  # "local=trust" required for ansible modules "postgresql_(user,db,ext)"
   - {type: "local", database: "all", user: "all", address: "", method: "peer"}
-  - {type: "host", database: "all", user: "all", address: "127.0.0.1/32", method: "md5"}
-  - {type: "host", database: "all", user: "all", address: "::1/128", method: "md5"}
-#  - {type: "host", database: "mydatabase", user: "mydb-user", address: "192.168.0.0/24", method: "md5"}
+  - {type: "host", database: "all", user: "all", address: "127.0.0.1/32", method: "{{ password_encryption }}"}
+  - {type: "host", database: "all", user: "all", address: "::1/128", method: "{{ password_encryption }}"}
+#  - {type: "host", database: "mydatabase", user: "mydb-user", address: "192.168.0.0/24", method: "{{ password_encryption }}"}
 #  - {type: "host", database: "all", user: "all", address: "192.168.0.0/24", method: "ident", options: "map=main"}  # use pg_ident
 
 # list of lines that Patroni will use to generate pg_ident.conf
@@ -212,6 +214,7 @@ pgbouncer_max_db_connections: 1000
 pgbouncer_default_pool_size: 20
 pgbouncer_default_pool_mode: "session"
 pgbouncer_generate_userlist: true  # generate the authentication file (userlist.txt) from the pg_shadow system table
+pgbouncer_auth_type: "{{ password_encryption }}"
 
 pgbouncer_pools:
   - {name: "postgres", dbname: "postgres", pool_parameters: ""}
