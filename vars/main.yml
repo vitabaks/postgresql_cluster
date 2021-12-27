@@ -210,7 +210,7 @@ pgbouncer_max_client_conn: 10000
 pgbouncer_max_db_connections: 1000
 pgbouncer_default_pool_size: 20
 pgbouncer_default_pool_mode: "session"
-pgbouncer_generate_userlist: true  # generate userlist.txt (all users and passwords md5) FROM pg_shadow
+pgbouncer_generate_userlist: true  # generate the authentication file (userlist.txt) from the pg_shadow system table
 
 pgbouncer_pools:
   - {name: "postgres", dbname: "postgres", pool_parameters: ""}
