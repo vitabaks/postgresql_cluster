@@ -82,10 +82,10 @@ postgresql_data_checksums: true  # for bootstrap only (initdb)
 
 # (optional) list of users to be created (if not already exists)
 postgresql_users: []
-#  - {name: "mydb-user", password: "mydb-user-pass"}
-#  - {name: "", password: ""}
-#  - {name: "", password: ""}
-#  - {name: "", password: ""}
+#  - {name: "mydb-user", password: "mydb-user-pass", flags: "SUPERUSER"}
+#  - {name: "", password: "", flags: "NOSUPERUSER"}
+#  - {name: "", password: "", flags: "NOSUPERUSER"}
+#  - {name: "", password: "", flags: "NOLOGIN"}
 
 # (optional) list of databases to be created (if not already exists)
 postgresql_databases: []
