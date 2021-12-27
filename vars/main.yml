@@ -109,6 +109,7 @@ postgresql_extensions: []
 postgresql_parameters:
   - {option: "max_connections", value: "500"}
   - {option: "superuser_reserved_connections", value: "5"}
+  - {option: "password_encryption", value: "scram-sha-256"}
   - {option: "max_locks_per_transaction", value: "64"}  # raise this value (ex. 512) if you have queries that touch many different tables (partitioning)
   - {option: "max_prepared_transactions", value: "0"}
   - {option: "huge_pages", value: "try"}  # or "on" if you set "vm_nr_hugepages" in kernel parameters
