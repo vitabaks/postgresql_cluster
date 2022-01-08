@@ -319,6 +319,7 @@ wal_g_patroni_cluster_bootstrap_command: "wal-g backup-fetch {{ postgresql_data_
 
 # pgBackRest
 pgbackrest_install: false  # or 'true'
+pgbackrest_srv_install: false  # or 'true'
 pgbackrest_install_from_pgdg_repo: true  # or 'false'
 pgbackrest_stanza: "stanza_name"  # specify your --stanza
 pgbackrest_repo_type: "posix"  # or "s3"
@@ -331,6 +332,7 @@ pgbackrest_conf:
     - {option: "log-level-file", value: "detail"}
     - {option: "log-path", value: "/var/log/pgbackrest"}
     - {option: "repo1-type", value: "{{ pgbackrest_repo_type |lower }}"}
+    # - {option: "repo1-retention-full", value: 5} #  Take care, not to fill up your disks with backups
     - {option: "repo1-host", value: "{{ pgbackrest_repo_host }}"}
     - {option: "repo1-host-user", value: "{{ pgbackrest_repo_user }}"}
 #    - {option: "", value: ""}
@@ -339,6 +341,20 @@ pgbackrest_conf:
     - {option: "process-max", value: "2"}
     - {option: "recovery-option", value: "recovery_target_action=promote"}
 #    - {option: "", value: ""}
+
+pgbackrest_srv_conf:
+  global:  # [global] section
+    - {option: "log-level-file", value: "detail"}
+    - {option: "log-path", value: "/var/log/pgbackrest"}
+    - {option: "repo1-type", value: "{{ pgbackrest_repo_type |lower }}"}
+    # - {option: "repo1-retention-full", value: 5} #  Take care, not to fill up your disks with backups
+    - {option: "repo1-path", value: "/var/lib/pgbackrest"}
+    - {option: "repo1-host-user", value: "{{ pgbackrest_repo_user }}"}
+  stanza:
+    - {option: "process-max", value: "2"}
+    - {option: "recovery-option", value: "recovery_target_action=promote"}
+    - {option: "backup-standby", value: "y"} # Don't take backups from a primary, move the work to a secondary, especially because of compression
+
 pgbackrest_patroni_cluster_restore_command:
   '/usr/bin/pgbackrest --stanza={{ pgbackrest_stanza }} --delta restore'  # restore from latest backup
 #  '/usr/bin/pgbackrest --stanza={{ pgbackrest_stanza }} --type=time "--target=2020-06-01 11:00:00+03" --delta restore'  # Point-in-Time Recovery (example)
