@@ -96,3 +96,9 @@
 {% for host in groups['postgres_cluster'] %}
   host      replication              {{ patroni_replication_username }}               {{ hostvars[host]['inventory_hostname'] }}/32         {{ postgresql_password_encryption_algorithm }}
 {% endfor %}
+# For pgBackRest from external server
+{% if pgbackrest_srv_install -%}
+{% for pgbackrestsrv in groups['pgbackrest'] %}
+  host      all              postgres               {{ hostvars[pgbackrestsrv]['inventory_hostname'] }}/32                md5
+{% endfor %}
+{% endif %}
