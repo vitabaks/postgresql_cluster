@@ -1,0 +1,13 @@
+[global]
+{% for global in pgbackrest_srv_conf.global %}
+{{ global.option }}={{ global.value }}
+{% endfor %}
+
+[{{ pgbackrest_stanza }}]
+{% for patroni in groups['postgres_cluster'] %}
+pg{{ loop.index }}-host={{ hostvars[patroni]['inventory_hostname'] }}
+pg{{ loop.index }}-path={{ postgresql_data_dir }}
+{% endfor %}
+{% for stanza in pgbackrest_srv_conf.stanza %}
+{{ stanza.option }}={{ stanza.value }}
+{% endfor %}
