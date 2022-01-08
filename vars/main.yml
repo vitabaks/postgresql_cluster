@@ -332,7 +332,7 @@ pgbackrest_conf:
     - {option: "log-level-file", value: "detail"}
     - {option: "log-path", value: "/var/log/pgbackrest"}
     - {option: "repo1-type", value: "{{ pgbackrest_repo_type |lower }}"}
-    # - {option: "repo1-retention-full", value: 5} #  Take care, not to fill up your disks with backups
+#    - {option: "repo1-retention-full", value: 5} #  Take care, not to fill up your disks with backups
     - {option: "repo1-host", value: "{{ pgbackrest_repo_host }}"}
     - {option: "repo1-host-user", value: "{{ pgbackrest_repo_user }}"}
 #    - {option: "", value: ""}
@@ -347,13 +347,13 @@ pgbackrest_srv_conf:
     - {option: "log-level-file", value: "detail"}
     - {option: "log-path", value: "/var/log/pgbackrest"}
     - {option: "repo1-type", value: "{{ pgbackrest_repo_type |lower }}"}
-    # - {option: "repo1-retention-full", value: 5} #  Take care, not to fill up your disks with backups
+#   - {option: "repo1-retention-full", value: 5} #  Take care, not to fill up your disks with backups
     - {option: "repo1-path", value: "/var/lib/pgbackrest"}
     - {option: "repo1-host-user", value: "{{ pgbackrest_repo_user }}"}
   stanza:
     - {option: "process-max", value: "2"}
     - {option: "recovery-option", value: "recovery_target_action=promote"}
-    - {option: "backup-standby", value: "y"} # Don't take backups from a primary, move the work to a secondary, especially because of compression
+    - {option: "backup-standby", value: "y"}  # Don't take backups from a primary, move the work to a secondary, especially because of compression
 
 pgbackrest_patroni_cluster_restore_command:
   '/usr/bin/pgbackrest --stanza={{ pgbackrest_stanza }} --delta restore'  # restore from latest backup
