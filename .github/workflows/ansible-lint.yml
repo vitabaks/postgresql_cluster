@@ -49,6 +49,7 @@ jobs:
           override-deps: |
             ansible==2.8.20
             ansible-lint==4.3.7
+            rich>=9.5.1,<11.0.0
           args: "-x 106,208,403"
 
       - name: Lint playbook with Ansible v2.7
@@ -61,6 +62,7 @@ jobs:
           override-deps: |
             ansible==2.7.18
             ansible-lint==4.2.0
+            rich>=9.5.1,<11.0.0
           args: "-x 106,208,403"
 
 ...
