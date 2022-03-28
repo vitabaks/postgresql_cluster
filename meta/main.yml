@@ -17,6 +17,7 @@ galaxy_info:
       versions:
         - stretch
         - buster
+        - bullseye
     - name: Ubuntu
       versions:
         - bionic
