@@ -19,59 +19,9 @@ jobs:
       - name: Git clone repo postgresql_cluster
         uses: actions/checkout@v2
 
-      - name: Lint playbook with latest Ansible
+      - name: Lint Ansible Playbook
         uses: ansible/ansible-lint-action@v6
         with:
-          targets: |
-            deploy_pgcluster.yml
-            add_pgnode.yml
-            add_balancer.yml
           args: ""
-
-      - name: Lint playbook with Ansible v2.10
-        uses: ansible/ansible-lint-action@v6
-        with:
-          targets: |
-            deploy_pgcluster.yml
-            add_pgnode.yml
-            add_balancer.yml
-          override-deps: ansible==2.10.7
-          args: ""
-
-      - name: Lint playbook with Ansible v2.9
-        uses: ansible/ansible-lint-action@v6
-        with:
-          targets: |
-            deploy_pgcluster.yml
-            add_pgnode.yml
-            add_balancer.yml
-          override-deps: ansible==2.9.27
-          args: ""
-
-      - name: Lint playbook with Ansible v2.8
-        uses: ansible/ansible-lint-action@v6
-        with:
-          targets: |
-            deploy_pgcluster.yml
-            add_pgnode.yml
-            add_balancer.yml
-          override-deps: |
-            ansible==2.8.20
-            ansible-lint==4.3.7
-            rich>=9.5.1,<11.0.0
-          args: "-x 106,208,403"
-
-      - name: Lint playbook with Ansible v2.7
-        uses: ansible/ansible-lint-action@v6
-        with:
-          targets: |
-            deploy_pgcluster.yml
-            add_pgnode.yml
-            add_balancer.yml
-          override-deps: |
-            ansible==2.7.18
-            ansible-lint==4.2.0
-            rich>=9.5.1,<11.0.0
-          args: "-x 106,208,403"
 
 ...
