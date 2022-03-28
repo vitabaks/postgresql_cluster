@@ -104,6 +104,22 @@ This playbook requires root privileges or sudo.
 
 Ansible ([What is Ansible](https://www.ansible.com/resources/videos/quick-start-video)?)
 
+## Port requirements
+List of required TCP ports that must be open for the database cluster:
+
+- `5432` (postgresql)
+- `6432` (pgbouncer)
+- `8008` (patroni rest api)
+- `2379`, `2380` (etcd)
+
+additionally, for the scheme "[Type A] PostgreSQL High-Availability with Load Balancing":
+
+- `5000` (haproxy - (read/write) master)
+- `5001` (haproxy - (read only) all replicas)
+- `5002` (haproxy - (read only) synchronous replica only)
+- `5003` (haproxy - (read only) asynchronous replicas only)
+- `7000` (optional, haproxy stats)
+
 ## Recommendations
 - **linux (Operation System)**: 
 
