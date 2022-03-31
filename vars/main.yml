@@ -72,13 +72,13 @@ patroni_etcd_hosts: []
 
 
 # PostgreSQL variables
-postgresql_version: "14"
+postgresql_version: "13"
 # postgresql_data_dir: see vars/Debian.yml or vars/RedHat.yml
 postgresql_port: "5432"
 postgresql_encoding: "UTF8"  # for bootstrap only (initdb)
 postgresql_locale: "en_US.UTF-8"  # for bootstrap only (initdb)
 postgresql_data_checksums: true  # for bootstrap only (initdb)
-postgresql_password_encryption_algorithm: "scram-sha-256"  # or "md5" if your clients do not work with passwords encrypted with SCRAM-SHA-256
+postgresql_password_encryption_algorithm: "md5"  # or "md5" if your clients do not work with passwords encrypted with SCRAM-SHA-256
 
 # (optional) list of users to be created (if not already exists)
 postgresql_users: []
@@ -107,25 +107,25 @@ postgresql_extensions: []
 
 # postgresql parameters to bootstrap dcs (are parameters for example)
 postgresql_parameters:
-  - {option: "max_connections", value: "500"}
+  - {option: "max_connections", value: "300"}
   - {option: "superuser_reserved_connections", value: "5"}
   - {option: "password_encryption", value: "{{ postgresql_password_encryption_algorithm }}"}
   - {option: "max_locks_per_transaction", value: "64"}  # raise this value (ex. 512) if you have queries that touch many different tables (partitioning)
   - {option: "max_prepared_transactions", value: "0"}
   - {option: "huge_pages", value: "try"}  # or "on" if you set "vm_nr_hugepages" in kernel parameters
-  - {option: "shared_buffers", value: "512MB"}  # please change this value
-  - {option: "work_mem", value: "128MB"}  # please change this value
-  - {option: "maintenance_work_mem", value: "256MB"}  # please change this value
-  - {option: "effective_cache_size", value: "4GB"}  # please change this value
+  - {option: "shared_buffers", value: "8GB"}
+  - {option: "work_mem", value: "100MB"}
+  - {option: "maintenance_work_mem", value: "512MB"}
+  - {option: "effective_cache_size", value: "48GB"}
   - {option: "checkpoint_timeout", value: "15min"}
   - {option: "checkpoint_completion_target", value: "0.9"}
   - {option: "min_wal_size", value: "2GB"}
-  - {option: "max_wal_size", value: "8GB"}  # or 16GB/32GB
+  - {option: "max_wal_size", value: "8GB"}
   - {option: "wal_buffers", value: "32MB"}
-  - {option: "default_statistics_target", value: "1000"}
+  - {option: "default_statistics_target", value: "100"}
   - {option: "seq_page_cost", value: "1"}
-  - {option: "random_page_cost", value: "4"}  # "1.1" for SSD storage. Also, if your databases fits in shared_buffers
-  - {option: "effective_io_concurrency", value: "2"}  # "200" for SSD storage
+  - {option: "random_page_cost", value: "1.1"}
+  - {option: "effective_io_concurrency", value: "200"}
   - {option: "synchronous_commit", value: "on"}  # or 'off' if you can you lose single transactions in case of a crash
   - {option: "autovacuum", value: "on"}  # never turn off the autovacuum!
   - {option: "autovacuum_max_workers", value: "5"}
@@ -136,10 +136,8 @@ postgresql_parameters:
   - {option: "autovacuum_naptime", value: "1s"}
   - {option: "max_files_per_process", value: "4096"}
   - {option: "archive_mode", value: "on"}
-  - {option: "archive_timeout", value: "1800s"}
-  - {option: "archive_command", value: "cd ."}  # not doing anything yet with WAL-s
-#  - {option: "archive_command", value: "wal-g wal-push %p"}  # archive WAL-s using WAL-G
-#  - {option: "archive_command", value: "pgbackrest --stanza={{ pgbackrest_stanza }} archive-push %p"}  # archive WAL-s using pgbackrest
+  - {option: "archive_timeout", value: "10min"}
+  - {option: "archive_command", value: "envdir /etc/wal-g/env /usr/local/bin/wal-g wal-push %p"}
   - {option: "wal_level", value: "replica"}
   - {option: "wal_keep_size", value: "2GB"}
   - {option: "max_wal_senders", value: "10"}
@@ -163,38 +161,59 @@ postgresql_parameters:
   - {option: "log_lock_waits", value: "on"}
   - {option: "log_temp_files", value: "0"}
   - {option: "track_activities", value: "on"}
+  - {option: "track_activity_query_size", value: "4096"}
   - {option: "track_counts", value: "on"}
   - {option: "track_functions", value: "all"}
+  - {option: "log_autovacuum_min_duration", value: "0"}
   - {option: "log_checkpoints", value: "on"}
   - {option: "logging_collector", value: "on"}
   - {option: "log_truncate_on_rotation", value: "on"}
   - {option: "log_rotation_age", value: "1d"}
   - {option: "log_rotation_size", value: "0"}
-  - {option: "log_line_prefix", value: "'%t [%p-%l] %r %q%u@%d '"}
+  - {option: "log_line_prefix", value: "'%m [%p] %q%u@%d'"}
   - {option: "log_filename", value: "'postgresql-%a.log'"}
+  - {option: "log_destination", value: "csvlog"}
   - {option: "log_directory", value: "{{ postgresql_log_dir }}"}
+  - {option: "log_file_mode", value: "0600"}
+  - {option: "log_timezone", value: "Etc/UTC"}
   - {option: "hot_standby_feedback", value: "on"}  # allows feedback from a hot standby to the primary that will avoid query conflicts
   - {option: "max_standby_streaming_delay", value: "30s"}
   - {option: "wal_receiver_status_interval", value: "10s"}
   - {option: "idle_in_transaction_session_timeout", value: "10min"}  # reduce this timeout if possible
   - {option: "jit", value: "off"}
-#  - {option: "max_worker_processes", value: "24"}
-#  - {option: "max_parallel_workers", value: "12"}
-#  - {option: "max_parallel_workers_per_gather", value: "2"}
-#  - {option: "max_parallel_maintenance_workers", value: "2"}
-#  - {option: "old_snapshot_threshold", value: "60min"}
-#  - {option: "", value: ""}
-#  - {option: "", value: ""}
-
+  - {option: "data_directory_mode", value: "0700"}
+  - {option: "client_encoding", value: "UTF8"}
+  - {option: "lc_collate", value: "C.UTF-8"}
+  - {option: "lc_ctype", value: "C.UTF-8"}
+  - {option: "lc_messages", value: "C.UTF-8"}
+  - {option: "lc_monetary", value: "C.UTF-8"}
+  - {option: "lc_numeric", value: "C.UTF-8"}
+  - {option: "lc_time", value: "C.UTF-8"}
+  - {option: "default_text_search_config", value: "pg_catalog.english"}
+  - {option: "max_worker_processes", value: "16"}
+  - {option: "max_parallel_workers", value: "12"}
+  - {option: "max_parallel_workers_per_gather", value: "4"}
+  - {option: "max_parallel_maintenance_workers", value: "4"}
+  - {option: "max_stack_depth", value: "2048"}
+  - {option: "server_encoding", value: "UTF8"}
+  - {option: "unix_socket_permissions", value: "0777"}
+  - {option: "ssl", value: "on"}
+  - {option: "ssl_cert_file", value: "/etc/ssl/certs/ssl-cert-snakeoil.pem"}
+  - {option: "ssl_key_file", value: "/etc/ssl/private/ssl-cert-snakeoil.key"}
 
 # specify additional hosts that will be added to the pg_hba.conf
 postgresql_pg_hba:
   - {type: "local", database: "all", user: "postgres", address: "", method: "trust"}  # "local=trust" required for ansible modules "postgresql_(user,db,ext)"
+  - {type: "local", database: "all", user: "okagent", address: "", method: "trust"}
   - {type: "local", database: "all", user: "all", address: "", method: "peer"}
-  - {type: "host", database: "all", user: "all", address: "127.0.0.1/32", method: "{{ postgresql_password_encryption_algorithm }}"}
-  - {type: "host", database: "all", user: "all", address: "::1/128", method: "{{ postgresql_password_encryption_algorithm }}"}
-#  - {type: "host", database: "mydatabase", user: "mydb-user", address: "192.168.0.0/24", method: "{{ postgresql_password_encryption_algorithm }}"}
-#  - {type: "host", database: "all", user: "all", address: "192.168.0.0/24", method: "ident", options: "map=main"}  # use pg_ident
+  - {type: "host", database: "all", user: "all", address: "127.0.0.1/32", method: "md5"}
+  - {type: "host", database: "all", user: "all", address: "::1/128", method: "md5"}
+  - {type: "host", database: "all", user: "okagent", address: "127.0.0.1/32", method: "trust"}
+  - {type: "hostssl", database: "all", user: "boostuser", address: "0.0.0.0/0", method: "md5"}
+  - {type: "hostssl", database: "all", user: "boost_readonly", address: "0.0.0.0/0", method: "md5"}
+  - {type: "hostssl", database: "all", user: "boost_veeral_shah", address: "0.0.0.0/0", method: "md5"}
+  - {type: "hostssl", database: "boost_db_prod_migration", user: "sasha", address: "0.0.0.0/0", method: "md5"}
+  - {type: "hostssl", database: "boost_db_prod_migration", user: "andrew", address: "0.0.0.0/0", method: "md5"}
 
 # list of lines that Patroni will use to generate pg_ident.conf
 postgresql_pg_ident: []
@@ -203,7 +222,7 @@ postgresql_pg_ident: []
 
 
 # PgBouncer parameters
-pgbouncer_install: true  # or 'false' if you do not want to install and configure the pgbouncer service
+pgbouncer_install: false
 pgbouncer_conf_dir: "/etc/pgbouncer"
 pgbouncer_log_dir: "/var/log/pgbouncer"
 pgbouncer_listen_port: 6432
