@@ -105,6 +105,7 @@
     - role: timezone
     - role: ntp
     - role: ssh-keys
+    - role: copy
 
 - import_playbook: balancers.yml
   when: with_haproxy_load_balancing|bool

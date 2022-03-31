@@ -23,6 +23,8 @@
 - - ntp_install
 - - ntp_conf
 - ssh_keys
+- fetch_files
+- copy_files
 - etcd
 - - etcd_install
 - - etcd_conf

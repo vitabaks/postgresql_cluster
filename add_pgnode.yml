@@ -87,6 +87,7 @@
     - role: timezone
     - role: ntp
     - role: ssh-keys
+    - role: copy
 
 - hosts: pgbackrest:postgres_cluster
   become: true
