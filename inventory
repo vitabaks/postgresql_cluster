@@ -14,18 +14,14 @@
 
 # if with_haproxy_load_balancing: true (in vars/main.yml)
 [balancers]
-10.128.64.140
-10.128.64.142
-10.128.64.143
 
 
 # PostgreSQL nodes
 [master]
-10.128.64.140 hostname=pgnode01 postgresql_exists='false'
+10.128.64.140 hostname=pgnode01 postgresql_exists='true'
 
 [replica]
 10.128.64.142 hostname=pgnode02 postgresql_exists='false'
-10.128.64.143 hostname=pgnode03 postgresql_exists='false'
 
 [postgres_cluster:children]
 master
@@ -44,9 +40,9 @@ replica
 [all:vars]
 ansible_connection='ssh'
 ansible_ssh_port='22'
-ansible_user='root'
-ansible_ssh_pass='secretpassword'  # "sshpass" package is required for use "ansible_ssh_pass"
-# ansible_ssh_private_key_file=
+ansible_user='ubuntu'
+# ansible_ssh_pass='secretpassword'  # "sshpass" package is required for use "ansible_ssh_pass"
+ansible_ssh_private_key_file=/home/ubuntu/.ssh/MYKEY
 # ansible_python_interpreter='/usr/bin/python3'  # is required for use python3
 
 [pgbackrest:vars]
