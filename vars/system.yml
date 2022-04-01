@@ -39,6 +39,7 @@ sysctl_conf:
   master: []
   replica: []
   postgres_cluster:
+    - {name: "vm.overcommit_memory", value: "2"}
     - {name: "vm.swappiness", value: "1"}
     - {name: "vm.min_free_kbytes", value: "102400"}
     - {name: "vm.dirty_expire_centisecs", value: "1000"}
