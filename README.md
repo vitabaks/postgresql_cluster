@@ -173,7 +173,7 @@ To minimize the risk of losing data on autofailover, you can configure settings 
 
 3. Edit the inventory file
 
-###### Specify the ip addresses and connection settings (`ansible_user`, `ansible_ssh_pass` ...) for your environment
+###### Specify (non-public) IP addresses and connection settings (`ansible_user`, `ansible_ssh_pass` ...) for your environment
 
 `vim inventory`
 
@@ -196,8 +196,11 @@ proxy_env:
 - `postgresql_version`
 - `postgresql_data_dir`
 
+5. Try to connect to hosts
 
-5. Run playbook:
+`ansible all -m ping`
+
+6. Run playbook:
 
 `ansible-playbook deploy_pgcluster.yml`
 
