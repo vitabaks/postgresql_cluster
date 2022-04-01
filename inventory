@@ -18,10 +18,10 @@
 
 # PostgreSQL nodes
 [master]
-10.128.64.140 hostname=pgnode01 postgresql_exists='true'
+10.128.64.140 hostname=web-prod postgresql_exists='true'
 
 [replica]
-10.128.64.142 hostname=pgnode02 postgresql_exists='false'
+10.128.64.142 hostname=web-prod-2 postgresql_exists='false'
 
 [postgres_cluster:children]
 master
