@@ -17,7 +17,7 @@
 This Ansible playbook is designed for deploying a PostgreSQL high availability cluster on dedicated physical servers for a production environment.
 Сluster can be deployed in virtual machines for test environments and small projects.
 
-In addition to deploying new clusters, this playbook also support the deployment of cluster over already existing and running PostgreSQL. You can convert your basic PostgreSQL installation to a high availability cluster. Just specifythe variable `postgresql_exists='true'` in the inventory file.
+In addition to deploying new clusters, this playbook also support the deployment of cluster over already existing and running PostgreSQL. You can convert your basic PostgreSQL installation to a high availability cluster. Just specify the variable `postgresql_exists='true'` in the inventory file.
 **Attention!** Your PostgreSQL will be stopped before running in cluster mode (please plan for a short downtime of databases).
 
 > :heavy_exclamation_mark: Please test it in your test enviroment before using in a production.
