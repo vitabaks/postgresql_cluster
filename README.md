@@ -1,15 +1,24 @@
 # PostgreSQL High-Availability Cluster :elephant: :sparkling_heart:
 
-[<img src="https://github.com/vitabaks/postgresql_cluster/workflows/Ansible-lint/badge.svg?branch=master">](https://github.com/vitabaks/postgresql_cluster/actions?query=workflow%3AAnsible-lint) [<img src="https://github.com/vitabaks/postgresql_cluster/workflows/Yamllint/badge.svg?branch=master">](https://github.com/vitabaks/postgresql_cluster/actions?query=workflow%3AYamllint) [<img src="https://github.com/vitabaks/postgresql_cluster/workflows/Molecule/badge.svg?branch=master">](https://github.com/vitabaks/postgresql_cluster/actions?query=workflow%3AMolecule) [![GitHub license](https://img.shields.io/github/license/vitabaks/postgresql_cluster)](https://github.com/vitabaks/postgresql_cluster/blob/master/LICENSE) ![GitHub stars](https://img.shields.io/github/stars/vitabaks/postgresql_cluster)
-[![Support me on Patreon](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fshieldsio-patreon.vercel.app%2Fapi%3Fusername%3Dvitabaks%26type%3Dpatrons&style=social)](https://patreon.com/vitabaks)
+[![Ansible Galaxy](https://img.shields.io/badge/galaxy-vitabaks.postgresql_cluster-success.svg)](https://galaxy.ansible.com/vitabaks/postgresql_cluster)
+[<img src="https://github.com/vitabaks/postgresql_cluster/workflows/Ansible-lint/badge.svg?branch=master">](https://github.com/vitabaks/postgresql_cluster/actions?query=workflow%3AAnsible-lint)
+[<img src="https://github.com/vitabaks/postgresql_cluster/workflows/Yamllint/badge.svg?branch=master">](https://github.com/vitabaks/postgresql_cluster/actions?query=workflow%3AYamllint)
+[<img src="https://github.com/vitabaks/postgresql_cluster/workflows/Molecule/badge.svg?branch=master">](https://github.com/vitabaks/postgresql_cluster/actions?query=workflow%3AMolecule)
+[![GitHub license](https://img.shields.io/github/license/vitabaks/postgresql_cluster)](https://github.com/vitabaks/postgresql_cluster/blob/master/LICENSE) 
+![GitHub stars](https://img.shields.io/github/stars/vitabaks/postgresql_cluster)
+
+#### Support this project on Patreon
+[![Support me on Patreon](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fshieldsio-patreon.vercel.app%2Fapi%3Fusername%3Dvitabaks%26type%3Dpatrons&style=for-the-badge)](https://patreon.com/vitabaks)
+
+---
 
 ### Deploy a Production Ready PostgreSQL High-Availability Cluster (based on "Patroni" and "DCS(etcd)"). Automating with Ansible.
 
 This Ansible playbook is designed for deploying a PostgreSQL high availability cluster on dedicated physical servers for a production environment.
 Сluster can be deployed in virtual machines for test environments and small projects.
 
-This playbook support the deployment of cluster over already existing and running PostgreSQL. You must specify the variable `postgresql_exists='true'` in the inventory file. 
-**Attention!** Your PostgreSQL will be stopped before running in cluster mode. You must planing downtime of existing databases.
+In addition to deploying new clusters, this playbook also support the deployment of cluster over already existing and running PostgreSQL. You can convert your basic PostgreSQL installation to a high availability cluster. Just specifythe variable `postgresql_exists='true'` in the inventory file.
+**Attention!** Your PostgreSQL will be stopped before running in cluster mode (please plan for a short downtime of databases).
 
 > :heavy_exclamation_mark: Please test it in your test enviroment before using in a production.
 
