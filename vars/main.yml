@@ -137,7 +137,7 @@ postgresql_parameters:
   - {option: "max_files_per_process", value: "4096"}
   - {option: "archive_mode", value: "on"}
   - {option: "archive_timeout", value: "10min"}
-  - {option: "archive_command", value: "envdir /etc/wal-g/env /usr/local/bin/wal-g wal-push %p"}
+  - {option: "archive_command", value: "wal-g wal-push %p"}
   - {option: "wal_level", value: "replica"}
   - {option: "wal_keep_size", value: "2GB"}
   - {option: "max_wal_senders", value: "10"}
@@ -285,7 +285,7 @@ patroni_cluster_bootstrap_method: "initdb"  # or "wal-g", "pgbackrest", "pg_prob
 # https://patroni.readthedocs.io/en/latest/replica_bootstrap.html#building-replicas
 patroni_create_replica_methods:
 #  - pgbackrest
-#  - wal_g
+  - wal_g
 #  - pg_probackup
   - basebackup
 
@@ -304,8 +304,8 @@ pg_probackup:
   - {option: "no_params", value: "true"}
 
 # "restore_command" written to recovery.conf when configuring follower (create replica)
-postgresql_restore_command: ""
-# postgresql_restore_command: "wal-g wal-fetch %f %p"  # restore WAL-s using WAL-G
+# postgresql_restore_command: ""
+postgresql_restore_command: "wal-g wal-fetch %f %p"  # restore WAL-s using WAL-G
 # postgresql_restore_command: "pgbackrest --stanza={{ pgbackrest_stanza }} archive-get %f %p"  # restore WAL-s using pgbackrest
 # postgresql_restore_command: "pg_probackup-{{ pg_probackup_version }} archive-get -B {{ pg_probackup_dir }} --instance {{ pg_probackup_instance }} --wal-file-path=%p --wal-file-name=%f"  # restore WAL-s using pg_probackup
 
@@ -320,19 +320,16 @@ pg_probackup_add_keys: "--recovery-target=latest --skip-external-dirs --no-valid
 pg_probackup_patroni_cluster_bootstrap_command: "pg_probackup-{{ pg_probackup_version }} restore -B {{ pg_probackup_dir }} --instance {{ pg_probackup_instance }} -j {{ pg_probackup_threads }} {{ pg_probackup_add_keys }}"
 
 # WAL-G
-wal_g_install: false  # or 'true'
-wal_g_ver: "v0.2.19"
-wal_g_json:  # more options see https://github.com/wal-g/wal-g#configuration
-  - {option: "AWS_ACCESS_KEY_ID", value: "minio"}
-  - {option: "AWS_SECRET_ACCESS_KEY", value: "miniosecret"}
-  - {option: "AWS_ENDPOINT", value: "http://172.26.9.200:9000"}
-  - {option: "WALG_S3_PREFIX", value: "s3://bucket"}
-  - {option: "AWS_S3_FORCE_PATH_STYLE", value: "true"}
-  - {option: "WALG_COMPRESSION_METHOD", value: "brotli"}
+wal_g_install: true  # or 'true'
+wal_g_ver: "1.1"
+wal_g_json:  # generate conf file {{ postgresql_home_dir }}/.walg.json
+  - {option: "AZURE_STORAGE_ACCESS_KEY", value: "XXXXXXXXXXXX"}  # please change
+  - {option: "AZURE_STORAGE_ACCOUNT", value: "booststorage"}
+  - {option: "WALG_AZ_PREFIX", value: "azure://dbbackups/prod"}
+  - {option: "WALG_UPLOAD_CONCURRENCY", value: "8"}
+  - {option: "WALG_DOWNLOAD_CONCURRENCY", value: "8"}
   - {option: "PGDATA", value: "{{ postgresql_data_dir }}"}
   - {option: "PGHOST", value: "{{ postgresql_unix_socket_dir }}"}
-#  - {option: "AWS_REGION", value: "us-east-1"}
-#  - {option: "WALG_S3_CA_CERT_FILE", value: "/path/to/custom/ca/file"}
 #  - {option: "", value: ""}
 wal_g_patroni_cluster_bootstrap_command: "wal-g backup-fetch {{ postgresql_data_dir }} LATEST"
 
