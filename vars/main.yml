@@ -293,7 +293,7 @@ postgresql_restore_command: ""
 # pg_probackup
 pg_probackup_install: false  # or 'true'
 pg_probackup_install_from_postgrespro_repo: true  # or 'false'
-pg_probackup_version: "13"
+pg_probackup_version: "{{ postgresql_version }}"
 pg_probackup_instance: "pg_probackup_instance_name"
 pg_probackup_dir: "/mnt/backup_dir"
 pg_probackup_threads: "4"
