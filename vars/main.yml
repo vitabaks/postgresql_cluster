@@ -285,7 +285,7 @@ patroni_cluster_bootstrap_method: "initdb"  # or "wal-g", "pgbackrest", "pg_prob
 # https://patroni.readthedocs.io/en/latest/replica_bootstrap.html#building-replicas
 patroni_create_replica_methods:
 #  - pgbackrest
-  - wal_g
+#  - wal_g
 #  - pg_probackup
   - basebackup
 
@@ -305,7 +305,7 @@ pg_probackup:
 
 # "restore_command" written to recovery.conf when configuring follower (create replica)
 # postgresql_restore_command: ""
-postgresql_restore_command: "wal-g wal-fetch %f %p"  # restore WAL-s using WAL-G
+# postgresql_restore_command: "wal-g wal-fetch %f %p"  # restore WAL-s using WAL-G
 # postgresql_restore_command: "pgbackrest --stanza={{ pgbackrest_stanza }} archive-get %f %p"  # restore WAL-s using pgbackrest
 # postgresql_restore_command: "pg_probackup-{{ pg_probackup_version }} archive-get -B {{ pg_probackup_dir }} --instance {{ pg_probackup_instance }} --wal-file-path=%p --wal-file-name=%f"  # restore WAL-s using pg_probackup
 
