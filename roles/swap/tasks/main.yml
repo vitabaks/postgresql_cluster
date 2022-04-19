@@ -11,7 +11,7 @@
 - name: Swap exists
   debug:
     msg: "Size {{ (swap_exists.stdout|int / 1024 / 1024)|round|int }}"
-  when: swap_file_create|bool
+  when: swap_exists.stdout is defined and swap_exists.stdout | length > 1
   tags: swap, swap_create, swap_remove
 
 # if the swap exists and the size is not equal to swap_file_size_mb
@@ -29,7 +29,7 @@
       file:
         path: "{{ swap_file_path }}"
         state: absent
-  when: (swap_file_create|bool and swap_exists.stdout | length > 1)
+  when: (swap_exists.stdout is defined and swap_exists.stdout | length > 1)
         and ((swap_exists.stdout|int / 1024 / 1024)|round|int != swap_file_size_mb|int)
   tags: swap, swap_remove
 
@@ -61,8 +61,8 @@
         fstype: swap
         opts: sw
         state: present
-  when: (swap_file_create|bool and swap_exists.stdout | length < 1) or
-        ((swap_exists.stdout|int / 1024 / 1024)|round|int != swap_file_size_mb|int)
+  when: (swap_exists.stdout is defined and swap_exists.stdout | length < 1) or
+        (swap_exists.stdout is defined and (swap_exists.stdout|int / 1024 / 1024)|round|int != swap_file_size_mb|int)
   tags: swap, swap_create
 
 ...
