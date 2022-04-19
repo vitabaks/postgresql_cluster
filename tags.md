@@ -13,6 +13,9 @@
 - hostname
 - dns, nameservers
 - etc_hosts
+- swap
+- - swap_create
+- - swap_remove
 - sysctl, kernel
 - disable_thp
 - limits

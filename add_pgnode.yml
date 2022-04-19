@@ -79,6 +79,7 @@
     - role: add-repository
     - role: packages
     - role: sudo
+    - role: swap
     - role: sysctl
     - role: transparent_huge_pages
     - role: pam_limits
