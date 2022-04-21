@@ -213,6 +213,7 @@ pgbouncer_default_pool_size: 20
 pgbouncer_default_pool_mode: "session"
 pgbouncer_generate_userlist: true  # generate the authentication file (userlist.txt) from the pg_shadow system table
 pgbouncer_auth_type: "{{ postgresql_password_encryption_algorithm }}"
+pgbouncer_ignore_startup_parameters: "extra_float_digits,geqo"
 
 pgbouncer_pools:
   - {name: "postgres", dbname: "postgres", pool_parameters: ""}
