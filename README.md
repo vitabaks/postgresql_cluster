@@ -161,7 +161,7 @@ Due to performance reasons, a synchronous replication is disabled by default.
 To minimize the risk of losing data on autofailover, you can configure settings in the following way:
 - synchronous_mode: 'true'
 - synchronous_mode_strict: 'true'
-- synchronous_commit: 'on' (or 'remote_write'/'remote_apply')
+- synchronous_commit: 'on' (or 'remote_apply')
 - use_pg_rewind: 'false' (enabled by default)
 
 ---
