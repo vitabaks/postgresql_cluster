@@ -189,7 +189,7 @@ postgresql_parameters:
 
 # specify additional hosts that will be added to the pg_hba.conf
 postgresql_pg_hba:
-  - {type: "local", database: "all", user: "{{ patroni_superuser_username }}", address: "", method: "trust"}  # "local=trust" required for ansible modules "postgresql_(user,db,ext)"
+  - {type: "local", database: "all", user: "{{ patroni_superuser_username }}", address: "", method: "trust"}
   - {type: "local", database: "all", user: "all", address: "", method: "peer"}
   - {type: "host", database: "all", user: "all", address: "127.0.0.1/32", method: "{{ postgresql_password_encryption_algorithm }}"}
   - {type: "host", database: "all", user: "all", address: "::1/128", method: "{{ postgresql_password_encryption_algorithm }}"}
