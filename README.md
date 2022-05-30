@@ -7,9 +7,6 @@
 [![GitHub license](https://img.shields.io/github/license/vitabaks/postgresql_cluster)](https://github.com/vitabaks/postgresql_cluster/blob/master/LICENSE) 
 ![GitHub stars](https://img.shields.io/github/stars/vitabaks/postgresql_cluster)
 
-#### Support this project on Patreon
-[![Support me on Patreon](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fshieldsio-patreon.vercel.app%2Fapi%3Fusername%3Dvitabaks%26type%3Dpatrons&style=for-the-badge)](https://patreon.com/vitabaks)
-
 ---
 
 ### Deploy a Production Ready PostgreSQL High-Availability Cluster (based on "Patroni" and "DCS(etcd)"). Automating with Ansible.
