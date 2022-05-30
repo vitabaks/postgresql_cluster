@@ -21,7 +21,7 @@ postgresql_version_terse: "{{ postgresql_version | replace('.', '') }}"
 apt_repository_keys:
   - key: "https://www.postgresql.org/media/keys/ACCC4CF8.asc"  # postgresql repository apt key
 apt_repository:
-  - repo: "deb https://apt.postgresql.org/pub/repos/apt/ {{ ansible_distribution_release }}-pgdg main"  # postgresql apt repository
+  - repo: "deb http://apt.postgresql.org/pub/repos/apt/ {{ ansible_distribution_release }}-pgdg main"  # postgresql apt repository
 #  - repo: "deb https://deb.debian.org/debian/ {{ ansible_distribution_release }} main"  # debian repo (optional)
 #  - repo: "deb https://deb.debian.org/debian/ {{ ansible_distribution_release }}-updates main"  # debian repo (optional)
 #  - repo: "deb https://security.debian.org/debian-security/ {{ ansible_distribution_release }}/updates main"  # debian repo (optional)

@@ -1,6 +1,41 @@
 ---
 # yamllint disable rule:line-length
 
+- name: configure storage for pgsql nodes
+  hosts: postgres_cluster
+  become: true
+  tasks:
+    - name: ensure volume group for vg_data exists
+      community.general.lvg:
+        vg: vg_data
+        pvs: /dev/sdb
+
+    - name: ensure volume group for vg_data exists
+      community.general.lvol:
+        vg: vg_data
+        lv: lv_pgsql
+        size: 100%VG
+
+    - name: ensure filesystem is created on pgsql lv
+      community.general.filesystem:
+        fstype: xfs
+        dev: /dev/mapper/vg_data-lv_pgsql
+
+    - name: ensure pgsql lv is mounted
+      ansible.posix.mount:
+        src: /dev/mapper/vg_data-lv_pgsql
+        path: /var/lib/postgresql
+        fstype: xfs
+        state: mounted
+
+- name: disable ufw
+  hosts: postgres_cluster
+  become: true
+  tasks:
+    - name: ensure ufw is disabled
+      community.general.ufw:
+        state: disabled
+
 - name: Deploy PostgreSQL HA Cluster (based on "Patroni" and "{{ dcs_type }}")
   hosts: localhost
   gather_facts: false

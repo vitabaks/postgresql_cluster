@@ -12,26 +12,30 @@ etc_hosts: []
 #  - "10.128.64.143 pgbackrest.minio.local minio.local s3.eu-west-3.amazonaws.com"  # example (MinIO)
 #  - ""
 
-ntp_enabled: false  # or 'true' if you want to install and configure the ntp service
-ntp_servers: []
+ntp_enabled: true  # or 'true' if you want to install and configure the ntp service
+ntp_servers:
+  - 0.dk.pool.ntp.org
+  - 1.dk.pool.ntp.org
+  - 2.dk.pool.ntp.org
+  - 3.dk.pool.ntp.org
 #  - "10.128.64.44"
 #  - "10.128.64.45"
 
-timezone: ""
+timezone: "Europe/Copenhagen"
 # timezone: "Europe/Moscow"
 
 # Generate locale
 # (except RHEL>=8,use glibc-langpack)
 locale_gen:
   - {language_country: "en_US", encoding: "UTF-8"}
-  - {language_country: "ru_RU", encoding: "UTF-8"}  # optional
+#  - {language_country: "ru_RU", encoding: "UTF-8"}  # optional
 #  - {language_country: "", encoding: ""}
 
 # Set system locale (LANG,LC_ALL)
 locale: "en_US.utf-8"
 
 # Configure swap space (if not already exists)
-swap_file_create: true  # or 'false'
+swap_file_create: false  # or 'false'
 swap_file_path: /swapfile
 swap_file_size_mb: '2048'  # change this value for your system
 
