@@ -436,5 +436,10 @@ vitabaks@gmail.com
 ### Sponsor this project
 [![Support me on Patreon](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fshieldsio-patreon.vercel.app%2Fapi%3Fusername%3Dvitabaks%26type%3Dpatrons&style=for-the-badge)](https://patreon.com/vitabaks)
 
+**Support our work through crypto wallets:**
+
+BTC: bc1qzz7pdx5ds5f28r9gp50xfsv0p7tk3m0wk9qn5t \
+ETH: 0x25eC4e2caf6CF810c690d2e2F779702a86D4f0d7
+
 ## Feedback, bug-reports, requests, ...
 Are [welcome](https://github.com/vitabaks/postgresql_cluster/issues)!
