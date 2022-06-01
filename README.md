@@ -36,7 +36,7 @@ Should you need to start from very beginning, use the following to clean up:
     ```
 - then delete etcd entry (can be run on any node):
     ```shell 
-    etcdctl --username patroni-etcd:P@ssw0rd rm --dir --recursive /service/pgsql-cluster/ # adjust if you changed the cluster's name
+    etcdctl --username patroni-etcd:P@ssw0rd rm --dir --recursive /service/pgsql-cluster/ # adjust if you changed the cluster's name, user name and password.
     ```
 
 ---
