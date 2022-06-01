@@ -1,4 +1,4 @@
-# PostgreSQL High-Availability Cluster :elephant: :sparkling_heart:
+# PostgreSQL High-Availability Cluster with DNS Connection Point (DRAFT)
 
 [![Ansible Galaxy](https://img.shields.io/badge/galaxy-vitabaks.postgresql_cluster-success.svg)](https://galaxy.ansible.com/vitabaks/postgresql_cluster)
 [<img src="https://github.com/vitabaks/postgresql_cluster/workflows/Ansible-lint/badge.svg?branch=master">](https://github.com/vitabaks/postgresql_cluster/actions?query=workflow%3AAnsible-lint)
