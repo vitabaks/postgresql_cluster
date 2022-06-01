@@ -27,24 +27,12 @@ patroni_superuser_password: "P@ssw0rd"  # please change password
 patroni_replication_username: "replicator"
 patroni_replication_password: "P@ssw0rd"  # please change password
 
-#patroni_etcd_username: "patroni-etcd" # or empty
-#patroni_etcd_password: "P@ssw0rd"  # please change password
-#{% if (confd_etcd_username is defined and confd_etcd_username | length > 0) %}
-#basic_auth = true
-#username = "{{ confd_etcd_username }}"
-#password = "{{ confd_etcd_password }}"
-#{% endif %}
-
+patroni_etcd_username: "patroni-etcd" # or empty
+patroni_etcd_password: "P@ssw0rd"  # please change password
 
 synchronous_mode: true  # or 'true' for enable synchronous database replication
 synchronous_mode_strict: false  # if 'true' then block all client writes to the master, when a synchronous replica is not available
 synchronous_node_count: 2  # number of synchronous standby databases
-
-
-# Confd variables
-confd_etcd_username: "confd-etcd" # or empty
-confd_etcd_password: "P@ssw0rd2"  # please change password
-
 
 # Load Balancing
 with_haproxy_load_balancing: true  # or 'true' if you want to install and configure the load-balancing
@@ -255,22 +243,5 @@ postgresql_restore_command: ""
 
 disable_archive_command: true  # or 'false' to not disable archive_command after restore
 keep_patroni_dynamic_json: true  # or 'false' to remove patroni.dynamic.json after restore (if exists)
-
-# Fix OS_FAMILY
-## AstraLinux CE 2.12.43 Orel: Debian 9 stretch
-#os_f: "Astra Linux (Orel 2.12.43)"
-#ansible_distribution: "{%if ansible_os_family == {{ os_f }} %}{{ 'Debian' }}{% else %}{{ ansible_distribution }}{% endif %}"
-#ansible_distribution_version: "{%if ansible_os_family == {{ os_f }} %}{{ '9.13' }}{% else %}{{ ansible_distribution_version }}{% endif %}"
-#ansible_distribution_major_version: "{%if ansible_os_family == {{ os_f }} %}{{ '9' }}{% else %}{{ ansible_distribution_major_version }}{% endif %}"
-#ansible_distribution_release: "{%if ansible_os_family == {{ os_f }} %}{{ 'stretch' }}{% else %}{{ ansible_distribution_release }}{% endif %}"
-#ansible_os_family: "{%if ansible_os_family == {{ os_f }} %}{{ 'Debian' }}{% else %}{{ ansible_os_family }}{% endif %}"
-
-## AstraLinux SE 1.7.1 Orel: Debian 10 buster
-#os_f: "Astra Linux"
-#ansible_distribution: "{% if ansible_os_family == os_f %}{{ 'Debian' }}{% else %}{{ ansible_distribution }}{% endif %}"
-#ansible_distribution_version: "{% if ansible_os_family == os_f %}{{ '10.12' }}{% else %}{{ ansible_distribution_version }}{% endif %}"
-#ansible_distribution_major_version: "{% if ansible_os_family == os_f %}{{ '10' }}{% else %}{{ ansible_distribution_major_version }}{% endif %}"
-#ansible_distribution_release: "{% if ansible_os_family == os_f %}{{ 'buster' }}{% else %}{{ ansible_distribution_release }}{% endif %}"
-ansible_os_family: "{% if ansible_os_family == 'Astra Linux' %} 'Debian' {% else %} 'ttt' {% endif %}"
 
 ...

@@ -1,0 +1,12 @@
+---
+# yamllint disable rule:line-length
+
+# AstraLinux SE 1.7.1 Orel: Debian 10 buster
+##ansible_os_family: "Astra Linux"
+ansible_os_family: "Debian"
+ansible_distribution: "Debian"
+ansible_distribution_version: "10.12"
+ansible_distribution_major_version: "10"
+ansible_distribution_release: "buster"
+
+...

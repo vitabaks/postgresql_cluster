@@ -6,7 +6,7 @@ firewall_flush_rules_and_chains: true
 
 firewall_allowed_tcp_ports:
   - "22"
-  - "25"
+#  - "25"
   - "80"
   - "443"
 firewall_allowed_udp_ports: []

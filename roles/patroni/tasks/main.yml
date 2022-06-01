@@ -705,19 +705,6 @@
         delay: 10
       ignore_errors: false
 
-      # for WAL-G (custom bootstrap)
-    - name: Wait for PostgreSQL Recovery to complete (WAL apply)
-      become: true
-      become_user: postgres
-      command: "{{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -tAc 'SELECT pg_is_in_recovery()'"
-      register: pg_is_in_recovery
-      until: pg_is_in_recovery.stdout == "f"
-      retries: 1200  # timeout 10 hours
-      delay: 30
-      changed_when: false
-      failed_when: false
-      when: patroni_cluster_bootstrap_method == "wal-g"
-
     - name: Check PostgreSQL is started and accepting connections on Master
       become: true
       become_user: postgres

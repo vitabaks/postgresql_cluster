@@ -11,12 +11,21 @@
     - vars/system.yml
 
   pre_tasks:
+    - name: Fix Astra Linux specific variables
+      include_vars: "vars/{{ ansible_os_family }}.yml"
+      when: not ansible_os_family == 'Astra Linux (Orel 2.12.43)'
+      tags: always
+
+    - name: Fix Astra Linux specific variables
+      include_vars: "vars/{{ ansible_os_family }}.yml"
+      when: not ansible_os_family == 'Astra Linux'
+      tags: always
+
     - name: Include OS-specific variables
       include_vars: "vars/{{ ansible_os_family }}.yml"
       when: not ansible_os_family == 'Rocky' and not ansible_os_family == 'AlmaLinux'
       tags: always
 
-    # For compatibility with Ansible old versions
     - name: Checking Linux distribution
       fail:
         msg: "{{ ansible_distribution }} is not supported"

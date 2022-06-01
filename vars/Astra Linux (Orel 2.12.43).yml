@@ -1,0 +1,12 @@
+---
+# yamllint disable rule:line-length
+
+# AstraLinux CE 2.12.43 Orel: Debian 9 stretch
+##ansible_os_family: "Astra Linux (Orel 2.12.43)"
+ansible_os_family: "Debian"
+ansible_distribution: "Debian"
+ansible_distribution_version: "9.13"
+ansible_distribution_major_version: "9"
+ansible_distribution_release: "stretch"
+
+...

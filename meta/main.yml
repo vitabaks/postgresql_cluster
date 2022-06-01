@@ -1,7 +1,7 @@
 ---
 galaxy_info:
   role_name: postgresql_cluster
-  description: PostgreSQL High-Availability Cluster (based on Patroni and etcd) with multi-site support
+  description: PostgreSQL High-Availability Cluster (based on Patroni and etcd) with DNS Connection Point
   namespace: IlgizMamyshev
   author: Ilgiz Mamyshev (mamyshev@outlook.com)
   license: MIT
@@ -18,10 +18,6 @@ galaxy_info:
       versions:
         - bionic
         - focal
-    - name: Astra Linux
-      versions:
-        - 2.12
-        - 1.7
 
   galaxy_tags:
     - postgresql

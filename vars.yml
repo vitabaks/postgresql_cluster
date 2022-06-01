@@ -1,0 +1,44 @@
+---
+# yamllint disable rule:line-length
+
+- name: Get and show variables
+  hosts: all
+  gather_facts: true
+  tags: always
+  vars_files:
+    - vars/main.yml
+    - vars/system.yml
+  vars:
+    minimal_ansible_version: 2.7.00000000000000
+  tasks:
+    - name: Create list of nodes
+      run_once: true
+      set_fact:
+        haproxy_nodes: "{% for host in groups['balancers'] %}{{ hostvars[host]['inventory_hostname'] }}{% if not loop.last %},{% endif %}{% endfor %}"  # noqa 204
+        postgres_cluster_nodes: "{% for host in groups['postgres_cluster'] %}{{ hostvars[host]['inventory_hostname'] }}{% if not loop.last %},{% endif %}{% endfor %}"  # noqa 204
+
+    - name: Variables
+      run_once: true
+      debug:
+        msg:
+          - +------------------------------------------------+
+          - haproxy_nodes {{ haproxy_nodes }}
+          - Port {{ haproxy_listen_port.master }} (read/write) master
+          - Port {{ haproxy_listen_port.replicas }} (read only)  all replicas
+          - Port {{ haproxy_listen_port.replicas_sync }} (read only)  synchronous replica only
+          - Port {{ haproxy_listen_port.replicas_async }} (read only)  asynchronous replicas only
+          - --------------------------------------------------
+          - postgres_cluster_nodes {{ postgres_cluster_nodes }}
+          - Port {{ postgresql_port }}
+          - --------------------------------------------------
+          - minimal_ansible_version {{ minimal_ansible_version }}
+          - ansible_distribution {{ ansible_distribution }}
+          - ansible_distribution_version {{ ansible_distribution_version }}
+          - ansible_distribution_major_version {{ ansible_distribution_major_version }}
+          - ansible_os_family {{ ansible_os_family }}
+          - ansible_distribution_release {{ ansible_distribution_release }}
+
+    - name: Print all available facts
+      ansible.builtin.debug:
+        var: ansible_facts
+...

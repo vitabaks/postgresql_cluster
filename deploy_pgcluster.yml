@@ -1,7 +1,7 @@
 ---
 # yamllint disable rule:line-length
 
-- name: Deploy PostgreSQL HA Cluster (based on "Patroni" and "{{ dcs_type }}")
+- name: Deploy PostgreSQL HA Cluster (based on "Patroni" and "{{ dcs_type }}") with DNS Connection Point
   hosts: localhost
   gather_facts: false
   vars_files:
@@ -33,6 +33,16 @@
     - vars/system.yml
 
   pre_tasks:
+    - name: Fix Astra Linux specific variables
+      include_vars: "vars/{{ ansible_os_family }}.yml"
+      when: not ansible_os_family == 'Astra Linux (Orel 2.12.43)'
+      tags: always
+
+    - name: Fix Astra Linux specific variables
+      include_vars: "vars/{{ ansible_os_family }}.yml"
+      when: not ansible_os_family == 'Astra Linux'
+      tags: always
+
     - name: Include OS-specific variables
       include_vars: "vars/{{ ansible_os_family }}.yml"
       when: not ansible_os_family == 'Rocky' and not ansible_os_family == 'AlmaLinux'
@@ -89,8 +99,9 @@
       when: firewall_enabled_at_boot|bool
       tags: firewall
 
-    - role: packages
     - role: sudo
+    - role: packages
+#    - role: sudo
     - role: sysctl
     - role: transparent_huge_pages
     - role: pam_limits
