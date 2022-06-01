@@ -439,7 +439,8 @@ vitabaks@gmail.com
 **Support our work through crypto wallets:**
 
 BTC: bc1qzz7pdx5ds5f28r9gp50xfsv0p7tk3m0wk9qn5t \
-ETH: 0x25eC4e2caf6CF810c690d2e2F779702a86D4f0d7
+ETH: 0x25eC4e2caf6CF810c690d2e2F779702a86D4f0d7 \
+USDT (TRC20) TSTSXZzqDCUDHDjZwCpuBkdukjuDZspwjj
 
 ## Feedback, bug-reports, requests, ...
 Are [welcome](https://github.com/vitabaks/postgresql_cluster/issues)!
