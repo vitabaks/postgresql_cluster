@@ -1,4 +1,4 @@
-# PostgreSQL High-Availability Cluster with DNS Connection Point (DRAFT)
+# PostgreSQL High-Availability Cluster with DNS Connection Point (DRAFT!!!!!!!!!)
 
 [![Ansible Galaxy](https://img.shields.io/badge/galaxy-vitabaks.postgresql_cluster-success.svg)](https://galaxy.ansible.com/vitabaks/postgresql_cluster)
 [<img src="https://github.com/vitabaks/postgresql_cluster/workflows/Ansible-lint/badge.svg?branch=master">](https://github.com/vitabaks/postgresql_cluster/actions?query=workflow%3AAnsible-lint)
@@ -430,16 +430,10 @@ Should you need to start from very beginning, use the following to clean up:
 Licensed under the MIT License. See the [LICENSE](./LICENSE) file for details.
 
 ## Author
-Vitaliy Kukharik (PostgreSQL DBA) \
-vitabaks@gmail.com
+..............
 
 ### Sponsor this project
-[![Support me on Patreon](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fshieldsio-patreon.vercel.app%2Fapi%3Fusername%3Dvitabaks%26type%3Dpatrons&style=for-the-badge)](https://patreon.com/vitabaks)
-
-**Support our work through crypto wallets:**
-
-BTC: bc1qzz7pdx5ds5f28r9gp50xfsv0p7tk3m0wk9qn5t \
-ETH: 0x25eC4e2caf6CF810c690d2e2F779702a86D4f0d7
+[![Support me on Patreon](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fshieldsio-patreon.vercel.app%2Fapi%3Fusername%3Dvitabaks%26type%3Dpatrons&style=for-the-badge)](https://patreon.com/imamyshev)
 
 ## Feedback, bug-reports, requests, ...
-Are [welcome](https://github.com/vitabaks/postgresql_cluster/issues)!
+Are [welcome](https://github.com/IlgizMamyshev/pgsql_cluster/issues)!
