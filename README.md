@@ -20,7 +20,6 @@ In addition to deploying new clusters, this playbook also support the deployment
 You have two options available for deployment ("Type A" and "Type B"):
 
 ### [Type A] PostgreSQL High-Availability with Load Balancing
-![TypeA](https://github.com/vitabaks/postgresql_cluster/blob/master/TypeA.png)
 
 > To use this scheme, specify `with_haproxy_load_balancing: true` in variable file vars/main.yml
 
@@ -56,7 +55,6 @@ In our configuration keepalived checks the status of the HAProxy service and in 
 
 
 ### [Type B] PostgreSQL High-Availability only
-![TypeB](https://github.com/vitabaks/postgresql_cluster/blob/master/TypeB.png)
 
 This is simple scheme without load balancing `Used by default`
 
@@ -168,11 +166,11 @@ To minimize the risk of losing data on autofailover, you can configure settings 
 
 1. Download or clone this repository
 
-`git clone https://github.com/vitabaks/postgresql_cluster.git`
+`git clone https://github.com/IlgizMamyshev/pgsql_cluster.git`
 
 2. Go to the playbook directory
 
-`cd postgresql_cluster/`
+`cd pgsql_cluster/`
 
 3. Edit the inventory file
 
@@ -206,8 +204,6 @@ proxy_env:
 6. Run playbook:
 
 `ansible-playbook deploy_pgcluster.yml`
-
-[![asciicast](https://asciinema.org/a/251019.svg)](https://asciinema.org/a/251019?speed=5)
 
 ---
 
