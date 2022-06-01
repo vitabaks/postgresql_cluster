@@ -1,0 +1,35 @@
+---
+# yamllint disable rule:line-length
+
+- name: DNS Connection Point | Make sure handlers are flushed immediately
+  meta: flush_handlers
+
+- name: DNS Connection Point | Make sure the packages are present
+  package:
+    name:
+      - dnsutils
+      - astra-winbind
+    state: present
+  environment: "{{ proxy_env | default({}) }}"
+  tags: patroni_callback, patroni_callback_conf
+
+- name: DNS Connection Point | Create script directory
+  file:
+    path: "{{ patroni_scripts_dir }}"
+    state: directory
+    owner: postgres
+    group: postgres
+    mode: 0750
+  tags: patroni_callback, patroni_callback_conf
+  
+- name: DNS Connection Point | Generate script file and assign permissions
+  template:
+    src: "templates/dnscp.sh.j2"
+    dest: "{{ patroni_scripts_dir }}/dnscp.sh"
+    owner: postgres
+    group: postgres
+    mode: 0771
+  when: existing_pgcluster is not defined or not existing_pgcluster|bool
+  tags: patroni_callback, patroni_callback_conf
+
+...

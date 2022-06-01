@@ -1,18 +1,14 @@
 ---
 galaxy_info:
   role_name: postgresql_cluster
-  description: PostgreSQL High-Availability Cluster (based on Patroni)
-  namespace: vitabaks
-  author: Vitaliy Kukharik (vitabaks@gmail.com)
+  description: PostgreSQL High-Availability Cluster (based on Patroni and etcd) with multi-site support
+  namespace: IlgizMamyshev
+  author: Ilgiz Mamyshev (mamyshev@outlook.com)
   license: MIT
 
   min_ansible_version: 2.7
 
   platforms:
-    - name: EL
-      versions:
-        - 7
-        - 8
     - name: Debian
       versions:
         - stretch
@@ -22,6 +18,10 @@ galaxy_info:
       versions:
         - bionic
         - focal
+    - name: Astra Linux
+      versions:
+        - 2.12
+        - 1.7
 
   galaxy_tags:
     - postgresql
@@ -29,5 +29,6 @@ galaxy_info:
     - cluster
     - patroni
     - etcd
+    - dnscp
 
 dependencies: []

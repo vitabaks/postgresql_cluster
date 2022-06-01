@@ -38,6 +38,10 @@ etcd:
   hosts: {% for etcd_hosts in patroni_etcd_hosts %}{{etcd_hosts.host}}:{{etcd_hosts.port}}{% if not loop.last %},{% endif %}{% endfor %}
 {% endif %}
 
+{% if (patroni_etcd_username is defined and patroni_etcd_username | length > 0) %}
+  username: {{ patroni_etcd_username }}
+  password: {{ patroni_etcd_password }}
+{% endif %}
 
 bootstrap:
   method: {{ patroni_cluster_bootstrap_method }}
@@ -106,7 +110,7 @@ bootstrap:
 
 
 postgresql:
-{% if not with_haproxy_load_balancing|bool and not pgbouncer_install|bool and (cluster_vip is defined and cluster_vip | length > 0) %}
+{% if not with_haproxy_load_balancing|bool and (cluster_vip is defined and cluster_vip | length > 0) %}
   listen: {{ hostvars[inventory_hostname]['inventory_hostname'] }},{{ cluster_vip }},127.0.0.1:{{ postgresql_port }}
 {% else %}
   listen: {{ hostvars[inventory_hostname]['inventory_hostname'] }},127.0.0.1:{{ postgresql_port }}
@@ -145,12 +149,12 @@ postgresql:
   remove_data_directory_on_rewind_failure: {{ patroni_remove_data_directory_on_rewind_failure |string |d(false, true) |lower }}
   remove_data_directory_on_diverged_timelines: {{ patroni_remove_data_directory_on_diverged_timelines |string |d(false, true) |lower }}
 
-#  callbacks:
-#    on_start:
-#    on_stop:
+  callbacks:
+    on_start: {{ patroni_scripts_dir }}/dnscp.sh
+    on_stop: {{ patroni_scripts_dir }}/dnscp.sh
 #    on_restart:
 #    on_reload:
-#    on_role_change:
+    on_role_change: {{ patroni_scripts_dir }}/dnscp.sh
 
   create_replica_methods:
 {% if patroni_create_replica_methods is defined and patroni_create_replica_methods | length > 0 %}
@@ -196,9 +200,9 @@ postgresql:
 {% endif %}
 
 watchdog:
-  mode: off  # Allowed values: off, automatic, required
+  mode: required  # Allowed values: off, automatic, required
   device: /dev/watchdog
-  safety_margin: 5
+  safety_margin: -1
 
 tags:
   nofailover: false

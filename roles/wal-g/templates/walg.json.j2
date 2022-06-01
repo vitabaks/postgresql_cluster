@@ -1,7 +1,0 @@
-{
-{% for wal_g in wal_g_json %}
-  "{{ wal_g.option }}": "{{ wal_g.value }}"{% if not loop.last %},
-{% endif %}
-{% endfor %}
-
-}

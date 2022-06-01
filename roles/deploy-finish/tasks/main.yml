@@ -5,7 +5,7 @@
   meta: flush_handlers
 
 - block:
-    - name: Check postgresql cluster health
+    - name: Check PostgreSQL cluster health
       run_once: true
       become: true
       become_user: postgres
@@ -15,7 +15,7 @@
         PATH: "{{ ansible_env.PATH }}:/usr/bin:/usr/local/bin"
       changed_when: false
 
-    - name: PostgreSQL Cluster health
+    - name: PostgreSQL cluster health
       run_once: true
       debug:
         var: patronictl_result.stdout_lines
@@ -23,7 +23,7 @@
   tags: patroni_status, cluster_info, cluster_status, point_in_time_recovery
 
 - block:
-    - name: Get postgresql database list
+    - name: Get PostgreSQL database list
       run_once: true
       become: true
       become_user: postgres
@@ -61,16 +61,17 @@
   tags: databases, db_list, cluster_info, cluster_status, point_in_time_recovery
 
 - block:
-    - name: PostgreSQL Cluster connection info
+    - name: PostgreSQL cluster connection info
       run_once: true
       debug:
         msg:
           - +------------------------------------------------+
-          - address (VIP) {{ cluster_vip }}
-          - port {{ haproxy_listen_port.master }} (read/write) master
-          - port {{ haproxy_listen_port.replicas }} (read only)  all replicas
-          - port {{ haproxy_listen_port.replicas_sync }} (read only)  synchronous replica only
-          - port {{ haproxy_listen_port.replicas_async }} (read only)  asynchronous replicas only
+          - DNS Connection Point {{ cluster_dnscp }}
+          - Address (VIP) {{ cluster_vip }}
+          - Port {{ haproxy_listen_port.master }} (read/write) master
+          - Port {{ haproxy_listen_port.replicas }} (read only)  all replicas
+          - Port {{ haproxy_listen_port.replicas_sync }} (read only)  synchronous replica only
+          - Port {{ haproxy_listen_port.replicas_async }} (read only)  asynchronous replicas only
           - +------------------------------------------------+
       when: with_haproxy_load_balancing|bool and
             synchronous_mode|bool
@@ -80,9 +81,10 @@
       debug:
         msg:
           - +------------------------------------------------+
-          - address (VIP) {{ cluster_vip }}
-          - port {{ haproxy_listen_port.master }} (read/write) master
-          - port {{ haproxy_listen_port.replicas }} (read only)  all replicas
+          - DNS Connection Point {{ cluster_dnscp }}
+          - Address (VIP) {{ cluster_vip }}
+          - Port {{ haproxy_listen_port.master }} (read/write) master
+          - Port {{ haproxy_listen_port.replicas }} (read only)  all replicas
           - +------------------------------------------------+
       when: with_haproxy_load_balancing|bool and
             not synchronous_mode|bool
@@ -92,22 +94,11 @@
       debug:
         msg:
           - +------------------------------------------------+
-          - address (VIP) {{ cluster_vip }}
-          - port {{ pgbouncer_listen_port }} (pgbouncer)
+          - DNS Connection Point {{ cluster_dnscp }}
+          - Address (VIP) {{ cluster_vip }}
+          - Port {{ postgresql_port }}
           - +------------------------------------------------+
-      when: not with_haproxy_load_balancing|bool and
-            pgbouncer_install|bool
-
-    - name: PostgreSQL Cluster connection info
-      run_once: true
-      debug:
-        msg:
-          - +------------------------------------------------+
-          - address (VIP) {{ cluster_vip }}
-          - port {{ postgresql_port }}
-          - +------------------------------------------------+
-      when: not with_haproxy_load_balancing|bool and
-            not pgbouncer_install|bool
+      when: not with_haproxy_load_balancing|bool
   when: cluster_vip is defined and cluster_vip | length > 0
   ignore_errors: true
   tags: conn_info, cluster_info, cluster_status
@@ -142,11 +133,11 @@
       debug:
         msg:
           - +------------------------------------------------+
-          - address {{ haproxy_nodes }}
-          - port {{ haproxy_listen_port.master }} (read/write) master
-          - port {{ haproxy_listen_port.replicas }} (read only)  all replicas
-          - port {{ haproxy_listen_port.replicas_sync }} (read only)  synchronous replica only
-          - port {{ haproxy_listen_port.replicas_async }} (read only)  asynchronous replicas only
+          - Address {{ haproxy_nodes }}
+          - Port {{ haproxy_listen_port.master }} (read/write) master
+          - Port {{ haproxy_listen_port.replicas }} (read only)  all replicas
+          - Port {{ haproxy_listen_port.replicas_sync }} (read only)  synchronous replica only
+          - Port {{ haproxy_listen_port.replicas_async }} (read only)  asynchronous replicas only
           - +------------------------------------------------+
       when: with_haproxy_load_balancing|bool and
             synchronous_mode|bool
@@ -156,9 +147,9 @@
       debug:
         msg:
           - +------------------------------------------------+
-          - address {{ haproxy_nodes }}
-          - port {{ haproxy_listen_port.master }} (read/write) master
-          - port {{ haproxy_listen_port.replicas }} (read only)  all replicas
+          - Address {{ haproxy_nodes }}
+          - Port {{ haproxy_listen_port.master }} (read/write) master
+          - Port {{ haproxy_listen_port.replicas }} (read only)  all replicas
           - +------------------------------------------------+
       when: with_haproxy_load_balancing|bool and
             not synchronous_mode|bool
@@ -168,22 +159,10 @@
       debug:
         msg:
           - +------------------------------------------------+
-          - address {{ postgres_cluster_nodes }}
-          - port {{ pgbouncer_listen_port }} (pgbouncer)
+          - Address {{ postgres_cluster_nodes }}
+          - Port {{ postgresql_port }}
           - +------------------------------------------------+
-      when: not with_haproxy_load_balancing|bool and
-            pgbouncer_install|bool
-
-    - name: PostgreSQL Cluster connection info
-      run_once: true
-      debug:
-        msg:
-          - +------------------------------------------------+
-          - address {{ postgres_cluster_nodes }}
-          - port {{ postgresql_port }}
-          - +------------------------------------------------+
-      when: not with_haproxy_load_balancing|bool and
-            not pgbouncer_install|bool
+      when: not with_haproxy_load_balancing|bool
   ignore_errors: true
   when: cluster_vip is not defined or cluster_vip | length < 1
   tags: conn_info, cluster_info, cluster_status

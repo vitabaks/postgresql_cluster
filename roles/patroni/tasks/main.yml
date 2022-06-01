@@ -11,7 +11,7 @@
   tags: patroni, patroni_install, pip
 
 # Patroni install
-- block:  # installation_method: "repo" and patroni_installation_method: "pip"
+- block:  # patroni_installation_method: "pip"
     - name: Copy patroni requirements.txt file
       copy:
         src: requirements.txt
@@ -59,7 +59,7 @@
       environment:
         PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
       when: patroni_pip_package_repo | length < 1 and patroni_install_version != "latest"
-  when: installation_method == "repo" and patroni_installation_method == "pip"
+  when: patroni_installation_method == "pip"
   environment: "{{ proxy_env | default({}) }}"
   vars:
     ansible_python_interpreter: /usr/bin/python3
@@ -105,53 +105,12 @@
       environment:
         PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
       when: patroni_pip_package_repo | length > 0
-  when: installation_method == "repo" and patroni_installation_method == "pip"
+  when: patroni_installation_method == "pip"
   vars:
     ansible_python_interpreter: /usr/bin/python3
   tags: patroni, patroni_install
 
-- block:  # installation_method: "file" and patroni_installation_method: "pip"
-    - name: Copy patroni requirements
-      copy:
-        src: "{{ item }}"
-        dest: /tmp/
-      loop: "{{ patroni_pip_requirements_file }}"
-      when: patroni_pip_requirements_file | length > 0
-
-    - name: Copy patroni package
-      copy:
-        src: "{{ item }}"
-        dest: /tmp/
-      loop: "{{ patroni_pip_package_file }}"
-      when: patroni_pip_package_file | length > 0
-
-    - name: Install requirements
-      pip:
-        name: "file:///tmp/{{ item }}"
-        executable: pip3
-        extra_args: "--no-index --find-links=file:///tmp --ignore-installed"
-        umask: "0022"
-      loop: "{{ patroni_pip_requirements_file | map('basename') | list }}"
-      environment:
-        PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
-      when: patroni_pip_requirements_file | length > 0
-
-    - name: Install patroni
-      pip:
-        name: "file:///tmp/{{ item }}"
-        executable: pip3
-        extra_args: "--no-index --find-links=file:///tmp --ignore-installed"
-        umask: "0022"
-      loop: "{{ patroni_pip_package_file | map('basename') | list }}"
-      environment:
-        PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
-      when: patroni_pip_package_file | length > 0
-  when: installation_method == "file" and patroni_installation_method == "pip"
-  vars:
-    ansible_python_interpreter: /usr/bin/python3
-  tags: patroni, patroni_install
-
-- block:  # installation_method: "repo" and patroni_installation_method: "rpm/deb"
+- block:  # patroni_installation_method: "rpm/deb"
     # Debian
     - name: Install patroni package
       package:
@@ -202,38 +161,7 @@
       loop: "{{ patroni_rpm_package_repo | map('basename') | list }}"
       when: ansible_os_family == "RedHat" and patroni_rpm_package_repo | length > 0
   environment: "{{ proxy_env | default({}) }}"
-  when: installation_method == "repo" and (patroni_installation_method == "rpm" or patroni_installation_method == "deb")
-  tags: patroni, patroni_install
-
-# installation_method: "file" and patroni_installation_method: "rpm/deb"
-- block:
-    # Debian
-    - name: Copy patroni deb package into /tmp
-      copy:
-        src: "{{ patroni_deb_package_file }}"
-        dest: /tmp/
-      when: ansible_os_family == "Debian"
-
-    - name: Install patroni from deb package
-      apt:
-        force_apt_get: true
-        deb: "/tmp/{{ patroni_deb_package_file | basename }}"
-        state: present
-      when: ansible_os_family == "Debian"
-
-    # RedHat
-    - name: Copy patroni rpm package into /tmp
-      copy:
-        src: "{{ patroni_rpm_package_file }}"
-        dest: /tmp/
-      when: ansible_os_family == "RedHat"
-
-    - name: Install patroni from rpm package
-      package:
-        name: "/tmp/{{ patroni_rpm_package_file | basename }}"
-        state: present
-      when: ansible_os_family == "RedHat"
-  when: installation_method == "file" and (patroni_installation_method == "rpm" or patroni_installation_method == "deb")
+  when: (patroni_installation_method == "rpm" or patroni_installation_method == "deb")
   tags: patroni, patroni_install
 
 # Patroni configure
@@ -298,7 +226,7 @@
         - {regexp: '^  connect_address: ((?!8008).)*$', line: '  connect_address: {{ hostvars[inventory_hostname].inventory_hostname }}:{{ postgresql_port }}'}
       loop_control:
         label: "{{ item.line }}"
-      when: with_haproxy_load_balancing|bool or pgbouncer_install|bool or (cluster_vip is not defined or cluster_vip | length < 1)
+      when: with_haproxy_load_balancing|bool or (cluster_vip is not defined or cluster_vip | length < 1)
 
     - name: Prepare patroni.yml conf file (replace "name","listen","connect_address")
       lineinfile:
@@ -314,7 +242,7 @@
         - {regexp: '^  connect_address: ((?!8008).)*$', line: '  connect_address: {{ hostvars[inventory_hostname].inventory_hostname }}:{{ postgresql_port }}'}
       loop_control:
         label: "{{ item.line }}"
-      when: not with_haproxy_load_balancing|bool and not pgbouncer_install|bool and (cluster_vip is defined and cluster_vip | length > 0)
+      when: not with_haproxy_load_balancing|bool and (cluster_vip is defined and cluster_vip | length > 0)
   when: existing_pgcluster is defined and existing_pgcluster|bool
   tags: patroni, patroni_conf
 

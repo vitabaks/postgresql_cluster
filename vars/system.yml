@@ -2,38 +2,9 @@
 # yamllint disable rule:line-length
 # yamllint disable rule:comments-indentation
 
-# DNS servers (/etc/resolv.conf)
-nameservers: []
-#  - "8.8.8.8"  # example (Google Public DNS)
-#  - "9.9.9.9"  # (Quad9 Public DNS)
+#timezone: ""
+timezone: "Europe/Moscow"
 
-# /etc/hosts (optional)
-etc_hosts: []
-#  - "10.128.64.143 pgbackrest.minio.local minio.local s3.eu-west-3.amazonaws.com"  # example (MinIO)
-#  - ""
-
-ntp_enabled: false  # or 'true' if you want to install and configure the ntp service
-ntp_servers: []
-#  - "10.128.64.44"
-#  - "10.128.64.45"
-
-timezone: ""
-# timezone: "Europe/Moscow"
-
-# Generate locale
-# (except RHEL>=8,use glibc-langpack)
-locale_gen:
-  - {language_country: "en_US", encoding: "UTF-8"}
-  - {language_country: "ru_RU", encoding: "UTF-8"}  # optional
-#  - {language_country: "", encoding: ""}
-
-# Set system locale (LANG,LC_ALL)
-locale: "en_US.utf-8"
-
-# Configure swap space (if not already exists)
-swap_file_create: true  # or 'false'
-swap_file_path: /swapfile
-swap_file_size_mb: '2048'  # change this value for your system
 
 # Kernel parameters
 sysctl_set: true  # or 'false'
@@ -46,15 +17,16 @@ sysctl_conf:
     - {name: "vm.overcommit_memory", value: "2"}
     - {name: "vm.swappiness", value: "1"}
     - {name: "vm.min_free_kbytes", value: "102400"}
-    - {name: "vm.dirty_expire_centisecs", value: "1000"}
-    - {name: "vm.dirty_background_bytes", value: "67108864"}
-    - {name: "vm.dirty_bytes", value: "536870912"}
-#    - {name: "vm.nr_hugepages", value: "9510"}  # example "9510"=18GB
+#    - {name: "vm.dirty_expire_centisecs", value: "1000"}
+    - {name: "vm.dirty_background_bytes", value: "0"} #"67108864"
+#    - {name: "vm.dirty_bytes", value: "536870912"}
+#    - {name: "vm.nr_hugepages", value: "70"}  # example "9510*2MB"=18GB
     - {name: "vm.zone_reclaim_mode", value: "0"}
     - {name: "kernel.numa_balancing", value: "0"}
     - {name: "kernel.sched_migration_cost_ns", value: "5000000"}
     - {name: "kernel.sched_autogroup_enabled", value: "0"}
     - {name: "net.ipv4.ip_nonlocal_bind", value: "1"}
+#
     - {name: "net.ipv4.ip_forward", value: "1"}
     - {name: "net.ipv4.ip_local_port_range", value: "10000 65535"}
     - {name: "net.netfilter.nf_conntrack_max", value: "1048576"}
@@ -74,7 +46,6 @@ sysctl_conf:
     - {name: "net.ipv4.tcp_tw_reuse", value: "1"}
 #    - {name: "", value: ""}
 
-
 # Transparent Huge Pages
 disable_thp: true  # or 'false'
 
@@ -84,31 +55,6 @@ set_limits: true  # or 'false'
 limits_user: "postgres"
 soft_nofile: 65536
 hard_nofile: 200000
-
-
-# I/O Scheduler (optional)
-set_scheduler: false  # or 'true'
-scheduler:
-  - {sched: "deadline", nr_requests: "1024", device: "sda"}
-#  - {sched: "noop" , nr_requests: "1024", device: "sdb"}
-#  - {sched: "" , nr_requests: "1024", device: ""}
-
-# Non-multiqueue I/O schedulers:
-# cfq         - for desktop systems and slow SATA drives
-# deadline    - for SAS drives (recommended for databases)
-# noop        - for SSD drives
-# Multiqueue I/O schedulers (blk-mq):
-# mq-deadline - (recommended for databases)
-# none        - (ideal for fast random I/O devices such as NVMe)
-# bfq         - (avoid for databases)
-# kyber
-
-
-# SSH Keys (optional)
-enable_ssh_key_based_authentication: false  # or 'true' for configure SSH Key-Based Authentication
-ssh_key_user: "postgres"
-ssh_key_state: "present"
-ssh_known_hosts: "{{ groups['postgres_cluster'] }}"
 
 
 # sudo
@@ -130,15 +76,17 @@ firewall_allowed_tcp_ports_for:
   postgres_cluster:
     - "{{ ansible_ssh_port | default(22) }}"
     - "{{ postgresql_port }}"
-    - "{{ pgbouncer_listen_port }}"
     - "8008"  # Patroni REST API port
-    - "19999"  # Netdata
-#    - "10050"  # Zabbix agent
+    - "3389"  # RDP
+    - "445"  # SMB
+    - "10050"  # Zabbix agent
 #    - ""
   etcd_cluster:
     - "{{ ansible_ssh_port | default(22) }}"
     - "2379"  # ETCD port
     - "2380"  # ETCD port
+    - "3389"  # RDP
+    - "10050"  # Zabbix agent
 #    - ""
   balancers:
     - "{{ ansible_ssh_port | default(22) }}"
@@ -161,18 +109,5 @@ firewall_additional_rules_for:
 # disable firewalld (installed by default on RHEL/CentOS) or ufw (installed by default on Ubuntu)
 firewall_disable_firewalld: true
 firewall_disable_ufw: true
-
-
-# (optional) - Fetch files from the server in the "master" group. These files can later be copied to all servers.
-fetch_files_from_master: []
-#  - {src: "/etc/ssl/certs/ssl-cert-snakeoil.pem", dest: "files/ssl-cert-snakeoil.pem"}
-#  - {src: "/etc/ssl/private/ssl-cert-snakeoil.key", dest: "files/ssl-cert-snakeoil.key"}
-#  - {src: "/path/to/myfile", dest: "files/myfile"}
-
-# (optional) - Copy this files to all servers in the cluster ("master" and "replica" groups)
-copy_files_to_all_server: []
-#  - {src: "files/ssl-cert-snakeoil.pem", dest: "/etc/ssl/certs/ssl-cert-snakeoil.pem", owner: "postgres", group: "postgres", mode: "0644"}
-#  - {src: "files/ssl-cert-snakeoil.key", dest: "/etc/ssl/private/ssl-cert-snakeoil.key", owner: "postgres", group: "postgres", mode: "0600"}
-#  - {src: "files/myfile", dest: "/path/to/myfile", owner: "postgres", group: "postgres", mode: "0640"}
 
 ...

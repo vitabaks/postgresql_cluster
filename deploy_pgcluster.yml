@@ -38,13 +38,6 @@
       when: not ansible_os_family == 'Rocky' and not ansible_os_family == 'AlmaLinux'
       tags: always
 
-    # For compatibility with Ansible old versions
-    # (support for RockyLinux and AlmaLinux has been added to Ansible 2.11)
-    - name: Include OS-specific variables
-      include_vars: "vars/RedHat.yml"
-      when: ansible_os_family == 'Rocky' or ansible_os_family == 'AlmaLinux'
-      tags: always
-
     - name: Checking Linux distribution
       fail:
         msg: "{{ ansible_distribution }} is not supported"
@@ -60,7 +53,7 @@
         update_cache: true
         cache_valid_time: 3600
       environment: "{{ proxy_env | default({}) }}"
-      when: ansible_os_family == "Debian" and installation_method == "repo"
+      when: ansible_os_family == "Debian"
       tags: add_repo, install_packages, install_postgres
 
     - name: Make sure the gnupg and apt-transport-https packages are present
@@ -70,7 +63,7 @@
           - apt-transport-https
         state: present
       environment: "{{ proxy_env | default({}) }}"
-      when: ansible_os_family == "Debian" and installation_method == "repo"
+      when: ansible_os_family == "Debian"
       tags: add_repo, install_packages, install_postgres
 
     - name: Build a firewall_ports_dynamic_var
@@ -96,49 +89,17 @@
       when: firewall_enabled_at_boot|bool
       tags: firewall
 
-    - role: hostname
-    - role: resolv_conf
-    - role: etc_hosts
-    - role: add-repository
     - role: packages
     - role: sudo
-    - role: swap
     - role: sysctl
     - role: transparent_huge_pages
     - role: pam_limits
-    - role: io-scheduler
-    - role: locales
     - role: timezone
-    - role: ntp
-    - role: ssh-keys
-    - role: copy
+    - role: dnscp
 
 - import_playbook: balancers.yml
   when: with_haproxy_load_balancing|bool
   tags: load_balancing, haproxy
-
-- hosts: pgbackrest:postgres_cluster
-  become: true
-  become_method: sudo
-  gather_facts: true
-  any_errors_fatal: true
-  vars_files:
-    - vars/main.yml
-  pre_tasks:
-    - name: Include OS-specific variables
-      include_vars: "vars/{{ ansible_os_family }}.yml"
-      when: not ansible_os_family == 'Rocky' and not ansible_os_family == 'AlmaLinux'
-      tags: always
-
-    # For compatibility with Ansible old versions
-    # (support for RockyLinux and AlmaLinux has been added to Ansible 2.11)
-    - name: Include OS-specific variables
-      include_vars: "vars/RedHat.yml"
-      when: ansible_os_family == 'Rocky' or ansible_os_family == 'AlmaLinux'
-      tags: always
-  roles:
-    - role: pgbackrest
-      when: pgbackrest_install|bool
 
 - hosts: postgres_cluster
   become: true
@@ -155,44 +116,8 @@
       when: not ansible_os_family == 'Rocky' and not ansible_os_family == 'AlmaLinux'
       tags: always
 
-    # For compatibility with Ansible old versions
-    # (support for RockyLinux and AlmaLinux has been added to Ansible 2.11)
-    - name: Include OS-specific variables
-      include_vars: "vars/RedHat.yml"
-      when: ansible_os_family == 'Rocky' or ansible_os_family == 'AlmaLinux'
-      tags: always
-
   roles:
-    - role: wal-g
-      when: wal_g_install|bool
-
-    - role: pg_probackup
-      when: pg_probackup_install|bool
-
-    - role: pgbouncer
-      when: pgbouncer_install|bool
-
     - role: patroni
-
-    - role: vip-manager
-      when: not with_haproxy_load_balancing|bool and
-            (cluster_vip is defined and cluster_vip | length > 0)
-
-    # optional
-    - role: postgresql-users
-      when: is_master == "true" and postgresql_users | length > 0
-
-    - role: postgresql-databases
-      when: is_master == "true" and postgresql_databases | length > 0
-
-    - role: postgresql-extensions
-      when: is_master == "true" and postgresql_extensions | length > 0
-
-    - role: pgbouncer/userlist
-      when: pgbouncer_install|bool and pgbouncer_generate_userlist|bool
-
-    - role: netdata
-      when: netdata_install is defined and netdata_install|bool
 
     # finish (info)
     - role: deploy-finish

@@ -41,27 +41,7 @@
       loop:
         - etcd
         - etcdctl
-  when: installation_method == "repo" and etcd_package_repo | length > 0
-  tags: etcd, etcd_install
-
-- block:  # install etcd package from file
-    - name: Extract "etcd" into /tmp
-      unarchive:
-        src: "{{ etcd_package_file }}"
-        dest: /tmp/
-        extra_opts:
-          - --no-same-owner
-
-    - name: Copy "etcd" and "etcdctl" binary files to /usr/local/bin/
-      copy:
-        src: "/tmp/{{ etcd_package_file.split('.tar.gz')[0] | basename }}/{{ item }}"
-        dest: /usr/local/bin/
-        mode: u+x,g+x,o+x
-        remote_src: true
-      loop:
-        - etcd
-        - etcdctl
-  when: installation_method == "file" and etcd_package_file | length > 0
+  when: etcd_package_repo | length > 0
   tags: etcd, etcd_install
 
 - name: Add etcd user

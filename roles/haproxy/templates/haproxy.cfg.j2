@@ -26,8 +26,8 @@ listen stats
     stats uri /
 
 listen master
-{% if cluster_vip is defined and cluster_vip | length > 0 %}
-    bind {{ cluster_vip }}:{{ haproxy_listen_port.master }}
+{% if cluster_dnscp is defined and cluster_dnscp | length > 0 %}
+    bind {{ cluster_dnscp }}:{{ haproxy_listen_port.master }}
 {% else %}
     bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ haproxy_listen_port.master }}
 {% endif %}
@@ -36,20 +36,14 @@ listen master
     option httpchk OPTIONS /master
     http-check expect status 200
     default-server inter 3s fastinter 1s fall 3 rise 4 on-marked-down shutdown-sessions
-{% if pgbouncer_install|bool %}
-  {% for host in groups['postgres_cluster'] %}
-server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}:{{ pgbouncer_listen_port }} check port 8008
-  {% endfor %}
-{% endif %}
-{% if ( pgbouncer_install is not defined ) or ( not pgbouncer_install|bool ) %}
+
   {% for host in groups['postgres_cluster'] %}
 server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}:{{ postgresql_port }} check port 8008
   {% endfor %}
-{% endif %}
 
 listen replicas
-{% if cluster_vip is defined and cluster_vip | length > 0 %}
-    bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas }}
+{% if cluster_dnscp is defined and cluster_dnscp | length > 0 %}
+    bind {{ cluster_dnscp }}:{{ haproxy_listen_port.replicas }}
 {% else %}
     bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ haproxy_listen_port.replicas }}
 {% endif %}
@@ -59,20 +53,14 @@ listen replicas
     balance roundrobin
     http-check expect status 200
     default-server inter 3s fastinter 1s fall 3 rise 2 on-marked-down shutdown-sessions
-{% if pgbouncer_install|bool %}
-  {% for host in groups['postgres_cluster'] %}
-server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}:{{ pgbouncer_listen_port }} check port 8008
-  {% endfor %}
-{% endif %}
-{% if ( pgbouncer_install is not defined ) or ( not pgbouncer_install|bool ) %}
+
   {% for host in groups['postgres_cluster'] %}
 server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}:{{ postgresql_port }} check port 8008
   {% endfor %}
-{% endif %}
 
 listen replicas_sync
-{% if cluster_vip is defined and cluster_vip | length > 0 %}
-    bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas_sync }}
+{% if cluster_dnscp is defined and cluster_dnscp | length > 0 %}
+    bind {{ cluster_dnscp }}:{{ haproxy_listen_port.replicas_sync }}
 {% else %}
     bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ haproxy_listen_port.replicas_sync }}
 {% endif %}
@@ -82,20 +70,14 @@ listen replicas_sync
     balance roundrobin
     http-check expect status 200
     default-server inter 3s fastinter 1s fall 3 rise 2 on-marked-down shutdown-sessions
-{% if pgbouncer_install|bool %}
-  {% for host in groups['postgres_cluster'] %}
-server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}:{{ pgbouncer_listen_port }} check port 8008
-  {% endfor %}
-{% endif %}
-{% if ( pgbouncer_install is not defined ) or ( not pgbouncer_install|bool ) %}
+
   {% for host in groups['postgres_cluster'] %}
 server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}:{{ postgresql_port }} check port 8008
   {% endfor %}
-{% endif %}
 
 listen replicas_async
-{% if cluster_vip is defined and cluster_vip | length > 0 %}
-    bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas_async }}
+{% if cluster_dnscp is defined and cluster_dnscp | length > 0 %}
+    bind {{ cluster_dnscp }}:{{ haproxy_listen_port.replicas_async }}
 {% else %}
     bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ haproxy_listen_port.replicas_async }}
 {% endif %}
@@ -105,14 +87,9 @@ listen replicas_async
     balance roundrobin
     http-check expect status 200
     default-server inter 3s fastinter 1s fall 3 rise 2 on-marked-down shutdown-sessions
-{% if pgbouncer_install|bool %}
-  {% for host in groups['postgres_cluster'] %}
-server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}:{{ pgbouncer_listen_port }} check port 8008
-  {% endfor %}
-{% endif %}
-{% if ( pgbouncer_install is not defined ) or ( not pgbouncer_install|bool ) %}
+
   {% for host in groups['postgres_cluster'] %}
 server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}:{{ postgresql_port }} check port 8008
   {% endfor %}
-{% endif %}
+
 

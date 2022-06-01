@@ -16,19 +16,12 @@
       when: not ansible_os_family == 'Rocky' and not ansible_os_family == 'AlmaLinux'
       tags: always
 
-    # For compatibility with Ansible old versions
-    # (support for RockyLinux and AlmaLinux has been added to Ansible 2.11)
-    - name: Include OS-specific variables
-      include_vars: "vars/RedHat.yml"
-      when: ansible_os_family == 'Rocky' or ansible_os_family == 'AlmaLinux'
-      tags: always
-
     - name: Update apt cache
       apt:
         update_cache: true
         cache_valid_time: 3600
       environment: "{{ proxy_env | default({}) }}"
-      when: ansible_os_family == "Debian" and installation_method == "repo"
+      when: ansible_os_family == "Debian"
 
     - name: Make sure the gnupg and apt-transport-https packages are present
       apt:
@@ -37,7 +30,7 @@
           - apt-transport-https
         state: present
       environment: "{{ proxy_env | default({}) }}"
-      when: ansible_os_family == "Debian" and installation_method == "repo"
+      when: ansible_os_family == "Debian"
 
     - name: Build a firewall_ports_dynamic_var
       set_fact:
@@ -62,11 +55,10 @@
       when: firewall_enabled_at_boot|bool
       tags: firewall
 
-    - role: hostname
-    - role: resolv_conf
+#    - role: resolv_conf
     - role: sysctl
     - role: timezone
-    - role: ntp
+#    - role: ntp
 
     - role: etcd
 

@@ -2,19 +2,21 @@
 # "Check system" variables
 
 os_valid_distributions:
-  - RedHat
-  - CentOS
+#  - RedHat
+#  - CentOS
   - Rocky
-  - OracleLinux
+#  - OracleLinux
   - Ubuntu
   - Debian
   - AlmaLinux
+  - Astra Linux
 
 os_minimum_versions:
-  RedHat: 7
-  CentOS: 7
+#  RedHat: 7
+#  CentOS: 7
   Rocky: 8.4
-  OracleLinux: 7
+#  OracleLinux: 7
   Ubuntu: 18.04
   Debian: 9
   AlmaLinux: 8.3
+  Astra Linux: 1.0
