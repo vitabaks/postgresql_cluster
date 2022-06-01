@@ -1,13 +1,10 @@
 # PostgreSQL High-Availability Cluster with DNS Connection Point (DRAFT!!!!!!!!!)
 
-[![Ansible Galaxy](https://img.shields.io/badge/galaxy-vitabaks.postgresql_cluster-success.svg)](https://galaxy.ansible.com/vitabaks/postgresql_cluster)
-[<img src="https://github.com/vitabaks/postgresql_cluster/workflows/Ansible-lint/badge.svg?branch=master">](https://github.com/vitabaks/postgresql_cluster/actions?query=workflow%3AAnsible-lint)
-[<img src="https://github.com/vitabaks/postgresql_cluster/workflows/Yamllint/badge.svg?branch=master">](https://github.com/vitabaks/postgresql_cluster/actions?query=workflow%3AYamllint)
-[<img src="https://github.com/vitabaks/postgresql_cluster/workflows/Molecule/badge.svg?branch=master">](https://github.com/vitabaks/postgresql_cluster/actions?query=workflow%3AMolecule)
-[![GitHub license](https://img.shields.io/github/license/vitabaks/postgresql_cluster)](https://github.com/vitabaks/postgresql_cluster/blob/master/LICENSE) 
-![GitHub stars](https://img.shields.io/github/stars/vitabaks/postgresql_cluster)
+[![GitHub license](https://img.shields.io/github/license/IlgizMamyshev/pgsql_cluster)](https://github.com/IlgizMamyshev/pgsql_cluster/blob/master/LICENSE) 
+![GitHub stars](https://img.shields.io/github/stars/IlgizMamyshev/pgsql_cluster)
 
 ---
+![Banner](https://user-images.githubusercontent.com/93491087/171470810-9437d5ea-0ef9-41b4-aa7e-85be1e97f4f1.png)
 
 ### Deploy a Production Ready PostgreSQL High-Availability Cluster (based on "Patroni" and "DCS(etcd)"). Automating with Ansible.
 
@@ -430,7 +427,8 @@ Should you need to start from very beginning, use the following to clean up:
 Licensed under the MIT License. See the [LICENSE](./LICENSE) file for details.
 
 ## Author
-..............
+Ilgiz Mamyshev (Microsoft SQL Server, PostgreSQL DBA) \
+[https://imamyshev.wordpress.com](https://imamyshev.wordpress.com/2022/05/29/dns-connection-point-for-patroni/)
 
 ### Sponsor this project
 [![Support me on Patreon](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fshieldsio-patreon.vercel.app%2Fapi%3Fusername%3Dvitabaks%26type%3Dpatrons&style=for-the-badge)](https://patreon.com/imamyshev)
