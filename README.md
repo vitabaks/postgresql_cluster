@@ -25,7 +25,6 @@
 
 
 
-
 ##### PostgreSQL (базы данных)
 Рекомендуемые средства резервного копирования и восстановления:
 * [pg_probackup](https://github.com/postgrespro/pg_probackup)
