@@ -1,4 +1,4 @@
-# PostgreSQL High-Availability Cluster with DNS Connection Point (DRAFT!!!!!!!!!)
+# Высокодоступный геораспределённый кластер PostgreSQL на базе Patroni с DNS точкой клиентского доступа
 
 [![GitHub license](https://img.shields.io/github/license/IlgizMamyshev/pgsql_cluster)](https://github.com/IlgizMamyshev/pgsql_cluster/blob/master/LICENSE) 
 ![GitHub stars](https://img.shields.io/github/stars/IlgizMamyshev/pgsql_cluster)
@@ -6,12 +6,19 @@
 ---
 ![Banner](https://user-images.githubusercontent.com/93491087/171470810-9437d5ea-0ef9-41b4-aa7e-85be1e97f4f1.png)
 
-### Deploy a Production Ready PostgreSQL High-Availability Cluster (based on "Patroni" and "DCS(etcd)"). Automating with Ansible.
+### Развертывание кластера высокой доступности PostgreSQL, готового к производственной среде (на основе "Patroni" и "DCS (etcd)"). Автоматизация с помощью Ansible.
 
-This Ansible playbook is designed for deploying a ...
+Этот Ansible playbook разработан для развёртывания высокодоступного кластера PostgreSQL на выделенных физических серверах для производственной среды.  
+Развёртывание может быть выполнено в виртуальной среде для тестовой среды или небольших проектов.  
 
-...
-...
+В дополнение к развертыванию новых кластеров этот playbook также поддерживает развертывание кластера поверх уже существующего и работающего PostgreSQL. Вы можете преобразовать выделенный экземпляр PostgreSQL в кластер высокой доступности (укажите переменную `postgresql_exists='true'` в файле инвентаризации).
+**Внимание!** Ваш экземпляр PostgreSQL будет остановлен перед запуском в составе кластера (пожалуйста, запланируйте небольшой простой баз данных).
+
+> :heavy_exclamation_mark: Пожалуйста, проведите тестирование, прежде чем использовать в производственной среде.
+
+Описание в разработке..  
+...  
+...  
 
 
 
@@ -19,37 +26,35 @@ This Ansible playbook is designed for deploying a ...
 
 
 
-##### PostgreSQL (databases)
-Backup and restore tools:
-* [pgbackrest](https://github.com/pgbackrest/pgbackrest)
+##### PostgreSQL (базы данных)
+Рекомендуемые средства резервного копирования и восстановления:
 * [pg_probackup](https://github.com/postgrespro/pg_probackup)
-* [wal-g](https://github.com/wal-g/wal-g)
 
-Do not forget to validate your backups.
+Не забывайте тестировать свои резервные копии.
 
-## How to start from scratch
-Should you need to start from very beginning, use the following to clean up:
-- on all nodes, stop Patroni and remove PGDATA:
+## Как начать развёртывание с нуля
+Если вам нужно начать с самого начала, используйте для очистки следующие команды:
+- на всех узлах СУБД остановить сервис Patroni и удалить каталог с базами данных (кластер баз данных, PGDATA):
     ```shell
     sudo systemctl stop patroni
     sudo rm -rf /var/lib/postgresql/ # be careful with this if there are other PG clusters
     ```
-- then delete etcd entry (can be run on any node):
+- затем удалите запись в etcd (можно запустить на любом узле etcd):
     ```shell 
-    etcdctl --username patroni-etcd:P@ssw0rd rm --dir --recursive /service/pgsql-cluster/ # adjust if you changed the cluster's name, user name and password.
+    etcdctl --username patroni-etcd:P@ssw0rd rm --dir --recursive /service/pgsql-cluster/ # настроить, если вы изменили имя кластера, имя пользователя и пароль.
     ```
 
 ---
 
-## License
-Licensed under the MIT License. See the [LICENSE](./LICENSE) file for details.
+## Лицензия
+Под лицензией MIT License. Подробнее см. в файле [LICENSE](./LICENSE) .
 
-## Author
-Ilgiz Mamyshev (Microsoft SQL Server, PostgreSQL DBA) \
+## Автор
+Илгиз Мамышев (Microsoft SQL Server, PostgreSQL DBA) \
 [https://imamyshev.wordpress.com](https://imamyshev.wordpress.com/2022/05/29/dns-connection-point-for-patroni/)
 
-### Sponsor this project
+### Спонсоры проекта
 [![Support me on Patreon](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fshieldsio-patreon.vercel.app%2Fapi%3Fusername%3Dvitabaks%26type%3Dpatrons&style=for-the-badge)](https://patreon.com/imamyshev)
 
-## Feedback, bug-reports, requests, ...
-Are [welcome](https://github.com/IlgizMamyshev/pgsql_cluster/issues)!
+## Обратная связь, отчеты об ошибках, запросы и т.п.
+[Добро пожаловать](https://github.com/IlgizMamyshev/pgsql_cluster/issues)!
