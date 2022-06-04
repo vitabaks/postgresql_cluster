@@ -4,7 +4,7 @@
 ![GitHub stars](https://img.shields.io/github/stars/IlgizMamyshev/pgsql_cluster)
 
 ---
-![Banner](https://user-images.githubusercontent.com/93491087/171470810-9437d5ea-0ef9-41b4-aa7e-85be1e97f4f1.png)
+![Banner](https://github.com/IlgizMamyshev/pgsql_cluster/blob/master/doc/PostreSQLBanner1600x400.png)
 
 ### Развертывание кластера высокой доступности PostgreSQL, готового к производственной среде (на основе "Patroni" и "DCS (etcd)"). Автоматизация с помощью Ansible.
 
@@ -15,8 +15,8 @@
 **Внимание!** Ваш экземпляр PostgreSQL будет остановлен перед запуском в составе кластера (пожалуйста, запланируйте небольшой простой баз данных).
 
 > :heavy_exclamation_mark: Пожалуйста, проведите тестирование, прежде чем использовать в производственной среде.
-
-
+  
+![PGSQLCluster](https://github.com/IlgizMamyshev/pgsql_cluster/blob/master/doc/PGSQLCluster.png)
 > Для развёртывания кластера без HAProxy задайте `with_haproxy_load_balancing: false` в файле переменных vars/main.yml
 
 Описание в разработке..  
