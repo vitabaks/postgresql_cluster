@@ -53,7 +53,8 @@
 
 ## Автор
 Илгиз Мамышев (Microsoft SQL Server, PostgreSQL DBA) \
-[https://imamyshev.wordpress.com](https://imamyshev.wordpress.com/2022/05/29/dns-connection-point-for-patroni/)
+[https://imamyshev.wordpress.com](https://imamyshev.wordpress.com/2022/05/29/dns-connection-point-for-patroni/) \
+Виталий Кухарик (PostgreSQL DBA) - автор проекта [postgresql_cluster](https://github.com/vitabaks/postgresql_cluster) на кодовой базе которого построен [pgsql_cluster](https://github.com/IlgizMamyshev/pgsql_cluster/)
 
 ### Поддержать данный проект
 [![Support me on Patreon](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fshieldsio-patreon.vercel.app%2Fapi%3Fusername%3Dvitabaks%26type%3Dpatrons&style=for-the-badge)](https://patreon.com/imamyshev)
