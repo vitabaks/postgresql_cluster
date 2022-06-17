@@ -1,0 +1,16 @@
+---
+# yamllint disable rule:line-length
+
+# PostgresSQL variables
+postgresql_bin_dir: "/usr/lib/postgresql/{{ postgresql_version }}/bin"
+postgresql_unix_socket_dir: "/var/run/postgresql"
+
+# PostgreSQL packages
+postgresql_packages:
+  - postgresql-{{ postgresql_version }}
+  - postgresql-client-{{ postgresql_version }}
+  - postgresql-server-dev-{{ postgresql_version }}
+  - postgresql-contrib-{{ postgresql_version }}
+  - postgresql-{{ postgresql_version }}-repack"
+
+...

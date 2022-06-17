@@ -3,7 +3,7 @@ galaxy_info:
   role_name: postgresql_cluster
   description: PostgreSQL High-Availability Cluster (based on Patroni and etcd) with DNS Connection Point
   namespace: IlgizMamyshev
-  author: Ilgiz Mamyshev (mamyshev@outlook.com)
+  author: Ilgiz Mamyshev
   license: MIT
 
   min_ansible_version: 2.7

@@ -11,14 +11,9 @@
     - vars/system.yml
 
   pre_tasks:
-    - name: Fix Astra Linux specific variables
+    - name: Set Astra Linux specific variables
       include_vars: "vars/{{ ansible_os_family }}.yml"
-      when: not ansible_os_family == 'Astra Linux (Orel 2.12.43)'
-      tags: always
-
-    - name: Fix Astra Linux specific variables
-      include_vars: "vars/{{ ansible_os_family }}.yml"
-      when: not ansible_os_family == 'Astra Linux'
+      when: ansible_os_family is search("Astra Linux")
       tags: always
 
     - name: Include OS-specific variables

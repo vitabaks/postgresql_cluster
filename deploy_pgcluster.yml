@@ -33,20 +33,23 @@
     - vars/system.yml
 
   pre_tasks:
-    - name: Fix Astra Linux specific variables
+    - name: Set Astra Linux specific variables
       include_vars: "vars/{{ ansible_os_family }}.yml"
-      when: not ansible_os_family == 'Astra Linux (Orel 2.12.43)'
-      tags: always
-
-    - name: Fix Astra Linux specific variables
-      include_vars: "vars/{{ ansible_os_family }}.yml"
-      when: not ansible_os_family == 'Astra Linux'
+      when: ansible_os_family is search("Astra Linux")
       tags: always
 
     - name: Include OS-specific variables
       include_vars: "vars/{{ ansible_os_family }}.yml"
       when: not ansible_os_family == 'Rocky' and not ansible_os_family == 'AlmaLinux'
       tags: always
+
+    - name: Include PostgreSQL-specific variables
+      include_vars: "vars/postgres/PostgreSQL.yml"
+      when: postgresql_fork != 'PostgresPro'
+
+    - name: Include PostgresPro-specific variables
+      include_vars: "vars/postgres/PostgresPro.yml"
+      when: postgresql_fork == 'PostgresPro'
 
     - name: Checking Linux distribution
       fail:
@@ -99,14 +102,16 @@
       when: firewall_enabled_at_boot|bool
       tags: firewall
 
-    - role: sudo
     - role: packages
-#    - role: sudo
+    - role: sudo
     - role: sysctl
     - role: transparent_huge_pages
     - role: pam_limits
     - role: timezone
     - role: dnscp
+
+    - role: watchdog
+      when: patroni_with_watchdog|bool
 
 - import_playbook: balancers.yml
   when: with_haproxy_load_balancing|bool
@@ -122,10 +127,23 @@
     - vars/system.yml
 
   pre_tasks:
+    - name: Set Astra Linux specific variables
+      include_vars: "vars/{{ ansible_os_family }}.yml"
+      when: ansible_os_family is search("Astra Linux")
+      tags: always
+
     - name: Include OS-specific variables
       include_vars: "vars/{{ ansible_os_family }}.yml"
       when: not ansible_os_family == 'Rocky' and not ansible_os_family == 'AlmaLinux'
       tags: always
+
+    - name: Include PostgreSQL-specific variables
+      include_vars: "vars/postgres/PostgreSQL.yml"
+      when: postgresql_fork != 'PostgresPro'
+
+    - name: Include PostgresPro-specific variables
+      include_vars: "vars/postgres/PostgresPro.yml"
+      when: postgresql_fork == 'PostgresPro'
 
   roles:
     - role: patroni

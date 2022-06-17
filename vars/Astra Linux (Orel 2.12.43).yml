@@ -1,7 +1,8 @@
 ---
 # yamllint disable rule:line-length
 
-# AstraLinux CE 2.12.43 Orel: Debian 9 stretch
+# AstraLinux CE 2.12.43 Orel = Debian 9 stretch
+# do not for chage
 ##ansible_os_family: "Astra Linux (Orel 2.12.43)"
 ansible_os_family: "Debian"
 ansible_distribution: "Debian"

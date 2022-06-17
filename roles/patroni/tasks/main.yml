@@ -296,7 +296,7 @@
   when: postgresql_wal_dir is defined and postgresql_wal_dir | length > 0
   tags: patroni, custom_wal_dir
 
-- block:  # wheh postgresql NOT exists or PITR
+- block:  # wheh postgresql NOT exists
     - name: Prepare PostgreSQL | make sure PostgreSQL data directory "{{ postgresql_data_dir }}" exists
       file:
         path: "{{ postgresql_data_dir }}"
@@ -309,7 +309,7 @@
       stat:
         path: "{{ postgresql_data_dir }}/PG_VERSION"
       register: pgdata_initialized
-      when: patroni_cluster_bootstrap_method == "initdb"
+      #when: patroni_cluster_bootstrap_method == "initdb"
 
     - name: Prepare PostgreSQL | data directory check result
       fail:
@@ -352,7 +352,6 @@
       loop:
         - absent
         - directory
-      when: patroni_cluster_bootstrap_method != "pgbackrest"  # --delta restore
 
     - name: Prepare PostgreSQL | make sure the custom WAL directory "{{ postgresql_wal_dir }}" is empty
       file:
@@ -364,9 +363,8 @@
       loop:
         - absent
         - directory
-      when: (postgresql_wal_dir is defined and postgresql_wal_dir | length > 0) and
-            patroni_cluster_bootstrap_method != "pgbackrest"  # --delta restore
-  when: postgresql_exists != "true" or patroni_cluster_bootstrap_method != "initdb"
+      when: (postgresql_wal_dir is defined and postgresql_wal_dir | length > 0)
+  when: postgresql_exists != "true"
   tags: patroni, point_in_time_recovery
 
 - block:  # when postgresql exists
@@ -490,13 +488,13 @@
       when: (checkpoint_result.rc is defined and checkpoint_result.rc == 0) and
             (ansible_os_family == "Debian" and postgresql_packages|join(" ") is not search("postgrespro"))
 
-      # "RedHat" or PostgresPro
+      # PostgresPro
     - name: Prepare PostgreSQL | stop PostgreSQL (will be managed by patroni)
       become: true
       become_user: postgres
       command: "{{ postgresql_bin_dir }}/pg_ctl stop -D {{ postgresql_data_dir }} -m fast -w -t 600"
       when: (checkpoint_result.rc is defined and checkpoint_result.rc == 0) and
-            (ansible_os_family == "RedHat" or postgresql_packages|join(" ") is search("postgrespro"))
+            (postgresql_packages|join(" ") is search("postgrespro"))
 
     - name: Prepare PostgreSQL | check PostgreSQL is stopped
       become: true
@@ -505,188 +503,8 @@
       register: pg_ctl_stop_result
       failed_when: pg_ctl_stop_result.rc != 3
       changed_when: false
-  when: postgresql_exists == "true" and patroni_cluster_bootstrap_method == "initdb"
+  when: postgresql_exists == "true" #and patroni_cluster_bootstrap_method == "initdb"
   tags: patroni, patroni_start_master
-
-- block:  # PITR (custom bootstrap)
-# Prepare (install pexpect, ruamel.yaml)
-    - name: Prepare | Make sure the ansible required python library is exist
-      pip:
-        name: "{{ item }}"
-        state: present
-        executable: pip3
-        extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
-        umask: "0022"
-      loop:
-        - pexpect
-        - ruamel.yaml
-      environment:
-        PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
-      vars:
-        ansible_python_interpreter: /usr/bin/python3
-# Run PITR
-    - name: Stop patroni service on the Replica servers (if running)
-      systemd:
-        name: patroni
-        state: stopped
-      when: is_master != "true"
-
-    - name: Stop patroni service on the Master server (if running)
-      systemd:
-        name: patroni
-        state: stopped
-      when: is_master == "true"
-
-    - name: Remove patroni cluster "{{ patroni_cluster_name }}" from DCS (if exist)
-      become: true
-      become_user: postgres
-      expect:
-        command: "patronictl -c /etc/patroni/patroni.yml remove {{ patroni_cluster_name }}"
-        responses:
-          'Please confirm the cluster name to remove': '{{ patroni_cluster_name }}'
-          'You are about to remove all information in DCS': 'Yes I am aware'
-      register: patronictl_remove_result
-      changed_when:
-        patronictl_remove_result.rc == 0 and
-        patronictl_remove_result.stdout|lower is not search("key not found")
-      failed_when:
-        patronictl_remove_result.rc != 0
-      environment:
-        PATH: "{{ ansible_env.PATH }}:/usr/bin:/usr/local/bin"
-      when: is_master == "true"
-      vars:
-        ansible_python_interpreter: /usr/bin/python3
-
-    - block:  # for pgbackrest only (for use --delta restore)
-        - name: Run "{{ pgbackrest_patroni_cluster_restore_command }}" on Master
-          command: >
-            {{ pgbackrest_patroni_cluster_restore_command }}
-            {{ '--target-action=promote' if pgbackrest_patroni_cluster_restore_command is search('--type=') else '' }}
-          async: 86400  # timeout 24 hours
-          poll: 0
-          register: pgbackrest_restore_master
-          when: is_master == "true"
-
-          # if patroni_create_replica_methods: "pgbackrest"
-        - name: Run "{{ pgbackrest_patroni_cluster_restore_command }}" on Replica
-          command: >
-            {{ pgbackrest_patroni_cluster_restore_command }}
-            {{ '--target-action=shutdown' if pgbackrest_patroni_cluster_restore_command is search('--type=') else '' }}
-          async: 86400  # timeout 24 hours
-          poll: 0
-          register: pgbackrest_restore_replica
-          when: is_master != "true" and 'pgbackrest' in patroni_create_replica_methods
-
-        - name: Waiting for restore from backup
-          async_status:
-            jid: "{{ item.ansible_job_id }}"
-          loop:
-            - "{{ pgbackrest_restore_master }}"
-            - "{{ pgbackrest_restore_replica }}"
-          loop_control:
-            label: "{{ item.changed }}"
-          register: pgbackrest_restore_jobs_result
-          until: pgbackrest_restore_jobs_result.finished
-          retries: 2880  # timeout 24 hours
-          delay: 30
-          when: item.ansible_job_id is defined
-
-        - name: Start PostgreSQL for Recovery  # Debian
-          command: "/usr/bin/pg_ctlcluster {{ postgresql_version }} {{ postgresql_cluster_name }} start -o '-c hot_standby=off'"
-          when: ansible_os_family == "Debian" and
-                (is_master == "true" or
-                (is_master != "true" and 'pgbackrest' in patroni_create_replica_methods))
-
-        - name: Start PostgreSQL for Recovery  # RedHat or PostgresPro
-          command: "{{ postgresql_bin_dir }}/pg_ctl start -D {{ postgresql_data_dir }} -o '-c hot_standby=off'"
-          when: (ansible_os_family == "RedHat" or postgresql_packages|join(" ") is search("postgrespro")) and
-                (is_master == "true" or
-                (is_master != "true" and 'pgbackrest' in patroni_create_replica_methods))
-
-        - name: Waiting for PostgreSQL Recovery to complete (WAL apply)
-          command: "{{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -tAc 'SELECT pg_is_in_recovery()'"
-          register: pg_is_in_recovery
-          until: pg_is_in_recovery.stdout != "t"
-          retries: 1200  # timeout 10 hours
-          delay: 30
-          changed_when: false
-          failed_when: false
-          when: is_master == "true" or
-                (is_master != "true" and 'pgbackrest' in patroni_create_replica_methods)
-
-        - name: Check that PostgreSQL is stopped
-          command: "{{ postgresql_bin_dir }}/pg_ctl status -D {{ postgresql_data_dir }}"
-          register: pg_ctl_status_result
-          changed_when: false
-          failed_when: false
-
-        - name: Stop PostgreSQL  # "Debian"
-          command: "/usr/bin/pg_ctlcluster {{ postgresql_version }} {{ postgresql_cluster_name }} stop -m fast -- -w -t 600"
-          when: ansible_os_family == "Debian" and
-                (pg_ctl_status_result.rc is defined and pg_ctl_status_result.rc != 3)
-
-        - name: Stop PostgreSQL  # "RedHat" or PostgresPro
-          command: "{{ postgresql_bin_dir }}/pg_ctl stop -D {{ postgresql_data_dir }} -m fast -w -t 600"
-          when: (ansible_os_family == "RedHat" or postgresql_packages|join(" ") is search("postgrespro")) and
-                (pg_ctl_status_result.rc is defined and pg_ctl_status_result.rc != 3)
-      when: patroni_cluster_bootstrap_method == "pgbackrest"
-      become: true
-      become_user: postgres
-  environment: "{{ proxy_env | default({}) }}"
-  when: patroni_cluster_bootstrap_method != "initdb" and
-        (pgbackrest_install|bool or wal_g_install|bool)
-  tags: patroni, point_in_time_recovery
-
-- block:  # PITR (custom bootstrap) - disable archive_command
-    - name: Check the patroni.dynamic.json exists
-      stat:
-        path: "{{ postgresql_data_dir }}/patroni.dynamic.json"
-      register: patroni_dynamic_json
-
-    - name: Remove patroni.dynamic.json file
-      file:
-        path: "{{ postgresql_data_dir }}/patroni.dynamic.json"
-        state: absent
-      when: not keep_patroni_dynamic_json|bool
-
-    - name: Edit patroni.dynamic.json | disable archive_command (if enabled)
-      yedit:
-        src: "{{ postgresql_data_dir }}/patroni.dynamic.json"
-        key: postgresql.parameters.archive_command
-        value: "cd ."  # not doing anything yet with WAL-s
-        content_type: json
-      vars:
-        ansible_python_interpreter: /usr/bin/python3
-      when: patroni_dynamic_json.stat.exists and
-            keep_patroni_dynamic_json|bool and disable_archive_command|bool
-
-    - name: Edit patroni.yml | disable archive_command (if enabled)
-      yedit:
-        src: /etc/patroni/patroni.yml
-        key: bootstrap.dcs.postgresql.parameters.archive_command
-        value: "cd ."  # not doing anything yet with WAL-s
-      vars:
-        ansible_python_interpreter: /usr/bin/python3
-      when: disable_archive_command|bool
-  when: patroni_cluster_bootstrap_method != "initdb" and
-        (pgbackrest_install|bool or wal_g_install|bool) and
-        (existing_pgcluster is not defined or not existing_pgcluster|bool)
-  become: true
-  become_user: postgres
-  tags: patroni, point_in_time_recovery
-
-- block:  # PITR (custom bootstrap) - generate pg_hba.conf
-    - name: Generate pg_hba.conf (before start patroni)
-      template:
-        src: templates/pg_hba.conf.j2
-        dest: "{{ postgresql_conf_dir }}/pg_hba.conf"
-        owner: postgres
-        group: postgres
-        mode: 0640
-  when: patroni_cluster_bootstrap_method != "initdb" and
-        postgresql_conf_dir != postgresql_data_dir and
-        (existing_pgcluster is not defined or not existing_pgcluster|bool)
-  tags: patroni
 
 - block:  # start patroni on master
     - name: Start patroni service on the Master server
@@ -750,55 +568,6 @@
       when: generate_pg_hba is changed
   when: existing_pgcluster is not defined or not existing_pgcluster|bool
   tags: patroni, pg_hba, pg_hba_generate
-
-- block:  # PITR (custom bootstrap) - superuser and replication
-    - name: Make sure the Master is not in recovery mode
-      command: "{{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -tAc 'SELECT pg_is_in_recovery()'"
-      register: pg_is_in_recovery
-      until: pg_is_in_recovery.stdout != "t"
-      retries: 1200  # timeout 10 hours
-      delay: 30
-      changed_when: false
-      when: is_master == "true"
-
-    - name: Make sure the postgresql users are present, and password does not differ from the specified
-      postgresql_user:
-        db: postgres
-        name: "{{ item.role }}"
-        password: "{{ item.pass }}"
-        role_attr_flags: "{{ item.role_attr }}"
-        login_unix_socket: "{{ postgresql_unix_socket_dir }}"
-        port: "{{ postgresql_port }}"
-      register: postgresql_user_result
-      loop:
-        - {role: '{{ patroni_superuser_username }}', pass: '{{ patroni_superuser_password }}', role_attr: 'SUPERUSER'}
-        - {role: '{{ patroni_replication_username }}', pass: '{{ patroni_replication_password }}', role_attr: 'LOGIN,REPLICATION'}
-      loop_control:
-        label: "{{ item.role }}"
-      when: is_master == "true"
-
-    - name: Update postgresql authentication in patroni.yml
-      yedit:
-        src: /etc/patroni/patroni.yml
-        edits:
-          - key: postgresql.authentication.replication.username
-            value: "{{ patroni_replication_username }}"
-          - key: postgresql.authentication.replication.password
-            value: "{{ patroni_replication_password }}"
-          - key: postgresql.authentication.superuser.username
-            value: "{{ patroni_superuser_username }}"
-          - key: postgresql.authentication.superuser.password
-            value: "{{ patroni_superuser_password }}"
-        state: present
-      vars:
-        ansible_python_interpreter: /usr/bin/python3
-      when: hostvars[groups['master'][0]]['postgresql_user_result'] is changed
-  when: patroni_cluster_bootstrap_method != "initdb" and
-        (pgbackrest_install|bool or wal_g_install|bool) and
-        (existing_pgcluster is not defined or not existing_pgcluster|bool)
-  become: true
-  become_user: postgres
-  tags: patroni, point_in_time_recovery
 
 - block:  # for add_pgnode.yml
     - name: Prepare PostgreSQL | fetch pg_hba.conf file from master

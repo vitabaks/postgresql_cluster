@@ -6,9 +6,7 @@ postgresql_cluster_name: "main"
 postgresql_data_dir: "/mnt/disk1/main/pg_data" #"/var/lib/postgresql/{{ postgresql_version }}/{{ postgresql_cluster_name }}"  # You can specify custom data dir path
 postgresql_wal_dir: "/mnt/disk2/main/pg_wal" #""  # custom WAL dir path (symlink will be created) [optional]
 postgresql_conf_dir: "{{ postgresql_data_dir }}" #"/etc/postgresql/{{ postgresql_version }}/{{ postgresql_cluster_name }}"
-postgresql_bin_dir: "/opt/pgpro/std-{{ postgresql_version }}/bin" # path "/opt/pgpro" for PostgresPro, "/usr/lib/postgresql/{{ postgresql_version }}/bin"
 postgresql_log_dir: "/var/log/postgresql"
-postgresql_unix_socket_dir: "/tmp" #"/var/run/postgresql"
 postgresql_home_dir: "/var/lib/postgresql"
 # stats_temp_directory (mount the statistics directory in tmpfs)
 postgresql_stats_temp_directory_path: "/var/lib/pgsql_stats_tmp"  # or 'none'
@@ -40,26 +38,9 @@ system_packages:
   - iptables
   - acl
 
-postgresql_packages:
-#  - postgresql-{{ postgresql_version }}
-#  - postgresql-client-{{ postgresql_version }}
-#  - postgresql-server-dev-{{ postgresql_version }}
-#  - postgresql-contrib-{{ postgresql_version }}
-#  - postgresql-{{ postgresql_version }}-repack"
-  - postgrespro-std-{{ postgresql_version }}-server
-  - postgrespro-std-{{ postgresql_version }}-client
-  - postgrespro-std-{{ postgresql_version }}-contrib
-  - postgrespro-std-{{ postgresql_version }}-dev
-  - postgrespro-std-{{ postgresql_version }}-libs
-
 # Extra packages
 #etcd_package_repo: "https://github.com/etcd-io/etcd/releases/download/{{ etcd_ver }}/etcd-{{ etcd_ver }}-linux-amd64.tar.gz"
 etcd_package_repo: "http://mlk-pgsql-mpa.demo.ru/opt/etcd/etcd-{{ etcd_ver }}-linux-amd64.tar.gz"
-# (if with_haproxy_load_balancing: true)
-haproxy_install_repo: false  # or 'false'
-# for Debian 9/10 the haproxy version 1.8 (LTS) will be installed from the haproxy.debian.net repository.
-# for Ubuntu 18.04 the haproxy version 1.8 (LTS) will be installed from the ppa:vbernat/haproxy-1.8 repository.
-# you can preload the haproxy deb packages to your APT repository (in this case specify "haproxy_install_repo: false").
 #confd_package_repo: "https://github.com/kelseyhightower/confd/releases/download/v0.16.0/confd-0.16.0-linux-amd64"
 confd_package_repo: "http://mlk-pgsql-mpa.demo.ru/opt/confd/confd-0.16.0-linux-amd64"
 

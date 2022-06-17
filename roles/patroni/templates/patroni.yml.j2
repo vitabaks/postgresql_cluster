@@ -44,21 +44,7 @@ etcd:
 {% endif %}
 
 bootstrap:
-  method: {{ patroni_cluster_bootstrap_method }}
-{% if patroni_cluster_bootstrap_method == 'wal-g' %}
-  wal-g:
-    command: {{ wal_g_patroni_cluster_bootstrap_command }}
-    no_params: True
-    recovery_conf:
-       recovery_target_action: promote
-       recovery_target_timeline: latest
-       restore_command: wal-g wal-fetch %f %p
-{% endif %}
-{% if patroni_cluster_bootstrap_method == 'pg_probackup' %}
-  pg_probackup:
-    command: {{ pg_probackup_patroni_cluster_bootstrap_command }}
-    no_params: true
-{% endif %}
+  method: initdb
   dcs:
     ttl: {{ patroni_ttl |d(30, true) |int }}
     loop_wait: {{ patroni_loop_wait |d(10, true) |int }}
@@ -161,18 +147,6 @@ postgresql:
   {% for create_replica_method in patroni_create_replica_methods %}
     - {{ create_replica_method }}
   {% endfor %}
-  {% if 'pgbackrest' in patroni_create_replica_methods %}
-  pgbackrest:
-    {% for item in pgbackrest %}
-    {{ item.option }}: {{ item.value }}
-    {% endfor %}
-  {% endif %}
-  {% if 'wal_g' in patroni_create_replica_methods %}
-  wal_g:
-    {% for item in wal_g %}
-    {{ item.option }}: {{ item.value }}
-    {% endfor %}
-  {% endif %}
   {% if 'basebackup' in patroni_create_replica_methods %}
   basebackup:
     {% for item in basebackup %}
@@ -200,9 +174,15 @@ postgresql:
 {% endif %}
 
 watchdog:
+{% if patroni_with_watchdog|bool %}
   mode: required  # Allowed values: off, automatic, required
   device: /dev/watchdog
   safety_margin: -1
+{% else %}
+  mode: off  # Allowed values: off, automatic, required
+  device: /dev/watchdog
+  safety_margin: 5
+{% endif %}
 
 tags:
   nofailover: false

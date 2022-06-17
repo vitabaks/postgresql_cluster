@@ -46,6 +46,7 @@ sysctl_conf:
     - {name: "net.ipv4.tcp_tw_reuse", value: "1"}
 #    - {name: "", value: ""}
 
+
 # Transparent Huge Pages
 disable_thp: true  # or 'false'
 
@@ -67,8 +68,8 @@ sudo_users:
 #    commands: "/usr/bin/find, /usr/bin/less, /usr/bin/tail, /bin/kill"
 
 
-# Firewall (ansible-role-firewall)
-firewall_enabled_at_boot: true
+# Firewall. Installs an iptables-based firewall for Linux (ansible-role-firewall)
+firewall_enabled_at_boot: true # or false (Set up a firewall yourself)
 
 firewall_allowed_tcp_ports_for:
   master: []
@@ -102,12 +103,8 @@ firewall_additional_rules_for:
   replica: []
   postgres_cluster: []
   etcd_cluster: []
-  balancers:
-    - "iptables -p vrrp -A INPUT -j ACCEPT"  # Keepalived (vrrp)
-    - "iptables -p vrrp -A OUTPUT -j ACCEPT"  # Keepalived (vrrp)
-
-# disable firewalld (installed by default on RHEL/CentOS) or ufw (installed by default on Ubuntu)
-firewall_disable_firewalld: true
-firewall_disable_ufw: true
+  balancers: []
+#    - "iptables -p vrrp -A INPUT -j ACCEPT"  # Keepalived (vrrp)
+#    - "iptables -p vrrp -A OUTPUT -j ACCEPT"  # Keepalived (vrrp)
 
 ...

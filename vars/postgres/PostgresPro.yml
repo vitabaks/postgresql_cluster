@@ -1,0 +1,19 @@
+---
+# yamllint disable rule:line-length
+
+# PostgresPro variables
+postgresql_bin_dir: "/opt/pgpro/std-{{ postgresql_version }}/bin"
+postgresql_unix_socket_dir: "/tmp" #"/var/run/postgresql"
+
+# PostgresPro Standard packages ("-std-" for Standard, "-ent-" for Entarprise Edition)
+os_specific_pgpro_packages:
+  Debian:
+    - postgrespro-std-{{ postgresql_version }}-dev
+postgresql_packages:
+  - postgrespro-std-{{ postgresql_version }}-server
+  - postgrespro-std-{{ postgresql_version }}-client
+  - postgrespro-std-{{ postgresql_version }}-contrib
+  - postgrespro-std-{{ postgresql_version }}-libs
+  - "{{ os_specific_pgpro_packages[ansible_os_family] }}"
+
+...

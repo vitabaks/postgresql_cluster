@@ -8,7 +8,7 @@ proxy_env: {}
 #  https_proxy: http://wz-tmg.ad.webzavod.ru:8080
 # -------------------------------------------
 
-# DNS Connection Point variables
+# DNS Connection Point
 cluster_vip: "172.16.10.175,172.16.32.189"  # addresses in different subnets separated by commas, for client access to databases in the cluster
 cluster_vcompname: "pgsql" # Virtual Computer Name - Client Access Point
 cluster_vcomppassword: "P@ssw0rd" # Virtual Computer Name - Client Access Point
@@ -16,23 +16,22 @@ cluster_dnszonefqdn: "demo.ru" # Set DNS zone FQDN (AD Domain FQDN).
 cluster_dnsserver: "" # Set FQDN or IP or empty (recommended for automatically detect). Used for register DNS name.
 cluster_dnscp: "{{ cluster_vcompname }}.{{ cluster_dnszonefqdn }}"
 
-
-# Patroni variables
+# Patroni
 patroni_cluster_name: "pgsql-cluster"  # specify the cluster name
 patroni_install_version: "latest"  # or specific version (example 1.5.6)
 patroni_scripts_dir: "/etc/patroni" # for patroni callback scripts
-
 patroni_superuser_username: "postgres"
 patroni_superuser_password: "P@ssw0rd"  # please change password
 patroni_replication_username: "replicator"
 patroni_replication_password: "P@ssw0rd"  # please change password
-
-patroni_etcd_username: "patroni-etcd" # or empty
+patroni_etcd_username: "patroni-etcd" # or empty for anonymous access
 patroni_etcd_password: "P@ssw0rd"  # please change password
-
 synchronous_mode: true  # or 'true' for enable synchronous database replication
 synchronous_mode_strict: false  # if 'true' then block all client writes to the master, when a synchronous replica is not available
 synchronous_node_count: 2  # number of synchronous standby databases
+
+# Watchdog support
+patroni_with_watchdog: true # or false
 
 # Load Balancing
 with_haproxy_load_balancing: true  # or 'true' if you want to install and configure the load-balancing
@@ -49,7 +48,6 @@ haproxy_maxconn:
 haproxy_timeout:
   client: "60m"
   server: "60m"
-
 
 # DCS (Distributed Consensus Store)
 dcs_exists: true  # or 'true' if you do not want to install and configure the etcd cluster
@@ -73,8 +71,8 @@ patroni_etcd_hosts: #[]
 
 
 # PostgreSQL variables
+postgresql_fork: "PostgresPro" # "PostgreSQL" or "PostgresPro"
 postgresql_version: "14" # major version
-postgrespro_minor_version: "{{ postgresql_version }}.2.1" # for Postgres Pro
 # postgresql_data_dir: see vars/Debian.yml
 postgresql_port: "5432"
 postgresql_encoding: "UTF8"  # for bootstrap only (initdb)
@@ -188,6 +186,7 @@ postgresql_pg_ident: []
 #  - {mapname: "main", system_username: "postgres", pg_username: "backup"}
 #  - {mapname: "", system_username: "", pg_username: ""}
 
+
 # Extended variables (optional)
 patroni_ttl: 30
 patroni_loop_wait: 10
@@ -226,9 +225,6 @@ patroni_remove_data_directory_on_rewind_failure: false  # or 'true' (if use_pg_r
 patroni_remove_data_directory_on_diverged_timelines: false  # or 'true'
 # if 'true', Patroni will remove the PostgreSQL data directory and recreate the replica
 # if it notices that timelines are diverging and the former master can not start streaming from the new master.
-
-# https://patroni.readthedocs.io/en/latest/replica_bootstrap.html#bootstrap
-patroni_cluster_bootstrap_method: "initdb"  # or "wal-g", "pgbackrest", "pg_probackup"
 
 # https://patroni.readthedocs.io/en/latest/replica_bootstrap.html#building-replicas
 patroni_create_replica_methods:

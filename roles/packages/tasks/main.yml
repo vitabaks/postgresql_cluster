@@ -1,32 +1,6 @@
 ---
 
-- block:  # RedHat (update cache)
-    - name: Clean yum cache
-      command: yum clean all
-      args:
-        warn: false
-      when: ansible_distribution_major_version == '7'
-
-    - name: Clean dnf cache
-      command: dnf clean all
-      args:
-        warn: false
-      when: ansible_distribution_major_version is version('8', '>=')
-  environment: "{{ proxy_env | default({}) }}"
-  when: ansible_os_family == "RedHat"
-  tags: install_packages, install_postgres
-
 # Install packages from repository
-# RedHat
-- name: Install system packages
-  package:
-    name: "{{ item }}"
-    state: latest
-  loop: "{{ system_packages }}"
-  environment: "{{ proxy_env | default({}) }}"
-  when: ansible_os_family == "RedHat"
-  tags: install_packages
-
 # Debian
 - name: Install system packages
   apt:
@@ -58,36 +32,7 @@
   when: ansible_os_family == "Debian"
   tags: install_postgres
 
-# PostgreSQL prepare for install (for RHEL 8)
-- block:
-    - name: PostgreSQL | check if appstream module is enabled
-      command: 'dnf -y -C module list postgresql'
-      register: postgresql_module_result
-      changed_when: false
-      args:
-        warn: false
-
-    - name: PostgreSQL | disable appstream module
-      command: 'dnf -y -C module disable postgresql'
-      args:
-        warn: false
-      when: "'[x] ' not in postgresql_module_result.stdout"
-  when: ansible_os_family == "RedHat" and
-        ansible_distribution_major_version >= '8'
-  ignore_errors: true
-  tags: install_postgres
-
 # Install PostgreSQL from repository
-# RedHat
-- name: Install PostgreSQL packages
-  package:
-    name: "{{ item }}"
-    state: present
-  loop: "{{ postgresql_packages }}"
-  environment: "{{ proxy_env | default({}) }}"
-  when: ansible_os_family == "RedHat"
-  tags: install_postgres
-
 # Debian
 - name: Install PostgreSQL packages
   apt:

@@ -1,13 +1,10 @@
 # Please specify the ip addresses and connection settings for your environment
-# The specified ip addresses will be used to listen by the cluster components.
 
 # "postgresql_exists='true'" if PostgreSQL is already exists and running
 # "hostname=" variable is optional
 
 # if dcs_exists: false and dcs_type: "etcd" (in vars/main.yml)
 [etcd_cluster]  # recommendation: 3 or 5-7 nodes
-#172.16.10.171
-#172.16.10.172
 172.16.10.174
 172.16.32.187
 172.16.10.176

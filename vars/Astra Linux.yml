@@ -1,7 +1,8 @@
 ---
 # yamllint disable rule:line-length
 
-# AstraLinux SE 1.7.1 Orel: Debian 10 buster
+# AstraLinux SE 1.7.1 Orel = Debian 10 buster
+# do not for chage
 ##ansible_os_family: "Astra Linux"
 ansible_os_family: "Debian"
 ansible_distribution: "Debian"
