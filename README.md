@@ -32,8 +32,6 @@
 
 > Для развёртывания кластера без HAProxy задайте `with_haproxy_load_balancing: false` в файле переменных vars/main.yml
 
-> :heavy_exclamation_mark: Your application must have support sending read requests to a custom port (ex 5001), and write requests (ex 5000).
-
 ##### Компоненты высокой доступности:
 [**Patroni**](https://github.com/zalando/patroni) - это шаблон для создания решения высокой доступности с использованием Python и распределенного хранилища конфигурации, такого как ZooKeeper, etcd, Consul или Kubernetes. Используется для автоматизации управления экземплярами PostgreSQL и автоматического аварийного переключения. Репозиторий - используется внешний источник.
 
@@ -69,12 +67,12 @@
 Минимальная поддерживаемая версия Ansible - 2.7.
 
 ## Требования
-This playbook requires root privileges or sudo.
+Этот playbook требует root привилегий или sudo.
 
-Ansible ([What is Ansible](https://www.ansible.com/resources/videos/quick-start-video)?)
+Ansible ([Что такое Ansible](https://www.ansible.com/resources/videos/quick-start-video)?)
 
 ## Требования к портам
-List of required TCP ports that must be open for the database cluster:
+Список необходимых портов TCP, которые должны быть открыты для кластера баз данных:
 
 - `5432` (PostgreSQL)
 - `8008` (Patroni Rest API)
