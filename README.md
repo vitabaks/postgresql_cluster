@@ -106,10 +106,10 @@ Ansible ([Что такое Ansible](https://www.ansible.com/resources/videos/qu
 По соображениям надёжности синхронная репликация в данном шаблоне включена. Автоматическая отработка отказа выполняется с переходом только на синхронную реплику.
 
 Чтобы ещё более ужесточить требования к надёжности и свести к минимуму риск потери данных при автоматическом переходе на другой ресурс, вы можете настроить параметры следующим образом:
-- synchronous_mode: 'true'
-- synchronous_mode_strict: 'true' (выключено по умолчанию)
-- synchronous_commit: 'on' (или 'remote_apply')
-- use_pg_rewind: 'false' (включено по умолчанию)
+- synchronous_mode: 'true' (включен по умолчанию в данном playbook)
+- synchronous_mode_strict: 'true' (выключен  по умолчанию)
+- synchronous_commit: 'on' (или 'remote_apply') ('on'  по умолчанию)
+- use_pg_rewind: 'false' (включен по умолчанию)
 
 ---
 
@@ -119,15 +119,15 @@ Ansible ([Что такое Ansible](https://www.ansible.com/resources/videos/qu
 `sudo apt update` \
 `sudo apt install ansible`
 
-###### Пример 2: установка последнего релиза, используя [pip](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html#installing-ansible-with-pip)
+###### Пример 2 (Установка, используя [pip](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html#installing-ansible-with-pip) ):
 `sudo apt update && sudo apt install python3-pip sshpass git -y` \
 `sudo pip3 install ansible`
 
-1. Скачайте или склонируйте этот репозиторий
+1. Скачайте или клонируйте этот репозиторий
 
 `git clone https://github.com/IlgizMamyshev/pgsql_cluster.git`
 
-2. Перейдите в каталог с фалами playbook
+2. Перейдите в каталог с файлами playbook
 
 `cd pgsql_cluster/`
 
@@ -175,7 +175,6 @@ proxy_env:
 ## Масштабирование кластера
 
 В разработке..
-</p></details>
 
 ###### Подготовка:
 
@@ -188,7 +187,6 @@ proxy_env:
 ###### Шаги по добавлению нового узла балансировщика:
 
 В разработке..
-</p></details>
 
 ## Восстановление и Клонирование
 В разработке..
