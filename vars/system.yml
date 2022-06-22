@@ -121,8 +121,8 @@ sudo_users:
 #    commands: "/usr/bin/find, /usr/bin/less, /usr/bin/tail, /bin/kill"
 
 
-# Firewall (ansible-role-firewall)
-firewall_enabled_at_boot: true
+# Firewall
+firewall_enabled_at_boot: false  # or 'true' for configure firewall (iptables)
 
 firewall_allowed_tcp_ports_for:
   master: []
