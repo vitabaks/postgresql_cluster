@@ -127,12 +127,12 @@ Ansible ([Что такое Ansible](https://www.ansible.com/resources/videos/qu
 ---
 
 ## Развёртывание: быстрый старт
-0. [Установите Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) on one control node (which could easily be a laptop)
-##### Пример 1 (Используя репозиторий [Astra Linux](https://wiki.astralinux.ru/pages/viewpage.action?pageId=27362819)):
+0. [Установите Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) на сервер управления, свой компьютер или ноутбук
+##### Пример 1 (установка, используя репозиторий [Astra Linux](https://wiki.astralinux.ru/pages/viewpage.action?pageId=27362819)):
 `sudo apt update` \
 `sudo apt install ansible`
 
-##### Пример 2 (Установка, используя [pip](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html#installing-ansible-with-pip) ):
+##### Пример 2 (установка, используя [pip](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html#installing-ansible-with-pip) ):
 `sudo apt update && sudo apt install python3-pip sshpass git -y` \
 `sudo pip3 install ansible`
 
