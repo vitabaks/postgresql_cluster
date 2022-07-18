@@ -17,7 +17,8 @@
 
 > :heavy_exclamation_mark: Пожалуйста, проведите тестирование, прежде чем использовать в производственной среде.
   
-##### Основные возможности:
+  
+#### Основные возможности:
 - развёртывание кластера etcd;
 - поддержка аутентификации доступа к etcd;
 - развёртывание кластера Patroni с СУБД PostgreSQL или PostgresPro;
@@ -28,6 +29,7 @@
 - настройка брандмауэра;
 - настройка параметров ядра ОС Linux;
 - поддержка ОС Debian, Astra Linux;
+  
   
 ![PGSQLCluster](https://github.com/IlgizMamyshev/pgsql_cluster/blob/master/doc/PGSQLCluster.png)
   
@@ -43,7 +45,7 @@
 
 > Для развёртывания кластера без HAProxy задайте `with_haproxy_load_balancing: false` в файле переменных vars/main.yml
 
-##### Компоненты высокой доступности:
+#### Компоненты высокой доступности:
 [**Patroni**](https://github.com/zalando/patroni) - это шаблон для создания решения высокой доступности с использованием Python и распределенного хранилища конфигурации, такого как ZooKeeper, etcd, Consul или Kubernetes. Используется для автоматизации управления экземплярами PostgreSQL и автоматического аварийного переключения. Репозиторий - используется внешний источник.
 
 [**etcd**](https://github.com/etcd-io/etcd) - это распределенное надежное хранилище ключей и значений для наиболее важных данных распределенной системы. etcd написан на Go и использует алгоритм консенсуса [Raft](https://raft.github.io/) для управления высокодоступным реплицированным журналом. Он используется Patroni для хранения информации о состоянии кластера и параметрах конфигурации PostgreSQL. Репозиторий - используется внешний источник.
@@ -52,12 +54,12 @@
 
 [**DNS Connection Point for Patroni**](https://github.com/IlgizMamyshev/dnscp) используется для обеспечения единой точки входа. DNSCP обеспечивает регистрацию DNS-записи как единой точки входа для клиентов и позволяет использовать один или более виртуальных IP-адресов (VIP), принадлежащих одной или нескольким подсетям. DNSCP использует функцию обратных вызовов ([callback](https://patroni.readthedocs.io/en/latest/SETTINGS.html)) [Patroni](https://github.com/zalando/patroni). 
 
-##### Компоненты балансировки нагрузки:
+#### Компоненты балансировки нагрузки:
 [**HAProxy**](http://www.haproxy.org/) — очень быстрое и надежное решение, предлагающее высокую доступность, балансировку нагрузки и прокси для приложений на основе TCP и HTTP. Репозиторий - компонент HAProxy входит в состав репозиторя ОС Astra Linux, но также можно использовать внешний источник.
 
 [**confd**](https://github.com/kelseyhightower/confd) позволяет управлять файлами конфигурации локального приложения используя шаблоны и данные из etcd или Consul. Используется для автоматизации управления файлами конфигурации HAProxy. Репозиторий - используется внешний источник.
 
-##### СУБД PostgreSQL:
+#### СУБД PostgreSQL:
 [**PostgreSQL**](https://www.postgresql.org) - реляционная база данных с открытым исходным кодом. Репозиторий - используется внешний источник, бесплатный продукт. При использовании ОС Astra Linux возможно использование PostgreSQL в составе репозитория ОС.  
 Поддерживаются все поддерживаемые версии PostgreSQL.
 
@@ -68,12 +70,12 @@
 
 :white_check_mark: протестировано: `Postgres Pro 14`
 
-##### Операционные Системы:
+#### Операционные Системы:
 - **Debian**: 9, 10, 11
 - **Astra Linux**: CE (основан на Debian 9), SE (основан на Debian 10)
 :white_check_mark: протестировано: `Astra Linux CE 2.12, Astra Linux SE 1.7`
 
-##### Ansible:
+#### Ansible:
 Для автоматизации развёртывания Решения используется [Ansible](https://www.ansible.com) - система управления конфигурациями. При использовании ОС Astra Linux возможно использование Ansible из состава репозитория операционной ситсемы.
 Минимальная поддерживаемая версия Ansible - 2.7.
 
@@ -98,7 +100,7 @@ Ansible ([Что такое Ansible](https://www.ansible.com/resources/videos/qu
 
 Обновите все операционные системы перед развёртыванием;
 
-Присоедините серверы-узлы кластера СУБД к домену Microsoft Active Directory или Astra Linux Directory. Присоединение к домену является требованием, если вы хотите использовать аутентифицированный доступ к DNS-серверу.
+Присоедините серверы-узлы кластера СУБД к домену [Microsoft Active Directory](https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/get-started/virtual-dc/active-directory-domain-services-overview) или [Astra Linux Directory](https://wiki.astralinux.ru/display/doc/Astra+Linux+Directory). Присоединение к домену является требованием, если вы хотите использовать аутентифицированный доступ к DNS-серверу.
 
 - **DCS (Распределённое Хранилище Конфигурации (Distributed Configuration Store))**: 
 
@@ -126,11 +128,11 @@ Ansible ([Что такое Ansible](https://www.ansible.com/resources/videos/qu
 
 ## Развёртывание: быстрый старт
 0. [Установите Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) on one control node (which could easily be a laptop)
-###### Пример 1 (Используя репозиторий [Astra Linux](https://wiki.astralinux.ru/pages/viewpage.action?pageId=27362819)):
+##### Пример 1 (Используя репозиторий [Astra Linux](https://wiki.astralinux.ru/pages/viewpage.action?pageId=27362819)):
 `sudo apt update` \
 `sudo apt install ansible`
 
-###### Пример 2 (Установка, используя [pip](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html#installing-ansible-with-pip) ):
+##### Пример 2 (Установка, используя [pip](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html#installing-ansible-with-pip) ):
 `sudo apt update && sudo apt install python3-pip sshpass git -y` \
 `sudo pip3 install ansible`
 
@@ -144,7 +146,7 @@ Ansible ([Что такое Ansible](https://www.ansible.com/resources/videos/qu
 
 3. Отредактируйте файл инвентаризации
 
-###### Задайте IP-адреса и параметры подключения (`ansible_user`, `ansible_ssh_pass` ...)
+##### Задайте IP-адреса и параметры подключения (`ansible_user`, `ansible_ssh_pass` ...)
 
 `vim inventory`
 
@@ -152,7 +154,7 @@ Ansible ([Что такое Ansible](https://www.ansible.com/resources/videos/qu
 
 `vim vars/main.yml`
 
-###### Минимальный набор переменных: 
+##### Минимальный набор переменных: 
 - `proxy_env` # если требуется (*для доступа к репозиториям в сети*)
 
 например:
@@ -187,15 +189,15 @@ proxy_env:
 
 В разработке..
 
-###### Подготовка:
+##### Подготовка:
 
 В разработке..
 
-###### Шаги по добавлению нового узла СУБД:
+##### Шаги по добавлению нового узла СУБД:
 
 В разработке..
 
-###### Шаги по добавлению нового узла балансировщика:
+##### Шаги по добавлению нового узла балансировщика:
 
 В разработке..
 
