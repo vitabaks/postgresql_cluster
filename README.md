@@ -119,10 +119,10 @@ Ansible ([Что такое Ansible](https://www.ansible.com/resources/videos/qu
 По соображениям надёжности синхронная репликация в данном шаблоне включена. Автоматическая отработка отказа выполняется с переходом только на синхронную реплику.
 
 Чтобы ещё более ужесточить требования к надёжности и свести к минимуму риск потери данных при автоматическом переходе на другой ресурс, вы можете настроить параметры следующим образом:
-- synchronous_mode: 'true' (включен по умолчанию в данном playbook)
-- synchronous_mode_strict: 'true' (выключен  по умолчанию)
-- synchronous_commit: 'on' (или 'remote_apply') ('on'  по умолчанию)
-- use_pg_rewind: 'false' (включен по умолчанию)
+- [synchronous_mode](https://patroni.readthedocs.io/en/latest/replication_modes.html#synchronous-mode): 'true' (включен по умолчанию в данном playbook)
+- [synchronous_mode_strict](https://patroni.readthedocs.io/en/latest/replication_modes.html#synchronous-mode): 'true' (выключен  по умолчанию)
+- [synchronous_commit](https://postgrespro.ru/docs/postgrespro/14/runtime-config-wal#GUC-SYNCHRONOUS-COMMIT): 'on' (или 'remote_apply') ('on'  по умолчанию)
+- [use_pg_rewind](https://patroni.readthedocs.io/en/latest/SETTINGS.html#dynamic-configuration-settings): '[false](https://patroni.readthedocs.io/en/latest/SETTINGS.html#dynamic-configuration-settings)' (включен по умолчанию)
 
 ---
 
