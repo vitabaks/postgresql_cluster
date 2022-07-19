@@ -122,7 +122,7 @@ Ansible ([Что такое Ansible](https://www.ansible.com/resources/videos/qu
 - [synchronous_mode](https://patroni.readthedocs.io/en/latest/replication_modes.html#synchronous-mode): 'true' (включен по умолчанию в данном playbook)
 - [synchronous_mode_strict](https://patroni.readthedocs.io/en/latest/replication_modes.html#synchronous-mode): 'true' (выключен  по умолчанию)
 - [synchronous_commit](https://postgrespro.ru/docs/postgrespro/14/runtime-config-wal#GUC-SYNCHRONOUS-COMMIT): 'on' (или 'remote_apply') ('on'  по умолчанию)
-- [use_pg_rewind](https://patroni.readthedocs.io/en/latest/SETTINGS.html#dynamic-configuration-settings): '[false](https://patroni.readthedocs.io/en/latest/SETTINGS.html#dynamic-configuration-settings)' (включен по умолчанию)
+- [use_pg_rewind](https://postgrespro.ru/docs/postgrespro/14/app-pgrewind): '[false](https://patroni.readthedocs.io/en/latest/SETTINGS.html#dynamic-configuration-settings)' (включен по умолчанию)
 
 ---
 
