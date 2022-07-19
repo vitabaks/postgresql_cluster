@@ -73,6 +73,7 @@
 #### Операционные Системы:
 - **Debian**: 9, 10, 11
 - **Astra Linux**: CE (основан на Debian 9), SE (основан на Debian 10)
+
 :white_check_mark: протестировано: `Astra Linux CE 2.12, Astra Linux SE 1.7`
 
 #### Ansible:
