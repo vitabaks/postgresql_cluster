@@ -185,6 +185,9 @@
     - role: postgresql-databases
       when: is_master == "true" and postgresql_databases | length > 0
 
+    - role: postgresql-schemas
+      when: is_master == "true" and postgresql_schemas | length > 0
+
     - role: postgresql-extensions
       when: is_master == "true" and postgresql_extensions | length > 0
 

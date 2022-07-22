@@ -76,6 +76,7 @@
 - - vip_manager_restart
 - postgresql_users
 - postgresql_databases
+- postgresql_schemas
 - postgresql_extensions
 - cluster_info
 - - patroni_status
