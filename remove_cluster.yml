@@ -1,0 +1,44 @@
+---
+
+- hosts: postgres_cluster
+  vars:
+    remove_postgres: false  # or 'true' to remove the database
+  become: true
+  vars_files:
+    - vars/main.yml
+    - vars/{{ ansible_os_family }}.yml
+  tasks:
+    - name: Stop Patroni service
+      service:
+        name: patroni
+        state: stopped
+    - name: Delete PostgreSQL database content
+      file:
+        path: "{{ postgresql_data_dir }}"
+        state: absent
+      when: remove_postgres|bool
+    - name: Delete PgBackRest repository
+      file:
+        # path: pgbackrest_conf global repo1-path
+        path: /var/lib/pgbackrest
+        state: absent
+      when: pgbackrest_install|bool
+
+- hosts: etcd_cluster
+  vars:
+    remove_etcd: false  # or 'true' to remove the database
+  become: true
+  vars_files:
+    - vars/main.yml
+  tasks:
+    - name: Stop Etcd service
+      service:
+        name: etcd
+        state: stopped
+    - name: Delete Etcd content
+      file:
+        path: "{{ etcd_data_dir }}/member"
+        state: absent
+      when: remove_etcd|bool
+
+...
