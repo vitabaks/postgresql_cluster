@@ -414,16 +414,20 @@ I can recommend the following backup and restore tools:
 Do not forget to validate your backups (for example [pgbackrest auto](https://github.com/vitabaks/pgbackrest_auto)).
 
 ## How to start from scratch
-Should you need to start from very beginning, use the following to clean up:
-- on all nodes, stop Patroni and remove PGDATA:
-    ```shell
-    sudo systemctl stop patroni
-    sudo rm -rf /var/lib/postgresql/ # be careful with this if there are other PG clusters
-    ```
-- then delete etcd entry (can be run on any node):
-    ```shell 
-    etcdctl rm --dir --recursive /service/postgres-cluster # adjust if you changed the cluster's name
-    ```
+Should you need to start from very beginning, use the playbook `remove_cluster.yml`.
+
+To prevent the script to be used by accident in a production environment, edit `remove_cluster.yml` and remove the *safety pin*. Change these variables accordingly:
+
+- remove_postgres: true
+- remove_etcd: true
+
+Run the script and all the data are gone.
+
+`ansible-playbook remove_cluster.yml`
+
+A new installation can now be made from scratch.
+ 
+:heavy_exclamation_mark: Be careful not to copy this script without the *safety pin* to the production environment.
 
 ---
 
