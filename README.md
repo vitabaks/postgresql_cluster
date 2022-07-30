@@ -19,8 +19,39 @@ In addition to deploying new clusters, this playbook also support the deployment
 
 > :heavy_exclamation_mark: Please test it in your test enviroment before using in a production.
 
+## Index
+- [Cluster types](#cluster-types)
+    - [[Type A] PostgreSQL High-Availability with Load Balancing](#type-a-postgresql-high-availability-with-load-balancing)
+    - [[Type B] PostgreSQL High-Availability only](#type-b-postgresql-high-availability-only)
+- [Compatibility](#compatibility)
+    - [Supported Linux Distributions:](#supported-linux-distributions)
+    - [PostgreSQL versions:](#postgresql-versions)
+    - [Ansible version](#ansible-version)
+- [Requirements](#requirements)
+- [Port requirements](#port-requirements)
+- [Recommendations](#recommendations)
+- [Deployment: quick start](#deployment-quick-start)
+- [Variables](#variables)
+- [Cluster Scaling](#cluster-scaling)
+    - [Preparation:](#preparation)
+    - [Steps to add a new node:](#steps-to-add-a-new-node)
+    - [Steps to add a new banlancer node:](#steps-to-add-a-new-banlancer-node)
+- [Restore and Cloning](#restore-and-cloning)
+    - [Create cluster with pgBackRest:](#create-cluster-with-pgbackrest)
+    - [Create cluster with WAL-G:](#create-cluster-with-wal-g)
+    - [Point-In-Time-Recovery:](#point-in-time-recovery)
+- [Maintenance](#maintenance)
+- [Disaster Recovery](#disaster-recovery)
+    - [etcd](#etcd)
+    - [PostgreSQL (databases)](#postgresql-databases)
+- [How to start from scratch](#how-to-start-from-scratch)
+- [License](#license)
+- [Author](#author)
+- [Feedback, bug-reports, requests, ...](#feedback-bug-reports-requests-)
 
-You have two options available for deployment ("Type A" and "Type B"):
+## Cluster types
+
+You have two options available for deployment "Type A" and "Type B".
 
 ### [Type A] PostgreSQL High-Availability with Load Balancing
 ![TypeA](https://github.com/vitabaks/postgresql_cluster/blob/master/TypeA.png)
