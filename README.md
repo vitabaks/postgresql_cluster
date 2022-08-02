@@ -1,4 +1,4 @@
-# Высокодоступный геораспределённый кластер PostgreSQL на базе Patroni с DNS точкой клиентского доступа
+# Высокодоступный кластер PostgreSQL на базе Patroni. С DNS точкой клиентского доступа, с поддержкой геораспределённого кластера.
 
 [![GitHub license](https://img.shields.io/github/license/IlgizMamyshev/pgsql_cluster)](https://github.com/IlgizMamyshev/pgsql_cluster/blob/master/LICENSE) 
 ![GitHub stars](https://img.shields.io/github/stars/IlgizMamyshev/pgsql_cluster)
