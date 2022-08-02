@@ -20,20 +20,25 @@
   
 #### Основные возможности:
 - развёртывание кластера etcd;
-- поддержка аутентификации доступа к etcd;
 - развёртывание кластера Patroni с СУБД PostgreSQL или PostgresPro;
 - настройка watchdog для Patroni (защита от split-brain);
-- поддержка геораспределенного кластера с DNS точкой подключения клиентов ([DNS Connection Point](https://github.com/IlgizMamyshev/dnscp));
-- поддержка аутентификации доступа к DNS Server;
+- DNS точка подключения клиентов ([DNS Connection Point](https://github.com/IlgizMamyshev/dnscp));
+- поддержка геораспределенного кластера ([DNS Connection Point](https://github.com/IlgizMamyshev/dnscp));
 - развёртывание HAProxy для балансировки доступа к репликам только для чтения;
 - настройка брандмауэра;
 - настройка параметров ядра ОС Linux;
 - поддержка ОС Debian, Astra Linux;
-  
-  
+
+#### Примеры реализации архитектуры:
+
+##### Высокодоступный кластер (Вариант):  
+![PGSQLCluster](https://github.com/IlgizMamyshev/pgsql_cluster/blob/master/doc/PGSQLClusterTypeA.png)
+
+##### Высокодоступный геораспределенный кластер (Вариант):
 ![PGSQLCluster](https://github.com/IlgizMamyshev/pgsql_cluster/blob/master/doc/PGSQLCluster.png)
+
   
-Данное Решение обеспечивает возможность распределения нагрузки по чтению. Это также позволяет масштабировать кластер с репликами только для чтения.
+Применение HAProxy обеспечивает возможность распределения нагрузки по чтению. Это также позволяет масштабировать кластер с репликами только для чтения.
 
 - порт 5000 (чтение / запись) мастер
 - порт 5001 (только чтение) все реплики
