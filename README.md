@@ -29,12 +29,12 @@
 - настройка параметров ядра ОС Linux;
 - поддержка ОС Debian, Astra Linux;
 
-#### Примеры реализации архитектуры:
+#### Примеры (варианты) реализации архитектуры высокой доступности:
 
-##### Высокодоступный кластер (Вариант):  
+##### Высокодоступный кластер, на базе Patroni, etcd и DNSCP (балансировка с HAProxy опционально):  
 ![PGSQLCluster](https://github.com/IlgizMamyshev/pgsql_cluster/blob/master/doc/PGSQLClusterTypeA.png)
 
-##### Высокодоступный геораспределенный кластер (Вариант):
+##### Высокодоступный геораспределенный кластер, на базе Patroni, etcd и DNSCP (балансировка с HAProxy опционально):
 ![PGSQLCluster](https://github.com/IlgizMamyshev/pgsql_cluster/blob/master/doc/PGSQLCluster.png)
 
   
