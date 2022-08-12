@@ -1,4 +1,4 @@
-# Высокодоступный геораспределённый кластер PostgreSQL на базе Patroni с DNS точкой клиентского доступа
+# Высокодоступный кластер PostgreSQL на базе Patroni. С DNS точкой клиентского доступа, с поддержкой геораспределённого кластера.
 
 [![GitHub license](https://img.shields.io/github/license/IlgizMamyshev/pgsql_cluster)](https://github.com/IlgizMamyshev/pgsql_cluster/blob/master/LICENSE) 
 ![GitHub stars](https://img.shields.io/github/stars/IlgizMamyshev/pgsql_cluster)
@@ -19,21 +19,30 @@
   
   
 #### Основные возможности:
-- развёртывание кластера etcd;
-- поддержка аутентификации доступа к etcd;
 - развёртывание кластера Patroni с СУБД PostgreSQL или PostgresPro;
+- использование встроенного механизма распределённого консенсуса или использование внешней системы DCS (etcd);
+- развёртывание кластера etcd;
 - настройка watchdog для Patroni (защита от split-brain);
-- поддержка геораспределенного кластера с DNS точкой подключения клиентов ([DNS Connection Point](https://github.com/IlgizMamyshev/dnscp));
-- поддержка аутентификации доступа к DNS Server;
+- DNS точка подключения клиентов ([DNS Connection Point](https://github.com/IlgizMamyshev/dnscp));
+- поддержка геораспределенного кластера ([DNS Connection Point](https://github.com/IlgizMamyshev/dnscp));
 - развёртывание HAProxy для балансировки доступа к репликам только для чтения;
-- настройка брандмауэра;
-- настройка параметров ядра ОС Linux;
-- поддержка ОС Debian, Astra Linux;
-  
-  
+- настройка брандмауэра операционной системы;
+- настройка параметров ядра операционной системы Linux;
+- поддержка операционных систем Debian, Astra Linux;
+
+#### Примеры (варианты) реализации архитектуры высокой доступности:
+
+##### Высокодоступный кластер, на базе Patroni (на чистом RAFT) и DNSCP (балансировка с HAProxy опционально):  
+![PGSQLCluster](https://github.com/IlgizMamyshev/pgsql_cluster/blob/master/doc/PGSQLClusterPatroniOnPureRAFT.png)
+
+##### Высокодоступный кластер, на базе Patroni, etcd и DNSCP (балансировка с HAProxy опционально):  
+![PGSQLCluster](https://github.com/IlgizMamyshev/pgsql_cluster/blob/master/doc/PGSQLClusterTypeA.png)
+
+##### Высокодоступный геораспределенный кластер, на базе Patroni, etcd и DNSCP (балансировка с HAProxy опционально):
 ![PGSQLCluster](https://github.com/IlgizMamyshev/pgsql_cluster/blob/master/doc/PGSQLCluster.png)
+
   
-Данное Решение обеспечивает возможность распределения нагрузки по чтению. Это также позволяет масштабировать кластер с репликами только для чтения.
+Применение HAProxy обеспечивает возможность распределения нагрузки по чтению. Это также позволяет масштабировать кластер с репликами только для чтения.
 
 - порт 5000 (чтение / запись) мастер
 - порт 5001 (только чтение) все реплики
@@ -57,7 +66,7 @@
 #### Компоненты балансировки нагрузки:
 [**HAProxy**](http://www.haproxy.org/) — очень быстрое и надежное решение, предлагающее высокую доступность, балансировку нагрузки и прокси для приложений на основе TCP и HTTP. HAProxy входит в состав репозиторя ОС Astra Linux, но также можно использовать внешний источник.
 
-[**confd**](https://github.com/kelseyhightower/confd) позволяет управлять файлами конфигурации локального приложения используя шаблоны и данные из etcd или Consul. Используется для автоматизации управления файлами конфигурации HAProxy.
+[**confd**](https://github.com/kelseyhightower/confd) позволяет управлять файлами конфигурации локального приложения используя шаблоны и данные из etcd. Используется для автоматизации управления файлами конфигурации HAProxy.
 
 #### СУБД PostgreSQL:
 [**PostgreSQL**](https://www.postgresql.org) - реляционная база данных с открытым исходным кодом. При использовании ОС Astra Linux возможно использование PostgreSQL в составе репозитория ОС.  
