@@ -1,27 +1,30 @@
 # Please specify the ip addresses and connection settings for your environment
 
 # "postgresql_exists='true'" if PostgreSQL is already exists and running
-# "hostname=" variable is optional
 
 # if dcs_exists: false and dcs_type: "etcd" (in vars/main.yml)
+# ETCD nodes (IP address (or hostname, not FQDN)) (hostname recommended)
 [etcd_cluster]  # recommendation: 3 or 5-7 nodes
-172.16.10.174
-172.16.32.187
-172.16.10.176
+#mlk-etcd-n1
+#mlk-etcd-n2
+#mlk-etcd-n3
+
+# if with_patroni_raft_controller: true (in vars/main.yml)
+[patroni_raft_controller]
+mlk-pgsql-n1
 
 # if with_haproxy_load_balancing: true (in vars/main.yml)
+# HAProxy nodes (IP address (or hostname, not FQDN)) (hostname recommended)
 [balancers]
-172.16.10.78
-172.16.10.79
-172.16.32.188
+#mlk-pgsql-n2
+#mlk-pgsql-n3
 
-# PostgreSQL nodes
+# PostgreSQL nodes (IP address (or hostname, not FQDN)) (hostname recommended)
 [master]
-172.16.10.78 hostname=mlk-pgsql-n1 postgresql_exists='false'
+mlk-pgsql-n2 postgresql_exists='false'
 
 [replica]
-172.16.10.79 hostname=mlk-pgsql-n2 postgresql_exists='false'
-172.16.32.188 hostname=mlk-pgsql-n3 postgresql_exists='false'
+mlk-pgsql-n3 postgresql_exists='false'
 
 [postgres_cluster:children]
 master

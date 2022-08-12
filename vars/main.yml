@@ -8,16 +8,9 @@ proxy_env: {}
 #  https_proxy: http://wz-tmg.ad.webzavod.ru:8080
 # -------------------------------------------
 
-# DNS Connection Point
-cluster_vip: "172.16.10.175,172.16.32.189"  # addresses in different subnets separated by commas, for client access to databases in the cluster
-cluster_vcompname: "pgsql" # Virtual Computer Name - Client Access Point
-cluster_vcomppassword: "P@ssw0rd" # Virtual Computer Name - Client Access Point
-cluster_dnszonefqdn: "demo.ru" # Set DNS zone FQDN (AD Domain FQDN).
-cluster_dnsserver: "" # Set FQDN or IP or empty (recommended for automatically detect). Used for register DNS name.
-cluster_dnscp: "{{ cluster_vcompname }}.{{ cluster_dnszonefqdn }}"
-
 # Patroni
-patroni_cluster_name: "pgsql-cluster"  # specify the cluster name
+patroni_cluster_name: "pgsql"  # specify the cluster name
+patroni_restapi_port: "8008" # Patroni REST API port
 patroni_install_version: "latest"  # or specific version (example 1.5.6)
 patroni_scripts_dir: "/etc/patroni" # for patroni callback scripts
 patroni_superuser_username: "postgres"
@@ -31,10 +24,51 @@ synchronous_mode_strict: false  # if 'true' then block all client writes to the 
 synchronous_node_count: 2  # number of synchronous standby databases
 
 # Watchdog support
-patroni_with_watchdog: true # or false
+patroni_with_watchdog: true # true or false
+
+# DNS Connection Point
+cluster_vip: "172.16.32.180"  # empty or one VIP address (or some VIP addresses in different subnets, separated by commas), for client access to PostgreSQL
+dnscp:
+  vcompname: "{{ patroni_cluster_name }}" # Virtual Computer Name - Client Access Point
+  vcomppassword: "" # Password for Virtual Computer Name Account. Empty for anonimous auth to DNS zone.
+  dnszonefqdn: "demo.ru" # Set DNS zone FQDN (AD Domain FQDN).
+  dnsserver: "" # Set FQDN or IP or empty (recommended for automatically detect). Used for register DNS name.
+
+# DCS (Distributed Consensus Store)
+dcs_exists: false  # or 'true' if you do not want to install and configure the etcd cluster
+dcs_type: "patroni" # or "etcd" or "patroni"
+
+# if dcs_exists: false and dcs_type: "patroni"
+patroni_raft_data_dir: "/etc/patroni" #"/var/lib/raft"
+patroni_raft_port: "2379"
+patroni_raft_password: ""
+
+# if dcs_exists: false and dcs_type: "patroni"
+with_patroni_raft_controller: true  # 'false' or 'true' if you want to install and configure the Patroni RAFT Controller
+patroni_raft_controller:
+  host: "{{ hostvars[groups['patroni_raft_controller'][0]].inventory_hostname }}" # hostname or IP
+  port: "{{ patroni_raft_port }}"
+  partnerhost: "{{ hostvars[groups['master'][0]].inventory_hostname }}" # hostname or IP (postgres_cluster master host)
+  partnerport: "{{ patroni_raft_port }}"
+
+# if dcs_exists: false and dcs_type: "etcd"
+etcd_ver: "v3.3.27"  # version for deploy etcd cluster
+etcd_data_dir: "/var/lib/etcd"
+etcd_cluster_name: "etcd-{{ patroni_cluster_name }}"  # ETCD_INITIAL_CLUSTER_TOKEN
+
+# if dcs_exists: true and dcs_type: "etcd" - specify ip address your etcd cluster in the "patroni_etcd_hosts" variable
+# example (use existing cluster of 3 nodes)
+patroni_etcd_hosts: []
+#  - { host: "mlk-etcd-n1", port: "2379" }
+#  - { host: "mlk-etcd-n2", port: "2379" }
+#  - { host: "mlk-etcd-n3", port: "2379" }
+
+# more options you can specify in the roles/patroni/templates/patroni.yml.j2
+# https://patroni.readthedocs.io/en/latest/SETTINGS.html#etcd
+# https://patroni.readthedocs.io/en/latest/SETTINGS.html#consul
 
 # Load Balancing
-with_haproxy_load_balancing: true  # or 'true' if you want to install and configure the load-balancing
+with_haproxy_load_balancing: false  # 'false' or 'true' if you want to install and configure the load-balancing
 haproxy_listen_port:
   master: 5000
   replicas: 5001
@@ -48,27 +82,6 @@ haproxy_maxconn:
 haproxy_timeout:
   client: "60m"
   server: "60m"
-
-# DCS (Distributed Consensus Store)
-dcs_exists: true  # or 'true' if you do not want to install and configure the etcd cluster
-dcs_type: "etcd"
-
-# if dcs_exists: false and dcs_type: "etcd"
-etcd_ver: "v3.3.27"  # version for deploy etcd cluster
-etcd_data_dir: "/var/lib/etcd"
-etcd_cluster_name: "etcd-{{ patroni_cluster_name }}"  # ETCD_INITIAL_CLUSTER_TOKEN
-
-# if dcs_exists: true and dcs_type: "etcd" - specify ip address your etcd cluster in the "patroni_etcd_hosts" variable
-# example (use existing cluster of 3 nodes)
-patroni_etcd_hosts: #[]
-  - { host: "172.16.10.174", port: "2379" }
-  - { host: "172.16.32.187", port: "2379" }
-  - { host: "172.16.10.176", port: "2379" }
-
-# more options you can specify in the roles/patroni/templates/patroni.yml.j2
-# https://patroni.readthedocs.io/en/latest/SETTINGS.html#etcd
-# https://patroni.readthedocs.io/en/latest/SETTINGS.html#consul
-
 
 # PostgreSQL variables
 postgresql_fork: "PostgresPro" # "PostgreSQL" or "PostgresPro"
@@ -202,11 +215,11 @@ patroni_standby_cluster:
 #  restore_command: ""  # command to restore WAL records from the remote master to standby leader (optional)
 #  recovery_min_apply_delay: ""  # how long to wait before actually apply WAL records on a standby leader (optional)
 
-patroni_log_destination: stderr  # or 'logfile'
+patroni_log_destination: stderr  # stderr or logfile (stderr recommended)
 # if patroni_log_destination: logfile
 patroni_log_dir: /var/log/patroni
-patroni_log_level: info
-patroni_log_traceback_level: error
+patroni_log_level: info # info or debug
+patroni_log_traceback_level: error # error or debug
 patroni_log_format: "%(asctime)s %(levelname)s: %(message)s"
 patroni_log_dateformat: ""
 patroni_log_max_queue_size: 1000

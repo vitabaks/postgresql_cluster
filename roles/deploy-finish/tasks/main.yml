@@ -66,8 +66,8 @@
       debug:
         msg:
           - +------------------------------------------------+
-          - DNS Connection Point {{ cluster_dnscp }}
-          - Address (VIP) {{ cluster_vip }}
+          - DNS Connection Point   {{ cluster_vcompname }}.{{ cluster_dnszonefqdn }}
+          - Address (VIP)          {{ cluster_vip }}
           - Port {{ haproxy_listen_port.master }} (read/write) master
           - Port {{ haproxy_listen_port.replicas }} (read only)  all replicas
           - Port {{ haproxy_listen_port.replicas_sync }} (read only)  synchronous replica only
@@ -81,8 +81,8 @@
       debug:
         msg:
           - +------------------------------------------------+
-          - DNS Connection Point {{ cluster_dnscp }}
-          - Address (VIP) {{ cluster_vip }}
+          - DNS Connection Point   {{ cluster_vcompname }}.{{ cluster_dnszonefqdn }}
+          - Address (VIP)          {{ cluster_vip }}
           - Port {{ haproxy_listen_port.master }} (read/write) master
           - Port {{ haproxy_listen_port.replicas }} (read only)  all replicas
           - +------------------------------------------------+
@@ -94,8 +94,8 @@
       debug:
         msg:
           - +------------------------------------------------+
-          - DNS Connection Point {{ cluster_dnscp }}
-          - Address (VIP) {{ cluster_vip }}
+          - DNS Connection Point   {{ cluster_vcompname }}.{{ cluster_dnszonefqdn }}
+          - Address (VIP)          {{ cluster_vip }}
           - Port {{ postgresql_port }}
           - +------------------------------------------------+
       when: not with_haproxy_load_balancing|bool

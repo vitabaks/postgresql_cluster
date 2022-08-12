@@ -21,16 +21,12 @@ defaults
 
 listen stats
     mode http
-    bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ haproxy_listen_port.stats }}
+    bind :{{ haproxy_listen_port.stats }}
     stats enable
     stats uri /
 
 listen master
-{% if cluster_dnscp is defined and cluster_dnscp | length > 0 %}
-    bind {{ cluster_dnscp }}:{{ haproxy_listen_port.master }}
-{% else %}
-    bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ haproxy_listen_port.master }}
-{% endif %}
+    bind :{{ haproxy_listen_port.master }}
     maxconn {{ haproxy_maxconn.master }}
     option tcplog
     option httpchk OPTIONS /master
@@ -38,15 +34,11 @@ listen master
     default-server inter 3s fastinter 1s fall 3 rise 4 on-marked-down shutdown-sessions
 
   {% for host in groups['postgres_cluster'] %}
-server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}:{{ postgresql_port }} check port 8008
+server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}:{{ postgresql_port }} check port {{ patroni_restapi_port }}
   {% endfor %}
 
 listen replicas
-{% if cluster_dnscp is defined and cluster_dnscp | length > 0 %}
-    bind {{ cluster_dnscp }}:{{ haproxy_listen_port.replicas }}
-{% else %}
-    bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ haproxy_listen_port.replicas }}
-{% endif %}
+    bind :{{ haproxy_listen_port.replicas }}
     maxconn {{ haproxy_maxconn.replica }}
     option tcplog
     option httpchk OPTIONS /replica
@@ -55,15 +47,11 @@ listen replicas
     default-server inter 3s fastinter 1s fall 3 rise 2 on-marked-down shutdown-sessions
 
   {% for host in groups['postgres_cluster'] %}
-server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}:{{ postgresql_port }} check port 8008
+server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}:{{ postgresql_port }} check port {{ patroni_restapi_port }}
   {% endfor %}
 
 listen replicas_sync
-{% if cluster_dnscp is defined and cluster_dnscp | length > 0 %}
-    bind {{ cluster_dnscp }}:{{ haproxy_listen_port.replicas_sync }}
-{% else %}
-    bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ haproxy_listen_port.replicas_sync }}
-{% endif %}
+    bind :{{ haproxy_listen_port.replicas_sync }}
     maxconn {{ haproxy_maxconn.replica }}
     option tcplog
     option httpchk OPTIONS /sync
@@ -72,15 +60,11 @@ listen replicas_sync
     default-server inter 3s fastinter 1s fall 3 rise 2 on-marked-down shutdown-sessions
 
   {% for host in groups['postgres_cluster'] %}
-server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}:{{ postgresql_port }} check port 8008
+server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}:{{ postgresql_port }} check port {{ patroni_restapi_port }}
   {% endfor %}
 
 listen replicas_async
-{% if cluster_dnscp is defined and cluster_dnscp | length > 0 %}
-    bind {{ cluster_dnscp }}:{{ haproxy_listen_port.replicas_async }}
-{% else %}
-    bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ haproxy_listen_port.replicas_async }}
-{% endif %}
+    bind :{{ haproxy_listen_port.replicas_async }}
     maxconn {{ haproxy_maxconn.replica }}
     option tcplog
     option httpchk OPTIONS /async
@@ -89,7 +73,7 @@ listen replicas_async
     default-server inter 3s fastinter 1s fall 3 rise 2 on-marked-down shutdown-sessions
 
   {% for host in groups['postgres_cluster'] %}
-server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}:{{ postgresql_port }} check port 8008
+server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}:{{ postgresql_port }} check port {{ patroni_restapi_port }}
   {% endfor %}
 
 

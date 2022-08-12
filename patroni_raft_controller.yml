@@ -1,7 +1,7 @@
 ---
 # yamllint disable rule:line-length
 
-- hosts: balancers
+- hosts: patroni_raft_controller
   become: true
   become_method: sudo
   any_errors_fatal: true
@@ -61,6 +61,12 @@
       when: firewall_enabled_at_boot|bool
       tags: firewall
 
+    - name: Add postgres user
+      user:
+        name: postgres
+        shell: /usr/sbin/nologin
+        home: "{{ patroni_raft_data_dir }}"
+
   roles:
     - role: ansible-role-firewall
       environment: "{{ proxy_env | default({}) }}"
@@ -72,11 +78,9 @@
 
 #    - role: hostname
 #    - role: resolv_conf
+    - role: sudo
     - role: sysctl
-
-    - role: haproxy
-
-#    - role: confd
-#      when: dcs_type == "etcd"
+    - role: timezone
+    - role: patroni_raft_controller
 
 ...

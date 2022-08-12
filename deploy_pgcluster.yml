@@ -1,7 +1,7 @@
 ---
 # yamllint disable rule:line-length
 
-- name: Deploy PostgreSQL HA Cluster (based on "Patroni" and "{{ dcs_type }}") with DNS Connection Point
+- name: Deploy PostgreSQL HA Cluster (based on "Patroni") with DNS Connection Point
   hosts: localhost
   gather_facts: false
   vars_files:
@@ -18,6 +18,9 @@
   hosts: all
   gather_facts: true
   tags: always
+
+# Create Topology Checking...
+# ...
 
 - import_playbook: etcd_cluster.yml
   when: not dcs_exists|bool and dcs_type == "etcd"
@@ -107,14 +110,18 @@
     - role: sysctl
     - role: transparent_huge_pages
     - role: pam_limits
+    - role: locales
     - role: timezone
+#    - role: ssh-keys
     - role: dnscp
-
-    - role: watchdog
-      when: patroni_with_watchdog|bool
+      when: cluster_vip is defined and cluster_vip | length > 0
 
 - import_playbook: balancers.yml
   when: with_haproxy_load_balancing|bool
+  tags: load_balancing, haproxy
+
+- import_playbook: patroni_raft_controller.yml
+  when: with_patroni_raft_controller|bool
   tags: load_balancing, haproxy
 
 - hosts: postgres_cluster

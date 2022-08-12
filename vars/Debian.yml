@@ -3,8 +3,8 @@
 
 # PostgreSQL variables
 postgresql_cluster_name: "main"
-postgresql_data_dir: "/mnt/disk1/main/pg_data" #"/var/lib/postgresql/{{ postgresql_version }}/{{ postgresql_cluster_name }}"  # You can specify custom data dir path
-postgresql_wal_dir: "/mnt/disk2/main/pg_wal" #""  # custom WAL dir path (symlink will be created) [optional]
+postgresql_data_dir: "/var/lib/postgresql/{{ postgresql_version }}/{{ postgresql_cluster_name }}" #"/mnt/disk1/main/pg_data"  # You can specify custom data dir path
+postgresql_wal_dir: "" #"/mnt/disk2/main/pg_wal"  # custom WAL dir path (symlink will be created) [optional]
 postgresql_conf_dir: "{{ postgresql_data_dir }}" #"/etc/postgresql/{{ postgresql_version }}/{{ postgresql_cluster_name }}"
 postgresql_log_dir: "/var/log/postgresql"
 postgresql_home_dir: "/var/lib/postgresql"
@@ -17,7 +17,7 @@ postgresql_version_terse: "{{ postgresql_version | replace('.', '') }}"
 # Packages (for apt repo)
 os_specific_packages:
   Debian-9: [python, python-dev, python-psycopg2, python-setuptools, python-pip, python-requests]
-  Debian-10: [python, python-dev, python-psycopg2, python-setuptools]
+  Debian-10: [python3]  #[python, python-dev, python-psycopg2, python-setuptools]
   Debian-11: [python3]  # python 2 is not required
   Ubuntu-18: [python, python-dev, python-psycopg2, python-setuptools]
   Ubuntu-20: [python3]  # python 2 is not required
@@ -28,6 +28,8 @@ system_packages:
   - python3-psycopg2
   - python3-setuptools
   - python3-pip
+#  - python3-cryptography
+#  - pysyncobj
 #  - python3-requests
   - curl
   - less
@@ -37,12 +39,12 @@ system_packages:
   - jq
   - iptables
   - acl
+# optional packages
+  - htop
 
 # Extra packages
-#etcd_package_repo: "https://github.com/etcd-io/etcd/releases/download/{{ etcd_ver }}/etcd-{{ etcd_ver }}-linux-amd64.tar.gz"
-etcd_package_repo: "http://mlk-pgsql-mpa.demo.ru/opt/etcd/etcd-{{ etcd_ver }}-linux-amd64.tar.gz"
-#confd_package_repo: "https://github.com/kelseyhightower/confd/releases/download/v0.16.0/confd-0.16.0-linux-amd64"
-confd_package_repo: "http://mlk-pgsql-mpa.demo.ru/opt/confd/confd-0.16.0-linux-amd64"
+etcd_package_repo: "https://github.com/etcd-io/etcd/releases/download/{{ etcd_ver }}/etcd-{{ etcd_ver }}-linux-amd64.tar.gz"
+#etcd_package_repo: "http://mlk-pgsql-mpa.demo.ru/opt/etcd/etcd-{{ etcd_ver }}-linux-amd64.tar.gz"
 
 # Patroni package will be installed from the pip (by default).
 # You also have the option of choosing an patroni installation method using the deb package.
@@ -50,9 +52,9 @@ patroni_installation_method: "pip"  # (default)"pip" or "deb"
 
 # (if patroni_installation_type: "pip")
 # Packages from your repository will be used to install instead of the pip repository.
-#pip_package_repo: "https://bootstrap.pypa.io/get-pip.py"  # latest version pip3 for python3 (or use "pip-<version>.tar.gz").
+pip_package_repo: "https://bootstrap.pypa.io/get-pip.py"  # latest version pip3 for python3 (or use "pip-<version>.tar.gz").
 #pip_package_repo: "https://bootstrap.pypa.io/pip/3.5/get-pip.py"
-pip_package_repo: "http://lk-pgsql-mpa.demo.ru/opt/pip/get-pip.py"  # latest version pip3 for python3 (or use "pip-<version>.tar.gz").
+#pip_package_repo: "http://mlk-pgsql-mpa.demo.ru/opt/pip/get-pip.py"  # latest version pip3 for python3 (or use "pip-<version>.tar.gz").
 patroni_pip_requirements_repo: []
 #  - "http://my-repo.url/setuptools-41.2.0.zip"
 #  - "http://my-repo.url/setuptools_scm-3.3.3.tar.gz"

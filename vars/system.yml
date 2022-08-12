@@ -5,6 +5,15 @@
 #timezone: ""
 timezone: "Europe/Moscow"
 
+# Generate locale
+# (except RHEL>=8,use glibc-langpack)
+locale_gen:
+  - {language_country: "en_US", encoding: "UTF-8"}
+  - {language_country: "ru_RU", encoding: "UTF-8"}  # optional
+#  - {language_country: "", encoding: ""}
+
+# Set system locale (LANG,LC_ALL)
+locale: "en_US.utf-8"
 
 # Kernel parameters
 sysctl_set: true  # or 'false'
@@ -34,7 +43,7 @@ sysctl_conf:
     - {name: "net.ipv4.tcp_max_syn_backlog", value: "8192"}
     - {name: "net.core.somaxconn", value: "65535"}
     - {name: "net.ipv4.tcp_tw_reuse", value: "1"}
-#    - {name: "", value: ""}
+  patroni_raft_controller: []
   balancers:
     - {name: "net.ipv4.ip_nonlocal_bind", value: "1"}
     - {name: "net.ipv4.ip_forward", value: "1"}
@@ -44,7 +53,6 @@ sysctl_conf:
     - {name: "net.ipv4.tcp_max_syn_backlog", value: "8192"}
     - {name: "net.core.somaxconn", value: "65535"}
     - {name: "net.ipv4.tcp_tw_reuse", value: "1"}
-#    - {name: "", value: ""}
 
 
 # Transparent Huge Pages
@@ -77,18 +85,23 @@ firewall_allowed_tcp_ports_for:
   postgres_cluster:
     - "{{ ansible_ssh_port | default(22) }}"
     - "{{ postgresql_port }}"
-    - "8008"  # Patroni REST API port
+    - "{{ patroni_restapi_port }}"  # Patroni REST API port
+    - "{{ patroni_raft_port }}"  # Patroni Raft port
     - "3389"  # RDP
     - "445"  # SMB
     - "10050"  # Zabbix agent
-#    - ""
+  patroni_raft_controller:
+    - "{{ ansible_ssh_port | default(22) }}"
+    - "{{ patroni_raft_controller.port }}"  # Patroni Raft port
+    - "3389"  # RDP
+    - "445"  # SMB
+    - "10050"  # Zabbix agent
   etcd_cluster:
     - "{{ ansible_ssh_port | default(22) }}"
     - "2379"  # ETCD port
     - "2380"  # ETCD port
     - "3389"  # RDP
     - "10050"  # Zabbix agent
-#    - ""
   balancers:
     - "{{ ansible_ssh_port | default(22) }}"
     - "{{ haproxy_listen_port.master }}"  # HAProxy (read/write) master
@@ -96,12 +109,12 @@ firewall_allowed_tcp_ports_for:
     - "{{ haproxy_listen_port.replicas_sync }}"  # HAProxy (read only) synchronous replica only
     - "{{ haproxy_listen_port.replicas_async }}"  # HAProxy (read only) asynchronous replicas only
     - "{{ haproxy_listen_port.stats }}"  # HAProxy stats
-#    - ""
 
 firewall_additional_rules_for:
   master: []
   replica: []
   postgres_cluster: []
+  patroni_raft_controller: []
   etcd_cluster: []
   balancers: []
 #    - "iptables -p vrrp -A INPUT -j ACCEPT"  # Keepalived (vrrp)

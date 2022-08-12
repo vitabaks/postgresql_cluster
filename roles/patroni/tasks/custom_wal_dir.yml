@@ -2,7 +2,7 @@
 # yamllint disable rule:line-length
 # yamllint disable rule:comments-indentation
 
-- name: "Make sure {{ postgresql_data_dir }}/{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }} is symlink"  # noqa 204
+- name: "Custom WAL dir for 1-st Timeline Master server (Replicas already have custom WAL dir) | Make sure {{ postgresql_data_dir }}/{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }} is symlink"  # noqa 204
   stat:
     path: "{{ postgresql_data_dir }}/{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }}"
   register: sym
@@ -16,7 +16,7 @@
         state: present
       environment: "{{ proxy_env | default({}) }}"
 
-    - name: Stop patroni service (for create symlink)
+    - name: Stop Patroni service (for create symlink)
       systemd:
         name: patroni
         state: stopped
@@ -56,14 +56,14 @@
   when: sym.stat.islnk is not defined or not sym.stat.islnk|bool
 
 - block:  # start patroni
-    - name: Start patroni service
+    - name: Start Patroni service
       systemd:
         name: patroni
         state: started
 
-    - name: Wait for port 8008 to become open on the host
+    - name: Wait for Patroni REST API port to become open on the host
       wait_for:
-        port: 8008
+        port: "{{ patroni_restapi_port }}"
         host: "{{ hostvars[inventory_hostname]['inventory_hostname'] }}"
         state: started
         timeout: 120
@@ -72,7 +72,7 @@
 
     - name: Check that the patroni is healthy
       uri:
-        url: "http://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:8008/health"
+        url: "http://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ patroni_restapi_port }}/health"
         status_code: 200
       register: replica_result
       until: replica_result.status == 200

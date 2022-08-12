@@ -1,0 +1,11 @@
+#jinja2: trim_blocks:True,lstrip_blocks:True
+---
+
+raft:
+  data_dir: {{ patroni_raft_data_dir }}
+  self_addr: {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ patroni_raft_controller.port }}
+  partner_addrs: 
+  - {{ patroni_raft_controller.partnerhost }}:{{ patroni_raft_controller.partnerport }}
+{% if patroni_raft_password is defined and patroni_raft_password | length > 0 %}
+  password: '{{ patroni_raft_password }}'
+{% endif %}

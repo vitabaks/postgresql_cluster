@@ -21,26 +21,61 @@ log:
 {% endif %}
 
 restapi:
-  listen: {{ hostvars[inventory_hostname]['inventory_hostname'] }}:8008
-  connect_address: {{ hostvars[inventory_hostname]['inventory_hostname'] }}:8008
+  listen: 0.0.0.0:{{ patroni_restapi_port }}
+  connect_address: {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ patroni_restapi_port }}
 #  certfile: /etc/ssl/certs/ssl-cert-snakeoil.pem
 #  keyfile: /etc/ssl/private/ssl-cert-snakeoil.key
 #  authentication:
 #    username: username
 #    password: password
 
-{% if not dcs_exists|bool and dcs_type == 'etcd' %}
+{% if not dcs_exists|bool %}
+  {% if dcs_type == 'etcd' %}
+
 etcd:
   hosts: {% for host in groups['etcd_cluster'] %}{{ hostvars[host]['inventory_hostname'] }}:2379{% if not loop.last %},{% endif %}{% endfor %}
-{% endif %}
-{% if dcs_exists|bool and dcs_type == 'etcd' %}
-etcd:
-  hosts: {% for etcd_hosts in patroni_etcd_hosts %}{{etcd_hosts.host}}:{{etcd_hosts.port}}{% if not loop.last %},{% endif %}{% endfor %}
-{% endif %}
+  {% if (patroni_etcd_username is defined and patroni_etcd_username | length > 0) %}
 
-{% if (patroni_etcd_username is defined and patroni_etcd_username | length > 0) %}
   username: {{ patroni_etcd_username }}
   password: {{ patroni_etcd_password }}
+  {% endif %}
+  {% else %}
+
+    {% if is_master == 'true' %}
+raft:
+  data_dir: {{ patroni_raft_data_dir }}
+  self_addr: {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ patroni_raft_port }}
+      {% if with_patroni_raft_controller|bool %}
+  partner_addrs: 
+  - {{ patroni_raft_controller.host }}:{{ patroni_raft_controller.port}}
+      {% else %}
+  partner_addrs: # empty, this is master host 
+      {% endif %}
+      {% if patroni_raft_password is defined and patroni_raft_password | length > 0 %}
+  password: '{{ patroni_raft_password }}'
+      {% endif %}
+    {% else %}
+raft:
+  data_dir: {{ patroni_raft_data_dir }}
+  self_addr: {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ patroni_raft_port }}
+  partner_addrs: 
+  - {{ hostvars[groups['master'][0]].inventory_hostname }}:{{ patroni_raft_port }}
+      {% if patroni_raft_password is defined and patroni_raft_password | length > 0 %}
+  password: '{{ patroni_raft_password }}'
+      {% endif %}
+    {% endif %}
+  {% endif %}
+{% else%}
+  {% if dcs_exists|bool and dcs_type == 'etcd' %}
+
+etcd:
+  hosts: {% for etcd_hosts in patroni_etcd_hosts %}{{etcd_hosts.host}}:{{etcd_hosts.port}}{% if not loop.last %},{% endif %}{% endfor %}
+  {% if (patroni_etcd_username is defined and patroni_etcd_username | length > 0) %}
+  
+  username: {{ patroni_etcd_username }}
+  password: {{ patroni_etcd_password }}
+  {% endif %}
+  {% endif %}
 {% endif %}
 
 bootstrap:
@@ -91,17 +126,17 @@ bootstrap:
 {% endif %}
 
   pg_hba:  # Add following lines to pg_hba.conf after running 'initdb'
-    - host replication {{ patroni_replication_username }} 127.0.0.1/32 md5
-    - host all all 0.0.0.0/0 md5
+    - host replication {{ patroni_replication_username }} 127.0.0.1/32 {{ postgresql_password_encryption_algorithm }}
+    - host all all 0.0.0.0/0 {{ postgresql_password_encryption_algorithm }}
 
 
 postgresql:
-{% if not with_haproxy_load_balancing|bool and (cluster_vip is defined and cluster_vip | length > 0) %}
-  listen: {{ hostvars[inventory_hostname]['inventory_hostname'] }},{{ cluster_vip }},127.0.0.1:{{ postgresql_port }}
+{% if cluster_vip is defined and cluster_vip | length > 0 %}
+  listen: {{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }},{{ cluster_vip }},127.0.0.1:{{ postgresql_port }}
 {% else %}
-  listen: {{ hostvars[inventory_hostname]['inventory_hostname'] }},127.0.0.1:{{ postgresql_port }}
+  listen: {{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }},127.0.0.1:{{ postgresql_port }}
 {% endif %}
-  connect_address: {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ postgresql_port }}
+  connect_address: {{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ postgresql_port }}
 {% if patroni_superuser_username == 'postgres' %}
   use_unix_socket: true
 {% endif %}
@@ -135,12 +170,14 @@ postgresql:
   remove_data_directory_on_rewind_failure: {{ patroni_remove_data_directory_on_rewind_failure |string |d(false, true) |lower }}
   remove_data_directory_on_diverged_timelines: {{ patroni_remove_data_directory_on_diverged_timelines |string |d(false, true) |lower }}
 
+{% if cluster_vip is defined and cluster_vip | length > 0 %}
   callbacks:
     on_start: {{ patroni_scripts_dir }}/dnscp.sh
     on_stop: {{ patroni_scripts_dir }}/dnscp.sh
 #    on_restart:
 #    on_reload:
     on_role_change: {{ patroni_scripts_dir }}/dnscp.sh
+{% endif %}
 
   create_replica_methods:
 {% if patroni_create_replica_methods is defined and patroni_create_replica_methods | length > 0 %}
@@ -175,7 +212,7 @@ postgresql:
 
 watchdog:
 {% if patroni_with_watchdog|bool %}
-  mode: required  # Allowed values: off, automatic, required
+  mode: automatic  # Allowed values: off, automatic, required
   device: /dev/watchdog
   safety_margin: -1
 {% else %}

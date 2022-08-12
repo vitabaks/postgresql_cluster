@@ -1,5 +1,5 @@
 [Unit]
-Description=Runners to orchestrate a high-availability PostgreSQL - Patroni
+Description=Patroni RAFT Controller
 After=syslog.target network.target
  
 [Service]
@@ -11,7 +11,6 @@ Group=postgres
 # Read in configuration file if it exists, otherwise proceed
 EnvironmentFile=-/etc/patroni_env.conf
 
-# The default is the user's home directory, and if you want to change it, you must provide an absolute path.
 # WorkingDirectory=~
  
 # Where to send early-startup messages from the server
@@ -24,17 +23,17 @@ ExecStartPre=-/usr/bin/sudo /sbin/modprobe softdog
 ExecStartPre=-/usr/bin/sudo /bin/chown postgres /dev/watchdog
 {% endif %}
 
-# Start the patroni process
+# Start the patroni_raft_controller process
 {% if patroni_installation_method == 'pip' %}
-ExecStart=/usr/local/bin/patroni /etc/patroni/patroni.yml
+ExecStart=/usr/local/bin/patroni_raft_controller /etc/patroni/patroni_raft_controller.yml
 {% else %}
-ExecStart=/usr/bin/patroni /etc/patroni/patroni.yml
+ExecStart=/usr/bin/patroni_raft_controller /etc/patroni/patroni_raft_controller.yml
 {% endif %}
 
-# Send HUP to reload from patroni.yml
+# Send HUP to reload from patroni_raft_controller.yml
 ExecReload=/bin/kill -s HUP $MAINPID
  
-# Only kill the patroni process, not it's children, so it will gracefully stop postgres
+# only kill the patroni_raft_controller process, not it's children, so it will gracefully stop postgres
 KillMode=process
  
 # Give a reasonable amount of time for the server to start up/shut down

@@ -8,7 +8,7 @@
   package:
     name:
       - dnsutils
-      - astra-winbind
+#      - astra-winbind
     state: present
   environment: "{{ proxy_env | default({}) }}"
 

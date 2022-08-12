@@ -88,11 +88,11 @@
   {{ client.type.ljust(10) |default('host') }}{{ client.database.ljust(25) |default('all') }}{{ client.user.ljust(25) |default('all') }}{{ client.address.ljust(25) |default('') }}{{ client.method |default('md5') }} {{ client.options |default(None) }}
 {% endfor %}
 {% for patroni in groups['postgres_cluster'] %}
-  host      all                      all                      {{ hostvars[patroni]['inventory_hostname'] }}/32         {{ postgresql_password_encryption_algorithm }}
+  host      all                      all                      {{ hostvars[patroni]['ansible_default_ipv4']['address'] }}/32         {{ postgresql_password_encryption_algorithm }}
 {% endfor %}
 # Allow replication connections from localhost, by a user with the
 # replication privilege.
   host      replication              {{ patroni_replication_username }}               localhost                trust
 {% for host in groups['postgres_cluster'] %}
-  host      replication              {{ patroni_replication_username }}               {{ hostvars[host]['inventory_hostname'] }}/32         {{ postgresql_password_encryption_algorithm }}
+  host      replication              {{ patroni_replication_username }}               {{ hostvars[host]['ansible_default_ipv4']['address'] }}/32         {{ postgresql_password_encryption_algorithm }}
 {% endfor %}
