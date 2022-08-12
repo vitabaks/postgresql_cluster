@@ -19,17 +19,21 @@
   
   
 #### Основные возможности:
-- развёртывание кластера etcd;
 - развёртывание кластера Patroni с СУБД PostgreSQL или PostgresPro;
+- использование встроенного механизма распределённого консенсуса или использование внешней системы DCS (etcd);
+- развёртывание кластера etcd;
 - настройка watchdog для Patroni (защита от split-brain);
 - DNS точка подключения клиентов ([DNS Connection Point](https://github.com/IlgizMamyshev/dnscp));
 - поддержка геораспределенного кластера ([DNS Connection Point](https://github.com/IlgizMamyshev/dnscp));
 - развёртывание HAProxy для балансировки доступа к репликам только для чтения;
-- настройка брандмауэра;
-- настройка параметров ядра ОС Linux;
-- поддержка ОС Debian, Astra Linux;
+- настройка брандмауэра операционной системы;
+- настройка параметров ядра операционной системы Linux;
+- поддержка операционных систем Debian, Astra Linux;
 
 #### Примеры (варианты) реализации архитектуры высокой доступности:
+
+##### Высокодоступный кластер, на базе Patroni (на чистом RAFT) и DNSCP (балансировка с HAProxy опционально):  
+![PGSQLCluster](https://github.com/IlgizMamyshev/pgsql_cluster/blob/master/doc/PGSQLClusterPatroniOnPureRAFT.png)
 
 ##### Высокодоступный кластер, на базе Patroni, etcd и DNSCP (балансировка с HAProxy опционально):  
 ![PGSQLCluster](https://github.com/IlgizMamyshev/pgsql_cluster/blob/master/doc/PGSQLClusterTypeA.png)
@@ -62,7 +66,7 @@
 #### Компоненты балансировки нагрузки:
 [**HAProxy**](http://www.haproxy.org/) — очень быстрое и надежное решение, предлагающее высокую доступность, балансировку нагрузки и прокси для приложений на основе TCP и HTTP. HAProxy входит в состав репозиторя ОС Astra Linux, но также можно использовать внешний источник.
 
-[**confd**](https://github.com/kelseyhightower/confd) позволяет управлять файлами конфигурации локального приложения используя шаблоны и данные из etcd или Consul. Используется для автоматизации управления файлами конфигурации HAProxy.
+[**confd**](https://github.com/kelseyhightower/confd) позволяет управлять файлами конфигурации локального приложения используя шаблоны и данные из etcd. Используется для автоматизации управления файлами конфигурации HAProxy.
 
 #### СУБД PostgreSQL:
 [**PostgreSQL**](https://www.postgresql.org) - реляционная база данных с открытым исходным кодом. При использовании ОС Astra Linux возможно использование PostgreSQL в составе репозитория ОС.  
