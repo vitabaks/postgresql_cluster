@@ -18,13 +18,17 @@ ntp_servers: []
 #  - "10.128.64.45"
 
 timezone: ""
+# timezone: "UTC"
+# timezone: "America/New_York"
 # timezone: "Europe/Moscow"
+# timezone: "Europe/Berlin"
 
 # Generate locale
 # (except RHEL>=8,use glibc-langpack)
 locale_gen:
   - {language_country: "en_US", encoding: "UTF-8"}
-  - {language_country: "ru_RU", encoding: "UTF-8"}  # optional
+#  - {language_country: "ru_RU", encoding: "UTF-8"}
+#  - {language_country: "de_DE", encoding: "UTF-8"}
 #  - {language_country: "", encoding: ""}
 
 # Set system locale (LANG,LC_ALL)
