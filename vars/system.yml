@@ -56,7 +56,6 @@ sysctl_conf:
 #    - {name: "vm.nr_hugepages", value: "9510"}  # example "9510"=18GB
     - {name: "vm.zone_reclaim_mode", value: "0"}
     - {name: "kernel.numa_balancing", value: "0"}
-    - {name: "kernel.sched_migration_cost_ns", value: "5000000"}
     - {name: "kernel.sched_autogroup_enabled", value: "0"}
     - {name: "net.ipv4.ip_nonlocal_bind", value: "1"}
     - {name: "net.ipv4.ip_forward", value: "1"}
@@ -66,6 +65,7 @@ sysctl_conf:
     - {name: "net.core.somaxconn", value: "65535"}
     - {name: "net.ipv4.tcp_tw_reuse", value: "1"}
 #    - {name: "net.netfilter.nf_conntrack_max", value: "1048576"}
+#    - {name: "kernel.sched_migration_cost_ns", value: "5000000"}
 #    - {name: "", value: ""}
   balancers:
     - {name: "net.ipv4.ip_nonlocal_bind", value: "1"}
