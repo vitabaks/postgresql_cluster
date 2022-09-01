@@ -54,7 +54,7 @@ In addition to deploying new clusters, this playbook also support the deployment
 You have two options available for deployment "Type A" and "Type B".
 
 ### [Type A] PostgreSQL High-Availability with Load Balancing
-![TypeA](https://github.com/vitabaks/postgresql_cluster/blob/master/TypeA.png)
+![TypeA](images/TypeA.png)
 
 > To use this scheme, specify `with_haproxy_load_balancing: true` in variable file vars/main.yml
 
@@ -90,7 +90,7 @@ In our configuration keepalived checks the status of the HAProxy service and in 
 
 
 ### [Type B] PostgreSQL High-Availability only
-![TypeB](https://github.com/vitabaks/postgresql_cluster/blob/master/TypeB.png)
+![TypeB](images/TypeB.png)
 
 This is simple scheme without load balancing `Used by default`
 
