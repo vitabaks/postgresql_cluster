@@ -7,3 +7,6 @@ skip_list:
   - 'no-log-password' # We do not display passwords
   - 'fqcn-builtins' # Use FQCN for builtin actions
   - 'no-changed-when'
+  - name[missing] # All tasks should be named.
+  - name[casing] # TODO: All names should start with an uppercase letter.
+  - jinja[spacing]
