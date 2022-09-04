@@ -10,3 +10,6 @@ skip_list:
   - name[missing] # All tasks should be named.
   - name[casing] # TODO: All names should start with an uppercase letter.
   - jinja[spacing]
+  - no-handler
+  - schema[tasks]
+ 
