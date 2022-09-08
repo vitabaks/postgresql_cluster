@@ -1,0 +1,12 @@
+---
+- hosts: postgres_cluster
+  become: true
+  tasks:
+    - name: Set huges_pages
+      sysctl:
+        name: vm.nr_hugepages
+        value: '2048'
+        sysctl_file: /etc/sysctl.d/50-hugepages.conf
+        sysctl_set: yes
+        state: present
+        reload: yes
