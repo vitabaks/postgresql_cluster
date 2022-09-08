@@ -7,6 +7,6 @@
         name: vm.nr_hugepages
         value: '2048'
         sysctl_file: /etc/sysctl.d/50-hugepages.conf
-        sysctl_set: yes
+        sysctl_set: true
         state: present
-        reload: yes
+        reload: true
