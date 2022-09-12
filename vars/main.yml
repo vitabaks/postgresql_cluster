@@ -117,7 +117,7 @@ postgresql_parameters:
   - {option: "password_encryption", value: "{{ postgresql_password_encryption_algorithm }}"}
   - {option: "max_locks_per_transaction", value: "64"}  # raise this value (ex. 512) if you have queries that touch many different tables (partitioning)
   - {option: "max_prepared_transactions", value: "0"}
-  - {option: "huge_pages", value: "try"}  # or "on" if you set "vm_nr_hugepages" in kernel parameters
+  - {option: "huge_pages", value: "try"}  # or "on". Uncomment "vm.nr_hugepages" in vars/system.yml
   - {option: "shared_buffers", value: "512MB"}  # please change this value
   - {option: "work_mem", value: "128MB"}  # please change this value
   - {option: "maintenance_work_mem", value: "256MB"}  # please change this value
