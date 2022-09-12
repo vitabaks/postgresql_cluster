@@ -53,7 +53,7 @@ sysctl_conf:
     - {name: "vm.dirty_expire_centisecs", value: "1000"}
     - {name: "vm.dirty_background_bytes", value: "67108864"}
     - {name: "vm.dirty_bytes", value: "536870912"}
-#    - {name: "vm.nr_hugepages", value: "9510"}  # example "9510"=18GB
+#    - {name: "vm.nr_hugepages", value: "9510"}  # Minimum 2048=4GB, set also huge_pages in vars/main.yml
     - {name: "vm.zone_reclaim_mode", value: "0"}
     - {name: "kernel.numa_balancing", value: "0"}
     - {name: "kernel.sched_autogroup_enabled", value: "0"}
