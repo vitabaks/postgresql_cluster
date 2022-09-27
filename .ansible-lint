@@ -12,4 +12,5 @@ skip_list:
   - jinja[spacing]
   - no-handler
   - schema[tasks]
- 
+  - jinja[invalid]  # Rule that looks inside jinja2 templates.
+  - template-instead-of-copy  # Templated files should use template instead of copy
