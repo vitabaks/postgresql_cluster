@@ -157,13 +157,14 @@ postgresql_parameters:
   - {option: "pg_stat_statements.track", value: "all"}
   - {option: "pg_stat_statements.track_utility", value: "false"}
   - {option: "pg_stat_statements.save", value: "true"}
-  - {option: "auto_explain.log_min_duration", value: "10s"}  # 10 sec (by default). Decrease this value if necessary
+  - {option: "auto_explain.log_min_duration", value: "10s"}  # enable auto_explain for 10-second logging threshold. Decrease this value if necessary
   - {option: "auto_explain.log_analyze", value: "true"}
   - {option: "auto_explain.log_buffers", value: "true"}
   - {option: "auto_explain.log_timing", value: "false"}
   - {option: "auto_explain.log_triggers", value: "true"}
   - {option: "auto_explain.log_verbose", value: "true"}
   - {option: "auto_explain.log_nested_statements", value: "true"}
+  - {option: "auto_explain.sample_rate", value: "0.01"}  # enable auto_explain for 1% of queries logging threshold
   - {option: "track_io_timing", value: "on"}
   - {option: "log_lock_waits", value: "on"}
   - {option: "log_temp_files", value: "0"}
