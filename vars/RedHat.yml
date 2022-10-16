@@ -174,8 +174,7 @@ patroni_pip_requirements_file:
 patroni_pip_package_file:
   - "patroni-1.6.0.tar.gz"  # https://pypi.org/project/patroni/#files
 
-# ( if patroni_installation_type: "rpm" and 
-: "file" )
+#  ( if patroni_installation_type: "rpm" and installation_method: "file" )
 patroni_rpm_package_file: "patroni-2.1.4-1.rhel8.x86_64.rpm"  # (package for RHEL/CentOS 8) https://download.postgresql.org/pub/repos/yum/common/redhat/rhel-8-x86_64/
 
 # additional packages
