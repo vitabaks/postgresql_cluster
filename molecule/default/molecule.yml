@@ -28,7 +28,6 @@ platforms:
     privileged: true
     pre_build_image: true
     env:
-      LANG: en_US.UTF-8
       LC_ALL: en_US.UTF-8
     groups:
       - etcd_cluster
@@ -48,7 +47,6 @@ platforms:
     privileged: true
     pre_build_image: true
     env:
-      LANG: en_US.UTF-8
       LC_ALL: en_US.UTF-8
     groups:
       - etcd_cluster
@@ -68,7 +66,6 @@ platforms:
     privileged: true
     pre_build_image: true
     env:
-      LANG: en_US.UTF-8
       LC_ALL: en_US.UTF-8
     groups:
       - etcd_cluster
@@ -89,7 +86,6 @@ platforms:
     privileged: true
     pre_build_image: true
     env:
-      LANG: en_US.UTF-8
       LC_ALL: en_US.UTF-8
     groups:
       - master
@@ -112,7 +108,6 @@ platforms:
     privileged: true
     pre_build_image: true
     env:
-      LANG: en_US.UTF-8
       LC_ALL: en_US.UTF-8
     groups:
       - replica
