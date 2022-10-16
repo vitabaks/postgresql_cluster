@@ -127,7 +127,7 @@ patroni_pip_package_repo: []
 # ( if patroni_installation_type: "deb" )
 # You can preload the patroni deb package to your APT repository, or explicitly specify the path to the package in this variable:
 patroni_deb_package_repo: []
-#  - "https://apt.postgresql.org/pub/repos/apt/pool/main/p/patroni/patroni_1.6.5-2.pgdg100%2B1_all.deb"  # (package for Debian 10)
+#  - "https://apt.postgresql.org/pub/repos/apt/pool/main/p/patroni/patroni_2.1.4-2.pgdg22.04%2B1_all.deb"  # (package for Ubuntu 22.04)
 
 
 # ================================================================================================= #
@@ -161,12 +161,12 @@ patroni_pip_package_file:
   - "patroni-1.6.0.tar.gz"  # https://pypi.org/project/patroni/#files
 
 # ( if installation_method: "file" and patroni_installation_type: "deb")
-patroni_deb_package_file: "patroni_1.6.0-2.pgdg90+1_all.deb"  # (package for Debian 9) https://apt.postgresql.org/pub/repos/apt/pool/main/p/patroni/
+patroni_deb_package_file: "patroni_2.1.4-2.pgdg22.04+1_all.deb"  # (package for Ubuntu 22.04) https://apt.postgresql.org/pub/repos/apt/pool/main/p/patroni/
 
 # additional packages
-etcd_package_file: "etcd-v3.3.15-linux-amd64.tar.gz"  # https://github.com/etcd-io/etcd/releases
+etcd_package_file: "etcd-v3.3.27-linux-amd64.tar.gz"  # https://github.com/etcd-io/etcd/releases
 wal_g_package_file: "wal-g.linux-amd64.tar.gz"  # https://github.com/wal-g/wal-g/releases
-vip_manager_package_file: "vip-manager_0.6-1_amd64.deb"  # https://github.com/cybertec-postgresql/vip-manager/releases
+vip_manager_package_file: "vip-manager-1.0.2-1.x86_64.rpm"  # https://github.com/cybertec-postgresql/vip-manager/releases
 # (if with_haproxy_load_balancing: true)
 haproxy_package_file: []
 #  - "haproxy_1.8.21-1~bpo9+1_amd64.deb"
