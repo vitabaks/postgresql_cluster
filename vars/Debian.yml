@@ -166,7 +166,7 @@ patroni_deb_package_file: "patroni_2.1.4-2.pgdg22.04+1_all.deb"  # (package for 
 # additional packages
 etcd_package_file: "etcd-v3.3.27-linux-amd64.tar.gz"  # https://github.com/etcd-io/etcd/releases
 wal_g_package_file: "wal-g.linux-amd64.tar.gz"  # https://github.com/wal-g/wal-g/releases
-vip_manager_package_file: "vip-manager-1.0.2-1.x86_64.rpm"  # https://github.com/cybertec-postgresql/vip-manager/releases
+vip_manager_package_file: "vip-manager_1.0.2-1_amd64.deb"  # https://github.com/cybertec-postgresql/vip-manager/releases
 # (if with_haproxy_load_balancing: true)
 haproxy_package_file: []
 #  - "haproxy_1.8.21-1~bpo9+1_amd64.deb"
