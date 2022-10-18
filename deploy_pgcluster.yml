@@ -19,6 +19,20 @@
   gather_facts: true
   tags: always
 
+  vars_files:
+      - vars/main.yml
+      - "vars/{{ ansible_os_family }}.yml"
+  tasks:
+    - name: Check cluster already installed
+      become: true
+      stat:
+        path: "{{ postgresql_data_dir }}"
+      register: check_data_dir
+    - name: Stop if cluster already installed
+      fail:
+        msg: "PostgreSQL Cluster is already installed."
+      when: check_data_dir.stat.exists
+
 - import_playbook: etcd_cluster.yml
   when: not dcs_exists|bool and dcs_type == "etcd"
   tags: etcd
