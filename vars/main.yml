@@ -30,9 +30,13 @@ patroni_with_watchdog: true # true or false
 cluster_vip: "172.16.32.180"  # empty or one VIP address (or some VIP addresses in different subnets, separated by commas), for client access to PostgreSQL
 dnscp:
   vcompname: "{{ patroni_cluster_name }}" # Virtual Computer Name - Client Access Point
-  vcomppassword: "" # Password for Virtual Computer Name Account. Empty for anonimous auth to DNS zone.
+  vcomppassword: "P@ssw0rd" # Password for Virtual Computer Name Account. Empty for anonimous auth to DNS zone.
   dnszonefqdn: "demo.ru" # Set DNS zone FQDN (AD Domain FQDN).
   dnsserver: "" # Set FQDN or IP or empty (recommended for automatically detect). Used for register DNS name.
+  encryptionkey: "a94VPhhmLY4xOpRZGCYP1%eY9*fG%SPk6QXaEK*kv47nm1*9xO" # Key to encrypt vcomppassword string value.
+  #Add to ADDS:
+  #sudo hostnamectl set-hostname pgsql-n1
+  #sudo astra-winbind -dc demo.ru -d demo.ru -g DEMO -u mamyshev@demo.ru -p StrongP@ssw0rd -y
 
 # DCS (Distributed Consensus Store)
 dcs_exists: false  # or 'true' if you do not want to install and configure the etcd cluster
@@ -48,8 +52,6 @@ with_patroni_raft_controller: true  # 'false' or 'true' if you want to install a
 patroni_raft_controller:
   host: "{{ hostvars[groups['patroni_raft_controller'][0]].inventory_hostname }}" # hostname or IP
   port: "{{ patroni_raft_port }}"
-  partnerhost: "{{ hostvars[groups['master'][0]].inventory_hostname }}" # hostname or IP (postgres_cluster master host)
-  partnerport: "{{ patroni_raft_port }}"
 
 # if dcs_exists: false and dcs_type: "etcd"
 etcd_ver: "v3.3.27"  # version for deploy etcd cluster
