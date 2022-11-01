@@ -1,7 +1,7 @@
 ---
 # yamllint disable rule:line-length
 
-- name: Deploy PostgreSQL HA Cluster (based on "Patroni") with DNS Connection Point
+- name: Deploy PostgreSQL HA Cluster based on Patroni with DNS Connection Point
   hosts: localhost
   gather_facts: false
   vars_files:
@@ -70,7 +70,6 @@
         cache_valid_time: 3600
       environment: "{{ proxy_env | default({}) }}"
       when: ansible_os_family == "Debian"
-      tags: add_repo, install_packages, install_postgres
 
     - name: Make sure the gnupg and apt-transport-https packages are present
       apt:
@@ -80,7 +79,6 @@
         state: present
       environment: "{{ proxy_env | default({}) }}"
       when: ansible_os_family == "Debian"
-      tags: add_repo, install_packages, install_postgres
 
     - name: Build a firewall_ports_dynamic_var
       set_fact:
@@ -118,11 +116,7 @@
 
 - import_playbook: balancers.yml
   when: with_haproxy_load_balancing|bool
-  tags: load_balancing, haproxy
-
-- import_playbook: patroni_raft_controller.yml
-  when: with_patroni_raft_controller|bool
-  tags: load_balancing, haproxy
+  tags: haproxy
 
 - hosts: postgres_cluster
   become: true
@@ -155,7 +149,39 @@
   roles:
     - role: patroni
 
+- import_playbook: patroni_raft_controller.yml
+  # After deploy Patroni hosts with PostgreSQL
+  when: with_patroni_raft_controller|bool
+
+- hosts: postgres_cluster
+  become: true
+  become_method: sudo
+  gather_facts: true
+  any_errors_fatal: true
+  vars_files:
+    - vars/main.yml
+    - vars/system.yml
+
+  pre_tasks:
+    - name: Set Astra Linux specific variables
+      include_vars: "vars/{{ ansible_os_family }}.yml"
+      when: ansible_os_family is search("Astra Linux")
+      tags: always
+
+    - name: Include OS-specific variables
+      include_vars: "vars/{{ ansible_os_family }}.yml"
+      when: not ansible_os_family == 'Rocky' and not ansible_os_family == 'AlmaLinux'
+      tags: always
+
+    - name: Include PostgreSQL-specific variables
+      include_vars: "vars/postgres/PostgreSQL.yml"
+      when: postgresql_fork != 'PostgresPro'
+
+    - name: Include PostgresPro-specific variables
+      include_vars: "vars/postgres/PostgresPro.yml"
+      when: postgresql_fork == 'PostgresPro'
+
+  roles:
     # finish (info)
     - role: deploy-finish
-
 ...
