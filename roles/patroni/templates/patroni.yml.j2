@@ -45,12 +45,7 @@ etcd:
 raft:
   data_dir: {{ patroni_raft_data_dir }}
   self_addr: {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ patroni_raft_port }}
-      {% if with_patroni_raft_controller|bool %}
-  partner_addrs: 
-  - {{ patroni_raft_controller.host }}:{{ patroni_raft_controller.port}}
-      {% else %}
-  partner_addrs: # empty, this is master host 
-      {% endif %}
+  #partner_addrs: # empty, this is master host 
       {% if patroni_raft_password is defined and patroni_raft_password | length > 0 %}
   password: '{{ patroni_raft_password }}'
       {% endif %}
@@ -212,13 +207,13 @@ postgresql:
 
 watchdog:
 {% if patroni_with_watchdog|bool %}
-  mode: automatic  # Allowed values: off, automatic, required
+  mode: automatic # Allowed values: off, automatic, required
   device: /dev/watchdog
   safety_margin: -1
 {% else %}
   mode: off  # Allowed values: off, automatic, required
   device: /dev/watchdog
-  safety_margin: 5
+  safety_margin: -1
 {% endif %}
 
 tags:
