@@ -28,7 +28,6 @@
   environment: "{{ proxy_env | default({}) }}"
   when: pip_package_repo is search("get-pip.py") and
         proxy_env is defined and proxy_env | length > 0
-  tags: pip_install, pip
 
 - block:  # with tar.gz
     - name: pip | download pip package
@@ -55,6 +54,5 @@
         chdir: "/tmp/{{ pip_package_repo.split('.tar.gz')[0] | basename }}"
       when: pip_package_result.changed
   when: pip_package_repo is search("tar.gz")
-  tags: pip_install, pip
 
 ...
