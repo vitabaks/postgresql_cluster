@@ -20,7 +20,6 @@
       debug:
         var: patronictl_result.stdout_lines
   ignore_errors: true
-  tags: patroni_status, cluster_info, cluster_status, point_in_time_recovery
 
 - block:
     - name: Get PostgreSQL database list
@@ -58,7 +57,6 @@
       debug:
         var: dbs_result.stdout_lines
   ignore_errors: true
-  tags: databases, db_list, cluster_info, cluster_status, point_in_time_recovery
 
 - block:
     - name: PostgreSQL cluster connection info
@@ -66,7 +64,7 @@
       debug:
         msg:
           - +------------------------------------------------+
-          - DNS Connection Point   {{ cluster_vcompname }}.{{ cluster_dnszonefqdn }}
+          - DNS Connection Point   {{ dnscp.vcompname }}.{{ dnscp.dnszonefqdn }}
           - Address (VIP)          {{ cluster_vip }}
           - Port {{ haproxy_listen_port.master }} (read/write) master
           - Port {{ haproxy_listen_port.replicas }} (read only)  all replicas
@@ -81,7 +79,7 @@
       debug:
         msg:
           - +------------------------------------------------+
-          - DNS Connection Point   {{ cluster_vcompname }}.{{ cluster_dnszonefqdn }}
+          - DNS Connection Point   {{ dnscp.vcompname }}.{{ dnscp.dnszonefqdn }}
           - Address (VIP)          {{ cluster_vip }}
           - Port {{ haproxy_listen_port.master }} (read/write) master
           - Port {{ haproxy_listen_port.replicas }} (read only)  all replicas
@@ -94,14 +92,13 @@
       debug:
         msg:
           - +------------------------------------------------+
-          - DNS Connection Point   {{ cluster_vcompname }}.{{ cluster_dnszonefqdn }}
+          - DNS Connection Point   {{ dnscp.vcompname }}.{{ dnscp.dnszonefqdn }}
           - Address (VIP)          {{ cluster_vip }}
           - Port {{ postgresql_port }}
           - +------------------------------------------------+
       when: not with_haproxy_load_balancing|bool
   when: cluster_vip is defined and cluster_vip | length > 0
   ignore_errors: true
-  tags: conn_info, cluster_info, cluster_status
 
 - block:
     - name: Get vip info
@@ -118,7 +115,6 @@
       when: man_ip is defined and man_ip == cluster_vip
   when: cluster_vip is defined and cluster_vip | length > 0
   ignore_errors: true
-  tags: vip_owner, vip_status, cluster_info, cluster_status
 
 
 - block:  # if cluster_vip is not defined
@@ -165,6 +161,5 @@
       when: not with_haproxy_load_balancing|bool
   ignore_errors: true
   when: cluster_vip is not defined or cluster_vip | length < 1
-  tags: conn_info, cluster_info, cluster_status
 
 ...
