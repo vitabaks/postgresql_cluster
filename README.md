@@ -116,7 +116,7 @@ RedHat and Debian based distros (x86_64)
 ###### PostgreSQL versions: 
 all supported PostgreSQL versions
 
-:white_check_mark: tested, works fine: `PostgreSQL 9.6, 10, 11, 12, 13, 14`
+:white_check_mark: tested, works fine: PostgreSQL 10, 11, 12, 13, 14, 15
 
 _Table of results of daily automated testing of cluster deployment:_
 | Distribution | Test result |
