@@ -217,6 +217,8 @@ pgbouncer_max_client_conn: 10000
 pgbouncer_max_db_connections: 1000
 pgbouncer_default_pool_size: 20
 pgbouncer_default_pool_mode: "session"
+pgbouncer_admin_users: "postgres"  # comma-separated list of users, who are allowed to change settings
+pgbouncer_stats_users: "postgres"  # comma-separated list of users who are just allowed to use SHOW command
 pgbouncer_generate_userlist: true  # generate the authentication file (userlist.txt) from the pg_shadow system table
 pgbouncer_auth_type: "{{ postgresql_password_encryption_algorithm }}"
 pgbouncer_ignore_startup_parameters: "extra_float_digits,geqo"
