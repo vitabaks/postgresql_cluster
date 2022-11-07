@@ -351,6 +351,9 @@ pgbackrest_conf:
 pgbackrest_patroni_cluster_restore_command:
   '/usr/bin/pgbackrest --stanza={{ pgbackrest_stanza }} --delta restore'  # restore from latest backup
 #  '/usr/bin/pgbackrest --stanza={{ pgbackrest_stanza }} --type=time "--target=2020-06-01 11:00:00+03" --delta restore'  # Point-in-Time Recovery (example)
+pgbackrest_cron: []
+#  - {name: "Full Backup", type: "full", hour: "06", minute: "30", dow: "0"}
+#  - {name: "Diff Backup", type: "diff", hour: "06", minute: "30", dow: "1-6"}
 
 # PITR mode (if patroni_cluster_bootstrap_method: "pgbackrest" or "wal-g"):
 # 1) The database cluster directory will be cleaned (for "wal-g") or overwritten (for "pgbackrest" --delta restore).

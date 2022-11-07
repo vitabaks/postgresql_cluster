@@ -121,4 +121,19 @@
 #    - "'postgres_cluster' in group_names"
 #  tags: pgbackrest, pgbackrest_bootstrap_script
 
+- name: Crontab pgbackrest
+  become: true
+  cron:
+    name: "{{ item.name | default('Backup') }}"
+    cron_file: /etc/cron.d/pgbackrest
+    job: "/usr/bin/pgbackrest --type={{ item.type }} --stanza={{ pgbackrest_stanza }} backup"
+    user: postgres
+    dow: "{{ item.dow }}"
+    hour: "{{ item.hour }}"
+    minute: "{{ item.minute }}"
+  ignore_errors: true
+  loop: "{{ pgbackrest_cron | flatten(1) }}"
+  when: pgbackrest_cron is defined and pgbackrest_cron | length > 0
+  tags: pgbackrest_cron
+
 ...
