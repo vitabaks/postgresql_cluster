@@ -28,7 +28,6 @@ apt_repository:
 
 # Packages (for apt repo)
 os_specific_packages:
-  Debian-9: [python, python-dev, python-psycopg2, python-setuptools]
   Debian-10: [python, python-dev, python-psycopg2, python-setuptools]
   Debian-11: [python3]  # python 2 is not required
   Ubuntu-18: [python, python-dev, python-psycopg2, python-setuptools]
@@ -64,7 +63,7 @@ vip_manager_package_repo: "https://github.com/cybertec-postgresql/vip-manager/re
 # (if with_haproxy_load_balancing: true)
 haproxy_installation_method: "deb"  # (default)"deb" or "src"
 haproxy_install_repo: true  # or 'false'
-# for Debian 9/10 the haproxy version 1.8 (LTS) will be installed from the haproxy.debian.net repository.
+# for Debian 10 the haproxy version 1.8 (LTS) will be installed from the haproxy.debian.net repository.
 # for Ubuntu 18.04 the haproxy version 1.8 (LTS) will be installed from the ppa:vbernat/haproxy-1.8 repository.
 # you can preload the haproxy deb packages to your APT repository (in this case specify "haproxy_install_repo: false").
 confd_package_repo: "https://github.com/kelseyhightower/confd/releases/download/v0.16.0/confd-0.16.0-linux-amd64"

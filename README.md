@@ -20,34 +20,43 @@ In addition to deploying new clusters, this playbook also support the deployment
 > :heavy_exclamation_mark: Please test it in your test enviroment before using in a production.
 
 ## Index
-- [Cluster types](#cluster-types)
+- [PostgreSQL High-Availability Cluster :elephant: :sparkling_heart:](#postgresql-high-availability-cluster-elephant-sparkling_heart)
+    - [Deploy a Production Ready PostgreSQL High-Availability Cluster (based on "Patroni" and "DCS(etcd)"). Automating with Ansible.](#deploy-a-production-ready-postgresql-high-availability-cluster-based-on-patroni-and-dcsetcd-automating-with-ansible)
+  - [Index](#index)
+  - [Cluster types](#cluster-types)
     - [[Type A] PostgreSQL High-Availability with Load Balancing](#type-a-postgresql-high-availability-with-load-balancing)
+          - [if variable "synchronous_mode" is 'true' (vars/main.yml):](#if-variable-synchronous_mode-is-true-varsmainyml)
+        - [Components of high availability:](#components-of-high-availability)
+        - [Components of load balancing:](#components-of-load-balancing)
     - [[Type B] PostgreSQL High-Availability only](#type-b-postgresql-high-availability-only)
-- [Compatibility](#compatibility)
-    - [Supported Linux Distributions:](#supported-linux-distributions)
-    - [PostgreSQL versions:](#postgresql-versions)
-    - [Ansible version](#ansible-version)
-- [Requirements](#requirements)
-- [Port requirements](#port-requirements)
-- [Recommendations](#recommendations)
-- [Deployment: quick start](#deployment-quick-start)
-- [Variables](#variables)
-- [Cluster Scaling](#cluster-scaling)
-    - [Preparation:](#preparation)
-    - [Steps to add a new node:](#steps-to-add-a-new-node)
-    - [Steps to add a new banlancer node:](#steps-to-add-a-new-banlancer-node)
-- [Restore and Cloning](#restore-and-cloning)
-    - [Create cluster with pgBackRest:](#create-cluster-with-pgbackrest)
-    - [Create cluster with WAL-G:](#create-cluster-with-wal-g)
-    - [Point-In-Time-Recovery:](#point-in-time-recovery)
-- [Maintenance](#maintenance)
-- [Disaster Recovery](#disaster-recovery)
-    - [etcd](#etcd)
-    - [PostgreSQL (databases)](#postgresql-databases)
-- [How to start from scratch](#how-to-start-from-scratch)
-- [License](#license)
-- [Author](#author)
-- [Feedback, bug-reports, requests, ...](#feedback-bug-reports-requests-)
+  - [Compatibility](#compatibility)
+          - [Supported Linux Distributions:](#supported-linux-distributions)
+          - [PostgreSQL versions:](#postgresql-versions)
+          - [Ansible version](#ansible-version)
+  - [Requirements](#requirements)
+  - [Port requirements](#port-requirements)
+  - [Recommendations](#recommendations)
+  - [Deployment: quick start](#deployment-quick-start)
+          - [Specify (non-public) IP addresses and connection settings (`ansible_user`, `ansible_ssh_pass` or `ansible_ssh_private_key_file` for your environment](#specify-non-public-ip-addresses-and-connection-settings-ansible_user-ansible_ssh_pass-or-ansible_ssh_private_key_file-for-your-environment)
+          - [Minimum set of variables:](#minimum-set-of-variables)
+  - [Variables](#variables)
+  - [Cluster Scaling](#cluster-scaling)
+          - [Preparation:](#preparation)
+          - [Steps to add a new node:](#steps-to-add-a-new-node)
+          - [Steps to add a new banlancer node:](#steps-to-add-a-new-banlancer-node)
+  - [Restore and Cloning](#restore-and-cloning)
+        - [Create cluster with pgBackRest:](#create-cluster-with-pgbackrest)
+        - [Create cluster with WAL-G:](#create-cluster-with-wal-g)
+        - [Point-In-Time-Recovery:](#point-in-time-recovery)
+  - [Maintenance](#maintenance)
+  - [Disaster Recovery](#disaster-recovery)
+        - [etcd](#etcd)
+        - [PostgreSQL (databases)](#postgresql-databases)
+  - [How to start from scratch](#how-to-start-from-scratch)
+  - [License](#license)
+  - [Author](#author)
+    - [Sponsor this project](#sponsor-this-project)
+  - [Feedback, bug-reports, requests, ...](#feedback-bug-reports-requests-)
 
 ## Cluster types
 
@@ -106,7 +115,7 @@ Written in Go. Cybertec Schönig & Schönig GmbH https://www.cybertec-postgresql
 RedHat and Debian based distros (x86_64)
 
 ###### Supported Linux Distributions:
-- **Debian**: 9, 10, 11
+- **Debian**: 10, 11
 - **Ubuntu**: 18.04, 20.04, 22.04
 - **CentOS**: 7, 8
 - **Oracle Linux**: 7, 8
@@ -121,7 +130,6 @@ all supported PostgreSQL versions
 _Table of results of daily automated testing of cluster deployment:_
 | Distribution | Test result |
 |--------------|:----------:|
-| Debian 9     | [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/vitabaks/postgresql_cluster/scheduled%20PostgreSQL%20(Debian%209))](https://github.com/vitabaks/postgresql_cluster/actions?query=workflow%3A%22scheduled+PostgreSQL+%28Debian+9%29%22) |
 | Debian 10    | [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/vitabaks/postgresql_cluster/scheduled%20PostgreSQL%20(Debian%2010))](https://github.com/vitabaks/postgresql_cluster/actions?query=workflow%3A%22scheduled+PostgreSQL+%28Debian+10%29%22) |
 | Debian 11    | [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/vitabaks/postgresql_cluster/scheduled%20PostgreSQL%20(Debian%2011))](https://github.com/vitabaks/postgresql_cluster/actions?query=workflow%3A%22scheduled+PostgreSQL+%28Debian+11%29%22) |
 | Ubuntu 18.04 | [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/vitabaks/postgresql_cluster/scheduled%20PostgreSQL%20(Ubuntu%2018.04))](https://github.com/vitabaks/postgresql_cluster/actions?query=workflow%3A%22scheduled+PostgreSQL+%28Ubuntu+18.04%29%22) |

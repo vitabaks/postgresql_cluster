@@ -9,15 +9,6 @@
       loop: "{{ apt_repository_keys }}"
       when: apt_repository_keys | length > 0
 
-    # for Debian 9 "Stretch" only
-    - name: Ignore certificate verification for "apt.postgresql.org"
-      lineinfile:
-        dest: /etc/apt/apt.conf
-        regexp: apt.postgresql.org::Verify-Peer
-        line: Acquire::https::apt.postgresql.org::Verify-Peer "false";
-        create: true
-      when: ansible_distribution_version == '9'
-
     - name: Add repository
       apt_repository:
         repo: "{{ item.repo }}"

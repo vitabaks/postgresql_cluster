@@ -16,5 +16,5 @@ os_minimum_versions:
   Rocky: 8.4
   OracleLinux: 7
   Ubuntu: 18.04
-  Debian: 9
+  Debian: 10
   AlmaLinux: 8.3
