@@ -1,6 +1,6 @@
 # Высокодоступный кластер PostgreSQL на базе Patroni. С DNS точкой клиентского доступа, с поддержкой геораспределения.
 
-[![GitHub license](https://img.shields.io/github/license/IlgizMamyshev/pgsql_cluster)](https://github.com/IlgizMamyshev/pgsql_cluster/blob/master/LICENSE) 
+[![GitHub license](https://img.shields.io/github/license/IlgizMamyshev/pgsql_cluster)](./LICENSE) 
 ![GitHub stars](https://img.shields.io/github/stars/IlgizMamyshev/pgsql_cluster)
 
 ---
@@ -33,7 +33,7 @@
 ##### Высокодоступный кластер, на базе Patroni (на чистом RAFT) и DNSCP (балансировка с HAProxy опционально):  
 ![PGSQLCluster](https://github.com/IlgizMamyshev/pgsql_cluster/blob/master/doc/PGSQLClusterPatroniOnPureRAFT.png)
 
-Другие варианты реализации архитектуры высокой доступности - смотреть [примеры](https://github.com/IlgizMamyshev/doc/README.md).
+Другие варианты реализации архитектуры высокой доступности - смотреть [примеры](./doc/README.MD).
 
 Применение HAProxy обеспечивает возможность распределения нагрузки по чтению. Это также позволяет масштабировать кластер с репликами только для чтения.
 
