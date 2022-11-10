@@ -39,7 +39,7 @@
 ![PGSQLCluster](https://github.com/IlgizMamyshev/pgsql_cluster/blob/master/doc/PGSQLClusterTypeA.png)
 
 ##### Высокодоступный геораспределенный кластер, на базе Patroni, etcd и DNSCP (балансировка с HAProxy опционально):
-![PGSQLCluster](https://github.com/IlgizMamyshev/pgsql_cluster/blob/master/doc/PGSQLCluster.png)
+![PGSQLCluster](https://github.com/IlgizMamyshev/pgsql_cluster/blob/master/doc/PGSQLCluster_Geo.png)
 
   
 Применение HAProxy обеспечивает возможность распределения нагрузки по чтению. Это также позволяет масштабировать кластер с репликами только для чтения.
