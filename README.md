@@ -1,4 +1,4 @@
-# Высокодоступный кластер PostgreSQL на базе Patroni. С DNS точкой клиентского доступа, с поддержкой геораспределённого кластера.
+# Высокодоступный кластер PostgreSQL на базе Patroni. С DNS точкой клиентского доступа, с поддержкой геораспределения.
 
 [![GitHub license](https://img.shields.io/github/license/IlgizMamyshev/pgsql_cluster)](https://github.com/IlgizMamyshev/pgsql_cluster/blob/master/LICENSE) 
 ![GitHub stars](https://img.shields.io/github/stars/IlgizMamyshev/pgsql_cluster)
@@ -6,7 +6,7 @@
 ---
 ![Banner](https://github.com/IlgizMamyshev/pgsql_cluster/blob/master/doc/PostreSQLBanner1600x400.png)
 
-### Развертывание кластера высокой доступности PostgreSQL, готового к производственной среде (на основе "Patroni" и "DCS (etcd)"). Автоматизация с помощью Ansible.
+### Развертывание кластера высокой доступности PostgreSQL, на основе Patroni. Автоматизация с помощью Ansible.
 
 Этот Ansible playbook разработан для развёртывания высокодоступного кластера PostgreSQL на выделенных физических серверах для производственной среды.  
 Развёртывание может быть выполнено в виртуальной среде для тестовой среды или небольших проектов.  
@@ -19,9 +19,9 @@
   
   
 #### Основные возможности:
-- развёртывание кластера Patroni с СУБД PostgreSQL или PostgresPro;
+- развёртывание кластера [Patroni](https://patroni.readthedocs.io/en/latest/) с СУБД PostgreSQL или PostgresPro;
 - использование встроенного механизма распределённого консенсуса или использование внешней DCS (etcd);
-- развёртывание кластера etcd;
+- развёртывание кластера [etcd](https://etcd.io/docs/v3.5/op-guide/);
 - настройка watchdog для Patroni (защита от split-brain);
 - DNS точка подключения клиентов ([DNS Connection Point](https://github.com/IlgizMamyshev/dnscp));
 - поддержка геораспределенного кластера ([DNS Connection Point](https://github.com/IlgizMamyshev/dnscp));
@@ -30,18 +30,11 @@
 - настройка параметров ядра операционной системы Linux;
 - поддержка операционных систем Debian, Astra Linux;
 
-#### Примеры (варианты) реализации архитектуры высокой доступности:
-
 ##### Высокодоступный кластер, на базе Patroni (на чистом RAFT) и DNSCP (балансировка с HAProxy опционально):  
 ![PGSQLCluster](https://github.com/IlgizMamyshev/pgsql_cluster/blob/master/doc/PGSQLClusterPatroniOnPureRAFT.png)
 
-##### Высокодоступный кластер, на базе Patroni, etcd и DNSCP (балансировка с HAProxy опционально):  
-![PGSQLCluster](https://github.com/IlgizMamyshev/pgsql_cluster/blob/master/doc/PGSQLClusterTypeA.png)
+Другие варианты реализации архитектуры высокой доступности - смотреть [примеры](https://github.com/IlgizMamyshev/doc/README.md).
 
-##### Высокодоступный геораспределенный кластер, на базе Patroni, etcd и DNSCP (балансировка с HAProxy опционально):
-![PGSQLCluster](https://github.com/IlgizMamyshev/pgsql_cluster/blob/master/doc/PGSQLCluster.png)
-
-  
 Применение HAProxy обеспечивает возможность распределения нагрузки по чтению. Это также позволяет масштабировать кластер с репликами только для чтения.
 
 - порт 5000 (чтение / запись) мастер
