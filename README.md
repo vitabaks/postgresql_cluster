@@ -6,7 +6,7 @@
 ---
 ![Banner](https://github.com/IlgizMamyshev/pgsql_cluster/blob/master/doc/PostreSQLBanner1600x400.png)
 
-### Развертывание кластера высокой доступности PostgreSQL, на основе "Patroni". Автоматизация с помощью Ansible.
+### Развертывание кластера высокой доступности PostgreSQL, на основе Patroni. Автоматизация с помощью Ansible.
 
 Этот Ansible playbook разработан для развёртывания высокодоступного кластера PostgreSQL на выделенных физических серверах для производственной среды.  
 Развёртывание может быть выполнено в виртуальной среде для тестовой среды или небольших проектов.  
@@ -19,9 +19,9 @@
   
   
 #### Основные возможности:
-- развёртывание кластера Patroni с СУБД PostgreSQL или PostgresPro;
+- развёртывание кластера [Patroni](https://patroni.readthedocs.io/en/latest/) с СУБД PostgreSQL или PostgresPro;
 - использование встроенного механизма распределённого консенсуса или использование внешней DCS (etcd);
-- развёртывание кластера etcd;
+- развёртывание кластера [etcd](https://etcd.io/docs/v3.5/op-guide/);
 - настройка watchdog для Patroni (защита от split-brain);
 - DNS точка подключения клиентов ([DNS Connection Point](https://github.com/IlgizMamyshev/dnscp));
 - поддержка геораспределенного кластера ([DNS Connection Point](https://github.com/IlgizMamyshev/dnscp));
