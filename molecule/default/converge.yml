@@ -6,6 +6,7 @@
   tasks:
     - name: Set variables for molecule
       set_fact:
+        firewall_enabled_at_boot: true
         firewall_enable_ipv6: false  # Added to prevent test failures in CI.
         swap_file_create: false  # Added to prevent test failures in CI.
         sysctl_set: false  # Added to prevent test failures in CI.
