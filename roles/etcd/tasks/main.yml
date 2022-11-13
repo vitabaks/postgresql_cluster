@@ -1,20 +1,19 @@
 ---
 # yamllint disable rule:line-length
 
-- name: Make sure handlers are flushed immediately
+- name: "Make sure handlers are flushed immediately"
   meta: flush_handlers
 
-- name: Make sure the unzip/tar packages are present
+- name: "Make sure the unzip/tar packages are present"
   package:
     name:
       - unzip
       - tar
     state: present
   environment: "{{ proxy_env | default({}) }}"
-  tags: etcd, etcd_install
 
 - block:  # install etcd package from repo
-    - name: Download "etcd" package
+    - name: "Download etcd package"
       get_url:
         url: "{{ item }}"
         dest: /tmp/
@@ -24,7 +23,7 @@
         - "{{ etcd_package_repo }}"
       environment: "{{ proxy_env | default({}) }}"
 
-    - name: Extract "etcd" into /tmp
+    - name: "Extract etcd into /tmp"
       unarchive:
         src: "/tmp/{{ etcd_package_repo | basename }}"
         dest: /tmp/
@@ -32,7 +31,7 @@
           - --no-same-owner
         remote_src: true
 
-    - name: Copy "etcd" and "etcdctl" binary files to /usr/local/bin/
+    - name: "Copy etcd and etcdctl binary files to /usr/local/bin/"
       copy:
         src: "/tmp/{{ etcd_package_repo.split('.tar.gz')[0] | basename }}/{{ item }}"
         dest: /usr/local/bin/
@@ -42,42 +41,67 @@
         - etcd
         - etcdctl
   when: etcd_package_repo | length > 0
-  tags: etcd, etcd_install
 
-- name: Add etcd user
+- name: "Add etcd user"
   user:
     name: etcd
     shell: /usr/sbin/nologin
     home: "{{ etcd_data_dir }}"
-  tags: etcd, etcd_conf
 
-- name: Create etcd conf directory
+- name: "Create directory for etcd configuration"
   file:
-    path: /etc/etcd
+    path: "{{ item }}"
     state: directory
-  tags: etcd, etcd_conf
+    owner: etcd
+    group: etcd
+    mode: 0755
+  with_items:
+    - /etc/etcd
+    - /etc/etcd/ssl
 
-- name: Generate conf file "/etc/etcd/etcd.conf"
+- name: "Copy over the CA certificate"
+  copy:
+    src: "{{ pki_cert_artifacts_dir }}/ca.crt"
+    remote_src: false
+    dest: /etc/etcd/ssl/ca.crt
+    owner: etcd
+    group: etcd
+    mode: 0644
+- name: "Copy over the etcd member certificate"
+  copy:
+    src: "{{ pki_cert_artifacts_dir }}/{{inventory_hostname}}.crt"
+    remote_src: false
+    dest: /etc/etcd/ssl/server.crt
+    owner: etcd
+    group: etcd
+    mode: 0644
+- name: "Copy over the etcd member key"
+  copy:
+    src: "{{ pki_cert_artifacts_dir }}/{{inventory_hostname}}.key"
+    remote_src: false
+    dest: /etc/etcd/ssl/server.key
+    owner: etcd
+    group: etcd
+    mode: 0600
+    
+- name: "Generate configuration file /etc/etcd/etcd.conf"
   template:
     src: templates/etcd.conf.j2
     dest: /etc/etcd/etcd.conf
-  tags: etcd, etcd_conf
 
-- name: Copy systemd service file
+- name: "Create etcd service (copy systemd service file)"
   template:
     src: templates/etcd.service.j2
     dest: /etc/systemd/system/etcd.service
-  tags: etcd, etcd_conf
 
-- name: Enable and start etcd service
+- name: "Enable and start etcd service"
   systemd:
     daemon_reload: true
     name: etcd
     enabled: true
     state: started
-  tags: etcd, etcd_start
 
-- name: Wait for port 2379 to become open on the host
+- name: "Wait for port 2379 to become open on the host"
   wait_for:
     port: 2379
     host: 127.0.0.1
@@ -85,25 +109,23 @@
     timeout: 120
     delay: 10
   ignore_errors: false
-  tags: etcd, etcd_start
 
 - block:
-    - name: Wait until the etcd cluster is healthy
-      command: /usr/local/bin/etcdctl cluster-health
+    - name: "Wait until the etcd cluster is healthy"
+      command: /usr/local/bin/etcdctl --ca-file="/etc/etcd/ssl/ca.crt" --endpoints https://127.0.0.1:2379 --cert-file=/etc/etcd/ssl/server.crt --key-file=/etc/etcd/ssl/server.key cluster-health
       environment:
         ETCDCTL_API: 2
       register: etcd_health_result
       run_once: true
       changed_when: false
       until: "'cluster is healthy' in etcd_health_result.stdout"
-      retries: 10
+      retries: 1000
       delay: 10
       ignore_errors: false
 
-    - name: cluster health
+    - name: "Cluster health"
       run_once: true
       debug:
         var: etcd_health_result.stdout_lines
-  tags: etcd, etcd_start, etcd_status
 
 ...
