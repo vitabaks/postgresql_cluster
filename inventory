@@ -3,32 +3,32 @@
 # "postgresql_exists='true'" if PostgreSQL is already exists and running
 
 # if dcs_exists: false and dcs_type: "etcd" (in vars/main.yml)
-# ETCD nodes (IP address (or hostname, not FQDN)) (hostname recommended)
+# ETCD nodes (<hostname|FQDN|IPv4> ansible_host=<IPv4>)
 [etcd_cluster]  # recommendation: 3 or 5-7 nodes
-#mlk-etcd-n1
-#mlk-etcd-n2
-#mlk-etcd-n3
-
-# if with_patroni_raft_controller: true (in vars/main.yml)
-[patroni_raft_controller]
-mlk-pgsql-n1
-
-# if with_haproxy_load_balancing: true (in vars/main.yml)
-# HAProxy nodes (IP address (or hostname, not FQDN)) (hostname recommended)
-[balancers]
-#mlk-pgsql-n2
-#mlk-pgsql-n3
+etcd-n1 ansible_host=172.16.35.6
+etcd-n2 ansible_host=172.16.35.3
+etcd-n3 ansible_host=172.16.35.24
 
 # PostgreSQL nodes (IP address (or hostname, not FQDN)) (hostname recommended)
 [master]
-mlk-pgsql-n2 postgresql_exists='false'
+pgsql-n2 postgresql_exists='false'
 
 [replica]
-mlk-pgsql-n3 postgresql_exists='false'
+pgsql-n3 postgresql_exists='false'
 
 [postgres_cluster:children]
 master
 replica
+
+# if with_patroni_raft_controller: true (in vars/main.yml)
+[patroni_raft_controller]
+pgsql-n1
+
+# if with_haproxy_load_balancing: true (in vars/main.yml)
+# HAProxy nodes (IP address (or hostname, not FQDN)) (hostname recommended)
+[balancers]
+#pgsql-n2
+#pgsql-n3
 
 # Connection settings
 [all:vars]
