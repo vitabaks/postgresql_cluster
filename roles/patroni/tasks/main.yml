@@ -172,15 +172,43 @@
   when: (patroni_installation_method == "rpm" or patroni_installation_method == "deb")
 
 # Patroni configure
-- name: Create conf directory
+- name: "Create directory for Patroni configuration"
   file:
-    path: /etc/patroni
+    path: "{{ item }}"
     state: directory
     owner: postgres
     group: postgres
     mode: 0750
+  with_items:
+    - /etc/patroni
+    - /etc/patroni/ssl
 
-- name: Generate conf file "/etc/patroni/patroni.yml"
+#- name: "Copy over the CA certificate"
+#  copy:
+#    src: "{{ pki_cert_artifacts_dir }}/ca.crt"
+#    remote_src: false
+#    dest: /etc/patroni/ssl/ca.crt
+#    owner: postgres
+#    group: postgres
+#    mode: 0644
+- name: "Copy over the Patroni cluster member certificate"
+  copy:
+    src: "{{ pki_cert_artifacts_dir }}/{{inventory_hostname}}.crt"
+    remote_src: false
+    dest: /etc/ssl/certs/server.crt
+    owner: root
+    group: root
+    mode: 0644
+- name: "Copy over the Patroni cluster member key"
+  copy:
+    src: "{{ pki_cert_artifacts_dir }}/{{inventory_hostname}}.key"
+    remote_src: false
+    dest: /etc/ssl/private/server.key
+    owner: root
+    group: ssl-cert
+    mode: 0640
+
+- name: "Generate conf file /etc/patroni/patroni.yml"
   template:
     src: templates/patroni.yml.j2
     dest: /etc/patroni/patroni.yml
@@ -189,7 +217,7 @@
     mode: 0640
   when: existing_pgcluster is not defined or not existing_pgcluster|bool
 
-- name: Create patroni log directory
+- name: "Create patroni log directory"
   file:
     path: "{{ patroni_log_dir }}"
     owner: postgres
@@ -198,7 +226,7 @@
     mode: 0750
   when: patroni_log_destination == 'logfile'
 
-- name: Create Patroni RAFT data directory
+- name: "Create Patroni RAFT data directory"
   file:
     path: "{{ patroni_raft_data_dir }}"
     owner: postgres
@@ -522,7 +550,7 @@
 
     - name: Wait for the cluster to initialize (master is the leader with the lock)
       uri:
-        url: "http://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ patroni_restapi_port }}/leader"
+        url: "https://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ patroni_restapi_port }}/leader"
         status_code: 200
       register: result
       until: result.status == 200
@@ -593,7 +621,7 @@
 
     - name: Check that the Patroni is healthy on the replica server
       uri:
-        url: "http://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ patroni_restapi_port }}/health"
+        url: "https://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ patroni_restapi_port }}/health"
         status_code: 200
       register: replica_result
       until: replica_result.status == 200
