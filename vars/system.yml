@@ -2,7 +2,6 @@
 # yamllint disable rule:line-length
 # yamllint disable rule:comments-indentation
 
-#timezone: ""
 timezone: "Europe/Moscow"
 
 # Generate locale
