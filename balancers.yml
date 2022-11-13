@@ -73,6 +73,7 @@
 #    - role: hostname
 #    - role: resolv_conf
     - role: sysctl
+    - role: install-root-cert
 
     - role: haproxy
 
