@@ -81,6 +81,5 @@
     - role: sudo
     - role: sysctl
     - role: timezone
-    - role: patroni_raft_controller
-
+    - role: patroni-raft-controller
 ...
