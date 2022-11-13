@@ -92,11 +92,15 @@ Ansible ([Что такое Ansible](https://www.ansible.com/resources/videos/qu
 
 - `5432` (PostgreSQL)
 - `8008` (Patroni Rest API)
+- `2379` (Patroni RAFT)
 - `2379`, `2380` (etcd)
 - `5000` (HAProxy - (чтение / запись) мастер реплика
 - `5001` (HAProxy - (только чтение) все реплики
 - `5002` (HAProxy - (только чтение) только синхронные реплики
 - `5003` (HAProxy - (только чтение) только асинхронные реплики
+
+#### Связанные ссылки:
+- [Планирование портов и протоколов](/doc/protocol_workloads.md)
 
 ## Рекомендации
 - **Linux (Операционная Система)**: 
@@ -104,6 +108,10 @@ Ansible ([Что такое Ansible](https://www.ansible.com/resources/videos/qu
 Обновите все операционные системы перед развёртыванием;
 
 Присоедините серверы-узлы кластера СУБД к домену [Microsoft Active Directory](https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/get-started/virtual-dc/active-directory-domain-services-overview) или [Astra Linux Directory](https://wiki.astralinux.ru/display/doc/Astra+Linux+Directory). Присоединение к домену является требованием, если вы хотите использовать аутентифицированный доступ к DNS-серверу.
+
+- **pure RAFT**: 
+
+Patroni может не зависеть от сторонних систем DCS (Distributed Consensus Store, типа etcd, Consul, ZooKeeper) за счёт собственной реализации [RAFT](https://patroni.readthedocs.io/en/latest/SETTINGS.html#raft-settings). При необходимости возможность использовать внешние системы DCS остаётся.
 
 - **DCS (Распределённое Хранилище Конфигурации (Distributed Configuration Store))**: 
 
@@ -133,11 +141,21 @@ Ansible ([Что такое Ansible](https://www.ansible.com/resources/videos/qu
 0. [Установите Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) на сервер управления, свой компьютер или ноутбук
 ##### Пример 1 (установка, используя репозиторий [Astra Linux](https://wiki.astralinux.ru/pages/viewpage.action?pageId=27362819)):
 `sudo apt update` \
-`sudo apt install ansible`
+`sudo apt install ansible` \
+
+`--Установка пакета для работы с pyOpenSSL` \
+`sudo apt-get install libssl-dev` \
+`sudo pip3 install --upgrade pip` \
+`sudo pip install pyOpenSSL`
 
 ##### Пример 2 (установка, используя [pip](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html#installing-ansible-with-pip) ):
 `sudo apt update && sudo apt install python3-pip sshpass git -y` \
-`sudo pip3 install ansible`
+`sudo pip3 install ansible` \
+
+`--Установка пакета для работы с pyOpenSSL` \
+`sudo apt-get install libssl-dev` \
+`sudo pip3 install --upgrade pip` \
+`sudo pip install pyOpenSSL`
 
 1. Скачайте или клонируйте этот репозиторий
 
@@ -157,28 +175,15 @@ Ansible ([Что такое Ansible](https://www.ansible.com/resources/videos/qu
 
 `vim vars/main.yml`
 
-##### Минимальный набор переменных: 
-- `proxy_env` # если требуется (*для доступа к репозиториям в сети*)
-
-например:
-```
-proxy_env:
-  http_proxy: http://proxy_server_ip:port
-  https_proxy: http://proxy_server_ip:port
-```
-- `cluster_vip` # один и несколько (для геораспределенного кластера) VIP для клиентского доступа
-- `cluster_vcompname`
-- `cluster_dnszonefqdn`
-- `patroni_cluster_name`
-- `with_haproxy_load_balancing`
-- `postgresql_version`
-- `postgresql_data_dir`
-
 5. Проверьте доступность узлов
 
 `ansible all -m ping`
 
-6. Запустите playbook:
+6.1 Запустите playbook для установки кластера etcd (опционально, если используете etcd DCS вместо Patroni RAFT):
+
+`ansible-playbook deploy_pgcluster.yml -K`
+
+6.2 Запустите playbook для установки кластера PostgreSQL:
 
 `ansible-playbook deploy_pgcluster.yml -K`
 
@@ -239,9 +244,9 @@ proxy_env:
     sudo systemctl stop patroni
     sudo rm -rf /var/lib/postgresql/ # be careful with this if there are other PG clusters
     ```
-- затем удалите запись в etcd (можно запустить на любом узле etcd):
+- затем, если используется etcd, удалите запись в etcd (можно запустить на любом узле etcd):
     ```shell 
-    etcdctl --username patroni-etcd:P@ssw0rd rm --dir --recursive /service/pgsql-cluster/ # настроить, если вы изменили имя кластера, имя пользователя и пароль.
+    sudo ETCDCTL_API=2 etcdctl --ca-file="/etc/etcd/ssl/ca.crt" --endpoints https://127.0.0.1:2379 --cert-file=/etc/etcd/ssl/server.crt --key-file=/etc/etcd/ssl/server.key rm --dir --recursive /service/
     ```
 
 ---
