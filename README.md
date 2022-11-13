@@ -109,7 +109,7 @@ Ansible ([Что такое Ansible](https://www.ansible.com/resources/videos/qu
 
 Присоедините серверы-узлы кластера СУБД к домену [Microsoft Active Directory](https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/get-started/virtual-dc/active-directory-domain-services-overview) или [Astra Linux Directory](https://wiki.astralinux.ru/display/doc/Astra+Linux+Directory). Присоединение к домену является требованием, если вы хотите использовать аутентифицированный доступ к DNS-серверу.
 
-- **pure RAFT**: 
+- **Patroni RAFT**: 
 
 Patroni может не зависеть от сторонних систем DCS (Distributed Consensus Store, типа etcd, Consul, ZooKeeper) за счёт собственной реализации [RAFT](https://patroni.readthedocs.io/en/latest/SETTINGS.html#raft-settings). При необходимости возможность использовать внешние системы DCS остаётся.
 
