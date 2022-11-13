@@ -1,0 +1,19 @@
+[Unit]
+Description=I/O Scheduler Setter
+DefaultDependencies=no
+After=sysinit.target local-fs.target
+Before=basic.target
+
+[Service]
+Type=oneshot
+{% if set_scheduler|bool %}
+{% for set in scheduler %}
+ExecStart=/bin/bash -c 'echo {{ set.sched }} > /sys/block/{{ set.device }}/queue/scheduler && echo {{ set.nr_requests }} > /sys/block/{{ set.device }}/queue/nr_requests'
+{% endfor %}
+{% endif %}
+
+TimeoutSec=0
+RemainAfterExit=yes
+
+[Install]
+WantedBy=basic.target
