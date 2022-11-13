@@ -17,8 +17,6 @@ patroni_superuser_username: "postgres"
 patroni_superuser_password: "P@ssw0rd"  # please change password
 patroni_replication_username: "replicator"
 patroni_replication_password: "P@ssw0rd"  # please change password
-patroni_etcd_username: "patroni-etcd" # or empty for anonymous access
-patroni_etcd_password: "P@ssw0rd"  # please change password
 synchronous_mode: true  # or 'true' for enable synchronous database replication
 synchronous_mode_strict: false  # if 'true' then block all client writes to the master, when a synchronous replica is not available
 synchronous_node_count: 2  # number of synchronous standby databases
@@ -54,16 +52,16 @@ patroni_raft_controller:
   port: "{{ patroni_raft_port }}"
 
 # if dcs_exists: false and dcs_type: "etcd"
-etcd_ver: "v3.3.27"  # version for deploy etcd cluster
+etcd_ver: "v3.4.22" #"v3.3.27"  # version for deploy etcd cluster
 etcd_data_dir: "/var/lib/etcd"
 etcd_cluster_name: "etcd-{{ patroni_cluster_name }}"  # ETCD_INITIAL_CLUSTER_TOKEN
 
 # if dcs_exists: true and dcs_type: "etcd" - specify ip address your etcd cluster in the "patroni_etcd_hosts" variable
 # example (use existing cluster of 3 nodes)
-patroni_etcd_hosts: []
-#  - { host: "mlk-etcd-n1", port: "2379" }
-#  - { host: "mlk-etcd-n2", port: "2379" }
-#  - { host: "mlk-etcd-n3", port: "2379" }
+patroni_etcd_hosts: #[]
+  - { host: "{{ hostvars[groups['etcd_cluster'][0]].ansible_host }}", port: "2379", protocol: "https" }
+  - { host: "{{ hostvars[groups['etcd_cluster'][1]].ansible_host }}", port: "2379", protocol: "https" }
+  - { host: "{{ hostvars[groups['etcd_cluster'][2]].ansible_host }}", port: "2379", protocol: "https" }
 
 # more options you can specify in the roles/patroni/templates/patroni.yml.j2
 # https://patroni.readthedocs.io/en/latest/SETTINGS.html#etcd
@@ -255,4 +253,6 @@ postgresql_restore_command: ""
 disable_archive_command: true  # or 'false' to not disable archive_command after restore
 keep_patroni_dynamic_json: true  # or 'false' to remove patroni.dynamic.json after restore (if exists)
 
+# PKI
+pki_cert_artifacts_dir: "./certs"
 ...
