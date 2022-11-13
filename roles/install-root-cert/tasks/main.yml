@@ -1,0 +1,26 @@
+---
+# yamllint disable rule:line-length
+
+# Install Root CA Certificate
+- block:
+  - name: "Ensure local certificates directory exists"
+    file:
+      state: directory
+      path: /usr/local/share/ca-certificates
+
+  - name: "Copy CA certificate from Ansible host to remote"
+    copy:
+      src: "{{ pki_cert_artifacts_dir }}/ca.crt"
+      remote_src: false
+      dest: /usr/local/share/ca-certificates/ca.crt
+    ignore_errors: false
+    when: "'localhost' not in inventory_hostname"
+
+  - name: "Copy the CA certificate to local path /usr/local/share/ca-certificates/"
+    shell: "cp {{ pki_cert_artifacts_dir }}/ca.crt /usr/local/share/ca-certificates/"
+    ignore_errors: false
+    when: "'localhost' in inventory_hostname"
+
+  - name: "Update certificate index"
+    shell: /usr/sbin/update-ca-certificates
+...
