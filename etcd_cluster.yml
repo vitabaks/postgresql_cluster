@@ -1,6 +1,93 @@
 ---
 # yamllint disable rule:line-length
 
+# SSL: Obtaining the Private IP Addresses of Managed Nodes
+#  https://www.digitalocean.com/community/tutorials/how-to-set-up-and-secure-an-etcd-cluster-with-ansible-on-ubuntu-18-04)
+- hosts: etcd_cluster
+  become: true
+  become_method: sudo
+  any_errors_fatal: true
+  tasks:
+    - shell: ip -f inet addr show eth0 | sed -En -e 's/.*inet ([0-9.]+).*/\1/p'
+      register: etcd_privateIP
+
+# PKI
+- hosts: localhost
+  gather_facts: false
+  become: true
+  become_method: sudo
+  any_errors_fatal: true
+  vars_files:
+    - vars/main.yml
+  pre_tasks:
+    - name: "Check for CA private key exists.."
+      stat:
+        path: "{{ pki_cert_artifacts_dir }}/ca.key"
+      register: pki_ca_key
+    - name: "File exist"
+      debug:
+        msg: "ca.key exist, deploy new Root CA skipping"
+      when: pki_ca_key.stat.exists and pki_ca_key.stat.isreg
+
+    - name: "Ensure CA certificate file exist"
+      stat:
+        path: "{{ pki_cert_artifacts_dir }}/ca.crt"
+      register: pki_ca_cert
+    - name: "File not exist"
+      debug:
+        msg: "ca.crt not exist"
+      when: not pki_ca_cert.stat.exists|bool and not pki_ca_cert.stat.isreg|bool
+  roles:
+    # Deploy CA if key file non exist
+    - role: ca
+      when: not pki_ca_key.stat.exists|bool and not pki_ca_key.stat.isreg|bool
+    - role: install-root-cert
+
+# SSL: Generating ETCD members’ Private Keys and CSRs
+- hosts: localhost
+  gather_facts: false
+  become: false
+  any_errors_fatal: true
+  vars_files:
+    - vars/main.yml
+  tasks:
+    - name: "Generate private key for each member"
+      openssl_privatekey:
+        path: "{{ pki_cert_artifacts_dir }}/{{item}}.key"
+        type: RSA
+        size: 4096
+        state: present
+        force: true
+      with_items: "{{ groups['etcd_cluster'] }}"
+
+    - name: "Generate CSR for each member"
+      openssl_csr:
+        path: "{{ pki_cert_artifacts_dir }}/{{item}}.csr"
+        privatekey_path: "{{ pki_cert_artifacts_dir }}/{{item}}.key"
+        common_name: "{{item}}"
+        key_usage:
+          - digitalSignature
+        extended_key_usage:
+          - serverAuth
+          - clientAuth
+        subject_alt_name:
+          - DNS:{{item}}
+          - IP:{{ hostvars[item]['etcd_privateIP']['stdout']}}
+          - IP:127.0.0.1
+        force: true
+      with_items: "{{ groups['etcd_cluster'] }}"
+
+    - name: "Generate an etcd member certificate signed with our own CA certificate"
+      openssl_certificate:
+        path: "{{ pki_cert_artifacts_dir }}/{{item}}.crt"
+        csr_path: "{{ pki_cert_artifacts_dir }}/{{item}}.csr"
+        ownca_path: "{{ pki_cert_artifacts_dir }}/ca.crt"
+        ownca_privatekey_path: "{{ pki_cert_artifacts_dir }}/ca.key"
+        provider: ownca
+        force: true
+      with_items: "{{ groups['etcd_cluster'] }}"
+
+# Deploy ETCD
 - hosts: etcd_cluster
   become: true
   become_method: sudo
@@ -11,24 +98,22 @@
     - vars/system.yml
 
   pre_tasks:
-    - name: Set Astra Linux specific variables
+    - name: "Set Astra Linux specific variables"
       include_vars: "vars/{{ ansible_os_family }}.yml"
       when: ansible_os_family is search("Astra Linux")
-      tags: always
 
-    - name: Include OS-specific variables
+    - name: "Include OS-specific variables"
       include_vars: "vars/{{ ansible_os_family }}.yml"
       when: not ansible_os_family == 'Rocky' and not ansible_os_family == 'AlmaLinux'
-      tags: always
 
-    - name: Update apt cache
+    - name: "Update apt cache"
       apt:
         update_cache: true
         cache_valid_time: 3600
       environment: "{{ proxy_env | default({}) }}"
       when: ansible_os_family == "Debian"
 
-    - name: Make sure the gnupg and apt-transport-https packages are present
+    - name: "Make sure the gnupg and apt-transport-https packages are present"
       apt:
         pkg:
           - gnupg
@@ -37,20 +122,17 @@
       environment: "{{ proxy_env | default({}) }}"
       when: ansible_os_family == "Debian"
 
-    - name: Build a firewall_ports_dynamic_var
+    - name: "Build a firewall_ports_dynamic_var"
       set_fact:
         firewall_ports_dynamic_var: "{{ firewall_ports_dynamic_var |default([]) }} + {{ firewall_allowed_tcp_ports_for[item] }}"
       loop: "{{ hostvars[inventory_hostname].group_names }}"
       when: firewall_enabled_at_boot|bool
-      tags: firewall
 
-    - name: Build a firewall_rules_dynamic_var
+    - name: "Build a firewall_rules_dynamic_var"
       set_fact:
         firewall_rules_dynamic_var: "{{ firewall_rules_dynamic_var |default([]) }} + {{ firewall_additional_rules_for[item] }}"
       loop: "{{ hostvars[inventory_hostname].group_names }}"
       when: firewall_enabled_at_boot|bool
-      tags: firewall
-
   roles:
     - role: ansible-role-firewall
       environment: "{{ proxy_env | default({}) }}"
@@ -58,10 +140,11 @@
         firewall_allowed_tcp_ports: "{{ firewall_ports_dynamic_var|list | unique }}"
         firewall_additional_rules: "{{ firewall_rules_dynamic_var|list | unique }}"
       when: firewall_enabled_at_boot|bool
-      tags: firewall
 
+    - role: io-scheduler
     - role: sysctl
     - role: timezone
+    - role: install-root-cert
     - role: etcd
 
 ...
