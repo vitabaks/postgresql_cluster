@@ -27,8 +27,8 @@ pgsql-n1
 # if with_haproxy_load_balancing: true (in vars/main.yml)
 # HAProxy nodes (IP address (or hostname, not FQDN)) (hostname recommended)
 [balancers]
-#pgsql-n2
-#pgsql-n3
+pgsql-n2
+pgsql-n3
 
 # Connection settings
 [all:vars]
