@@ -54,7 +54,7 @@ sysctl_conf:
 #    - { name: "vm.nr_hugepages", value: "9510" }  # example "9510"=18GB
     - { name: "vm.zone_reclaim_mode", value: "0" }
     - { name: "kernel.numa_balancing", value: "0" }
-    - { name: "kernel.sched_autogroup_enabled", value: "0"} 
+    - { name: "kernel.sched_autogroup_enabled", value: "0" }
     - { name: "net.ipv4.ip_nonlocal_bind", value: "1" }
     - { name: "net.ipv4.ip_forward", value: "1" }
     - { name: "net.ipv4.ip_local_port_range", value: "10000 65535" }

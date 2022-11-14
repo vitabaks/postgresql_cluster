@@ -40,7 +40,7 @@
 
     - name: Get epel-release-latest rpm package
       get_url:
-        url: "https://dl.fedoraproject.org/pub/epel/epel-release-latest-{{ ansible_distribution_major_version }}.noarch.rpm" 
+        url: "https://dl.fedoraproject.org/pub/epel/epel-release-latest-{{ ansible_distribution_major_version }}.noarch.rpm"
         dest: /tmp/
         timeout: 30
         validate_certs: false
