@@ -1,6 +1,4 @@
 ---
-# yamllint disable rule:line-length
-# yamllint disable rule:comments-indentation
 
 - name: Make sure handlers are flushed immediately
   meta: flush_handlers
@@ -291,11 +289,11 @@
         line: "{{ item.line }}"
         backrefs: true
       loop:
-        - {regexp: '^name:', line: 'name: {{ ansible_hostname }}'}
-        - {regexp: '^  listen: .*:8008$', line: '  listen: {{ hostvars[inventory_hostname].inventory_hostname }}:8008'}
-        - {regexp: '^  connect_address: .*:8008$', line: '  connect_address: {{ hostvars[inventory_hostname].inventory_hostname }}:8008'}
-        - {regexp: '^  listen: ((?!8008).)*$', line: '  listen: {{ hostvars[inventory_hostname].inventory_hostname }},127.0.0.1:{{ postgresql_port }}'}
-        - {regexp: '^  connect_address: ((?!8008).)*$', line: '  connect_address: {{ hostvars[inventory_hostname].inventory_hostname }}:{{ postgresql_port }}'}
+        - { regexp: '^name:', line: 'name: {{ ansible_hostname }}' }
+        - { regexp: '^  listen: .*:8008$', line: '  listen: {{ hostvars[inventory_hostname].inventory_hostname }}:8008' }
+        - { regexp: '^  connect_address: .*:8008$', line: '  connect_address: {{ hostvars[inventory_hostname].inventory_hostname }}:8008' }
+        - { regexp: '^  listen: ((?!8008).)*$', line: '  listen: {{ hostvars[inventory_hostname].inventory_hostname }},127.0.0.1:{{ postgresql_port }}' }
+        - { regexp: '^  connect_address: ((?!8008).)*$', line: '  connect_address: {{ hostvars[inventory_hostname].inventory_hostname }}:{{ postgresql_port }}' }
       loop_control:
         label: "{{ item.line }}"
       when: with_haproxy_load_balancing|bool or pgbouncer_install|bool or (cluster_vip is not defined or cluster_vip | length < 1)
@@ -307,11 +305,11 @@
         line: "{{ item.line }}"
         backrefs: true
       loop:
-        - {regexp: '^name:', line: 'name: {{ ansible_hostname }}'}
-        - {regexp: '^  listen: .*:8008$', line: '  listen: {{ hostvars[inventory_hostname].inventory_hostname }}:8008'}
-        - {regexp: '^  connect_address: .*:8008$', line: '  connect_address: {{ hostvars[inventory_hostname].inventory_hostname }}:8008'}
-        - {regexp: '^  listen: ((?!8008).)*$', line: '  listen: {{ hostvars[inventory_hostname].inventory_hostname }},{{ cluster_vip }},127.0.0.1:{{ postgresql_port }}'}  # noqa 204
-        - {regexp: '^  connect_address: ((?!8008).)*$', line: '  connect_address: {{ hostvars[inventory_hostname].inventory_hostname }}:{{ postgresql_port }}'}
+        - { regexp: '^name:', line: 'name: {{ ansible_hostname }}' }
+        - { regexp: '^  listen: .*:8008$', line: '  listen: {{ hostvars[inventory_hostname].inventory_hostname }}:8008' }
+        - { regexp: '^  connect_address: .*:8008$', line: '  connect_address: {{ hostvars[inventory_hostname].inventory_hostname }}:8008' }
+        - { regexp: '^  listen: ((?!8008).)*$', line: '  listen: {{ hostvars[inventory_hostname].inventory_hostname }},{{ cluster_vip }},127.0.0.1:{{ postgresql_port }}' }
+        - { regexp: '^  connect_address: ((?!8008).)*$', line: '  connect_address: {{ hostvars[inventory_hostname].inventory_hostname }}:{{ postgresql_port }}' }
       loop_control:
         label: "{{ item.line }}"
       when: not with_haproxy_load_balancing|bool and not pgbouncer_install|bool and (cluster_vip is defined and cluster_vip | length > 0)
@@ -856,8 +854,8 @@
         port: "{{ postgresql_port }}"
       register: postgresql_user_result
       loop:
-        - {role: '{{ patroni_superuser_username }}', pass: '{{ patroni_superuser_password }}', role_attr: 'SUPERUSER'}
-        - {role: '{{ patroni_replication_username }}', pass: '{{ patroni_replication_password }}', role_attr: 'LOGIN,REPLICATION'}
+        - { role: '{{ patroni_superuser_username }}', pass: '{{ patroni_superuser_password }}', role_attr: 'SUPERUSER' }
+        - { role: '{{ patroni_replication_username }}', pass: '{{ patroni_replication_password }}', role_attr: 'LOGIN,REPLICATION' }
       loop_control:
         label: "{{ item.role }}"
       when: is_master == "true"

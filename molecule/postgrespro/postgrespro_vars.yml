@@ -1,5 +1,4 @@
 ---
-# yamllint disable rule:line-length
 
 # PostgreSQL variables
 postgresql_version: "12"  # major version

@@ -6,7 +6,7 @@
 - block:
     - name: Build a sysctl_conf dynamic variable
       set_fact:
-        sysctl_conf_dynamic_var: "{{ sysctl_conf_dynamic_var | default([]) + (sysctl_conf[item] | flatten(1)) }}"  # yamllint disable rule:line-length
+        sysctl_conf_dynamic_var: "{{ sysctl_conf_dynamic_var | default([]) + (sysctl_conf[item] | flatten(1)) }}"
       loop: "{{ hostvars[inventory_hostname].group_names }}"
 
     - name: Setting kernel parameters

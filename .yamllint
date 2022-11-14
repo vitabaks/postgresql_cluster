@@ -1,0 +1,11 @@
+extends: default
+
+rules:
+  line-length: disable
+  comments-indentation: disable
+  braces:
+    min-spaces-inside: 1
+    max-spaces-inside: 1
+
+ignore: |
+  .github/

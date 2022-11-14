@@ -16,3 +16,4 @@ skip_list:
   - template-instead-of-copy  # Templated files should use template instead of copy
   - experimental  # all rules tagged as experimental
   - name[template]  # Rule for checking task and play names
+  - command-instead-of-shell

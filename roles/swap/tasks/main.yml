@@ -1,5 +1,4 @@
 ---
-# yamllint disable rule:line-length
 
 - name: Ensure swap exists
   command: swapon --show=SIZE --bytes --noheadings

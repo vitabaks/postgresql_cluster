@@ -1,5 +1,4 @@
 ---
-# yamllint disable rule:line-length
 
 - name: PostgreSQL High-Availability Cluster Scaling (add replica node)
   hosts: replica

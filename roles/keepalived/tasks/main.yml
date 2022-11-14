@@ -6,7 +6,7 @@
   environment: "{{ proxy_env | default({}) }}"
   tags: keepalived_install, keepalived
 
-- name: Make sure the kernel parameters "net.ipv4.ip_nonlocal_bind", "net.ipv4.ip_forward" are enabled  # yamllint disable rule:line-length
+- name: Make sure the kernel parameters "net.ipv4.ip_nonlocal_bind", "net.ipv4.ip_forward" are enabled
   sysctl:
     name: "{{ item }}"
     value: "1"
@@ -26,7 +26,7 @@
     group: root
   tags: keepalived_conf, keepalived
 
-- name: Create vrrp_script "/usr/libexec/keepalived/haproxy_check.sh"  # yamllint disable rule:line-length
+- name: Create vrrp_script "/usr/libexec/keepalived/haproxy_check.sh"
   copy:
     content: |
       #!/bin/bash
@@ -69,7 +69,7 @@
         line: "{{ item.line }}"
         backrefs: true
       loop:
-        - {regexp: '^.*interface', line: '   interface {{ vip_interface }}'}
+        - { regexp: '^.*interface', line: '   interface {{ vip_interface }}' }
       loop_control:
         label: "{{ item.line }}"
       notify: "restart keepalived"

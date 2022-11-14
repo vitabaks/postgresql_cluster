@@ -1,5 +1,4 @@
 ---
-# yamllint disable rule:line-length
 
 - block:  # Debian pgdg repo
     - name: Make sure the gnupg and apt-transport-https packages are present

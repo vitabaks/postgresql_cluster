@@ -1,6 +1,4 @@
 ---
-# yamllint disable rule:line-length
-# yamllint disable rule:comments-indentation
 
 # DNS servers (/etc/resolv.conf)
 nameservers: []
@@ -26,10 +24,10 @@ timezone: ""
 # Generate locale
 # (except RHEL>=8,use glibc-langpack)
 locale_gen:
-  - {language_country: "en_US", encoding: "UTF-8"}
-#  - {language_country: "ru_RU", encoding: "UTF-8"}
-#  - {language_country: "de_DE", encoding: "UTF-8"}
-#  - {language_country: "", encoding: ""}
+  - { language_country: "en_US", encoding: "UTF-8" }
+#  - { language_country: "ru_RU", encoding: "UTF-8" }
+#  - { language_country: "de_DE", encoding: "UTF-8" }
+#  - { language_country: "", encoding: "" }
 
 # Set system locale (LANG,LC_ALL)
 locale: "en_US.utf-8"
@@ -47,36 +45,36 @@ sysctl_conf:
   master: []
   replica: []
   postgres_cluster:
-    - {name: "vm.overcommit_memory", value: "2"}
-    - {name: "vm.swappiness", value: "1"}
-    - {name: "vm.min_free_kbytes", value: "102400"}
-    - {name: "vm.dirty_expire_centisecs", value: "1000"}
-    - {name: "vm.dirty_background_bytes", value: "67108864"}
-    - {name: "vm.dirty_bytes", value: "536870912"}
-#    - {name: "vm.nr_hugepages", value: "9510"}  # example "9510"=18GB
-    - {name: "vm.zone_reclaim_mode", value: "0"}
-    - {name: "kernel.numa_balancing", value: "0"}
-    - {name: "kernel.sched_autogroup_enabled", value: "0"}
-    - {name: "net.ipv4.ip_nonlocal_bind", value: "1"}
-    - {name: "net.ipv4.ip_forward", value: "1"}
-    - {name: "net.ipv4.ip_local_port_range", value: "10000 65535"}
-    - {name: "net.core.netdev_max_backlog", value: "10000"}
-    - {name: "net.ipv4.tcp_max_syn_backlog", value: "8192"}
-    - {name: "net.core.somaxconn", value: "65535"}
-    - {name: "net.ipv4.tcp_tw_reuse", value: "1"}
-#    - {name: "net.netfilter.nf_conntrack_max", value: "1048576"}
-#    - {name: "kernel.sched_migration_cost_ns", value: "5000000"}
-#    - {name: "", value: ""}
+    - { name: "vm.overcommit_memory", value: "2" }
+    - { name: "vm.swappiness", value: "1" }
+    - { name: "vm.min_free_kbytes", value: "102400" }
+    - { name: "vm.dirty_expire_centisecs", value: "1000" }
+    - { name: "vm.dirty_background_bytes", value: "67108864" }
+    - { name: "vm.dirty_bytes", value: "536870912" }
+#    - { name: "vm.nr_hugepages", value: "9510" }  # example "9510"=18GB
+    - { name: "vm.zone_reclaim_mode", value: "0" }
+    - { name: "kernel.numa_balancing", value: "0" }
+    - { name: "kernel.sched_autogroup_enabled", value: "0"} 
+    - { name: "net.ipv4.ip_nonlocal_bind", value: "1" }
+    - { name: "net.ipv4.ip_forward", value: "1" }
+    - { name: "net.ipv4.ip_local_port_range", value: "10000 65535" }
+    - { name: "net.core.netdev_max_backlog", value: "10000" }
+    - { name: "net.ipv4.tcp_max_syn_backlog", value: "8192" }
+    - { name: "net.core.somaxconn", value: "65535" }
+    - { name: "net.ipv4.tcp_tw_reuse", value: "1" }
+#    - { name: "net.netfilter.nf_conntrack_max", value: "1048576" }
+#    - { name: "kernel.sched_migration_cost_ns", value: "5000000" }
+#    - { name: "", value: "" }
   balancers:
-    - {name: "net.ipv4.ip_nonlocal_bind", value: "1"}
-    - {name: "net.ipv4.ip_forward", value: "1"}
-    - {name: "net.ipv4.ip_local_port_range", value: "10000 65535"}
-    - {name: "net.core.netdev_max_backlog", value: "10000"}
-    - {name: "net.ipv4.tcp_max_syn_backlog", value: "8192"}
-    - {name: "net.core.somaxconn", value: "65535"}
-    - {name: "net.ipv4.tcp_tw_reuse", value: "1"}
-#   - {name: "net.netfilter.nf_conntrack_max", value: "1048576"}
-#    - {name: "", value: ""}
+    - { name: "net.ipv4.ip_nonlocal_bind", value: "1" }
+    - { name: "net.ipv4.ip_forward", value: "1" }
+    - { name: "net.ipv4.ip_local_port_range", value: "10000 65535" }
+    - { name: "net.core.netdev_max_backlog", value: "10000" }
+    - { name: "net.ipv4.tcp_max_syn_backlog", value: "8192" }
+    - { name: "net.core.somaxconn", value: "65535" }
+    - { name: "net.ipv4.tcp_tw_reuse", value: "1" }
+#   - { name: "net.netfilter.nf_conntrack_max", value: "1048576" }
+#   - { name: "", value: "" }
 
 
 # Transparent Huge Pages
@@ -93,9 +91,9 @@ hard_nofile: 200000
 # I/O Scheduler (optional)
 set_scheduler: false  # or 'true'
 scheduler:
-  - {sched: "deadline", nr_requests: "1024", device: "sda"}
-#  - {sched: "noop" , nr_requests: "1024", device: "sdb"}
-#  - {sched: "" , nr_requests: "1024", device: ""}
+  - { sched: "deadline", nr_requests: "1024", device: "sda" }
+#  - { sched: "noop" , nr_requests: "1024", device: "sdb" }
+#  - { sched: "" , nr_requests: "1024", device: "" }
 
 # Non-multiqueue I/O schedulers:
 # cfq         - for desktop systems and slow SATA drives
@@ -169,14 +167,14 @@ firewall_disable_ufw: true
 
 # (optional) - Fetch files from the server in the "master" group. These files can later be copied to all servers.
 fetch_files_from_master: []
-#  - {src: "/etc/ssl/certs/ssl-cert-snakeoil.pem", dest: "files/ssl-cert-snakeoil.pem"}
-#  - {src: "/etc/ssl/private/ssl-cert-snakeoil.key", dest: "files/ssl-cert-snakeoil.key"}
-#  - {src: "/path/to/myfile", dest: "files/myfile"}
+#  - { src: "/etc/ssl/certs/ssl-cert-snakeoil.pem", dest: "files/ssl-cert-snakeoil.pem" }
+#  - { src: "/etc/ssl/private/ssl-cert-snakeoil.key", dest: "files/ssl-cert-snakeoil.key" }
+#  - { src: "/path/to/myfile", dest: "files/myfile" }
 
 # (optional) - Copy this files to all servers in the cluster ("master" and "replica" groups)
 copy_files_to_all_server: []
-#  - {src: "files/ssl-cert-snakeoil.pem", dest: "/etc/ssl/certs/ssl-cert-snakeoil.pem", owner: "postgres", group: "postgres", mode: "0644"}
-#  - {src: "files/ssl-cert-snakeoil.key", dest: "/etc/ssl/private/ssl-cert-snakeoil.key", owner: "postgres", group: "postgres", mode: "0600"}
-#  - {src: "files/myfile", dest: "/path/to/myfile", owner: "postgres", group: "postgres", mode: "0640"}
+#  - { src: "files/ssl-cert-snakeoil.pem", dest: "/etc/ssl/certs/ssl-cert-snakeoil.pem", owner: "postgres", group: "postgres", mode: "0644" }
+#  - { src: "files/ssl-cert-snakeoil.key", dest: "/etc/ssl/private/ssl-cert-snakeoil.key", owner: "postgres", group: "postgres", mode: "0600" }
+#  - { src: "files/myfile", dest: "/path/to/myfile", owner: "postgres", group: "postgres", mode: "0640" }
 
 ...

@@ -1,5 +1,4 @@
 ---
-# yamllint disable rule:line-length
 
 - name: Create systemd service "disable-transparent-huge-pages.service"
   blockinfile:

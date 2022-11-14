@@ -1,5 +1,4 @@
 ---
-# yamllint disable rule:line-length
 
 - name: Install pgbouncer package
   package:
@@ -133,7 +132,7 @@
         line: "{{ item.line }}"
         backrefs: true
       loop:
-        - {regexp: '^listen_addr =', line: 'listen_addr = {{ hostvars[inventory_hostname].inventory_hostname }}'}
+        - { regexp: '^listen_addr =', line: 'listen_addr = {{ hostvars[inventory_hostname].inventory_hostname }}' }
       loop_control:
         label: "{{ item.line }}"
       notify: "restart pgbouncer"
@@ -147,7 +146,7 @@
         line: "{{ item.line }}"
         backrefs: true
       loop:
-        - {regexp: '^listen_addr =', line: 'listen_addr = {{ hostvars[inventory_hostname].inventory_hostname }},{{ cluster_vip }}'}
+        - { regexp: '^listen_addr =', line: 'listen_addr = {{ hostvars[inventory_hostname].inventory_hostname }},{{ cluster_vip }}' }
       loop_control:
         label: "{{ item.line }}"
       notify: "restart pgbouncer"

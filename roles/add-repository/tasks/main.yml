@@ -1,5 +1,4 @@
 ---
-# yamllint disable rule:line-length
 
 - block:  # Debian/Ubuntu
     - name: Add repository apt-key
@@ -41,7 +40,7 @@
 
     - name: Get epel-release-latest rpm package
       get_url:
-        url: "https://dl.fedoraproject.org/pub/epel/epel-release-latest-{{ ansible_distribution_major_version }}.noarch.rpm"  # noqa 204
+        url: "https://dl.fedoraproject.org/pub/epel/epel-release-latest-{{ ansible_distribution_major_version }}.noarch.rpm" 
         dest: /tmp/
         timeout: 30
         validate_certs: false
@@ -115,7 +114,7 @@
     # Install PostgreSQL Repository
     - name: Get pgdg-redhat-repo-latest.noarch.rpm
       get_url:
-        url: "https://download.postgresql.org/pub/repos/yum/reporpms/EL-{{ ansible_distribution_major_version }}-x86_64/pgdg-redhat-repo-latest.noarch.rpm"  # noqa 204
+        url: "https://download.postgresql.org/pub/repos/yum/reporpms/EL-{{ ansible_distribution_major_version }}-x86_64/pgdg-redhat-repo-latest.noarch.rpm"
         dest: /tmp/
         timeout: 30
         validate_certs: false

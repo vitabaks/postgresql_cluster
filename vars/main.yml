@@ -1,13 +1,10 @@
 ---
-# yamllint disable rule:line-length
-# yamllint disable rule:comments-indentation
-
+# ---------------------------------------------------------------------
 # Proxy variables (optional) for download packages using a proxy server
-proxy_env: {}
+proxy_env:
 #  http_proxy: http://10.128.64.9:3128
 #  https_proxy: http://10.128.64.9:3128
-
-# -------------------------------------------
+# ---------------------------------------------------------------------
 
 # Cluster variables
 cluster_vip: ""  # ip address for client access to databases in the cluster (optional)
@@ -82,130 +79,130 @@ postgresql_password_encryption_algorithm: "scram-sha-256"  # or "md5" if your cl
 
 # (optional) list of users to be created (if not already exists)
 postgresql_users: []
-#  - {name: "mydb-user", password: "mydb-user-pass", flags: "SUPERUSER"}
-#  - {name: "", password: "", flags: "NOSUPERUSER"}
-#  - {name: "", password: "", flags: "NOSUPERUSER"}
-#  - {name: "", password: "", flags: "NOLOGIN"}
+#  - { name: "mydb-user", password: "mydb-user-pass", flags: "SUPERUSER" }
+#  - { name: "", password: "", flags: "NOSUPERUSER" }
+#  - { name: "", password: "", flags: "NOSUPERUSER" }
+#  - { name: "", password: "", flags: "NOLOGIN" }
 
 # (optional) list of databases to be created (if not already exists)
 postgresql_databases: []
-#  - {db: "mydatabase", encoding: "UTF8", lc_collate: "ru_RU.UTF-8", lc_ctype: "ru_RU.UTF-8", owner: "mydb-user"}
-#  - {db: "", encoding: "UTF8", lc_collate: "en_US.UTF-8", lc_ctype: "en_US.UTF-8", owner: ""}
-#  - {db: "", encoding: "UTF8", lc_collate: "en_US.UTF-8", lc_ctype: "en_US.UTF-8", owner: ""}
+#  - { db: "mydatabase", encoding: "UTF8", lc_collate: "ru_RU.UTF-8", lc_ctype: "ru_RU.UTF-8", owner: "mydb-user" }
+#  - { db: "", encoding: "UTF8", lc_collate: "en_US.UTF-8", lc_ctype: "en_US.UTF-8", owner: "" }
+#  - { db: "", encoding: "UTF8", lc_collate: "en_US.UTF-8", lc_ctype: "en_US.UTF-8", owner: "" }
 
 # (optional) list of schemas to be created (if not already exists)
 postgresql_schemas: []
-#  - {schema: "myschema", db: "mydatabase", owner: "mydb-user"}
+#  - { schema: "myschema", db: "mydatabase", owner: "mydb-user" }
 
 # (optional) list of database extensions to be created (if not already exists)
 postgresql_extensions: []
-#  - {ext: "pg_stat_statements", db: "postgres"}
-#  - {ext: "pg_stat_statements", db: "mydatabase"}
-#  - {ext: "pg_stat_statements", db: "mydatabase", schema: "myschema"}
-#  - {ext: "pg_stat_statements", db: ""}
-#  - {ext: "pg_stat_statements", db: ""}
-#  - {ext: "pg_repack", db: ""}  # postgresql-<version>-repack package is required
-#  - {ext: "pg_stat_kcache", db: ""}  # postgresql-<version>-pg-stat-kcache package is required
-#  - {ext: "", db: ""}
-#  - {ext: "", db: ""}
+#  - { ext: "pg_stat_statements", db: "postgres" }
+#  - { ext: "pg_stat_statements", db: "mydatabase" }
+#  - { ext: "pg_stat_statements", db: "mydatabase", schema: "myschema" }
+#  - { ext: "pg_stat_statements", db: "" }
+#  - { ext: "pg_stat_statements", db: "" }
+#  - { ext: "pg_repack", db: "" }  # postgresql-<version>-repack package is required
+#  - { ext: "pg_stat_kcache", db: "" }  # postgresql-<version>-pg-stat-kcache package is required
+#  - { ext: "", db: "" }
+#  - { ext: "", db: "" }
 
 
 # postgresql parameters to bootstrap dcs (are parameters for example)
 postgresql_parameters:
-  - {option: "max_connections", value: "500"}
-  - {option: "superuser_reserved_connections", value: "5"}
-  - {option: "password_encryption", value: "{{ postgresql_password_encryption_algorithm }}"}
-  - {option: "max_locks_per_transaction", value: "64"}  # raise this value (ex. 512) if you have queries that touch many different tables (partitioning)
-  - {option: "max_prepared_transactions", value: "0"}
-  - {option: "huge_pages", value: "try"}  # or "on" if you set "vm_nr_hugepages" in kernel parameters
-  - {option: "shared_buffers", value: "512MB"}  # please change this value
-  - {option: "work_mem", value: "128MB"}  # please change this value
-  - {option: "maintenance_work_mem", value: "256MB"}  # please change this value
-  - {option: "effective_cache_size", value: "4GB"}  # please change this value
-  - {option: "checkpoint_timeout", value: "15min"}
-  - {option: "checkpoint_completion_target", value: "0.9"}
-  - {option: "min_wal_size", value: "2GB"}
-  - {option: "max_wal_size", value: "8GB"}  # or 16GB/32GB
-  - {option: "wal_buffers", value: "32MB"}
-  - {option: "default_statistics_target", value: "1000"}
-  - {option: "seq_page_cost", value: "1"}
-  - {option: "random_page_cost", value: "4"}  # "1.1" for SSD storage. Also, if your databases fits in shared_buffers
-  - {option: "effective_io_concurrency", value: "2"}  # "200" for SSD storage
-  - {option: "synchronous_commit", value: "on"}  # or 'off' if you can you lose single transactions in case of a crash
-  - {option: "autovacuum", value: "on"}  # never turn off the autovacuum!
-  - {option: "autovacuum_max_workers", value: "5"}
-  - {option: "autovacuum_vacuum_scale_factor", value: "0.01"}  # or 0.005/0.001
-  - {option: "autovacuum_analyze_scale_factor", value: "0.01"}
-  - {option: "autovacuum_vacuum_cost_limit", value: "500"}  # or 1000/5000
-  - {option: "autovacuum_vacuum_cost_delay", value: "2"}
-  - {option: "autovacuum_naptime", value: "1s"}
-  - {option: "max_files_per_process", value: "4096"}
-  - {option: "archive_mode", value: "on"}
-  - {option: "archive_timeout", value: "1800s"}
-  - {option: "archive_command", value: "cd ."}  # not doing anything yet with WAL-s
-#  - {option: "archive_command", value: "wal-g wal-push %p"}  # archive WAL-s using WAL-G
-#  - {option: "archive_command", value: "pgbackrest --stanza={{ pgbackrest_stanza }} archive-push %p"}  # archive WAL-s using pgbackrest
-  - {option: "wal_level", value: "replica"}
-  - {option: "wal_keep_size", value: "2GB"}
-  - {option: "max_wal_senders", value: "10"}
-  - {option: "max_replication_slots", value: "10"}
-  - {option: "hot_standby", value: "on"}
-  - {option: "wal_log_hints", value: "on"}
-  - {option: "wal_compression", value: "on"}
-  - {option: "shared_preload_libraries", value: "pg_stat_statements,auto_explain"}
-  - {option: "pg_stat_statements.max", value: "10000"}
-  - {option: "pg_stat_statements.track", value: "all"}
-  - {option: "pg_stat_statements.track_utility", value: "false"}
-  - {option: "pg_stat_statements.save", value: "true"}
-  - {option: "auto_explain.log_min_duration", value: "10s"}  # enable auto_explain for 10-second logging threshold. Decrease this value if necessary
-  - {option: "auto_explain.log_analyze", value: "true"}
-  - {option: "auto_explain.log_buffers", value: "true"}
-  - {option: "auto_explain.log_timing", value: "false"}
-  - {option: "auto_explain.log_triggers", value: "true"}
-  - {option: "auto_explain.log_verbose", value: "true"}
-  - {option: "auto_explain.log_nested_statements", value: "true"}
-  - {option: "auto_explain.sample_rate", value: "0.01"}  # enable auto_explain for 1% of queries logging threshold
-  - {option: "track_io_timing", value: "on"}
-  - {option: "log_lock_waits", value: "on"}
-  - {option: "log_temp_files", value: "0"}
-  - {option: "track_activities", value: "on"}
-  - {option: "track_counts", value: "on"}
-  - {option: "track_functions", value: "all"}
-  - {option: "log_checkpoints", value: "on"}
-  - {option: "logging_collector", value: "on"}
-  - {option: "log_truncate_on_rotation", value: "on"}
-  - {option: "log_rotation_age", value: "1d"}
-  - {option: "log_rotation_size", value: "0"}
-  - {option: "log_line_prefix", value: "'%t [%p-%l] %r %q%u@%d '"}
-  - {option: "log_filename", value: "'postgresql-%a.log'"}
-  - {option: "log_directory", value: "{{ postgresql_log_dir }}"}
-  - {option: "hot_standby_feedback", value: "on"}  # allows feedback from a hot standby to the primary that will avoid query conflicts
-  - {option: "max_standby_streaming_delay", value: "30s"}
-  - {option: "wal_receiver_status_interval", value: "10s"}
-  - {option: "idle_in_transaction_session_timeout", value: "10min"}  # reduce this timeout if possible
-  - {option: "jit", value: "off"}
-  - {option: "max_worker_processes", value: "24"}
-  - {option: "max_parallel_workers", value: "8"}
-  - {option: "max_parallel_workers_per_gather", value: "2"}
-  - {option: "max_parallel_maintenance_workers", value: "2"}
-#  - {option: "old_snapshot_threshold", value: "60min"}
-#  - {option: "", value: ""}
-#  - {option: "", value: ""}
+  - { option: "max_connections", value: "500" }
+  - { option: "superuser_reserved_connections", value: "5" }
+  - { option: "password_encryption", value: "{{ postgresql_password_encryption_algorithm }}" }
+  - { option: "max_locks_per_transaction", value: "64" }  # raise this value (ex. 512) if you have queries that touch many different tables (partitioning)
+  - { option: "max_prepared_transactions", value: "0" }
+  - { option: "huge_pages", value: "try" }  # or "on" if you set "vm_nr_hugepages" in kernel parameters
+  - { option: "shared_buffers", value: "512MB" }  # please change this value
+  - { option: "work_mem", value: "128MB" }  # please change this value
+  - { option: "maintenance_work_mem", value: "256MB" }  # please change this value
+  - { option: "effective_cache_size", value: "4GB" }  # please change this value
+  - { option: "checkpoint_timeout", value: "15min" }
+  - { option: "checkpoint_completion_target", value: "0.9" }
+  - { option: "min_wal_size", value: "2GB" }
+  - { option: "max_wal_size", value: "8GB" }  # or 16GB/32GB
+  - { option: "wal_buffers", value: "32MB" }
+  - { option: "default_statistics_target", value: "1000" }
+  - { option: "seq_page_cost", value: "1" }
+  - { option: "random_page_cost", value: "4" }  # "1.1" for SSD storage. Also, if your databases fits in shared_buffers
+  - { option: "effective_io_concurrency", value: "2" }  # "200" for SSD storage
+  - { option: "synchronous_commit", value: "on" }  # or 'off' if you can you lose single transactions in case of a crash
+  - { option: "autovacuum", value: "on" }  # never turn off the autovacuum!
+  - { option: "autovacuum_max_workers", value: "5" }
+  - { option: "autovacuum_vacuum_scale_factor", value: "0.01" }  # or 0.005/0.001
+  - { option: "autovacuum_analyze_scale_factor", value: "0.01" }
+  - { option: "autovacuum_vacuum_cost_limit", value: "500" }  # or 1000/5000
+  - { option: "autovacuum_vacuum_cost_delay", value: "2" }
+  - { option: "autovacuum_naptime", value: "1s" }
+  - { option: "max_files_per_process", value: "4096" }
+  - { option: "archive_mode", value: "on" }
+  - { option: "archive_timeout", value: "1800s" }
+  - { option: "archive_command", value: "cd ." }  # not doing anything yet with WAL-s
+#  - { option: "archive_command", value: "wal-g wal-push %p" }  # archive WAL-s using WAL-G
+#  - { option: "archive_command", value: "pgbackrest --stanza={{ pgbackrest_stanza }} archive-push %p" }  # archive WAL-s using pgbackrest
+  - { option: "wal_level", value: "replica" }
+  - { option: "wal_keep_size", value: "2GB" }
+  - { option: "max_wal_senders", value: "10" }
+  - { option: "max_replication_slots", value: "10" }
+  - { option: "hot_standby", value: "on" }
+  - { option: "wal_log_hints", value: "on" }
+  - { option: "wal_compression", value: "on" }
+  - { option: "shared_preload_libraries", value: "pg_stat_statements,auto_explain" }
+  - { option: "pg_stat_statements.max", value: "10000" }
+  - { option: "pg_stat_statements.track", value: "all" }
+  - { option: "pg_stat_statements.track_utility", value: "false" }
+  - { option: "pg_stat_statements.save", value: "true" }
+  - { option: "auto_explain.log_min_duration", value: "10s" }  # enable auto_explain for 10-second logging threshold. Decrease this value if necessary
+  - { option: "auto_explain.log_analyze", value: "true" }
+  - { option: "auto_explain.log_buffers", value: "true" }
+  - { option: "auto_explain.log_timing", value: "false" }
+  - { option: "auto_explain.log_triggers", value: "true" }
+  - { option: "auto_explain.log_verbose", value: "true" }
+  - { option: "auto_explain.log_nested_statements", value: "true" }
+  - { option: "auto_explain.sample_rate", value: "0.01" }  # enable auto_explain for 1% of queries logging threshold
+  - { option: "track_io_timing", value: "on" }
+  - { option: "log_lock_waits", value: "on" }
+  - { option: "log_temp_files", value: "0" }
+  - { option: "track_activities", value: "on" }
+  - { option: "track_counts", value: "on" }
+  - { option: "track_functions", value: "all" }
+  - { option: "log_checkpoints", value: "on" }
+  - { option: "logging_collector", value: "on" }
+  - { option: "log_truncate_on_rotation", value: "on" }
+  - { option: "log_rotation_age", value: "1d" }
+  - { option: "log_rotation_size", value: "0" }
+  - { option: "log_line_prefix", value: "'%t [%p-%l] %r %q%u@%d '" }
+  - { option: "log_filename", value: "'postgresql-%a.log'" }
+  - { option: "log_directory", value: "{{ postgresql_log_dir }}" }
+  - { option: "hot_standby_feedback", value: "on" }  # allows feedback from a hot standby to the primary that will avoid query conflicts
+  - { option: "max_standby_streaming_delay", value: "30s" }
+  - { option: "wal_receiver_status_interval", value: "10s" }
+  - { option: "idle_in_transaction_session_timeout", value: "10min" }  # reduce this timeout if possible
+  - { option: "jit", value: "off" }
+  - { option: "max_worker_processes", value: "24" }
+  - { option: "max_parallel_workers", value: "8" }
+  - { option: "max_parallel_workers_per_gather", value: "2" }
+  - { option: "max_parallel_maintenance_workers", value: "2" }
+#  - { option: "old_snapshot_threshold", value: "60min" }
+#  - { option: "", value: "" }
+#  - { option: "", value: "" }
 
 
 # specify additional hosts that will be added to the pg_hba.conf
 postgresql_pg_hba:
-  - {type: "local", database: "all", user: "{{ patroni_superuser_username }}", address: "", method: "trust"}
-  - {type: "local", database: "all", user: "all", address: "", method: "peer"}
-  - {type: "host", database: "all", user: "all", address: "127.0.0.1/32", method: "{{ postgresql_password_encryption_algorithm }}"}
-  - {type: "host", database: "all", user: "all", address: "::1/128", method: "{{ postgresql_password_encryption_algorithm }}"}
-#  - {type: "host", database: "mydatabase", user: "mydb-user", address: "192.168.0.0/24", method: "{{ postgresql_password_encryption_algorithm }}"}
-#  - {type: "host", database: "all", user: "all", address: "192.168.0.0/24", method: "ident", options: "map=main"}  # use pg_ident
+  - { type: "local", database: "all", user: "{{ patroni_superuser_username }}", address: "", method: "trust" }
+  - { type: "local", database: "all", user: "all", address: "", method: "peer" }
+  - { type: "host", database: "all", user: "all", address: "127.0.0.1/32", method: "{{ postgresql_password_encryption_algorithm }}" }
+  - { type: "host", database: "all", user: "all", address: "::1/128", method: "{{ postgresql_password_encryption_algorithm }}" }
+#  - { type: "host", database: "mydatabase", user: "mydb-user", address: "192.168.0.0/24", method: "{{ postgresql_password_encryption_algorithm }}" }
+#  - { type: "host", database: "all", user: "all", address: "192.168.0.0/24", method: "ident", options: "map=main" }  # use pg_ident
 
 # list of lines that Patroni will use to generate pg_ident.conf
 postgresql_pg_ident: []
-#  - {mapname: "main", system_username: "postgres", pg_username: "backup"}
-#  - {mapname: "", system_username: "", pg_username: ""}
+#  - { mapname: "main", system_username: "postgres", pg_username: "backup" }
+#  - { mapname: "", system_username: "", pg_username: "" }
 
 
 # PgBouncer parameters
@@ -224,10 +221,10 @@ pgbouncer_auth_type: "{{ postgresql_password_encryption_algorithm }}"
 pgbouncer_ignore_startup_parameters: "extra_float_digits,geqo"
 
 pgbouncer_pools:
-  - {name: "postgres", dbname: "postgres", pool_parameters: ""}
-#  - {name: "mydatabase", dbname: "mydatabase", pool_parameters: "pool_size=20 pool_mode=transaction"}
-#  - {name: "", dbname: "", pool_parameters: ""}
-#  - {name: "", dbname: "", pool_parameters: ""}
+  - { name: "postgres", dbname: "postgres", pool_parameters: "" }
+#  - { name: "mydatabase", dbname: "mydatabase", pool_parameters: "pool_size=20 pool_mode=transaction" }
+#  - { name: "", dbname: "", pool_parameters: "" }
+#  - { name: "", dbname: "", pool_parameters: "" }
 
 
 # Extended variables (optional)
@@ -280,18 +277,18 @@ patroni_create_replica_methods:
   - basebackup
 
 pgbackrest:
-  - {option: "command", value: "/usr/bin/pgbackrest --stanza={{ pgbackrest_stanza }} --delta restore"}
-  - {option: "keep_data", value: "True"}
-  - {option: "no_params", value: "True"}
+  - { option: "command", value: "/usr/bin/pgbackrest --stanza={{ pgbackrest_stanza }} --delta restore" }
+  - { option: "keep_data", value: "True" }
+  - { option: "no_params", value: "True" }
 wal_g:
-  - {option: "command", value: "wal-g backup-fetch {{ postgresql_data_dir }} LATEST"}
-  - {option: "no_params", value: "True"}
+  - { option: "command", value: "wal-g backup-fetch {{ postgresql_data_dir }} LATEST" }
+  - { option: "no_params", value: "True" }
 basebackup:
-  - {option: "max-rate", value: "100M"}
-  - {option: "checkpoint", value: "fast"}
+  - { option: "max-rate", value: "100M" }
+  - { option: "checkpoint", value: "fast" }
 pg_probackup:
-  - {option: "command", value: "pg_probackup-{{ pg_probackup_version }} restore -B {{ pg_probackup_dir }} --instance {{ pg_probackup_instance }} -j {{ pg_probackup_threads }} {{ pg_probackup_add_keys }}"}
-  - {option: "no_params", value: "true"}
+  - { option: "command", value: "pg_probackup-{{ pg_probackup_version }} restore -B {{ pg_probackup_dir }} --instance {{ pg_probackup_instance }} -j {{ pg_probackup_threads }} {{ pg_probackup_add_keys }}" }
+  - { option: "no_params", value: "true" }
 
 # "restore_command" written to recovery.conf when configuring follower (create replica)
 postgresql_restore_command: ""
@@ -313,17 +310,17 @@ pg_probackup_patroni_cluster_bootstrap_command: "pg_probackup-{{ pg_probackup_ve
 wal_g_install: false  # or 'true'
 wal_g_ver: "v0.2.19"
 wal_g_json:  # more options see https://github.com/wal-g/wal-g#configuration
-  - {option: "AWS_ACCESS_KEY_ID", value: "minio"}
-  - {option: "AWS_SECRET_ACCESS_KEY", value: "miniosecret"}
-  - {option: "AWS_ENDPOINT", value: "http://172.26.9.200:9000"}
-  - {option: "WALG_S3_PREFIX", value: "s3://bucket"}
-  - {option: "AWS_S3_FORCE_PATH_STYLE", value: "true"}
-  - {option: "WALG_COMPRESSION_METHOD", value: "brotli"}
-  - {option: "PGDATA", value: "{{ postgresql_data_dir }}"}
-  - {option: "PGHOST", value: "{{ postgresql_unix_socket_dir }}"}
-#  - {option: "AWS_REGION", value: "us-east-1"}
-#  - {option: "WALG_S3_CA_CERT_FILE", value: "/path/to/custom/ca/file"}
-#  - {option: "", value: ""}
+  - { option: "AWS_ACCESS_KEY_ID", value: "minio" }
+  - { option: "AWS_SECRET_ACCESS_KEY", value: "miniosecret" }
+  - { option: "AWS_ENDPOINT", value: "http://172.26.9.200:9000" }
+  - { option: "WALG_S3_PREFIX", value: "s3://bucket" }
+  - { option: "AWS_S3_FORCE_PATH_STYLE", value: "true" }
+  - { option: "WALG_COMPRESSION_METHOD", value: "brotli" }
+  - { option: "PGDATA", value: "{{ postgresql_data_dir }}" }
+  - { option: "PGHOST", value: "{{ postgresql_unix_socket_dir }}" }
+#  - { option: "AWS_REGION", value: "us-east-1" }
+#  - { option: "WALG_S3_CA_CERT_FILE", value: "/path/to/custom/ca/file" }
+#  - { option: "", value: "" }
 wal_g_patroni_cluster_bootstrap_command: "wal-g backup-fetch {{ postgresql_data_dir }} LATEST"
 
 # pgBackRest
@@ -337,23 +334,23 @@ pgbackrest_conf_file: "/etc/pgbackrest/pgbackrest.conf"
 # see more options https://pgbackrest.org/configuration.html
 pgbackrest_conf:
   global:  # [global] section
-    - {option: "log-level-file", value: "detail"}
-    - {option: "log-path", value: "/var/log/pgbackrest"}
-    - {option: "repo1-type", value: "{{ pgbackrest_repo_type |lower }}"}
-    - {option: "repo1-host", value: "{{ pgbackrest_repo_host }}"}
-    - {option: "repo1-host-user", value: "{{ pgbackrest_repo_user }}"}
-#    - {option: "", value: ""}
+    - { option: "log-level-file", value: "detail" }
+    - { option: "log-path", value: "/var/log/pgbackrest" }
+    - { option: "repo1-type", value: "{{ pgbackrest_repo_type |lower }}" }
+    - { option: "repo1-host", value: "{{ pgbackrest_repo_host }}" }
+    - { option: "repo1-host-user", value: "{{ pgbackrest_repo_user }}" }
+#    - { option: "", value: "" }
   stanza:  # [stanza_name] section
-    - {option: "pg1-path", value: "{{ postgresql_data_dir }}"}
-    - {option: "process-max", value: "2"}
-    - {option: "recovery-option", value: "recovery_target_action=promote"}
-#    - {option: "", value: ""}
+    - { option: "pg1-path", value: "{{ postgresql_data_dir }}" }
+    - { option: "process-max", value: "2" }
+    - { option: "recovery-option", value: "recovery_target_action=promote" }
+#    - { option: "", value: "" }
 pgbackrest_patroni_cluster_restore_command:
   '/usr/bin/pgbackrest --stanza={{ pgbackrest_stanza }} --delta restore'  # restore from latest backup
 #  '/usr/bin/pgbackrest --stanza={{ pgbackrest_stanza }} --type=time "--target=2020-06-01 11:00:00+03" --delta restore'  # Point-in-Time Recovery (example)
 pgbackrest_cron: []
-#  - {name: "Full Backup", type: "full", hour: "06", minute: "30", dow: "0"}
-#  - {name: "Diff Backup", type: "diff", hour: "06", minute: "30", dow: "1-6"}
+#  - { name: "Full Backup", type: "full", hour: "06", minute: "30", dow: "0" }
+#  - { name: "Diff Backup", type: "diff", hour: "06", minute: "30", dow: "1-6" }
 
 # PITR mode (if patroni_cluster_bootstrap_method: "pgbackrest" or "wal-g"):
 # 1) The database cluster directory will be cleaned (for "wal-g") or overwritten (for "pgbackrest" --delta restore).

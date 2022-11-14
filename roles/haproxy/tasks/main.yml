@@ -1,5 +1,4 @@
 ---
-# yamllint disable rule:line-length
 
 # Install HAProxy from rpm/deb packages
 # from repo
@@ -238,7 +237,7 @@
     - name: Build and install lua (required for haproxy)
       become: true
       become_user: root
-      shell: "make INSTALL_TOP=/opt/{{ lua_src_repo.split('.tar.gz')[0] | basename }} linux install"  # noqa 305
+      shell: "make INSTALL_TOP=/opt/{{ lua_src_repo.split('.tar.gz')[0] | basename }} linux install"
       args:
         chdir: "/tmp/{{ lua_src_repo.split('.tar.gz')[0] | basename }}"
       tags: lua
@@ -277,7 +276,7 @@
     - name: Build and install lua (required for haproxy)
       become: true
       become_user: root
-      shell: "make INSTALL_TOP=/opt/{{ lua_src_file.split('.tar.gz')[0] | basename }} linux install"  # noqa 305
+      shell: "make INSTALL_TOP=/opt/{{ lua_src_file.split('.tar.gz')[0] | basename }} linux install"
       args:
         chdir: "/tmp/{{ lua_src_file.split('.tar.gz')[0] | basename }}"
       tags: lua
@@ -393,11 +392,11 @@
         line: "{{ item.line }}"
         backrefs: true
       loop:
-        - {regexp: '^.*bind.*:{{ haproxy_listen_port.stats }}$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:{{ haproxy_listen_port.stats }}'}  # noqa 204
-        - {regexp: '^.*bind.*:{{ haproxy_listen_port.master }}$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:{{ haproxy_listen_port.master }}'}  # noqa 204
-        - {regexp: '^.*bind.*:{{ haproxy_listen_port.replicas }}$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:{{ haproxy_listen_port.replicas }}'}  # noqa 204
-        - {regexp: '^.*bind.*:{{ haproxy_listen_port.replicas_sync }}$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:{{ haproxy_listen_port.replicas_sync }}'}  # noqa 204
-        - {regexp: '^.*bind.*:{{ haproxy_listen_port.replicas_async }}$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:{{ haproxy_listen_port.replicas_async }}'}  # noqa 204
+        - { regexp: '^.*bind.*:{{ haproxy_listen_port.stats }}$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:{{ haproxy_listen_port.stats }}' }
+        - { regexp: '^.*bind.*:{{ haproxy_listen_port.master }}$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:{{ haproxy_listen_port.master }}' }
+        - { regexp: '^.*bind.*:{{ haproxy_listen_port.replicas }}$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:{{ haproxy_listen_port.replicas }}' }
+        - { regexp: '^.*bind.*:{{ haproxy_listen_port.replicas_sync }}$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:{{ haproxy_listen_port.replicas_sync }}' }
+        - { regexp: '^.*bind.*:{{ haproxy_listen_port.replicas_async }}$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:{{ haproxy_listen_port.replicas_async }}' }
       loop_control:
         label: "{{ item.line }}"
       notify: "restart haproxy"
@@ -410,11 +409,11 @@
         line: "{{ item.line }}"
         backrefs: true
       loop:
-        - {regexp: '^.*bind.*:{{ haproxy_listen_port.stats }}$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:{{ haproxy_listen_port.stats }}'}  # noqa 204
-        - {regexp: '^.*bind.*:{{ haproxy_listen_port.master }}$', line: '    bind {{ cluster_vip }}:{{ haproxy_listen_port.master }}'}
-        - {regexp: '^.*bind.*:{{ haproxy_listen_port.replicas }}$', line: '    bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas }}'}
-        - {regexp: '^.*bind.*:{{ haproxy_listen_port.replicas_sync }}$', line: '    bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas_sync }}'}
-        - {regexp: '^.*bind.*:{{ haproxy_listen_port.replicas_async }}$', line: '    bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas_async }}'}
+        - { regexp: '^.*bind.*:{{ haproxy_listen_port.stats }}$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:{{ haproxy_listen_port.stats }}' }
+        - { regexp: '^.*bind.*:{{ haproxy_listen_port.master }}$', line: '    bind {{ cluster_vip }}:{{ haproxy_listen_port.master }}' }
+        - { regexp: '^.*bind.*:{{ haproxy_listen_port.replicas }}$', line: '    bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas }}' }
+        - { regexp: '^.*bind.*:{{ haproxy_listen_port.replicas_sync }}$', line: '    bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas_sync }}' }
+        - { regexp: '^.*bind.*:{{ haproxy_listen_port.replicas_async }}$', line: '    bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas_async }}' }
       loop_control:
         label: "{{ item.line }}"
       notify: "restart haproxy"
