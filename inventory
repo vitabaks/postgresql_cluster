@@ -3,13 +3,13 @@
 # "postgresql_exists='true'" if PostgreSQL is already exists and running
 
 # if dcs_exists: false and dcs_type: "etcd" (in vars/main.yml)
-# ETCD nodes (<hostname|FQDN|IPv4> ansible_host=<IPv4>)
+# ETCD nodes (<hostname|FQDN|IPv4> [ansible_host=<IPv4>]) (set ansible_host only if hostname not resolved, or use /etc/hosts)
 [etcd_cluster]  # recommendation: 3 or 5-7 nodes
-etcd-n1 ansible_host=172.16.35.6
-etcd-n2 ansible_host=172.16.35.3
-etcd-n3 ansible_host=172.16.35.24
+etcd-n1 #ansible_host=172.16.35.6
+etcd-n2 #ansible_host=172.16.35.3
+etcd-n3 #ansible_host=172.16.35.24
 
-# PostgreSQL nodes (IP address (or hostname, not FQDN)) (hostname recommended)
+# PostgreSQL nodes (<hostname|FQDN|IPv4> postgresql_exists='<false|true>')
 [master]
 pgsql-n2 postgresql_exists='false'
 
