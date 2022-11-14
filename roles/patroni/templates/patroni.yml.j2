@@ -34,9 +34,9 @@ restapi:
 {% if dcs_type == 'etcd' %}
 
 etcd:
-  hosts: {% for etcd_hosts in patroni_etcd_hosts %}{{etcd_hosts.host}}:{{etcd_hosts.port}}{% if not loop.last %},{% endif %}{% endfor %}
+  hosts: {% for host in groups['etcd_cluster'] %}{{ hostvars[host]['ansible_facts']['eth0']['ipv4']['address'] }}:{{ patroni_etcd_hosts.port }}{% if not loop.last %},{% endif %}{% endfor %}
 
-  protocol: {{ patroni_etcd_hosts[0].protocol }}
+  protocol: {{ patroni_etcd_hosts.protocol }}
   cert: /etc/ssl/certs/server.crt
   key: /etc/ssl/private/server.key
 {% else %}
