@@ -1,6 +1,6 @@
 ---
 
-- name: Restart haproxy service
+- name: "Restart haproxy service"
   systemd:
     daemon_reload: true
     name: haproxy
@@ -8,7 +8,7 @@
     state: restarted
   listen: "restart haproxy"
 
-- name: Check HAProxy is started and accepting connections
+- name: "Check HA Proxy is started and accepting connections"
   wait_for:
     port: "{{ haproxy_listen_port.stats }}"
     host: "{{ hostvars[inventory_hostname]['inventory_hostname'] }}"
