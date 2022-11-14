@@ -10,7 +10,7 @@ proxy_env: {}
 
 # Patroni
 patroni_cluster_name: "pgsql"  # specify the cluster name
-patroni_restapi_port: "8008" # Patroni REST API port
+patroni_restapi_port: "8008" # Patroni REST API port (Used https protocol in this project!)
 patroni_install_version: "latest"  # or specific version (example 1.5.6)
 patroni_scripts_dir: "/etc/patroni" # for patroni callback scripts
 patroni_superuser_username: "postgres"
@@ -25,7 +25,7 @@ synchronous_node_count: 2  # number of synchronous standby databases
 patroni_with_watchdog: true # true or false
 
 # DNS Connection Point
-cluster_vip: "172.16.32.180"  # empty or one VIP address (or some VIP addresses in different subnets, separated by commas), for client access to PostgreSQL
+cluster_vip: "172.16.32.180"  # empty or one VIP address (or some VIP addresses in different subnets, separated by commas, for example: "172.16.32.180,172.16.10.180" ), for client access to PostgreSQL
 dnscp:
   vcompname: "{{ patroni_cluster_name }}" # Virtual Computer Name - Client Access Point
   vcomppassword: "P@ssw0rd" # Password for Virtual Computer Name Account. Empty for anonimous auth to DNS zone.
