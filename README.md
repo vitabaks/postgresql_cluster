@@ -186,6 +186,11 @@ Patroni может не зависеть от сторонних систем DC
 
 `ansible-playbook deploy_pgcluster.yml -K`
 
+6.3 Запустите playbook для установки HA Proxy (опционально):
+
+`ansible-playbook balancers.yml -K` \
+Чтобы установить HA Proxy сразу во время развёртывания кластера PostgreSQL в /vars/[main.yml](./vars/main.yml) укажите `with_haproxy_load_balancing: true`
+
 ---
 
 ## Переменные
