@@ -1,7 +1,7 @@
 ---
 # ---------------------------------------------------------------------
 # Proxy variables (optional) for download packages using a proxy server
-proxy_env:
+proxy_env: {}  # yamllint disable rule:braces
 #  http_proxy: http://10.128.64.9:3128
 #  https_proxy: http://10.128.64.9:3128
 # ---------------------------------------------------------------------

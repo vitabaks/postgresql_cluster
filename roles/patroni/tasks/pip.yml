@@ -8,17 +8,27 @@
 - block:  # with get-pip.py
     - name: pip | get-pip.py
       get_url:
-        url: "{{ item }}"
+        url: "{{ pip_package_repo }}"
         dest: /tmp/
         timeout: 60
         validate_certs: false
-      loop:
-        - "{{ pip_package_repo }}"
       register: get_pip_result
+      when: ansible_python_version is version('3.7', '>=')
+
+    - name: pip | get-pip.py
+      get_url:
+        url: "https://bootstrap.pypa.io/pip/3.6/get-pip.py"
+        dest: /tmp/
+        timeout: 60
+        validate_certs: false
+      register: get_pip_result
+      when:
+        - ansible_python_version is version('3.6', '>=')
+        - ansible_python_version is version('3.7', '<')
 
     - name: pip | install pip
       command: >
-        python3 {{ pip_package_repo | basename }}
+        python3 get-pip.py
         --trusted-host=pypi.python.org
         --trusted-host=pypi.org
         --trusted-host=files.pythonhosted.org
@@ -27,6 +37,7 @@
       when: get_pip_result.changed
   environment: "{{ proxy_env | default({}) }}"
   when: installation_method == "repo" and
+        patroni_installation_method == "pip" and
         pip_package_repo is search("get-pip.py")
   tags: pip_install, pip
 
