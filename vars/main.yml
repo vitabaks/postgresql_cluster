@@ -37,8 +37,8 @@ dnscp:
   #sudo astra-winbind -dc demo.ru -d demo.ru -g DEMO -u mamyshev@demo.ru -p StrongP@ssw0rd -y
 
 # DCS (Distributed Consensus Store)
-dcs_exists: false  # or 'true' if you do not want to install and configure the etcd cluster
-dcs_type: "patroni" # or "etcd" or "patroni"
+dcs_exists: false # 'false' or 'true'. Use 'true' if you do not want to install and configure the etcd cluster
+dcs_type: "patroni" # "etcd" or "patroni"
 
 # if dcs_exists: false and dcs_type: "patroni"
 patroni_raft_data_dir: "/etc/patroni" #"/var/lib/raft"
