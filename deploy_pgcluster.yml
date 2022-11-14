@@ -14,17 +14,18 @@
         msg: "Ansible version must be {{ minimal_ansible_version }} or higher"
       when: ansible_version.full is version(minimal_ansible_version, '<')
 
-- name: "Gathering facts from all servers"
+- name: "Gathering facts from servers"
   hosts: all,!etcd_cluster
   gather_facts: true
 
 #- import_playbook: etcd_cluster.yml
 #  when: dcs_exists|bool == false and dcs_type == "etcd" # не работает
+
 - name: "ETCD Cluster"
   hosts: etcd_cluster
   become: true
   become_method: sudo
-  gather_facts: false
+  gather_facts: true
   any_errors_fatal: true
   vars_files:
     - vars/main.yml
@@ -52,6 +53,12 @@
       fail:
         msg: "Deploy ETCD Cluster first! Run: ansible-playbook etcd_cluster.yml -K"
       when: dcs_exists|bool == false and dcs_type == "etcd"
+
+    - name: "Cluster not needed."
+      run_once: true
+      debug:
+        msg: "Skipping.."
+      when: dcs_type != "etcd"
 
 # SSL: Obtaining the Private IP Addresses of Managed Nodes
 - hosts: postgres_cluster
