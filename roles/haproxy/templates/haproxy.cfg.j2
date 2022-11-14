@@ -8,6 +8,7 @@ global
     user haproxy
     group haproxy
     daemon
+    ssl-server-verify none
 
 defaults
     mode               tcp
@@ -26,7 +27,14 @@ listen stats
     stats uri /
 
 listen master
+{% if cluster_vip is defined and cluster_vip | length > 0 %}
+{% set vips = cluster_vip.split(',') %}
+{% for vip in vips %}
+    bind {{ vip }}:{{ haproxy_listen_port.master }}
+{% endfor %}
+{% else %}
     bind :{{ haproxy_listen_port.master }}
+{% endif %}
     maxconn {{ haproxy_maxconn.master }}
     option tcplog
     option httpchk OPTIONS /master
@@ -34,11 +42,18 @@ listen master
     default-server inter 3s fastinter 1s fall 3 rise 4 on-marked-down shutdown-sessions
 
   {% for host in groups['postgres_cluster'] %}
-server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}:{{ postgresql_port }} check port {{ patroni_restapi_port }}
+server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}:{{ postgresql_port }} check check-ssl port {{ patroni_restapi_port }}
   {% endfor %}
 
 listen replicas
+{% if cluster_vip is defined and cluster_vip | length > 0 %}
+{% set vips = cluster_vip.split(',') %}
+{% for vip in vips %}
+    bind {{ vip }}:{{ haproxy_listen_port.replicas }}
+{% endfor %}
+{% else %}
     bind :{{ haproxy_listen_port.replicas }}
+{% endif %}
     maxconn {{ haproxy_maxconn.replica }}
     option tcplog
     option httpchk OPTIONS /replica
@@ -47,11 +62,18 @@ listen replicas
     default-server inter 3s fastinter 1s fall 3 rise 2 on-marked-down shutdown-sessions
 
   {% for host in groups['postgres_cluster'] %}
-server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}:{{ postgresql_port }} check port {{ patroni_restapi_port }}
+server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}:{{ postgresql_port }} check check-ssl port {{ patroni_restapi_port }}
   {% endfor %}
 
 listen replicas_sync
+{% if cluster_vip is defined and cluster_vip | length > 0 %}
+{% set vips = cluster_vip.split(',') %}
+{% for vip in vips %}
+    bind {{ vip }}:{{ haproxy_listen_port.replicas_sync }}
+{% endfor %}
+{% else %}
     bind :{{ haproxy_listen_port.replicas_sync }}
+{% endif %}
     maxconn {{ haproxy_maxconn.replica }}
     option tcplog
     option httpchk OPTIONS /sync
@@ -60,11 +82,18 @@ listen replicas_sync
     default-server inter 3s fastinter 1s fall 3 rise 2 on-marked-down shutdown-sessions
 
   {% for host in groups['postgres_cluster'] %}
-server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}:{{ postgresql_port }} check port {{ patroni_restapi_port }}
+server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}:{{ postgresql_port }} check check-ssl port {{ patroni_restapi_port }}
   {% endfor %}
 
 listen replicas_async
+{% if cluster_vip is defined and cluster_vip | length > 0 %}
+{% set vips = cluster_vip.split(',') %}
+{% for vip in vips %}
+    bind {{ vip }}:{{ haproxy_listen_port.replicas_async }}
+{% endfor %}
+{% else %}
     bind :{{ haproxy_listen_port.replicas_async }}
+{% endif %}
     maxconn {{ haproxy_maxconn.replica }}
     option tcplog
     option httpchk OPTIONS /async
@@ -73,7 +102,7 @@ listen replicas_async
     default-server inter 3s fastinter 1s fall 3 rise 2 on-marked-down shutdown-sessions
 
   {% for host in groups['postgres_cluster'] %}
-server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}:{{ postgresql_port }} check port {{ patroni_restapi_port }}
+server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}:{{ postgresql_port }} check check-ssl port {{ patroni_restapi_port }}
   {% endfor %}
 
 
