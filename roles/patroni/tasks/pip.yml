@@ -27,8 +27,7 @@
       when: get_pip_result.changed
   environment: "{{ proxy_env | default({}) }}"
   when: installation_method == "repo" and
-        pip_package_repo is search("get-pip.py") and
-        proxy_env is defined and proxy_env | length > 0
+        pip_package_repo is search("get-pip.py")
   tags: pip_install, pip
 
 - block:  # with tar.gz
