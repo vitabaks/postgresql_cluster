@@ -56,12 +56,10 @@ etcd_ver: "v3.4.22" #"v3.3.27"  # version for deploy etcd cluster
 etcd_data_dir: "/var/lib/etcd"
 etcd_cluster_name: "etcd-{{ patroni_cluster_name }}"  # ETCD_INITIAL_CLUSTER_TOKEN
 
-# if dcs_exists: true and dcs_type: "etcd" - specify ip address your etcd cluster in the "patroni_etcd_hosts" variable
-# example (use existing cluster of 3 nodes)
-patroni_etcd_hosts: #[]
-  - { host: "{{ hostvars[groups['etcd_cluster'][0]].ansible_host }}", port: "2379", protocol: "https" }
-  - { host: "{{ hostvars[groups['etcd_cluster'][1]].ansible_host }}", port: "2379", protocol: "https" }
-  - { host: "{{ hostvars[groups['etcd_cluster'][2]].ansible_host }}", port: "2379", protocol: "https" }
+# if dcs_exists: true and dcs_type: "etcd"
+patroni_etcd_hosts:
+  port: "2379"
+  protocol: "https"
 
 # more options you can specify in the roles/patroni/templates/patroni.yml.j2
 # https://patroni.readthedocs.io/en/latest/SETTINGS.html#etcd
