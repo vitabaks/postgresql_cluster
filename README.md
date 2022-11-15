@@ -209,8 +209,8 @@ Patroni может не зависеть от сторонних систем DC
 
 ### HA Proxy
 ##### Статистика
-`http://mlk-pgsql-n2.demo.ru:7000` \
-`http://mlk-pgsql-n3.demo.ru:7000`
+`http://pgsql-n2.demo.ru:7000` \
+`http://pgsql-n3.demo.ru:7000`
 
 ### PostgreSQL
 ##### Журнал событий
