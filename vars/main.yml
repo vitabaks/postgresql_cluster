@@ -43,7 +43,7 @@ dcs_type: "patroni" # "etcd" or "patroni"
 # if dcs_exists: false and dcs_type: "patroni"
 patroni_raft_data_dir: "/etc/patroni" #"/var/lib/raft"
 patroni_raft_port: "2379"
-patroni_raft_password: ""
+patroni_raft_password: "6#TCb9JItl8u78IiXAzKOeE54#V1FVm1OWpDPtMhb0Nh$3S2P$"
 
 # if dcs_exists: false and dcs_type: "patroni"
 with_patroni_raft_controller: true  # 'false' or 'true' if you want to install and configure the Patroni RAFT Controller

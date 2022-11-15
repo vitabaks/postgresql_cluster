@@ -198,10 +198,26 @@ Patroni может не зависеть от сторонних систем DC
 `sudo systemctl status patroni.service`
 
 ##### Журнал событий
-`sudo grep -i patroni /var/log/syslog`
+`sudo grep -i patroni /var/log/syslog` \
+`sudo tail -n 15 /var/log/syslog`
 
 ##### Здоровье кластера
 `sudo patronictl -c /etc/patroni/patroni.yml list`
+
+##### RAFT
+`sudo syncobj_admin -conn pgsql-n2:2379 -pass 6#TCb9JItl8u78IiXAzKOeE54#V1FVm1OWpDPtMhb0Nh$3S2P$ -status`
+
+### HA Proxy
+##### Статистика
+`http://mlk-pgsql-n2.demo.ru:7000` \
+`http://mlk-pgsql-n3.demo.ru:7000`
+
+### PostgreSQL
+##### Журнал событий
+`sudo tail -n 20 /var/log/postgresql/postgresql-15.log`
+
+##### Тестовое подключение
+`/opt/pgpro/std-14/bin/psql -p 5432 -U postgres -d postgres -c "SELECT version();"`
 
 ### etcd
 ##### Статус сервиса
