@@ -105,7 +105,7 @@ Ansible ([Что такое Ansible](https://www.ansible.com/resources/videos/qu
 
 Обновите все операционные системы перед развёртыванием;
 
-Присоедините серверы-узлы кластера СУБД к домену [Microsoft Active Directory](https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/get-started/virtual-dc/active-directory-domain-services-overview) или [Astra Linux Directory](https://wiki.astralinux.ru/display/doc/Astra+Linux+Directory). Присоединение к домену является требованием, если вы хотите использовать аутентифицированный доступ к DNS-серверу.
+Присоедините серверы-узлы кластера СУБД к домену [Microsoft Active Directory](https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/get-started/virtual-dc/active-directory-domain-services-overview) или [Astra Linux Directory](https://wiki.astralinux.ru/display/doc/Astra+Linux+Directory). Присоединение к домену является требованием, если вы хотите использовать аутентифицированный доступ к DNS-серверу при регистрации DNS-имени точки клиентского доступа.
 
 - **Patroni RAFT**: 
 
@@ -132,8 +132,6 @@ Patroni может не зависеть от сторонних систем DC
 - [synchronous_mode_strict](https://patroni.readthedocs.io/en/latest/replication_modes.html#synchronous-mode): 'true' (выключен  по умолчанию)
 - [synchronous_commit](https://postgrespro.ru/docs/postgrespro/14/runtime-config-wal#GUC-SYNCHRONOUS-COMMIT): 'on' (или 'remote_apply') ('on'  по умолчанию)
 - [use_pg_rewind](https://postgrespro.ru/docs/postgrespro/14/app-pgrewind): '[false](https://patroni.readthedocs.io/en/latest/SETTINGS.html#dynamic-configuration-settings)' (включен по умолчанию)
-
----
 
 ## Развёртывание: быстрый старт
 0. [Установите Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) на сервер управления, свой компьютер или ноутбук
@@ -191,10 +189,29 @@ Patroni может не зависеть от сторонних систем DC
 `ansible-playbook balancers.yml -K` \
 Чтобы установить HA Proxy сразу во время развёртывания кластера PostgreSQL в /vars/[main.yml](./vars/main.yml) укажите `with_haproxy_load_balancing: true`
 
----
-
 ## Переменные
 Смотри файлы vars/[main.yml](./vars/main.yml), [system.yml](./vars/system.yml) и [Debian.yml](./vars/Debian.yml), чтобы узнать подробности.
+
+## Проверка после развёртывания
+### Patroni
+##### Статус сервиса
+`sudo systemctl status patroni.service`
+
+##### Журнал событий
+`sudo grep -i patroni /var/log/syslog`
+
+##### Здоровье кластера
+`sudo patronictl -c /etc/patroni/patroni.yml list`
+
+### etcd
+##### Статус сервиса
+`sudo systemctl status etcd.service`
+
+##### Здоровье кластера
+`sudo ETCDCTL_API=2 etcdctl --ca-file="/etc/etcd/ssl/ca.crt" --endpoints https://127.0.0.1:2379 --cert-file=/etc/etcd/ssl/server.crt --key-file=/etc/etcd/ssl/server.key cluster-health`
+
+##### Конфигурация PostgreSQL в etcd
+`sudo ETCDCTL_API=2 etcdctl --ca-file="/etc/etcd/ssl/ca.crt" --endpoints https://127.0.0.1:2379 --cert-file=/etc/etcd/ssl/server.crt --key-file=/etc/etcd/ssl/server.key get service/pgsql-cluster/config`
 
 ## Обслуживание
 Данный вопрос выходит за рамки данного описания.  
@@ -232,8 +249,6 @@ Patroni может не зависеть от сторонних систем DC
     ```shell 
     sudo ETCDCTL_API=2 etcdctl --ca-file="/etc/etcd/ssl/ca.crt" --endpoints https://127.0.0.1:2379 --cert-file=/etc/etcd/ssl/server.crt --key-file=/etc/etcd/ssl/server.key rm --dir --recursive /service/
     ```
-
----
 
 ## Лицензия
 Под лицензией MIT License. Подробнее см. в файле [LICENSE](./LICENSE) .
