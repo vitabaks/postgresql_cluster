@@ -203,6 +203,9 @@ Patroni может не зависеть от сторонних систем DC
 ##### Здоровье кластера
 `sudo patronictl -c /etc/patroni/patroni.yml list`
 
+##### RAFT
+`sudo syncobj_admin -conn pgsql-n2:2379 -pass 6#TCb9JItl8u78IiXAzKOeE54#V1FVm1OWpDPtMhb0Nh$3S2P$ -status`
+
 ### etcd
 ##### Статус сервиса
 `sudo systemctl status etcd.service`
