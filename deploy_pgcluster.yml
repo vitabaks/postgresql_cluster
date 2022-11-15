@@ -20,18 +20,22 @@
 
 #- import_playbook: etcd_cluster.yml
 #  when: dcs_exists|bool == false and dcs_type == "etcd" # не работает
-
-- name: "ETCD Cluster"
+- name: "ETCD cluster"
   hosts: etcd_cluster
   become: true
   become_method: sudo
-  gather_facts: true
+  gather_facts: false
   any_errors_fatal: true
   vars_files:
     - vars/main.yml
   tasks:
-    - name: "Check etcd cluster is healthy"
-      command: /usr/local/bin/etcdctl --ca-file="/etc/etcd/ssl/ca.crt" --endpoints https://127.0.0.1:2379 --cert-file=/etc/etcd/ssl/server.crt --key-file=/etc/etcd/ssl/server.key cluster-health
+    - name: "Gathering some facts from ETCD servers"
+      setup:
+        gather_subset: all
+      when: dcs_type == "etcd"
+
+    - name: "Check ETCD cluster is healthy"
+      command: /usr/local/bin/etcdctl --ca-file="/etc/etcd/ssl/ca.crt" --endpoints {{ patroni_etcd_hosts.protocol }}://127.0.0.1:{{ patroni_etcd_hosts.port }} --cert-file=/etc/etcd/ssl/server.crt --key-file=/etc/etcd/ssl/server.key cluster-health
       environment:
         ETCDCTL_API: 2
       register: etcd_health_result
@@ -49,12 +53,12 @@
         var: etcd_health_result.stdout_lines
       when: dcs_exists|bool == true and dcs_type == "etcd"
 
-    - name: "Cluster not deployed"
+    - name: "ETCD not deployed"
       fail:
         msg: "Deploy ETCD Cluster first! Run: ansible-playbook etcd_cluster.yml -K"
       when: dcs_exists|bool == false and dcs_type == "etcd"
 
-    - name: "Cluster not needed."
+    - name: "ETCD not required"
       run_once: true
       debug:
         msg: "Skipping.."
