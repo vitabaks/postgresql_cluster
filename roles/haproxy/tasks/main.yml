@@ -4,7 +4,7 @@
 # Install HAProxy from rpm/deb packages
 # from repo
 - block:
-    - name: Install HAProxy package
+    - name: "Install HA Proxy package"
       apt:
         name: haproxy
         state: present
@@ -13,7 +13,7 @@
   tags: haproxy, load_balancing
 
 # Configure
-- name: Make sure the kernel parameter "net.ipv4.ip_nonlocal_bind" are enabled
+- name: "Make sure the kernel parameter 'net.ipv4.ip_nonlocal_bind' are enabled"
   sysctl:
     name: "net.ipv4.ip_nonlocal_bind"
     value: "1"
@@ -23,13 +23,13 @@
   ignore_errors: true  # to prevent test failures in CI
   tags: haproxy, load_balancing
 
-- name: Add haproxy group
+- name: "Add haproxy group"
   group:
     name: haproxy
     state: present
   tags: haproxy, load_balancing
 
-- name: Add haproxy user
+- name: "Add haproxy user"
   user:
     name: haproxy
     comment: "HAProxy user"
@@ -37,7 +37,7 @@
     shell: /usr/sbin/nologin
   tags: haproxy, load_balancing
 
-- name: Create directories
+- name: "Create directories"
   file:
     dest: "{{ item }}"
     state: directory
@@ -49,7 +49,7 @@
     - /var/lib/haproxy/dev
   tags: haproxy, load_balancing
 
-- name: Generate conf file "/etc/haproxy/haproxy.cfg"
+- name: "Generate conf file '/etc/haproxy/haproxy.cfg'"
   template:
     src: templates/haproxy.cfg.j2
     dest: /etc/haproxy/haproxy.cfg
@@ -59,7 +59,7 @@
   when: add_balancer is not defined or not add_balancer|bool
   tags: haproxy, haproxy_conf, load_balancing
 
-- name: Generate systemd service file "/etc/systemd/system/haproxy.service"
+- name: "Generate systemd service file '/etc/systemd/system/haproxy.service'"
   template:
     src: templates/haproxy.service.j2
     dest: /etc/systemd/system/haproxy.service
@@ -69,7 +69,7 @@
   tags: haproxy, haproxy_service, load_balancing
 
 - block:  # for add_balancer.yml
-    - name: Fetch haproxy.cfg file from master
+    - name: "Fetch haproxy.cfg file from master"
       run_once: true
       fetch:
         src: /etc/haproxy/haproxy.cfg
@@ -79,7 +79,7 @@
       notify: "restart haproxy"
       delegate_to: "{{ groups.master[0] }}"
 
-    - name: Copy haproxy.cfg file to replica
+    - name: "Copy haproxy.cfg file to replica"
       copy:
         src: files/haproxy.cfg
         dest: /etc/haproxy/haproxy.cfg
@@ -87,39 +87,6 @@
         group: haproxy
       notify: "restart haproxy"
 
-    - name: Prepare haproxy.cfg conf file (replace "bind")
-      lineinfile:
-        path: /etc/haproxy/haproxy.cfg
-        regexp: "{{ item.regexp }}"
-        line: "{{ item.line }}"
-        backrefs: true
-      loop:
-        - {regexp: '^.*bind.*:{{ haproxy_listen_port.stats }}$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:{{ haproxy_listen_port.stats }}'}  # noqa 204
-        - {regexp: '^.*bind.*:{{ haproxy_listen_port.master }}$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:{{ haproxy_listen_port.master }}'}  # noqa 204
-        - {regexp: '^.*bind.*:{{ haproxy_listen_port.replicas }}$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:{{ haproxy_listen_port.replicas }}'}  # noqa 204
-        - {regexp: '^.*bind.*:{{ haproxy_listen_port.replicas_sync }}$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:{{ haproxy_listen_port.replicas_sync }}'}  # noqa 204
-        - {regexp: '^.*bind.*:{{ haproxy_listen_port.replicas_async }}$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:{{ haproxy_listen_port.replicas_async }}'}  # noqa 204
-      loop_control:
-        label: "{{ item.line }}"
-      notify: "restart haproxy"
-      when: cluster_vip is not defined or cluster_vip | length < 1
-
-    - name: Prepare haproxy.cfg conf file (replace "bind" for stats)
-      lineinfile:
-        path: /etc/haproxy/haproxy.cfg
-        regexp: "{{ item.regexp }}"
-        line: "{{ item.line }}"
-        backrefs: true
-      loop:
-        - {regexp: '^.*bind.*:{{ haproxy_listen_port.stats }}$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:{{ haproxy_listen_port.stats }}'}  # noqa 204
-        - {regexp: '^.*bind.*:{{ haproxy_listen_port.master }}$', line: '    bind {{ cluster_vip }}:{{ haproxy_listen_port.master }}'}
-        - {regexp: '^.*bind.*:{{ haproxy_listen_port.replicas }}$', line: '    bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas }}'}
-        - {regexp: '^.*bind.*:{{ haproxy_listen_port.replicas_sync }}$', line: '    bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas_sync }}'}
-        - {regexp: '^.*bind.*:{{ haproxy_listen_port.replicas_async }}$', line: '    bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas_async }}'}
-      loop_control:
-        label: "{{ item.line }}"
-      notify: "restart haproxy"
-      when: cluster_vip is defined and cluster_vip | length > 0
   when: add_balancer is defined and add_balancer|bool
   tags: haproxy, haproxy_conf, load_balancing
 

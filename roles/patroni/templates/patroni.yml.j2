@@ -23,54 +23,36 @@ log:
 restapi:
   listen: 0.0.0.0:{{ patroni_restapi_port }}
   connect_address: {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ patroni_restapi_port }}
-#  certfile: /etc/ssl/certs/ssl-cert-snakeoil.pem
-#  keyfile: /etc/ssl/private/ssl-cert-snakeoil.key
+  certfile: /etc/ssl/certs/server.crt
+  keyfile: /etc/ssl/private/server.key
+  ciphers: "ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES128-GCM-SHA256:!SSLv1:!SSLv2:!SSLv3:!TLSv1:!TLSv1.1"
+  verify_client: optional # none, optional or required. For optional the client cert will only be checked for PUT, POST, PATCH, and DELETE requests.
 #  authentication:
-#    username: username
-#    password: password
+#    username: patroni_restapi_username
+#    password: patroni_restapi_password
 
-{% if not dcs_exists|bool %}
-  {% if dcs_type == 'etcd' %}
+{% if dcs_type == 'etcd' %}
 
 etcd:
-  hosts: {% for host in groups['etcd_cluster'] %}{{ hostvars[host]['inventory_hostname'] }}:2379{% if not loop.last %},{% endif %}{% endfor %}
-  {% if (patroni_etcd_username is defined and patroni_etcd_username | length > 0) %}
+  hosts: {% for host in groups['etcd_cluster'] %}{{ hostvars[host]['ansible_facts']['eth0']['ipv4']['address'] }}:{{ patroni_etcd_hosts.port }}{% if not loop.last %},{% endif %}{% endfor %}
 
-  username: {{ patroni_etcd_username }}
-  password: {{ patroni_etcd_password }}
-  {% endif %}
+  protocol: {{ patroni_etcd_hosts.protocol }}
+  cert: /etc/ssl/certs/server.crt
+  key: /etc/ssl/private/server.key
+{% else %}
+
+raft:
+  data_dir: {{ patroni_raft_data_dir }}
+  self_addr: {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ patroni_raft_port }}
+  {% if is_master == 'true' %}
+  #partner_addrs: # empty, this is first (master) host 
   {% else %}
-
-    {% if is_master == 'true' %}
-raft:
-  data_dir: {{ patroni_raft_data_dir }}
-  self_addr: {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ patroni_raft_port }}
-  #partner_addrs: # empty, this is master host 
-      {% if patroni_raft_password is defined and patroni_raft_password | length > 0 %}
-  password: '{{ patroni_raft_password }}'
-      {% endif %}
-    {% else %}
-raft:
-  data_dir: {{ patroni_raft_data_dir }}
-  self_addr: {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ patroni_raft_port }}
   partner_addrs: 
   - {{ hostvars[groups['master'][0]].inventory_hostname }}:{{ patroni_raft_port }}
-      {% if patroni_raft_password is defined and patroni_raft_password | length > 0 %}
+  {% endif %}
+    {% if patroni_raft_password is defined and patroni_raft_password | length > 0 %}
   password: '{{ patroni_raft_password }}'
-      {% endif %}
     {% endif %}
-  {% endif %}
-{% else%}
-  {% if dcs_exists|bool and dcs_type == 'etcd' %}
-
-etcd:
-  hosts: {% for etcd_hosts in patroni_etcd_hosts %}{{etcd_hosts.host}}:{{etcd_hosts.port}}{% if not loop.last %},{% endif %}{% endfor %}
-  {% if (patroni_etcd_username is defined and patroni_etcd_username | length > 0) %}
-  
-  username: {{ patroni_etcd_username }}
-  password: {{ patroni_etcd_password }}
-  {% endif %}
-  {% endif %}
 {% endif %}
 
 bootstrap:

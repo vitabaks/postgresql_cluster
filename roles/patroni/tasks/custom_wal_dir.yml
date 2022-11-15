@@ -72,7 +72,7 @@
 
     - name: Check that the patroni is healthy
       uri:
-        url: "http://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ patroni_restapi_port }}/health"
+        url: "https://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ patroni_restapi_port }}/health"
         status_code: 200
       register: replica_result
       until: replica_result.status == 200

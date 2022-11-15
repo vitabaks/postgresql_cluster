@@ -10,15 +10,13 @@ proxy_env: {}
 
 # Patroni
 patroni_cluster_name: "pgsql"  # specify the cluster name
-patroni_restapi_port: "8008" # Patroni REST API port
+patroni_restapi_port: "8008" # Patroni REST API port (Used https protocol in this project!)
 patroni_install_version: "latest"  # or specific version (example 1.5.6)
 patroni_scripts_dir: "/etc/patroni" # for patroni callback scripts
 patroni_superuser_username: "postgres"
 patroni_superuser_password: "P@ssw0rd"  # please change password
 patroni_replication_username: "replicator"
 patroni_replication_password: "P@ssw0rd"  # please change password
-patroni_etcd_username: "patroni-etcd" # or empty for anonymous access
-patroni_etcd_password: "P@ssw0rd"  # please change password
 synchronous_mode: true  # or 'true' for enable synchronous database replication
 synchronous_mode_strict: false  # if 'true' then block all client writes to the master, when a synchronous replica is not available
 synchronous_node_count: 2  # number of synchronous standby databases
@@ -27,7 +25,7 @@ synchronous_node_count: 2  # number of synchronous standby databases
 patroni_with_watchdog: true # true or false
 
 # DNS Connection Point
-cluster_vip: "172.16.32.180"  # empty or one VIP address (or some VIP addresses in different subnets, separated by commas), for client access to PostgreSQL
+cluster_vip: "172.16.32.180"  # empty or one VIP address (or some VIP addresses in different subnets, separated by commas, for example: "172.16.32.180,172.16.10.180" ), for client access to PostgreSQL
 dnscp:
   vcompname: "{{ patroni_cluster_name }}" # Virtual Computer Name - Client Access Point
   vcomppassword: "P@ssw0rd" # Password for Virtual Computer Name Account. Empty for anonimous auth to DNS zone.
@@ -39,8 +37,8 @@ dnscp:
   #sudo astra-winbind -dc demo.ru -d demo.ru -g DEMO -u mamyshev@demo.ru -p StrongP@ssw0rd -y
 
 # DCS (Distributed Consensus Store)
-dcs_exists: false  # or 'true' if you do not want to install and configure the etcd cluster
-dcs_type: "patroni" # or "etcd" or "patroni"
+dcs_exists: false # 'false' or 'true'. Use 'true' if you do not want to install and configure the etcd cluster
+dcs_type: "patroni" # "etcd" or "patroni"
 
 # if dcs_exists: false and dcs_type: "patroni"
 patroni_raft_data_dir: "/etc/patroni" #"/var/lib/raft"
@@ -54,16 +52,14 @@ patroni_raft_controller:
   port: "{{ patroni_raft_port }}"
 
 # if dcs_exists: false and dcs_type: "etcd"
-etcd_ver: "v3.3.27"  # version for deploy etcd cluster
+etcd_ver: "v3.4.22" #"v3.3.27"  # version for deploy etcd cluster
 etcd_data_dir: "/var/lib/etcd"
 etcd_cluster_name: "etcd-{{ patroni_cluster_name }}"  # ETCD_INITIAL_CLUSTER_TOKEN
 
-# if dcs_exists: true and dcs_type: "etcd" - specify ip address your etcd cluster in the "patroni_etcd_hosts" variable
-# example (use existing cluster of 3 nodes)
-patroni_etcd_hosts: []
-#  - { host: "mlk-etcd-n1", port: "2379" }
-#  - { host: "mlk-etcd-n2", port: "2379" }
-#  - { host: "mlk-etcd-n3", port: "2379" }
+# if dcs_exists: true and dcs_type: "etcd"
+patroni_etcd_hosts:
+  port: "2379"
+  protocol: "https"
 
 # more options you can specify in the roles/patroni/templates/patroni.yml.j2
 # https://patroni.readthedocs.io/en/latest/SETTINGS.html#etcd
@@ -255,4 +251,6 @@ postgresql_restore_command: ""
 disable_archive_command: true  # or 'false' to not disable archive_command after restore
 keep_patroni_dynamic_json: true  # or 'false' to remove patroni.dynamic.json after restore (if exists)
 
+# PKI
+pki_cert_artifacts_dir: "./certs"
 ...

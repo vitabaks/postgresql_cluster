@@ -21,7 +21,6 @@
       WantedBy=basic.target
   notify: "restart disable-thp"
   when: disable_thp is defined and disable_thp|bool
-  tags: disable_thp, transparent_huge_pages
 
 - name: Make sure handlers are flushed immediately
   meta: flush_handlers

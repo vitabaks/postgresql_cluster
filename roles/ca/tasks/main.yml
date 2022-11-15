@@ -1,0 +1,45 @@
+---
+# yamllint disable rule:line-length
+
+# Deploy Root CA
+
+- name: "Create cert artifacts directory to house keys and certificates"
+  file:
+    path: "{{ pki_cert_artifacts_dir }}"
+    state: directory
+
+- name: "Generate private key for CA"
+  openssl_privatekey:
+    path: "{{ pki_cert_artifacts_dir }}/ca.key"
+    type: RSA
+    size: 4096
+    state: present
+    force: true
+
+- name: "Generate CSR for CA"
+  openssl_csr:
+    path: "{{ pki_cert_artifacts_dir }}/ca.csr"
+    privatekey_path: "{{ pki_cert_artifacts_dir }}/ca.key"
+    common_name: ca
+    organization_name: "pgsql cluster Root CA"
+    country_name: "Russian Federation"
+    #email_address: "{{ pki_email_address }}"
+    basic_constraints:
+      - CA:TRUE
+      - pathlen:1
+    basic_constraints_critical: true
+    key_usage:
+      - keyCertSign
+      - digitalSignature
+    force: true
+
+- name: "Generate self-signed CA certificate"
+  openssl_certificate:
+    path: "{{ pki_cert_artifacts_dir }}/ca.crt"
+    privatekey_path: "{{ pki_cert_artifacts_dir }}/ca.key"
+    csr_path: "{{ pki_cert_artifacts_dir }}/ca.csr"
+    provider: selfsigned
+    #selfsigned_not_after: "21221231235900Z" # ошибка "DeprecationWarning: the imp module is deprecated in favour of importlib"
+    force: true
+
+...

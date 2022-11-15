@@ -2,7 +2,6 @@
 # yamllint disable rule:line-length
 # yamllint disable rule:comments-indentation
 
-#timezone: ""
 timezone: "Europe/Moscow"
 
 # Generate locale
@@ -14,6 +13,11 @@ locale_gen:
 
 # Set system locale (LANG,LC_ALL)
 locale: "en_US.utf-8"
+
+# Configure swap space (if not already exists)
+swap_file_create: true  # or 'false'
+swap_file_path: /swapfile
+swap_file_size_mb: '2048'  # change this value for your system
 
 # Kernel parameters
 sysctl_set: true  # or 'false'
@@ -66,6 +70,27 @@ soft_nofile: 65536
 hard_nofile: 200000
 
 
+# I/O Scheduler (optional)
+# https://www.cloudbees.com/blog/linux-io-scheduler-tuning
+# https://www.monperrus.net/martin/scheduler+queue+size+and+resilience+to+heavy+IO
+set_scheduler: true  # 'false' or 'true'
+scheduler:
+  - {sched: "mq-deadline", nr_requests: "1024", device: "sda"}
+#  - {sched: "mq-deadline", nr_requests: "1024", device: "sdb"}
+#  - {sched: "noop" , nr_requests: "1024", device: "sdb"}
+#  - {sched: "" , nr_requests: "1024", device: ""}
+
+# Non-multiqueue I/O schedulers:
+# cfq         - for desktop systems and slow SATA drives
+# deadline    - for SAS drives (recommended for databases)
+# noop        - for SSD drives
+# Multiqueue I/O schedulers (blk-mq):
+# mq-deadline - (recommended for databases)
+# none        - (ideal for fast random I/O devices such as NVMe)
+# bfq         - (avoid for databases)
+# kyber
+
+
 # sudo
 sudo_users:
   - name: "postgres"
@@ -87,20 +112,20 @@ firewall_allowed_tcp_ports_for:
     - "{{ postgresql_port }}"
     - "{{ patroni_restapi_port }}"  # Patroni REST API port
     - "{{ patroni_raft_port }}"  # Patroni Raft port
-    - "3389"  # RDP
+#    - "3389"  # RDP
     - "445"  # SMB
     - "10050"  # Zabbix agent
   patroni_raft_controller:
     - "{{ ansible_ssh_port | default(22) }}"
     - "{{ patroni_raft_controller.port }}"  # Patroni Raft port
-    - "3389"  # RDP
+#    - "3389"  # RDP
     - "445"  # SMB
     - "10050"  # Zabbix agent
   etcd_cluster:
     - "{{ ansible_ssh_port | default(22) }}"
     - "2379"  # ETCD port
     - "2380"  # ETCD port
-    - "3389"  # RDP
+#    - "3389"  # RDP
     - "10050"  # Zabbix agent
   balancers:
     - "{{ ansible_ssh_port | default(22) }}"

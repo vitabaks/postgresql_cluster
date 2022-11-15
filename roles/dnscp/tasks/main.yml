@@ -4,7 +4,7 @@
 #- name: DNS Connection Point | Make sure handlers are flushed immediately
 #  meta: flush_handlers
 
-- name: DNS Connection Point | Make sure the packages are present
+- name: "DNS Connection Point | Make sure the packages are present"
   package:
     name:
       - dnsutils
@@ -22,7 +22,7 @@
     mode: 0750
 
 - block:
-    - name: DNS Connection Point | Generate script file and assign permissions
+    - name: "DNS Connection Point | Generate script file and assign permissions"
       template:
         src: "templates/dnscp.sh.j2"
         dest: "{{ patroni_scripts_dir }}/dnscp.sh"
@@ -30,12 +30,12 @@
         group: postgres
         mode: 0771
 
-    - name: DNS Connection Point | Save computer account password to encrypted string
+    - name: "DNS Connection Point | Save computer account password to encrypted string"
       shell: "echo '{{ dnscp.vcomppassword }}' | openssl enc -aes-256-cbc -md sha512 -a -pbkdf2 -iter 100000 -salt -pass pass:{{ dnscp.encryptionkey }} > {{ patroni_scripts_dir }}/dnscp.secret"
       register: result
       failed_when: result.rc != 0
 
-    - name: DNS Connection Point | Change file ownership, group and permissions
+    - name: "DNS Connection Point | Change file ownership, group and permissions"
       # https://docs.ansible.com/ansible/latest/collections/ansible/builtin/file_module.html
       file:
         path: "{{ patroni_scripts_dir }}/dnscp.secret"

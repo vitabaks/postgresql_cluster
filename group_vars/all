@@ -1,5 +1,5 @@
 ---
-# "Check system" variables
+# Check system variables
 
 os_valid_distributions:
 #  - RedHat
