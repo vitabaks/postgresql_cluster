@@ -169,9 +169,13 @@
       when: pg_probackup_install|bool
 
     - role: pgbouncer
-      when: pgbouncer_install|bool
+      when: pgbouncer_install|bool and patroni_cluster_already_deploy != "true"
 
     - role: patroni
+      when: patroni_cluster_already_deploy != "true"
+
+    - role: patroni_after_deploy
+      when: patroni_cluster_already_deploy == "true"
 
     - role: vip-manager
       when: not with_haproxy_load_balancing|bool and
