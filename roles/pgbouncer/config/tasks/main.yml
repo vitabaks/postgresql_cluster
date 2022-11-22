@@ -1,4 +1,23 @@
 ---
+- name: Ensure config directory "{{ pgbouncer_conf_dir }}" exist
+  file:
+    path: "{{ pgbouncer_conf_dir }}"
+    state: directory
+    owner: postgres
+    group: postgres
+    mode: 0750
+  tags: pgbouncer_conf, pgbouncer
+
+- name: Update pgbouncer.ini
+  template:
+    src: ../templates/pgbouncer.ini.j2
+    dest: "{{ pgbouncer_conf_dir }}/pgbouncer.ini"
+    owner: postgres
+    group: postgres
+    mode: 0640
+  notify: "restart pgbouncer"
+  when: existing_pgcluster is not defined or not existing_pgcluster|bool
+  tags: pgbouncer_conf, pgbouncer
 
 - name: Get users and password md5 from pg_shadow
   run_once: true
@@ -11,7 +30,7 @@
   changed_when: false
   delegate_to: "{{ groups.master[0] }}"
   when: pgbouncer_generate_userlist|bool
-  tags: pgbouncer, pgbouncer_generate_userlist
+  tags: pgbouncer_conf, pgbouncer, pgbouncer_generate_userlist
 
 - name: Generate /etc/pgbouncer/userlist.txt
   become: true
@@ -27,6 +46,6 @@
     - pg_shadow_result.stdout is defined
     - pg_shadow_result.stdout | length > 0
     - pgbouncer_generate_userlist|bool
-  tags: pgbouncer, pgbouncer_generate_userlist
+  tags: pgbouncer_conf, pgbouncer, pgbouncer_generate_userlist
 
 ...

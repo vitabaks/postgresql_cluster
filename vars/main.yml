@@ -1,9 +1,4 @@
 ---
-# ---------------------------------------------------------------------
-# Change this variable on 'true' after first deployment of cluster
-# Also switch it to 'false' for run add_pgnode.yml or create custom WAL dir.
-patroni_cluster_already_deploy: 'false'
-# ---------------------------------------------------------------------
 
 # ---------------------------------------------------------------------
 # Proxy variables (optional) for download packages using a proxy server

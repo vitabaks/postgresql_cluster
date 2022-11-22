@@ -579,7 +579,7 @@
   tags: patroni, patroni_start_master
 
 - block:  # PITR (custom bootstrap)
-# Prepare (install pexpect, ruamel.yaml)
+  # Prepare (install pexpect, ruamel.yaml)
     - name: Prepare | Make sure the ansible required python library is exist
       pip:
         name: "{{ item }}"
@@ -594,7 +594,7 @@
         PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
       vars:
         ansible_python_interpreter: /usr/bin/python3
-# Run PITR
+  # Run PITR
     - name: Stop patroni service on the Replica servers (if running)
       systemd:
         name: patroni
@@ -818,19 +818,10 @@
         owner: postgres
         group: postgres
         mode: 0640
-      register: generate_pg_hba
+      notify: "reload postgres"
       when: is_master == "true" or
             ((is_master != "true" and postgresql_conf_dir != postgresql_data_dir)
             or postgresql_exists == "true")
-
-    - name: Prepare PostgreSQL | reload for apply the pg_hba.conf
-      become: true
-      become_user: postgres
-      command: "{{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -c 'SELECT pg_reload_conf()'"
-      register: psql_reload_result
-      changed_when: psql_reload_result.rc == 0
-      failed_when: false  # exec pg_reload_conf on all running postgres (to re-run with --tag pg_hba).
-      when: generate_pg_hba is changed
   when: existing_pgcluster is not defined or not existing_pgcluster|bool
   tags: patroni, pg_hba, pg_hba_generate
 

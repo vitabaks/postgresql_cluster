@@ -1,6 +1,6 @@
 ---
 
-- name: Deploy PostgreSQL HA Cluster (based on "Patroni" and "{{ dcs_type }}")
+- name: Configuration PostgreSQL HA Cluster (based on "Patroni" and "{{ dcs_type }}")
   hosts: localhost
   gather_facts: false
   vars_files:
@@ -17,10 +17,6 @@
   hosts: all
   gather_facts: true
   tags: always
-
-- import_playbook: etcd_cluster.yml
-  when: not dcs_exists|bool and dcs_type == "etcd"
-  tags: etcd
 
 - hosts: postgres_cluster
   become: true
@@ -77,14 +73,14 @@
         firewall_ports_dynamic_var: "{{ firewall_ports_dynamic_var | default([]) + (firewall_allowed_tcp_ports_for[item]) }}"
       loop: "{{ hostvars[inventory_hostname].group_names }}"
       when: firewall_enabled_at_boot|bool
-      tags: firewall
+      tags: config_firewall, firewall
 
     - name: Build a firewall_rules_dynamic_var
       set_fact:
         firewall_rules_dynamic_var: "{{ firewall_rules_dynamic_var | default([]) + (firewall_additional_rules_for[item]) }}"
       loop: "{{ hostvars[inventory_hostname].group_names }}"
       when: firewall_enabled_at_boot|bool
-      tags: firewall
+      tags: config_firewall, firewall
 
   roles:
     - role: ansible-role-firewall
@@ -93,51 +89,34 @@
         firewall_allowed_tcp_ports: "{{ firewall_ports_dynamic_var | unique }}"
         firewall_additional_rules: "{{ firewall_rules_dynamic_var | unique }}"
       when: firewall_enabled_at_boot|bool
-      tags: firewall
+      tags: config_firewall, firewall
 
     - role: hostname
+      tags: config_hostname
     - role: resolv_conf
+      tags: config_resolv_conf
     - role: etc_hosts
-    - role: add-repository
-    - role: packages
+      tags: config_etc_hosts
     - role: sudo
+      tags: config_sudo
     - role: swap
+      tags: config_swap
     - role: sysctl
-    - role: transparent_huge_pages
+      tags: config_sysctl
     - role: pam_limits
-    - role: io-scheduler
+      tags: config_pam_limits
     - role: locales
+      tags: config_loacles
     - role: timezone
+      tags: config_timezone
     - role: ntp
+      tags: config_ntp
     - role: ssh-keys
-    - role: copy
+      tags: config_ssh_keys
 
 - import_playbook: balancers.yml
   when: with_haproxy_load_balancing|bool
-  tags: load_balancing, haproxy
-
-- hosts: pgbackrest:postgres_cluster
-  become: true
-  become_method: sudo
-  gather_facts: true
-  any_errors_fatal: true
-  vars_files:
-    - vars/main.yml
-  pre_tasks:
-    - name: Include OS-specific variables
-      include_vars: "vars/{{ ansible_os_family }}.yml"
-      when: not ansible_os_family == 'Rocky' and not ansible_os_family == 'AlmaLinux'
-      tags: always
-
-    # For compatibility with Ansible old versions
-    # (support for RockyLinux and AlmaLinux has been added to Ansible 2.11)
-    - name: Include OS-specific variables
-      include_vars: "vars/RedHat.yml"
-      when: ansible_os_family == 'Rocky' or ansible_os_family == 'AlmaLinux'
-      tags: always
-  roles:
-    - role: pgbackrest
-      when: pgbackrest_install|bool
+  tags: config_balancers,load_balancing, haproxy
 
 - hosts: postgres_cluster
   become: true
@@ -145,6 +124,7 @@
   gather_facts: true
   any_errors_fatal: true
   handlers:
+    - include: roles/patroni/handlers/main.yml
     - include: roles/pgbouncer/handlers/main.yml
   vars_files:
     - vars/main.yml
@@ -164,40 +144,33 @@
       tags: always
 
   roles:
-    - role: wal-g
-      when: wal_g_install|bool
-
-    - role: pg_probackup
-      when: pg_probackup_install|bool
-
-    - role: pgbouncer
-
-    - role: patroni
+    - role: patroni/config
+      tags: config_patroni
 
     - role: vip-manager
       when: not with_haproxy_load_balancing|bool and
             (cluster_vip is defined and cluster_vip | length > 0)
+      tags: config_vip_manager
 
     # optional
     - role: postgresql-users
       when: is_master == "true" and postgresql_users | length > 0
+      tags: config_postgresql_users
 
     - role: postgresql-databases
       when: is_master == "true" and postgresql_databases | length > 0
+      tags: config_postgresql_databases
 
     - role: postgresql-schemas
       when: is_master == "true" and postgresql_schemas | length > 0
+      tags: config_postgresql_schemas
 
     - role: postgresql-extensions
       when: is_master == "true" and postgresql_extensions | length > 0
+      tags: config_postgresql_extensions
 
     - role: pgbouncer/config
       when: pgbouncer_install|bool and pgbouncer_generate_userlist|bool
-
-    - role: netdata
-      when: netdata_install is defined and netdata_install|bool
-
-    # finish (info)
-    - role: deploy-finish
+      tags: config_pgbouncer
 
 ...
