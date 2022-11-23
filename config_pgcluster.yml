@@ -80,7 +80,7 @@
         firewall_rules_dynamic_var: "{{ firewall_rules_dynamic_var | default([]) + (firewall_additional_rules_for[item]) }}"
       loop: "{{ hostvars[inventory_hostname].group_names }}"
       when: firewall_enabled_at_boot|bool
-      tags: config_firewall, firewall
+      tags: firewall
 
   roles:
     - role: ansible-role-firewall
@@ -89,30 +89,19 @@
         firewall_allowed_tcp_ports: "{{ firewall_ports_dynamic_var | unique }}"
         firewall_additional_rules: "{{ firewall_rules_dynamic_var | unique }}"
       when: firewall_enabled_at_boot|bool
-      tags: config_firewall, firewall
+      tags: firewall
 
     - role: hostname
-      tags: config_hostname
     - role: resolv_conf
-      tags: config_resolv_conf
     - role: etc_hosts
-      tags: config_etc_hosts
     - role: sudo
-      tags: config_sudo
     - role: swap
-      tags: config_swap
     - role: sysctl
-      tags: config_sysctl
     - role: pam_limits
-      tags: config_pam_limits
     - role: locales
-      tags: config_loacles
     - role: timezone
-      tags: config_timezone
     - role: ntp
-      tags: config_ntp
     - role: ssh-keys
-      tags: config_ssh_keys
 
 - import_playbook: balancers.yml
   when: with_haproxy_load_balancing|bool
@@ -145,32 +134,25 @@
 
   roles:
     - role: patroni/config
-      tags: config_patroni
 
     - role: vip-manager
       when: not with_haproxy_load_balancing|bool and
             (cluster_vip is defined and cluster_vip | length > 0)
-      tags: config_vip_manager
 
     # optional
     - role: postgresql-users
       when: is_master == "true" and postgresql_users | length > 0
-      tags: config_postgresql_users
 
     - role: postgresql-databases
       when: is_master == "true" and postgresql_databases | length > 0
-      tags: config_postgresql_databases
 
     - role: postgresql-schemas
       when: is_master == "true" and postgresql_schemas | length > 0
-      tags: config_postgresql_schemas
 
     - role: postgresql-extensions
       when: is_master == "true" and postgresql_extensions | length > 0
-      tags: config_postgresql_extensions
 
     - role: pgbouncer/config
       when: pgbouncer_install|bool and pgbouncer_generate_userlist|bool
-      tags: config_pgbouncer
 
 ...
