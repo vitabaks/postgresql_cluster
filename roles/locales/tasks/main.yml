@@ -3,8 +3,6 @@
 # for OracleLinux 7
 - name: Reinstall glibc-common to avoid problem when generating locales
   command: yum reinstall glibc-common -y
-  args:
-    warn: false
   environment: "{{ proxy_env | default({}) }}"
   when: (ansible_distribution == "OracleLinux" and
          ansible_distribution_major_version == '7')
