@@ -68,7 +68,7 @@
       loop: "{{ postgresql_parameters }}"
       when: item.value == "null"
   when: is_master == "true"
-  tags: patroni
+  tags: patroni, patroni_conf
 
 - name: Delete postgresql parameters from "/etc/patroni/patroni.yml"
   lineinfile:
