@@ -8,7 +8,7 @@
     owner: postgres
     group: postgres
     mode: 0750
-  tags: patroni
+  tags: patroni, patroni_conf
 
 - name: Make sure that patroni log directory exists
   file:
