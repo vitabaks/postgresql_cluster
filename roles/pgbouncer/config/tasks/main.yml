@@ -17,7 +17,7 @@
     mode: 0640
   notify: "restart pgbouncer"
   when: existing_pgcluster is not defined or not existing_pgcluster|bool
-  tags: pgbouncer
+  tags: pgbouncer, pgbouncer_conf
 
 - name: Get users and password md5 from pg_shadow
   run_once: true
