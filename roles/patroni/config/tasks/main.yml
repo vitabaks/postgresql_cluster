@@ -10,16 +10,6 @@
     mode: 0750
   tags: patroni
 
-- name: Update conf file "/etc/patroni/patroni.yml"
-  template:
-    src: ../templates/patroni.yml.j2
-    dest: /etc/patroni/patroni.yml
-    owner: postgres
-    group: postgres
-    mode: 0640
-  notify: "reload patroni"
-  tags: patroni
-
 - name: Make sure that patroni log directory exists
   file:
     path: "{{ patroni_log_dir }}"
@@ -37,6 +27,16 @@
     group: postgres
     state: directory
     mode: 0700
+  tags: patroni
+  
+- name: Update conf file "/etc/patroni/patroni.yml"
+  template:
+    src: ../templates/patroni.yml.j2
+    dest: /etc/patroni/patroni.yml
+    owner: postgres
+    group: postgres
+    mode: 0640
+  notify: "reload patroni"
   tags: patroni
 
 - name: Update pg_hba.conf
