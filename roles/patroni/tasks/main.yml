@@ -818,10 +818,19 @@
         owner: postgres
         group: postgres
         mode: 0640
-      notify: "reload postgres"
+      register: generate_pg_hba
       when: is_master == "true" or
             ((is_master != "true" and postgresql_conf_dir != postgresql_data_dir)
             or postgresql_exists == "true")
+            
+    - name: Prepare PostgreSQL | reload for apply the pg_hba.conf
+      become: true
+      become_user: postgres
+      command: "{{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -c 'SELECT pg_reload_conf()'"
+      register: psql_reload_result
+      changed_when: psql_reload_result.rc == 0
+      failed_when: false  # exec pg_reload_conf on all running postgres (to re-run with --tag pg_hba).
+      when: generate_pg_hba is changed
   when: existing_pgcluster is not defined or not existing_pgcluster|bool
   tags: patroni, pg_hba, pg_hba_generate
 
