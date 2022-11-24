@@ -93,5 +93,7 @@
 - - pgbackrest_conf
 - - pgbackrest_ssh_keys
 - - pgbackrest_cron
+- pg_probackup
+- - pg_probackup_repo
+- - pg_probackup_install
 - netdata
-
