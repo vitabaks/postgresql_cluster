@@ -76,7 +76,7 @@
     regexp: '^.*{{ item.option }}: {{ item.value }}$'
     state: absent
   loop: "{{ postgresql_parameters }}"
-  tags: patroni
   when: item.value == "null"
+  tags: patroni, patroni_conf
 
 ...
