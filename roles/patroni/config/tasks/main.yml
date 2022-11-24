@@ -37,7 +37,7 @@
     group: postgres
     mode: 0640
   notify: "reload patroni"
-  tags: patroni
+  tags: patroni, patroni_conf
 
 - name: Update pg_hba.conf
   template:
