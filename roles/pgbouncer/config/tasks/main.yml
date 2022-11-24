@@ -6,7 +6,7 @@
     owner: postgres
     group: postgres
     mode: 0750
-  tags: pgbouncer
+  tags: pgbouncer, pgbouncer_conf
 
 - name: Update pgbouncer.ini
   template:
