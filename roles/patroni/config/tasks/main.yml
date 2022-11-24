@@ -47,7 +47,7 @@
     group: postgres
     mode: 0640
   notify: "reload postgres"
-  tags: patroni, pg_hba
+  tags: patroni, patroni_conf, pg_hba, pg_hba_generate
 
 - block:
     - name: Update postgresql parameters in DCS
