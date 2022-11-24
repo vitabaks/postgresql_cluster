@@ -28,7 +28,7 @@
     state: directory
     mode: 0700
   tags: patroni
-  
+
 - name: Update conf file "/etc/patroni/patroni.yml"
   template:
     src: ../templates/patroni.yml.j2
@@ -56,7 +56,7 @@
         method: PATCH
         body: '{"postgresql":{"parameters":{"{{ item.option }}":"{{ item.value }}"}}}'
         body_format: json
-      loop: "{{postgresql_parameters}}"
+      loop: "{{ postgresql_parameters }}"
       when: item.value != "null"
 
     - name: Delete postgresql parameters from DCS
@@ -65,7 +65,7 @@
         method: PATCH
         body: '{"postgresql":{"parameters":{"{{ item.option }}":null}}}'
         body_format: json
-      loop: "{{postgresql_parameters}}"
+      loop: "{{ postgresql_parameters }}"
       when: item.value == "null"
   when: is_master == "true"
   tags: patroni
@@ -75,7 +75,7 @@
     path: /etc/patroni/patroni.yml
     regexp: '^.*{{ item.option }}: {{ item.value }}$'
     state: absent
-  loop: "{{postgresql_parameters}}"
+  loop: "{{ postgresql_parameters }}"
   tags: patroni
   when: item.value == "null"
 

@@ -822,7 +822,7 @@
       when: is_master == "true" or
             ((is_master != "true" and postgresql_conf_dir != postgresql_data_dir)
             or postgresql_exists == "true")
-            
+
     - name: Prepare PostgreSQL | reload for apply the pg_hba.conf
       become: true
       become_user: postgres
