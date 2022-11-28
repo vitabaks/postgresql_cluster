@@ -191,6 +191,9 @@
     - role: postgresql-extensions
       when: is_master == "true" and postgresql_extensions | length > 0
 
+    - role: postgresql-initial-db
+      when: is_master == "true" and postgresql_initial_db | length > 0
+
     - role: pgbouncer/userlist
       when: pgbouncer_install|bool and pgbouncer_generate_userlist|bool
 

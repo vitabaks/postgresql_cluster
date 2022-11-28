@@ -1,0 +1,28 @@
+---
+
+- name: Copy initial PostgreSQL scripts
+  become: true
+  become_user: postgres
+  copy:
+    src: "{{ item.file }}"
+    dest: "/tmp/{{ item.file }}"
+  loop: "{{ postgresql_initial_db | flatten(1) }}"
+  when: postgresql_initial_db is defined and postgresql_initial_db | length > 0
+
+- name: Restore or create initial PostgreSQL databases
+  become: true
+  become_user: postgres
+  postgresql_db:
+    name: "{{ item.db | default('postgres') }}"
+    target: "/tmp/{{ item.file }}"
+    login_user: "{{ item.user | default('postgres') }}"
+    login_password: "{{ item.password | default('') }}"
+    owner: "{{ item.owner | default('postgres') }}"
+    port: "{{ postgresql_port }}"
+    state: restore
+  ignore_errors: false
+  loop: "{{ postgresql_initial_db | flatten(1) }}"
+  when: postgresql_initial_db is defined and postgresql_initial_db | length > 0
+  tags: postgresql_initial_db
+
+...

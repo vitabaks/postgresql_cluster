@@ -109,6 +109,12 @@ postgresql_extensions: []
 #  - {ext: "", db: ""}
 #  - {ext: "", db: ""}
 
+# (optional) list of SQL files to import after database has been created
+# Files to import must placed in the "files/" directory.
+# https://docs.ansible.com/ansible/latest/collections/community/postgresql/postgresql_db_module.html
+postgresql_initial_db: {}
+#  - {db: "mydatabase", file: "some_grants.sql"}
+#  - {db: "mydatabase", file: "some_data.sql.gz", owner: "mydb-user", user: "mydb-user", password: "mydb-user-pass"}
 
 # postgresql parameters to bootstrap dcs (are parameters for example)
 postgresql_parameters:

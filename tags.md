@@ -78,6 +78,7 @@
 - postgresql_databases
 - postgresql_schemas
 - postgresql_extensions
+- postgresql_initial_db
 - cluster_info
 - - patroni_status
 - - databases, db_list
