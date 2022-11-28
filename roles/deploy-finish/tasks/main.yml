@@ -1,5 +1,4 @@
 ---
-# yamllint disable rule:line-length
 
 - name: Make sure handlers are flushed immediately
   meta: flush_handlers
@@ -134,8 +133,8 @@
     - name: Create list of nodes
       run_once: true
       set_fact:
-        haproxy_nodes: "{% for host in groups['balancers'] %}{{ hostvars[host]['inventory_hostname'] }}{% if not loop.last %},{% endif %}{% endfor %}"  # noqa 204
-        postgres_cluster_nodes: "{% for host in groups['postgres_cluster'] %}{{ hostvars[host]['inventory_hostname'] }}{% if not loop.last %},{% endif %}{% endfor %}"  # noqa 204
+        haproxy_nodes: "{% for host in groups['balancers'] %}{{ hostvars[host]['inventory_hostname'] }}{% if not loop.last %},{% endif %}{% endfor %}"
+        postgres_cluster_nodes: "{% for host in groups['postgres_cluster'] %}{{ hostvars[host]['inventory_hostname'] }}{% if not loop.last %},{% endif %}{% endfor %}"
 
     - name: PostgreSQL Cluster connection info
       run_once: true

@@ -1,5 +1,4 @@
 ---
-# yamllint disable rule:comments-indentation
 
 - name: Add extensions to the databases
   become: true

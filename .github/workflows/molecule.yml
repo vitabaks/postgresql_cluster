@@ -1,6 +1,4 @@
 ---
-# yamllint disable rule:truthy
-# yamllint disable rule:line-length
 
 name: Molecule
 

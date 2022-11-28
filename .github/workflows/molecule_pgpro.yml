@@ -1,5 +1,4 @@
 ---
-# yamllint disable rule:truthy
 
 name: Molecule PostgresPro
 
@@ -17,7 +16,7 @@ jobs:
           - centos8
           - centos7
           - debian10
-          - debian9
+          - debian11
           - ubuntu1804
           - ubuntu2004
           - ubuntu2204

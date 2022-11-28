@@ -1,5 +1,4 @@
 ---
-# yamllint disable rule:truthy
 
 name: scheduled PostgreSQL (Ubuntu 22.04)
 

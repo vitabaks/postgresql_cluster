@@ -1,6 +1,4 @@
 ---
-# yamllint disable rule:comments-indentation
-# yamllint disable rule:line-length
 
 dependency:
   name: galaxy

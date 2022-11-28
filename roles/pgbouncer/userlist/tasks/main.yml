@@ -1,5 +1,4 @@
 ---
-# yamllint disable rule:line-length
 
 - name: Get users and password md5 from pg_shadow
   run_once: true

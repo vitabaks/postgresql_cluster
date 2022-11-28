@@ -8,7 +8,7 @@
         shell: /bin/bash
         state: present
 
-    - name: Create a 2048-bit SSH key for user "{{ ssh_key_user }}" in ~/.ssh/id_rsa (if not already exist)  # yamllint disable rule:line-length
+    - name: Create a 2048-bit SSH key for user "{{ ssh_key_user }}" in ~/.ssh/id_rsa (if not already exist)
       user:
         name: "{{ ssh_key_user }}"
         generate_ssh_key: true
@@ -36,7 +36,7 @@
       register: ssh_known_host_results
       changed_when: false
 
-    - name: known_hosts | for each host, add/update the public key in the "~{{ ssh_key_user }}/.ssh/known_hosts"  # yamllint disable rule:line-length
+    - name: known_hosts | for each host, add/update the public key in the "~{{ ssh_key_user }}/.ssh/known_hosts"
       become: true
       become_user: "{{ ssh_key_user }}"
       known_hosts:

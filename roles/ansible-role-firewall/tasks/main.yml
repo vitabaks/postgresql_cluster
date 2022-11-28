@@ -1,5 +1,4 @@
 ---
-# yamllint disable rule:line-length
 
 - name: Ensure iptables is present.
   package: name=iptables state=present

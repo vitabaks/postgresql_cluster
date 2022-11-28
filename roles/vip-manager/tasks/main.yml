@@ -1,5 +1,4 @@
 ---
-# yamllint disable rule:line-length
 
 - block:  # install vip-manager package from repo
     - name: Get vip-manager package
@@ -92,8 +91,8 @@
         line: "{{ item.line }}"
         backrefs: true
       loop:
-        - {regexp: '^nodename:', line: 'nodename: "{{ ansible_hostname }}"'}
-        - {regexp: '^iface:', line: 'iface: {{ vip_manager_iface }} # interface to which the virtual ip will be added'}
+        - { regexp: '^nodename:', line: 'nodename: "{{ ansible_hostname }}"' }
+        - { regexp: '^iface:', line: 'iface: {{ vip_manager_iface }} # interface to which the virtual ip will be added' }
       loop_control:
         label: "{{ item.line }}"
       notify: "restart vip-manager"
