@@ -1,5 +1,4 @@
 ---
-
 # ---------------------------------------------------------------------
 # Proxy variables (optional) for download packages using a proxy server
 proxy_env: {}  # yamllint disable rule:braces
