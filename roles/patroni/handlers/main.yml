@@ -1,0 +1,20 @@
+---
+
+- name: Reload patroni service
+  systemd:
+    daemon_reload: true
+    name: patroni
+    enabled: true
+    state: reloaded
+  listen: "reload patroni"
+
+- name: Reload postgres
+  become: true
+  become_user: postgres
+  command: "{{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -c 'SELECT pg_reload_conf()'"
+  register: psql_reload_result
+  changed_when: psql_reload_result.rc == 0
+  failed_when: false  # exec pg_reload_conf on all running postgres (to re-run with --tag pg_hba).
+  listen: "reload postgres"
+
+...

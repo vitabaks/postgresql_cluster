@@ -19,5 +19,6 @@ skip_list:
   - command-instead-of-shell  # Using command rather than shell where necessary
   - command-instead-of-module  # Using command rather than module where necessary
   - fqcn[action]
+  - no-relative-paths
 
 # https://ansible-lint.readthedocs.io/rules/

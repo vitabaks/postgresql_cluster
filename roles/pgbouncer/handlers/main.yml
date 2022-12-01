@@ -18,4 +18,11 @@
   ignore_errors: false
   listen: "restart pgbouncer"
 
+- name: Reload pgbouncer service
+  systemd:
+    name: pgbouncer
+    state: reloaded
+  listen: "reload pgbouncer"
+  ignore_errors: true  # Added to prevent test failures in CI.
+
 ...

@@ -1,6 +1,6 @@
 ---
 
-- name: Deploy PostgreSQL HA Cluster (based on "Patroni" and "{{ dcs_type }}")
+- name: Configuration PostgreSQL HA Cluster (based on "Patroni" and "{{ dcs_type }}")
   hosts: localhost
   gather_facts: false
   vars_files:
@@ -17,10 +17,6 @@
   hosts: all
   gather_facts: true
   tags: always
-
-- import_playbook: etcd_cluster.yml
-  when: not dcs_exists|bool and dcs_type == "etcd"
-  tags: etcd
 
 - hosts: postgres_cluster
   become: true
@@ -77,7 +73,7 @@
         firewall_ports_dynamic_var: "{{ firewall_ports_dynamic_var | default([]) + (firewall_allowed_tcp_ports_for[item]) }}"
       loop: "{{ hostvars[inventory_hostname].group_names }}"
       when: firewall_enabled_at_boot|bool
-      tags: firewall
+      tags: config_firewall, firewall
 
     - name: Build a firewall_rules_dynamic_var
       set_fact:
@@ -103,41 +99,15 @@
     - role: sudo
     - role: swap
     - role: sysctl
-    - role: transparent_huge_pages
     - role: pam_limits
-    - role: io-scheduler
     - role: locales
     - role: timezone
     - role: ntp
     - role: ssh-keys
-    - role: copy
 
 - import_playbook: balancers.yml
   when: with_haproxy_load_balancing|bool
-  tags: load_balancing, haproxy
-
-- hosts: pgbackrest:postgres_cluster
-  become: true
-  become_method: sudo
-  gather_facts: true
-  any_errors_fatal: true
-  vars_files:
-    - vars/main.yml
-  pre_tasks:
-    - name: Include OS-specific variables
-      include_vars: "vars/{{ ansible_os_family }}.yml"
-      when: not ansible_os_family == 'Rocky' and not ansible_os_family == 'AlmaLinux'
-      tags: always
-
-    # For compatibility with Ansible old versions
-    # (support for RockyLinux and AlmaLinux has been added to Ansible 2.11)
-    - name: Include OS-specific variables
-      include_vars: "vars/RedHat.yml"
-      when: ansible_os_family == 'Rocky' or ansible_os_family == 'AlmaLinux'
-      tags: always
-  roles:
-    - role: pgbackrest
-      when: pgbackrest_install|bool
+  tags: config_balancers,load_balancing, haproxy
 
 - hosts: postgres_cluster
   become: true
@@ -145,6 +115,7 @@
   gather_facts: true
   any_errors_fatal: true
   handlers:
+    - include: roles/patroni/handlers/main.yml
     - include: roles/pgbouncer/handlers/main.yml
   vars_files:
     - vars/main.yml
@@ -164,15 +135,7 @@
       tags: always
 
   roles:
-    - role: wal-g
-      when: wal_g_install|bool
-
-    - role: pg_probackup
-      when: pg_probackup_install|bool
-
-    - role: pgbouncer
-
-    - role: patroni
+    - role: patroni/config
 
     - role: vip-manager
       when: not with_haproxy_load_balancing|bool and
@@ -193,11 +156,5 @@
 
     - role: pgbouncer/config
       when: pgbouncer_install|bool and pgbouncer_generate_userlist|bool
-
-    - role: netdata
-      when: netdata_install is defined and netdata_install|bool
-
-    # finish (info)
-    - role: deploy-finish
 
 ...

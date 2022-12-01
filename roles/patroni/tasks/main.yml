@@ -579,7 +579,7 @@
   tags: patroni, patroni_start_master
 
 - block:  # PITR (custom bootstrap)
-# Prepare (install pexpect, ruamel.yaml)
+  # Prepare (install pexpect, ruamel.yaml)
     - name: Prepare | Make sure the ansible required python library is exist
       pip:
         name: "{{ item }}"
@@ -594,7 +594,7 @@
         PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
       vars:
         ansible_python_interpreter: /usr/bin/python3
-# Run PITR
+  # Run PITR
     - name: Stop patroni service on the Replica servers (if running)
       systemd:
         name: patroni

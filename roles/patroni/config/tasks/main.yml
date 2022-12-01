@@ -1,0 +1,82 @@
+---
+
+# Patroni configure
+- name: Make sure that conf directory exists
+  file:
+    path: /etc/patroni
+    state: directory
+    owner: postgres
+    group: postgres
+    mode: 0750
+  tags: patroni, patroni_conf
+
+- name: Make sure that patroni log directory exists
+  file:
+    path: "{{ patroni_log_dir }}"
+    owner: postgres
+    group: postgres
+    state: directory
+    mode: 0750
+  when: patroni_log_destination == 'logfile'
+  tags: patroni
+
+- name: Make sure the postgresql log directory "{{ postgresql_log_dir }}" exists
+  file:
+    path: "{{ postgresql_log_dir }}"
+    owner: postgres
+    group: postgres
+    state: directory
+    mode: 0700
+  tags: patroni
+
+- name: Update conf file "/etc/patroni/patroni.yml"
+  template:
+    src: ../templates/patroni.yml.j2
+    dest: /etc/patroni/patroni.yml
+    owner: postgres
+    group: postgres
+    mode: 0640
+  notify: "reload patroni"
+  tags: patroni, patroni_conf
+
+- name: Update pg_hba.conf
+  template:
+    src: ../templates/pg_hba.conf.j2
+    dest: "{{ postgresql_conf_dir }}/pg_hba.conf"
+    owner: postgres
+    group: postgres
+    mode: 0640
+  notify: "reload postgres"
+  tags: patroni, patroni_conf, pg_hba, pg_hba_generate
+
+- block:
+    - name: Update postgresql parameters in DCS
+      uri:
+        url: http://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:8008/config
+        method: PATCH
+        body: '{"postgresql":{"parameters":{"{{ item.option }}":"{{ item.value }}"}}}'
+        body_format: json
+      loop: "{{ postgresql_parameters }}"
+      when: item.value != "null"
+
+    - name: Delete postgresql parameters from DCS
+      uri:
+        url: http://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:8008/config
+        method: PATCH
+        body: '{"postgresql":{"parameters":{"{{ item.option }}":null}}}'
+        body_format: json
+      loop: "{{ postgresql_parameters }}"
+      when: item.value == "null"
+  when: is_master == "true"
+  tags: patroni, patroni_conf
+
+- name: Delete postgresql parameters from "/etc/patroni/patroni.yml"
+  lineinfile:
+    path: /etc/patroni/patroni.yml
+    regexp: '^.*{{ item.option }}: {{ item.value }}$'
+    state: absent
+  loop: "{{ postgresql_parameters }}"
+  when: item.value == "null"
+  tags: patroni, patroni_conf
+
+...
