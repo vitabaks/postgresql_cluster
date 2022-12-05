@@ -171,6 +171,7 @@
       when: pg_probackup_install|bool
 
     - role: pgbouncer
+      when: pgbouncer_install|bool
 
     - role: patroni
 
