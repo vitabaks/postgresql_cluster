@@ -81,7 +81,7 @@
 - name: Install pgbackrest
   package:
     name: pgbackrest
-    state: latest
+    state: present
   environment: "{{ proxy_env | default({}) }}"
   tags: pgbackrest, pgbackrest_install
 
