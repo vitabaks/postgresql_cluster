@@ -42,6 +42,10 @@ os_specific_packages:
     - python3-libselinux
     - python3-libsemanage
     - python3-policycoreutils
+  RedHat-9:
+    - python3-libselinux
+    - python3-libsemanage
+    - python3-policycoreutils
 system_packages:
   - "{{ os_specific_packages[ansible_os_family ~ '-' ~ ansible_distribution_major_version] }}"
   - python3
