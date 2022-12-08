@@ -1,5 +1,5 @@
 urllib3>=1.25.9
-boto
+boto3
 PyYAML
 requests>=2.25.1
 six>=1.7
@@ -8,6 +8,7 @@ python-consul>=0.7.1
 click>=4.1
 prettytable>=0.7
 python-dateutil
+pysyncobj>=0.3.8
 psutil>=2.0.0
 ydiff>=1.2.0
 pexpect>=4.8.0
