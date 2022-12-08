@@ -109,9 +109,10 @@ RedHat and Debian based distros (x86_64)
 - **Debian**: 10, 11
 - **Ubuntu**: 18.04, 20.04, 22.04
 - **CentOS**: 7, 8
-- **Oracle Linux**: 7, 8
-- **Rocky Linux**: 8
-- **AlmaLinux**: 8
+- **CentOS Stream**: 8, 9
+- **Oracle Linux**: 7, 8, 9
+- **Rocky Linux**: 8, 9
+- **AlmaLinux**: 8, 9
 
 ###### PostgreSQL versions: 
 all supported PostgreSQL versions
@@ -121,18 +122,24 @@ all supported PostgreSQL versions
 _Table of results of daily automated testing of cluster deployment:_
 | Distribution | Test result |
 |--------------|:----------:|
-| Debian 10    | [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/vitabaks/postgresql_cluster/scheduled%20PostgreSQL%20(Debian%2010))](https://github.com/vitabaks/postgresql_cluster/actions?query=workflow%3A%22scheduled+PostgreSQL+%28Debian+10%29%22) |
-| Debian 11    | [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/vitabaks/postgresql_cluster/scheduled%20PostgreSQL%20(Debian%2011))](https://github.com/vitabaks/postgresql_cluster/actions?query=workflow%3A%22scheduled+PostgreSQL+%28Debian+11%29%22) |
-| Ubuntu 18.04 | [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/vitabaks/postgresql_cluster/scheduled%20PostgreSQL%20(Ubuntu%2018.04))](https://github.com/vitabaks/postgresql_cluster/actions?query=workflow%3A%22scheduled+PostgreSQL+%28Ubuntu+18.04%29%22) |
-| Ubuntu 20.04 | [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/vitabaks/postgresql_cluster/scheduled%20PostgreSQL%20(Ubuntu%2020.04))](https://github.com/vitabaks/postgresql_cluster/actions?query=workflow%3A%22scheduled+PostgreSQL+%28Ubuntu+20.04%29%22) |
-| Ubuntu 22.04 | [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/vitabaks/postgresql_cluster/scheduled%20PostgreSQL%20(Ubuntu%2022.04))](https://github.com/vitabaks/postgresql_cluster/actions?query=workflow%3A%22scheduled+PostgreSQL+%28Ubuntu+22.04%29%22) |
-| CentOS 8     | [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/vitabaks/postgresql_cluster/scheduled%20PostgreSQL%20(CentOS%208))](https://github.com/vitabaks/postgresql_cluster/actions?query=workflow%3A%22scheduled+PostgreSQL+%28CentOS+8%29%22) |
+| Debian 10    | [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/vitabaks/postgresql_cluster/scheduled%20PostgreSQL%20(Debian%2010))](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_debian10.yml) |
+| Debian 11    | [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/vitabaks/postgresql_cluster/scheduled%20PostgreSQL%20(Debian%2011))](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_debian11.yml) |
+| Ubuntu 18.04 | [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/vitabaks/postgresql_cluster/scheduled%20PostgreSQL%20(Ubuntu%2018.04))](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_ubuntu1804.yml) |
+| Ubuntu 20.04 | [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/vitabaks/postgresql_cluster/scheduled%20PostgreSQL%20(Ubuntu%2020.04))](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_ubuntu2004.yml) |
+| Ubuntu 22.04 | [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/vitabaks/postgresql_cluster/scheduled%20PostgreSQL%20(Ubuntu%2022.04))](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_ubuntu2204.yml) |
+| CentOS 8     | [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/vitabaks/postgresql_cluster/scheduled%20PostgreSQL%20(CentOS%208))](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_centos8.yml) |
+| CentOS Stream 8 | [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/vitabaks/postgresql_cluster/scheduled%20PostgreSQL%20(CentOS%20Stream%208))](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_centosstream8.yml) |
+| CentOS Stream 9 | [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/vitabaks/postgresql_cluster/scheduled%20PostgreSQL%20(CentOS%20Stream%209))](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_centosstream9.yml) |
 | Oracle Linux 8 | [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/vitabaks/postgresql_cluster/scheduled%20PostgreSQL%20(OracleLinux%208))](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_oracle_linux8.yml) |
+| Oracle Linux 9 | [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/vitabaks/postgresql_cluster/scheduled%20PostgreSQL%20(OracleLinux%209))](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_oracle_linux9.yml) |
 | Rocky Linux 8 | [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/vitabaks/postgresql_cluster/scheduled%20PostgreSQL%20(RockyLinux%208))](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_rockylinux8.yml) |
+| Rocky Linux 9 | [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/vitabaks/postgresql_cluster/scheduled%20PostgreSQL%20(RockyLinux%209))](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_rockylinux9.yml) |
 | AlmaLinux 8 | [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/vitabaks/postgresql_cluster/scheduled%20PostgreSQL%20(AlmaLinux%208))](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_almalinux8.yml) |
+| AlmaLinux 9 | [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/vitabaks/postgresql_cluster/scheduled%20PostgreSQL%20(AlmaLinux%209))](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_almalinux9.yml) |
+
 
 ###### Ansible version 
-This has been tested on Ansible 2.7, 2.8, 2.9, 2.10, 2.11
+Minimum supported Ansible version: 2.7
 
 ## Requirements
 This playbook requires root privileges or sudo.
