@@ -259,6 +259,7 @@ Patroni может не зависеть от сторонних систем DC
 - на всех узлах СУБД остановить сервис Patroni и удалить каталог с базами данных (кластер баз данных, PGDATA):
     ```shell
     sudo systemctl stop patroni
+    sudo rm -rf /etc/patroni/
     sudo rm -rf /var/lib/postgresql/ # be careful with this if there are other PG clusters
     ```
 - затем, если используется etcd, удалите запись в etcd (можно запустить на любом узле etcd):
