@@ -174,7 +174,7 @@ postgresql_parameters:
   - { option: "log_rotation_age", value: "1d" }
   - { option: "log_rotation_size", value: "0" }
   - { option: "log_line_prefix", value: "'%t [%p-%l] %r %q%u@%d '" }
-  - { option: "log_filename", value: "'postgresql-%a.log'" }
+  - { option: "log_filename", value: "postgresql-%a.log" }
   - { option: "log_directory", value: "{{ postgresql_log_dir }}" }
   - { option: "hot_standby_feedback", value: "on" }  # allows feedback from a hot standby to the primary that will avoid query conflicts
   - { option: "max_standby_streaming_delay", value: "30s" }
