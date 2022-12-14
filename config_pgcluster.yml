@@ -16,9 +16,9 @@
 - name: Set maintenance variable
   hosts: all
   tasks:
-    - name: set variable
+    - name: Set variable
       set_fact:
-        postgresql_cluster_maintenance: false
+        postgresql_cluster_maintenance: true
   tags: always
 
 - name: Gathering facts from all servers
