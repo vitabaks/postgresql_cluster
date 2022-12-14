@@ -354,7 +354,7 @@
     owner: haproxy
     group: haproxy
   notify: "restart haproxy"
-  when: add_balancer is not defined or not add_balancer|bool
+  when: (add_balancer is not defined or not add_balancer|bool) and (postgresql_cluster_maintenance is not defined or not postgresql_cluster_maintenance|bool)
   tags: haproxy, haproxy_conf, load_balancing
 
 - name: Generate systemd service file "/etc/systemd/system/haproxy.service"

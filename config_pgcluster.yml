@@ -106,6 +106,8 @@
     - role: ssh-keys
 
 - import_playbook: balancers.yml
+  vars:
+    postgresql_cluster_maintenance: true
   when: with_haproxy_load_balancing|bool
   tags: config_balancers,load_balancing, haproxy
 
