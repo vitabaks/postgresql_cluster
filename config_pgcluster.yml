@@ -13,6 +13,14 @@
         msg: "Ansible version must be {{ minimal_ansible_version }} or higher"
       when: ansible_version.full is version(minimal_ansible_version, '<')
 
+- name: Set maintenance variable
+  hosts: all
+  tasks:
+    - name: set variable
+      set_fact:
+        postgresql_cluster_maintenance: false
+  tags: always
+
 - name: Gathering facts from all servers
   hosts: all
   gather_facts: true
@@ -106,8 +114,6 @@
     - role: ssh-keys
 
 - import_playbook: balancers.yml
-  vars:
-    postgresql_cluster_maintenance: true
   when: with_haproxy_load_balancing|bool
   tags: config_balancers,load_balancing, haproxy
 
