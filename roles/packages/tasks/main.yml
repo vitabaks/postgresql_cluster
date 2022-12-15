@@ -105,7 +105,7 @@
   loop: "{{ postgresql_packages }}"
   environment: "{{ proxy_env | default({}) }}"
   when: ansible_os_family == "RedHat" and installation_method == "repo"
-  tags: install_postgres
+  tags: install_packages, install_postgres
 
 # Debian
 - name: Install PostgreSQL packages
@@ -115,6 +115,6 @@
   loop: "{{ postgresql_packages }}"
   environment: "{{ proxy_env | default({}) }}"
   when: ansible_os_family == "Debian" and installation_method == "repo"
-  tags: install_postgres
+  tags: install_packages, install_postgres
 
 ...
