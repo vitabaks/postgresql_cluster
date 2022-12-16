@@ -43,64 +43,68 @@
           - libsodium-dev
           - make
           - cmake
-          - curl
+          - git
         state: present
 
-    - name: Download Go
-      get_url:
-        url: "https://go.dev/dl/go1.19.3.linux-amd64.tar.gz"
-        dest: /tmp/
-        timeout: 60
-        validate_certs: false
+    - name: Check the Go version
+      shell: |
+        set -o pipefail;
+        go version | awk {'print $3'} | cut -b 3-6
+      args:
+        executable: /bin/bash
+      changed_when: false
+      failed_when: false
+      register: go_version
+      environment:
+        PATH: "{{ ansible_env.PATH }}:/usr/local/go/bin"
 
-    - name: Extract Go into /tmp
-      unarchive:
-        src: "/tmp/go1.19.3.linux-amd64.tar.gz"
-        dest: /tmp/
-        extra_opts:
-          - --no-same-owner
-        remote_src: true
+    - block:  # Install Go
+        - name: Download Go v1.19.4
+          get_url:
+            url: "https://go.dev/dl/go1.19.4.linux-amd64.tar.gz"
+            dest: /tmp/
+            timeout: 60
+            validate_certs: false
 
-    - name: Install Go
-      copy:
-        src: "/tmp/go1.19.3.linux-amd64"
-        dest: /usr/local/go
-        mode: u+x,g+x,o+x
-        remote_src: true
+        - name: Install Go
+          unarchive:
+            src: "/tmp/go1.19.4.linux-amd64.tar.gz"
+            dest: /usr/local/
+            extra_opts:
+              - --no-same-owner
+            remote_src: true
+      when:
+        - go_version.stdout is defined
+        - go_version.stdout is version('1.19.4', '<')
 
     - name: "Download WAL-G v{{ wal_g_version }} source code"
-      get_url:
-        url: "https://github.com/wal-g/wal-g/archive/refs/tags/v{{ wal_g_version }}.tar.gz"
-        dest: /tmp/
-        timeout: 60
-        validate_certs: false
-
-    - name: Extract WAL-G into /tmp
-      unarchive:
-        src: "/tmp/wal-g-{{ wal_g_version }}.tar.gz"
-        dest: /tmp/
-        extra_opts:
-          - --no-same-owner
-        remote_src: true
+      git:
+        repo: https://github.com/wal-g/wal-g.git
+        version: v{{ wal_g_version }}
+        dest: /tmp/wal-g
 
     - name: Build WAL-G
       become: true
       become_user: root
       make:
-        chdir: "/tmp/wal-g-{{ wal_g_version }}"
+        chdir: /tmp/wal-g/
         target: deps
         params:
           USE_LIBSODIUM: 1
           USE_LZO: 1
+      environment:
+        PATH: "{{ ansible_env.PATH }}:/usr/local/go/bin"
 
     - name: Install WAL-G
       become: true
       become_user: root
       make:
-        chdir: "/tmp/wal-g-{{ wal_g_version }}"
+        chdir: /tmp/wal-g/
         target: pg_install
         params:
           GOBIN: /usr/local/bin
+      environment:
+        PATH: "{{ ansible_env.PATH }}:/usr/local/go/bin"
   environment: "{{ proxy_env | default({}) }}"
   when:
     - installation_method == "repo"
