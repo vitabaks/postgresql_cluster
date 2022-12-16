@@ -7,17 +7,19 @@
 [![GitHub license](https://img.shields.io/github/license/vitabaks/postgresql_cluster)](https://github.com/vitabaks/postgresql_cluster/blob/master/LICENSE) 
 ![GitHub stars](https://img.shields.io/github/stars/vitabaks/postgresql_cluster)
 
----
-
 ### Deploy a Production Ready PostgreSQL High-Availability Cluster (based on "Patroni" and "DCS(etcd)"). Automating with Ansible.
 
-This Ansible playbook is designed for deploying a PostgreSQL high availability cluster on dedicated physical servers for a production environment.
-Сluster can be deployed in virtual machines for test environments and small projects.
+This Ansible playbook is designed for deploying a PostgreSQL high availability cluster on dedicated physical servers for a production environment. The cluster can also be deployed on virtual machines and in the Cloud.
 
 In addition to deploying new clusters, this playbook also support the deployment of cluster over already existing and running PostgreSQL. You can convert your basic PostgreSQL installation to a high availability cluster. Just specify the variable `postgresql_exists='true'` in the inventory file.
 **Attention!** Your PostgreSQL will be stopped before running in cluster mode (please plan for a short downtime of databases).
 
 > :heavy_exclamation_mark: Please test it in your test enviroment before using in a production.
+
+---
+
+:trophy: _Please consider [sponsoring](https://github.com/vitabaks/postgresql_cluster#sponsor-this-project) this project. It is necessary that this open source project become even better, so that more functionality and automation are added. Also, some membership levels include live chat with me and personalized support._
+
 
 ## Index
 - [Cluster types](#cluster-types)
@@ -47,6 +49,7 @@ In addition to deploying new clusters, this playbook also support the deployment
 - [How to start from scratch](#how-to-start-from-scratch)
 - [License](#license)
 - [Author](#author)
+- [Sponsor this project](#sponsor-this-project)
 - [Feedback, bug-reports, requests, ...](#feedback-bug-reports-requests-)
 
 ## Cluster types
@@ -472,14 +475,17 @@ Licensed under the MIT License. See the [LICENSE](./LICENSE) file for details.
 Vitaliy Kukharik (PostgreSQL DBA) \
 vitabaks@gmail.com
 
-### Sponsor this project
+## Sponsor this project
+
+Support our work through [Patreon](https://www.patreon.com/vitabaks):
+
 [![Support me on Patreon](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fshieldsio-patreon.vercel.app%2Fapi%3Fusername%3Dvitabaks%26type%3Dpatrons&style=for-the-badge)](https://patreon.com/vitabaks)
 
-**Support our work through crypto wallets:**
+Support our work through crypto wallet:
 
-BTC: bc1qzz7pdx5ds5f28r9gp50xfsv0p7tk3m0wk9qn5t \
-ETH: 0x25eC4e2caf6CF810c690d2e2F779702a86D4f0d7 \
-USDT (TRC20) TSTSXZzqDCUDHDjZwCpuBkdukjuDZspwjj
+USDT (TRC20): `TSTSXZzqDCUDHDjZwCpuBkdukjuDZspwjj`
+
+---
 
 ## Feedback, bug-reports, requests, ...
 Are [welcome](https://github.com/vitabaks/postgresql_cluster/issues)!
