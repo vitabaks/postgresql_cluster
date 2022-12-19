@@ -13,15 +13,16 @@ galaxy_info:
       versions:
         - 7
         - 8
+        - 9
     - name: Debian
       versions:
-        - stretch
         - buster
         - bullseye
     - name: Ubuntu
       versions:
         - bionic
         - focal
+        - jammy
 
   galaxy_tags:
     - postgresql
