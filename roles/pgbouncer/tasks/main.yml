@@ -96,7 +96,7 @@
 - name: Failed when total_pool_size > max_connections
   fail:
     msg: "total_pool_size: {{ total_pool_size  }} > max_connections: {{ max_connections }}. Need change settings"
-  when: total_pool_size > max_connections
+  when: pgbouncer_pools is defined and pgbouncer_pools | length > 0 and total_pool_size > max_connections
   tags: pgbouncer_conf, pgbouncer
 
 - name: Configure pgbouncer.ini
