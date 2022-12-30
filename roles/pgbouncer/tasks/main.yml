@@ -80,6 +80,25 @@
     dest: /etc/logrotate.d/pgbouncer
   tags: pgbouncer_logrotate, pgbouncer
 
+- name: Calculate pgbouncer total pool size
+  set_fact:
+    total_pool_size: "{{ total_pool_size|default(0)|int + item.pool_parameters | regex_replace ('[^0-9]') | int }}"
+  loop: "{{ pgbouncer_pools }}"
+  tags: pgbouncer_conf, pgbouncer
+
+- name: Get postgresql max_connections parameter
+  set_fact:
+    max_connections: "{{ item.value }}"
+  when: item.option == "max_connections"
+  loop: "{{ postgresql_parameters }}"
+  tags: pgbouncer_conf, pgbouncer
+
+- name: Failed when total_pool_size > max_connections
+  fail:
+    msg: "total_pool_size: {{ total_pool_size  }} > max_connections: {{ max_connections }}. Need change settings"
+  when: total_pool_size > max_connections
+  tags: pgbouncer_conf, pgbouncer
+
 - name: Configure pgbouncer.ini
   template:
     src: templates/pgbouncer.ini.j2
