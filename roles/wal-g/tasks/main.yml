@@ -67,8 +67,23 @@
           - cmake
           - git
         state: present
+      when: ansible_os_family == "Debian"
 
-    - name: Check the Go version
+    - name: Install lib dependencies to build WAL-G
+      package:
+        name:
+          - brotli-devel
+          - lzo-devel
+          - libsodium-devel
+          - make
+          - cmake
+          - gcc
+          - gcc-c++
+          - git
+        state: present
+      when: ansible_os_family == "RedHat"
+
+    - name: Check the installed Go version
       shell: |
         set -o pipefail;
         go version | awk {'print $3'} | tr -d 'go'
@@ -76,27 +91,37 @@
         executable: /bin/bash
       changed_when: false
       failed_when: false
-      register: go_version
+      register: go_installed_version
       environment:
         PATH: "{{ ansible_env.PATH }}:/usr/local/go/bin"
 
-    - block:  # Install Go
-        - name: Download Go v1.19.4
+    - name: Check the latest available Go version
+      shell: |
+        set -o pipefail;
+        curl -s https://go.dev/VERSION?m=text | tr -d 'go'
+      args:
+        executable: /bin/bash
+      changed_when: false
+      failed_when: false
+      register: wal_g_latest_version
+
+    - block:  # Install latest Go compiler
+        - name: "Download Go v{{ wal_g_latest_version.stdout }}"
           get_url:
-            url: "https://go.dev/dl/go1.19.4.linux-amd64.tar.gz"
+            url: "https://go.dev/dl/go{{ wal_g_latest_version.stdout }}.linux-amd64.tar.gz"
             dest: /tmp/
             timeout: 60
             validate_certs: false
 
         - name: Install Go
           unarchive:
-            src: "/tmp/go1.19.4.linux-amd64.tar.gz"
+            src: "/tmp/go{{ wal_g_latest_version.stdout }}.linux-amd64.tar.gz"
             dest: /usr/local/
             extra_opts:
               - --no-same-owner
             remote_src: true
-      when: go_version.stderr is search("command not found") or
-            go_version.stdout is version('1.19.4', '<')
+      when: go_installed_version.stderr is search("command not found") or
+            go_installed_version.stdout is version(wal_g_latest_version.stdout, '<')
 
     - name: "Download WAL-G v{{ wal_g_version }} source code"
       git:
@@ -104,25 +129,29 @@
         version: v{{ wal_g_version }}
         dest: /tmp/wal-g
 
-    - name: Build WAL-G
+    - name: Build WAL-G deps
       become: true
       become_user: root
       make:
         chdir: /tmp/wal-g/
         target: deps
         params:
+          USE_BROTLI: 1
           USE_LIBSODIUM: 1
           USE_LZO: 1
       environment:
         PATH: "{{ ansible_env.PATH }}:/usr/local/go/bin"
 
-    - name: Install WAL-G
+    - name: Build and install WAL-G
       become: true
       become_user: root
       make:
         chdir: /tmp/wal-g/
         target: pg_install
         params:
+          USE_BROTLI: 1
+          USE_LIBSODIUM: 1
+          USE_LZO: 1
           GOBIN: /usr/local/bin
       environment:
         PATH: "{{ ansible_env.PATH }}:/usr/local/go/bin"
