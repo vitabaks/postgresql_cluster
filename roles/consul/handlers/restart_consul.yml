@@ -1,7 +1,7 @@
 ---
 - name: Daemon reload systemd in case the binaries upgraded
   systemd:
-    daemon_reload: yes
+    daemon_reload: true
   become: true
   when: ansible_service_mgr == "systemd"
   listen: 'reload systemd daemon'

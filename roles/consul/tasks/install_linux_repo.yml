@@ -38,7 +38,7 @@
       user:
         name: consul
         state: absent
-        remove: yes
+        remove: true
 
   when: "'consul' not in ansible_facts.packages"
   become: true

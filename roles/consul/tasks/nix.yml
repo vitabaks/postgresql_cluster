@@ -231,7 +231,7 @@
 - name: Enable consul at startup (systemd)
   systemd:
     name: consul
-    enabled: yes
+    enabled: true
   when:
     - ansible_service_mgr == "systemd"
     - not ansible_os_family == "FreeBSD"
