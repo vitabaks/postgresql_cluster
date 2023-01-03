@@ -51,6 +51,25 @@
       when: firewall_enabled_at_boot|bool
       tags: firewall
 
+    - name: Check if the consul role requirements (ansible.utils) are installed
+      shell: |
+        set -o pipefail;
+        ansible-galaxy collection list | grep -c ansible.utils
+      args:
+        executable: /bin/bash
+      changed_when: false
+      register: ansible_utils_result
+      run_once: true
+      delegate_to: 127.0.0.1
+
+    - name: Install consul role requirements (ansible.utils)
+      command: ansible-galaxy install -r roles/consul/requirements.yml
+      run_once: true
+      delegate_to: 127.0.0.1
+      when:
+        - ansible_utils_result.stdout is defined
+        - ansible_utils_result.stdout == 0
+
   roles:
     - role: ansible-role-firewall
       vars:
