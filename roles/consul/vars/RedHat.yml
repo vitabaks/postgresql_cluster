@@ -1,0 +1,25 @@
+---
+# File: RedHat.yml - Red Hat OS variables for Consul
+
+consul_os_packages:
+  - "{% if ( ansible_distribution  == 'Fedora' and ansible_distribution_version is version('28', '<') ) or \
+      ( ansible_distribution  == 'CentOS' and ansible_distribution_version is version('8', '<') ) or \
+      ( ansible_distribution  == 'Amazon' and ansible_distribution_version is version('3', '<') ) or \
+      ( ansible_distribution  == 'OracleLinux' and ansible_distribution_version is version('8', '<') ) \
+    %}\
+      libselinux-python\
+    {% else %}\
+      python3-libselinux\
+    {% endif %}"
+  - unzip
+
+consul_repo_prerequisites:
+  - yum-utils
+
+consul_repo_url: "{% if ( ansible_distribution  == 'Fedora') %}\
+      https://rpm.releases.hashicorp.com/fedora/hashicorp.repo\
+    {% else %}\
+      https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo\
+    {% endif %}"
+
+dnsmasq_package: dnsmasq

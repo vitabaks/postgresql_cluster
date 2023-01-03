@@ -22,6 +22,10 @@
   when: not dcs_exists|bool and dcs_type == "etcd"
   tags: etcd
 
+- import_playbook: consul.yml
+  when: not dcs_exists|bool and dcs_type == "consul"
+  tags: consul
+
 - hosts: postgres_cluster
   become: true
   become_method: sudo

@@ -1,0 +1,6 @@
+---
+# File: Rocky-8.yml - Rocky Linux version 8.x variables for Consul
+
+consul_os_packages:
+  - python3-libselinux
+  - unzip

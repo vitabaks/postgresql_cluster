@@ -1,0 +1,10 @@
+# WARNING!!! Ansible managed.
+
+[Unit]
+ConditionFileNotEmpty=
+ConditionFileNotEmpty={{ consul_config_path }}/config.json
+
+[Service]
+ExecStart=
+ExecStart=/usr/bin/consul agent -config-file={{ consul_config_path }}/config.json -config-dir={{ consul_configd_path }}
+

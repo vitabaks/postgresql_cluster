@@ -1,0 +1,29 @@
+---
+- name: See if consul service exists
+  become: true
+  become_user: "{{ consul_user }}"
+  command: "launchctl list {{ consul_launchctl_ident }}"
+  changed_when: false
+  ignore_errors: true
+  register: consul_service_list
+
+- name: Get UID for consul user
+  command: "id -u {{ consul_user }}"
+  changed_when: false
+  register: uid
+  when: consul_service_list is succeeded
+
+- name: Unload consul service
+  become: true
+  become_user: "{{ consul_user }}"
+  command: "launchctl bootout gui/{{ uid.stdout }} {{ consul_launchctl_plist }}"
+  changed_when: false
+  register: unload_consul_service
+  # Code 113 is returned by launchctl for the error "Could not find service in domain for
+  # port". This can also mean that the service hasn't yet been configured, so we don't
+  # want to treat that as as error.
+  failed_when: unload_consul_service.rc != 0 and unload_consul_service.rc != 113
+  retries: 3
+  delay: 3
+  until: unload_consul_service is not failed
+  when: consul_service_list is succeeded

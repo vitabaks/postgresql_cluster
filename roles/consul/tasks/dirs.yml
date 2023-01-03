@@ -1,0 +1,85 @@
+---
+# File: dirs.yml - Consul directories
+
+- name: Create directories
+  block:
+  - name: Configuration and data directories
+    file:
+      dest: "{{ dir_item }}"
+      state: directory
+      owner: "{{ consul_user }}"
+      group: "{{ consul_group }}"
+      mode: 0700
+    with_items:
+      - "{{ consul_config_path }}"
+      - "{{ consul_configd_path }}"
+      - "{{ consul_data_path }}"
+    loop_control:
+      loop_var: dir_item
+  - name: Run directory
+    file:
+      dest: "{{ consul_run_path }}"
+      state: directory
+      owner: "{{ consul_user }}"
+      group: "{{ consul_group }}"
+      mode: 0750
+    when: not consul_install_from_repo | bool
+
+  when: ansible_os_family != 'Windows'
+
+- name: Create log directory
+  file:
+    dest: "{{ consul_log_path }}"
+    state: directory
+    owner: "{{ consul_user }}"
+    group: "{{ consul_group }}"
+    mode: 0700
+  when:
+    - ansible_os_family != 'Windows'
+    - not consul_syslog_enable | bool
+    - not consul_configure_syslogd | bool
+
+- name: Create log directory
+  file:
+    dest: "{{ log_item }}"
+    state: directory
+    owner: "{{ syslog_user }}"
+    group: "{{ syslog_group }}"
+    mode: 0700
+  with_items:
+    - "{{ consul_log_path }}"
+  loop_control:
+    loop_var: log_item
+  when:
+    - ansible_os_family != 'Windows'
+    - consul_syslog_enable | bool
+    - consul_configure_syslogd | bool
+
+- name: Verify binary path
+  file:
+    path: "{{ consul_bin_path }}"
+    state: directory
+    owner: root
+    mode: 0755
+  when:
+    # On macOS, we should not alter consul_bin_path, since it may be owned by the homebrew
+    # user. This may cause the role to fail on macOS systems where homebrew is not
+    # present, but in that case, the user should create the directory from their playbook
+    # before running this role.
+    - ansible_os_family != 'Darwin'
+    - ansible_os_family != 'Windows'
+    - not consul_install_from_repo | bool
+
+- name: Create directories on Windows
+  win_file:
+    dest: "{{ dir_item }}"
+    state: directory
+  with_items:
+    - "{{ consul_config_path }}"
+    - "{{ consul_configd_path }}"
+    - "{{ consul_data_path }}"
+    - "{{ consul_log_path }}"
+    - "{{ consul_bin_path }}"
+  loop_control:
+    loop_var: dir_item
+  when: ansible_os_family == 'Windows'

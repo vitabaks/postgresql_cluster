@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>{{ consul_bin_path }}</string>
+  </dict>
+  <key>KeepAlive</key>
+  <true/>
+  <key>Label</key>
+  <string>{{ consul_launchctl_ident }}</string>
+  <key>MachServices</key>
+  <dict>
+    <key>{{ consul_launchctl_ident }}</key>
+    <true/>
+  </dict>
+  <key>ProcessType</key>
+  <string>Background</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>{{ consul_bin_path }}/consul</string>
+    <string>agent</string>
+    <string>-config-file={{ consul_config_path }}/config.json</string>
+    <string>-config-dir={{ consul_configd_path }}</string>
+    <string>-pid-file={{ consul_run_path }}/consul.pid</string>
+  </array>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>StandardErrorPath</key>
+  <string>{{ consul_log_path }}/log.stderr</string>
+  <key>StandardOutPath</key>
+  <string>{{ consul_log_path }}/log.stdout</string>
+  <key>UserName</key>
+  <string>{{ consul_user }}</string>
+</dict>
+</plist>

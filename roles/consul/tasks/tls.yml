@@ -1,0 +1,49 @@
+---
+# File: tls.yml - TLS tasks for Consul
+
+- block:
+    - name: Create SSL directory
+      file:
+        dest: "{{ consul_tls_dir }}"
+        state: directory
+        owner: "{{ consul_user }}"
+        group: "{{ consul_group }}"
+        mode: 0755
+
+    - name: Copy CA certificate
+      copy:
+        remote_src: "{{ consul_tls_files_remote_src }}"
+        src: "{{ consul_tls_ca_crt }}"
+        dest: "{{ consul_tls_dir }}/{{ consul_tls_ca_crt | basename }}"
+        owner: "{{ consul_user }}"
+        group: "{{ consul_group }}"
+        mode: 0644
+      notify: restart consul
+
+  when:
+    - consul_tls_copy_keys | bool
+
+- block:
+    - name: Copy server certificate
+      copy:
+        remote_src: "{{ consul_tls_files_remote_src }}"
+        src: "{{ consul_tls_server_crt }}"
+        dest: "{{ consul_tls_dir }}/{{ consul_tls_server_crt | basename }}"
+        owner: "{{ consul_user }}"
+        group: "{{ consul_group }}"
+        mode: 0644
+      notify: restart consul
+
+    - name: Copy server key
+      copy:
+        remote_src: "{{ consul_tls_files_remote_src }}"
+        src: "{{ consul_tls_server_key }}"
+        dest: "{{ consul_tls_dir }}/{{ consul_tls_server_key | basename }}"
+        owner: "{{ consul_user }}"
+        group: "{{ consul_group }}"
+        mode: 0600
+      notify: restart consul
+
+  when:
+    - consul_tls_copy_keys | bool
+    - auto_encrypt is not defined or (auto_encrypt is defined and not auto_encrypt.enabled | bool) or (consul_node_role != 'client') | bool

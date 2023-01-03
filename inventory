@@ -1,23 +1,31 @@
-# This is example inventory file!
 # Please specify the ip addresses and connection settings for your environment
 # The specified ip addresses will be used to listen by the cluster components.
 
 # "postgresql_exists='true'" if PostgreSQL is already exists and running
 # "hostname=" variable is optional (used to change the server name)
 
-# if dcs_exists: false and dcs_type: "etcd" (in vars/main.yml)
-[etcd_cluster]  # recommendation: 3 or 5-7 nodes
+# In this example, all components will be installed on PostgreSQL nodes.
+# You can deploy the haproxy balancers and the etcd or consul cluster on other dedicated servers (recomended).
+
+# if dcs_exists: false and dcs_type: "etcd"
+[etcd_cluster]  # recommendation: 3, or 5-7 nodes
 10.128.64.140
 10.128.64.142
 10.128.64.143
 
+# if dcs_exists: false and dcs_type: "consul"
+[consul_instances]  # recommendation: 3 or 5-7 nodes
+10.128.64.140 consul_datacenter=dc1 consul_node_role=server consul_bootstrap_expect=true
+10.128.64.142 consul_datacenter=dc1 consul_node_role=server consul_bootstrap_expect=true
+10.128.64.143 consul_datacenter=dc1 consul_node_role=server consul_bootstrap_expect=true
+#10.128.64.144 consul_node_role=client
+#10.128.64.145 consul_node_role=client
 
-# if with_haproxy_load_balancing: true (in vars/main.yml)
+# if with_haproxy_load_balancing: true
 [balancers]
 10.128.64.140
 10.128.64.142
 10.128.64.143
-
 
 # PostgreSQL nodes
 [master]
@@ -31,12 +39,7 @@
 master
 replica
 
-
-# In this example, all components will be installed on PostgreSQL nodes
-# You can deploy the etcd cluster and the haproxy balancers on other dedicated servers. 
-
-
-# if pgbackrest_install: true and "repo_host" is set (in vars/main.yml)
+# if pgbackrest_install: true and "repo_host" is set
 [pgbackrest]  # optional (Dedicated Repository Host)
 
 
@@ -46,8 +49,8 @@ ansible_connection='ssh'
 ansible_ssh_port='22'
 ansible_user='root'
 ansible_ssh_pass='secretpassword'  # "sshpass" package is required for use "ansible_ssh_pass"
-# ansible_ssh_private_key_file=
-# ansible_python_interpreter='/usr/bin/python3'  # is required for use python3
+#ansible_ssh_private_key_file=
+#ansible_python_interpreter='/usr/bin/python3'  # is required for use python3
 
 [pgbackrest:vars]
 ansible_user='postgres'

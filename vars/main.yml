@@ -49,7 +49,7 @@ vip_manager_mask: "24"  # netmask for the virtual ip
 
 # DCS (Distributed Consensus Store)
 dcs_exists: false  # or 'true' if you do not want to install and configure the etcd cluster
-dcs_type: "etcd"
+dcs_type: "etcd"  # or 'consul'
 
 # if dcs_exists: false and dcs_type: "etcd"
 etcd_ver: "v3.3.27"  # version for deploy etcd cluster
@@ -66,6 +66,28 @@ patroni_etcd_hosts: []
 # more options you can specify in the roles/patroni/templates/patroni.yml.j2
 # https://patroni.readthedocs.io/en/latest/SETTINGS.html#etcd
 # https://patroni.readthedocs.io/en/latest/SETTINGS.html#consul
+
+# if dcs_exists: false and dcs_type: "consul"
+consul_version: "1.14.3"  # Set value as latest for the latest available version of consul
+consul_config_path: "/etc/consul"
+consul_configd_path: "{{ consul_config_path }}/conf.d"
+consul_data_path: "/var/lib/consul"
+consul_domain: "consul"  # Consul domain name
+consul_datacenter: "dc1"  # Datacenter label (can be specified for each host in the inventory)
+consul_disable_update_check: true  # Disables automatic checking for security bulletins and new version releases
+consul_enable_local_script_checks: true  # This controls whether health checks that execute scripts are enabled on this agent
+consul_ui: false  # Enable the consul UI?
+consul_syslog_enable: true  # Enable logging to syslog
+# DNS
+consul_dnsmasq_enable: true  # Enable DNS forwarding with Dnsmasq
+consul_dnsmasq_cache: 0  # dnsmasq cache-size (0 - disable caching)
+consul_dnsmasq_servers: "{{ nameservers }}"  # Upstream DNS servers used by dnsmasq (use nameservers from vars/system.yml)
+# TLS
+consul_tls_enable: false  # default, or 'true'
+# You can enable TLS encryption by dropping a CA certificate, server certificate, and server key into the role's files directory.
+consul_tls_ca_crt: "ca.crt"
+consul_tls_server_crt: "server.crt"
+consul_tls_server_key: "server.key"
 
 
 # PostgreSQL variables
