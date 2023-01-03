@@ -68,14 +68,15 @@ patroni_etcd_hosts: []
 # https://patroni.readthedocs.io/en/latest/SETTINGS.html#consul
 
 # if dcs_exists: false and dcs_type: "consul"
-consul_version: "1.14.3"  # Set value as latest for the latest available version of consul
+consul_version: "1.14.3"
 consul_config_path: "/etc/consul"
 consul_configd_path: "{{ consul_config_path }}/conf.d"
 consul_data_path: "/var/lib/consul"
 consul_domain: "consul"  # Consul domain name
 consul_datacenter: "dc1"  # Datacenter label (can be specified for each host in the inventory)
 consul_disable_update_check: true  # Disables automatic checking for security bulletins and new version releases
-consul_enable_local_script_checks: true  # This controls whether health checks that execute scripts are enabled on this agent
+consul_enable_script_checks: true  # This controls whether health checks that execute scripts are enabled on this agent
+consul_enable_local_script_checks: true  # Enable them when they are defined in the local configuration files
 consul_ui: false  # Enable the consul UI?
 consul_syslog_enable: true  # Enable logging to syslog
 # DNS
