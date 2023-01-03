@@ -7,7 +7,7 @@
 [![GitHub license](https://img.shields.io/github/license/vitabaks/postgresql_cluster)](https://github.com/vitabaks/postgresql_cluster/blob/master/LICENSE) 
 ![GitHub stars](https://img.shields.io/github/stars/vitabaks/postgresql_cluster)
 
-### Deploy a Production Ready PostgreSQL High-Availability Cluster (based on "Patroni" and "DCS(etcd)"). Automating with Ansible.
+### Deploy a Production Ready PostgreSQL High-Availability Cluster (based on "Patroni" and DCS "etcd" or "consul"). Automating with Ansible.
 
 This Ansible playbook is designed for deploying a PostgreSQL high availability cluster on dedicated physical servers for a production environment. The cluster can also be deployed on virtual machines and in the Cloud.
 
@@ -149,6 +149,10 @@ This playbook requires root privileges or sudo.
 
 Ansible ([What is Ansible](https://www.ansible.com/resources/videos/quick-start-video)?)
 
+if `dcs_type: "consul"`, please install consul role requirements on the control node:
+
+`ansible-galaxy install -r roles/consul/requirements.yml`
+
 ## Port requirements
 List of required TCP ports that must be open for the database cluster:
 
@@ -239,6 +243,10 @@ proxy_env:
 - `with_haproxy_load_balancing` `'true'` (Type A) or `'false'`/default (Type B)
 - `postgresql_version`
 - `postgresql_data_dir`
+
+if `dcs_type: "consul"`, please install consul role requirements on the control node:
+
+`ansible-galaxy install -r roles/consul/requirements.yml`
 
 5. Try to connect to hosts
 
