@@ -199,7 +199,7 @@
 
 # installation_method == "file"
 
-# A precompiled binary for Ubuntu 18.04 and 20.04
+# A precompiled binary (package in tar.gz)
 - block:
     - name: "Extract WAL-G archive {{ wal_g_package_file }} into /tmp"
       unarchive:
@@ -219,8 +219,7 @@
     - wal_g_version is version('1.0', '>=')
     - (wal_g_installed_version.stderr is search("command not found") or
        wal_g_installed_version.stdout != wal_g_version)
-    - (wal_g_package_file == "wal-g-pg-ubuntu-18.04-amd64.tar.gz" or
-       wal_g_package_file == "wal-g-pg-ubuntu-20.04-amd64.tar.gz")
+    - (wal_g_package_file is defined and wal_g_package_file | length > 0)
   tags: wal-g, wal_g, wal_g_install
 
 # older versions of WAL-G (for compatibility)
