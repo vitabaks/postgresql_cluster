@@ -8,6 +8,7 @@
   vars_files:
     - vars/main.yml
     - vars/system.yml
+  environment: "{{ proxy_env | default({}) }}"
 
   pre_tasks:
     - name: Include OS-specific variables
@@ -26,7 +27,6 @@
       apt:
         update_cache: true
         cache_valid_time: 3600
-      environment: "{{ proxy_env | default({}) }}"
       when: ansible_os_family == "Debian" and installation_method == "repo"
 
     - name: Make sure the gnupg and apt-transport-https packages are present
@@ -35,7 +35,6 @@
           - gnupg
           - apt-transport-https
         state: present
-      environment: "{{ proxy_env | default({}) }}"
       when: ansible_os_family == "Debian" and installation_method == "repo"
 
     - name: Build a firewall_ports_dynamic_var
@@ -54,7 +53,6 @@
 
   roles:
     - role: ansible-role-firewall
-      environment: "{{ proxy_env | default({}) }}"
       vars:
         firewall_allowed_tcp_ports: "{{ firewall_ports_dynamic_var | unique }}"
         firewall_additional_rules: "{{ firewall_rules_dynamic_var | unique }}"
