@@ -58,6 +58,7 @@
       args:
         executable: /bin/bash
       changed_when: false
+      failed_when: false
       register: ansible_utils_result
       run_once: true
       delegate_to: 127.0.0.1
@@ -80,6 +81,7 @@
 
     - role: hostname
     - role: etc_hosts
+    - role: sysctl
     - role: timezone
     - role: ntp
 
