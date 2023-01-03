@@ -33,6 +33,7 @@
 - - etcd_conf
 - - etcd_start
 - - etcd_status
+- consul
 - patroni
 - - pip
 - - patroni_install
