@@ -60,6 +60,7 @@ system_packages:
   - jq
   - iptables
   - acl
+  - bind-utils
 
 # The glibc-langpack package includes the basic information required to support the language in your applications.
 # for RHEL version 8 (only)

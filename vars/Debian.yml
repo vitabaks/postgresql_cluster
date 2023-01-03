@@ -47,6 +47,7 @@ system_packages:
   - jq
   - iptables
   - acl
+  - dnsutils
 
 postgresql_packages:
   - postgresql-{{ postgresql_version }}
