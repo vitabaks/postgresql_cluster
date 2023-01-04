@@ -69,8 +69,6 @@ patroni_etcd_hosts: []
 
 # if dcs_exists: false and dcs_type: "consul"
 consul_version: "1.14.3"
-consul_config_path: "/etc/consul"
-consul_configd_path: "{{ consul_config_path }}/conf.d"
 consul_data_path: "/var/lib/consul"
 consul_domain: "consul"  # Consul domain name
 consul_datacenter: "dc1"  # Datacenter label (can be specified for each host in the inventory)
@@ -90,6 +88,38 @@ consul_recursors: []  # List of upstream DNS servers
 consul_dnsmasq_enable: true  # Enable DNS forwarding with Dnsmasq
 consul_dnsmasq_cache: 0  # dnsmasq cache-size (0 - disable caching)
 consul_dnsmasq_servers: []  # Upstream DNS servers used by dnsmasq
+
+# https://developer.hashicorp.com/consul/docs/discovery/checks
+# https://github.com/ansible-community/ansible-consul#service-management-support
+consul_services:
+  - name: "{{ patroni_cluster_name }}"
+    id: "{{ patroni_cluster_name }}-master"
+    tags: ['master']
+    port: "{{ pgbouncer_listen_port }}"  # or "{{ pgbouncer_listen_port }}" if pgbouncer_install: false
+    checks:
+      - [http: "http://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:8008/master", interval: "2s"]
+      - [args: ["systemctl", "status", "pgbouncer"], interval: "5s"]  # comment out this check if pgbouncer_install: false
+  - name: "{{ patroni_cluster_name }}"
+    id: "{{ patroni_cluster_name }}-replica"
+    tags: ['replica']
+    port: "{{ pgbouncer_listen_port }}"
+    checks:
+      - [http: "http://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:8008/replica", interval: "2s"]
+      - [args: ["systemctl", "status", "pgbouncer"], interval: "5s"]
+#  - name: "{{ patroni_cluster_name }}"
+#    id: "{{ patroni_cluster_name }}-sync-replica"
+#    tags: ['sync-replica']
+#    port: "{{ pgbouncer_listen_port }}"
+#    checks:
+#      - [http: "http://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:8008/sync", interval: "2s"]
+#      - [args: ["systemctl", "status", "pgbouncer"], interval: "5s"]
+#  - name: "{{ patroni_cluster_name }}"
+#    id: "{{ patroni_cluster_name }}-async-replica"
+#    tags: ['async-replica']
+#    port: "{{ pgbouncer_listen_port }}"
+#    checks:
+#      - [http: "http://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:8008/async", interval: "2s"]
+#      - [args: ["systemctl", "status", "pgbouncer"], interval: "5s"]
 
 
 # PostgreSQL variables

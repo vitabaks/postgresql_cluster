@@ -60,7 +60,9 @@
 
 - name: Include services management
   import_tasks: services.yml
-  when: consul_services is defined and consul_services|length>0
+  when:
+    - consul_services is defined and consul_services|length>0
+    - inventory_hostname in groups['postgres_cluster']
   tags:
     - consul_services
 

@@ -3,7 +3,7 @@
 
 - name: Configure consul services
   template:
-    dest: "{{ consul_configd_path }}/service_{{ service_item.name }}.json"
+    dest: "{{ consul_configd_path }}/service_{{ service_item.id }}.json"
     src: service.json.j2
     owner: "{{ consul_user }}"
     group: "{{ consul_group }}"
@@ -48,7 +48,7 @@
 - name: Set fact with list of services we manage
   set_fact:
     managed_files: "{{ managed_files |default([]) }} + \
-    [ '{{ consul_configd_path }}/service_{{ service_item.name }}.json' ]"
+    [ '{{ consul_configd_path }}/service_{{ service_item.id }}.json' ]"
   with_items: "{{ consul_services }}"
   loop_control:
     loop_var: service_item
@@ -56,7 +56,7 @@
 
 - name: Find all service config files that we manage [Windows]
   win_stat:
-    path: "{{ consul_configd_path }}/service_{{ service_config_item.name }}.json"
+    path: "{{ consul_configd_path }}/service_{{ service_config_item.id }}.json"
   with_items: "{{ consul_services }}"
   loop_control:
     loop_var: service_config_item
