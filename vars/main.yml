@@ -79,16 +79,17 @@ consul_enable_script_checks: true  # This controls whether health checks that ex
 consul_enable_local_script_checks: true  # Enable them when they are defined in the local configuration files
 consul_ui: false  # Enable the consul UI?
 consul_syslog_enable: true  # Enable logging to syslog
-# DNS
-consul_dnsmasq_enable: true  # Enable DNS forwarding with Dnsmasq
-consul_dnsmasq_cache: 0  # dnsmasq cache-size (0 - disable caching)
-consul_dnsmasq_servers: "{{ nameservers }}"  # Upstream DNS servers used by dnsmasq (use nameservers from vars/system.yml)
 # TLS
-consul_tls_enable: false  # default, or 'true'
 # You can enable TLS encryption by dropping a CA certificate, server certificate, and server key into the role's files directory.
+consul_tls_enable: false
 consul_tls_ca_crt: "ca.crt"
 consul_tls_server_crt: "server.crt"
 consul_tls_server_key: "server.key"
+# DNS
+consul_recursors: []  # List of upstream DNS servers
+consul_dnsmasq_enable: true  # Enable DNS forwarding with Dnsmasq
+consul_dnsmasq_cache: 0  # dnsmasq cache-size (0 - disable caching)
+consul_dnsmasq_servers: []  # Upstream DNS servers used by dnsmasq
 
 
 # PostgreSQL variables
