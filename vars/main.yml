@@ -51,14 +51,13 @@ vip_manager_mask: "24"  # netmask for the virtual ip
 dcs_exists: false  # or 'true' if you do not want to install and configure the etcd cluster
 dcs_type: "etcd"  # or 'consul'
 
-# if dcs_exists: false and dcs_type: "etcd"
+# if dcs_type: "etcd" and dcs_exists: false
 etcd_ver: "v3.3.27"  # version for deploy etcd cluster
 etcd_data_dir: "/var/lib/etcd"
 etcd_cluster_name: "etcd-{{ patroni_cluster_name }}"  # ETCD_INITIAL_CLUSTER_TOKEN
 
-# if dcs_exists: true and dcs_type: "etcd" - specify ip address your etcd cluster in the "patroni_etcd_hosts" variable
-# example (use existing cluster of 3 nodes)
-patroni_etcd_hosts: []
+# if dcs_type: "etcd" and dcs_exists: true
+patroni_etcd_hosts: []  # list of servers of an existing etcd cluster
 #  - { host: "10.128.64.140", port: "2379" }
 #  - { host: "10.128.64.142", port: "2379" }
 #  - { host: "10.128.64.143", port: "2379" }
@@ -67,7 +66,7 @@ patroni_etcd_hosts: []
 # https://patroni.readthedocs.io/en/latest/SETTINGS.html#etcd
 # https://patroni.readthedocs.io/en/latest/SETTINGS.html#consul
 
-# if dcs_exists: false and dcs_type: "consul"
+# if dcs_type: "consul"
 consul_version: "1.14.3"
 consul_config_path: "/etc/consul"
 consul_configd_path: "{{ consul_config_path }}/conf.d"
@@ -92,6 +91,10 @@ consul_dnsmasq_cache: 0  # dnsmasq cache-size (0 - disable caching)
 consul_dnsmasq_servers:  # Upstream DNS servers used by dnsmasq
   - "8.8.8.8"
   - "9.9.9.9"
+consul_join: []  # List of LAN servers of an existing consul cluster, to join.
+# - "10.128.64.140"
+# - "10.128.64.142"
+# - "10.128.64.143"
 
 # https://developer.hashicorp.com/consul/docs/discovery/checks
 # https://github.com/ansible-community/ansible-consul#service-management-support
