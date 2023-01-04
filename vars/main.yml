@@ -48,7 +48,7 @@ vip_manager_mask: "24"  # netmask for the virtual ip
 
 
 # DCS (Distributed Consensus Store)
-dcs_exists: false  # or 'true' if you do not want to install and configure the etcd cluster
+dcs_exists: false  # or 'true' if you don't want to deploy a new etcd cluster
 dcs_type: "etcd"  # or 'consul'
 
 # if dcs_type: "etcd" and dcs_exists: false
@@ -79,7 +79,7 @@ consul_enable_local_script_checks: true  # Enable them when they are defined in 
 consul_ui: false  # Enable the consul UI?
 consul_syslog_enable: true  # Enable logging to syslog
 # TLS
-# You can enable TLS encryption by dropping a CA certificate, server certificate, and server key into the role's files directory.
+# You can enable TLS encryption by dropping a CA certificate, server certificate, and server key in roles/consul/files/
 consul_tls_enable: false
 consul_tls_ca_crt: "ca.crt"
 consul_tls_server_crt: "server.crt"
@@ -96,8 +96,7 @@ consul_join: []  # List of LAN servers of an existing consul cluster, to join.
 # - "10.128.64.142"
 # - "10.128.64.143"
 
-# https://developer.hashicorp.com/consul/docs/discovery/checks
-# https://github.com/ansible-community/ansible-consul#service-management-support
+# https://developer.hashicorp.com/consul/docs/discovery/services
 consul_services:
   - name: "{{ patroni_cluster_name }}"
     id: "{{ patroni_cluster_name }}-master"
