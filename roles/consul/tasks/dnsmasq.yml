@@ -61,12 +61,28 @@
         path: /etc/resolv.conf
       register: resolv_dot_conf
 
-    - name: Remove resolv.conf association with systemd-resolved
-      file:
-        src: /run/resolvconf/resolv.conf
-        path: /etc/resolv.conf
-        state: link
+    - block:
+        - name: Remove resolv.conf association with systemd-resolved
+          file:
+            path: /etc/resolv.conf
+            state: absent
+
+        - name: Create /etc/resolv.conf
+          file:
+            path: /etc/resolv.conf
+            state: touch
+            owner: root
+            group: root
+            mode: u=rw,g=r,o=r
+
+        - name: Add a nameserver entry poining to localhost for dnsmasq
+          lineinfile:
+            path: /etc/resolv.conf
+            regexp: "^nameserver 127.0.0.1"
+            line: "nameserver 127.0.0.1"
+            unsafe_writes: true  # to prevent failures in CI
       become: true
       when:
+        - resolv_dot_conf.stat.islnk is defined
         - resolv_dot_conf.stat.islnk
-        - 'resolv_dot_conf.stat.lnk_source == "/run/systemd/resolve/stub-resolv.conf"'
+        - resolv_dot_conf.stat.lnk_source == "/run/systemd/resolve/stub-resolv.conf"
