@@ -108,6 +108,7 @@ platforms:
       - master
       - postgres_cluster
       - balancers
+      - consul_instances
 
   - name: 10.172.0.21
     hostname: pgnode02
@@ -134,6 +135,7 @@ platforms:
       - replica
       - postgres_cluster
       - balancers
+      - consul_instances
 
 provisioner:
   name: ansible
