@@ -93,6 +93,7 @@ platforms:
       - 8008/tcp
       - 5432/tcp
       - 6432/tcp
+      - 8500/tcp  # if dcs_type: "consul"
     command: ""
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
@@ -114,6 +115,7 @@ platforms:
       - 8008/tcp
       - 5432/tcp
       - 6432/tcp
+      - 8500/tcp  # if dcs_type: "consul"
     command: ""
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
