@@ -137,13 +137,13 @@ provisioner:
     links:
       group_vars: ../../group_vars/
     host_vars:
-      dcs-node01:
+      10.172.0.17:  # dcs-node01
         consul_node_role: server  # if dcs_type: "consul"
         consul_bootstrap_expect: true  # if dcs_type: "consul"
-      dcs-node02:
+      10.172.0.18:  # dcs-node02
         consul_node_role: server
         consul_bootstrap_expect: true
-      dcs-node03:
+      10.172.0.19:  # dcs-node03
         consul_node_role: server
         consul_bootstrap_expect: true
   playbooks:
