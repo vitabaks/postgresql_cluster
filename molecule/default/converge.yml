@@ -12,7 +12,6 @@
         sysctl_set: false  # Added to prevent test failures in CI.
         nameservers: ["8.8.8.8", "9.9.9.9"]
         with_haproxy_load_balancing: true
-        dcs_type: "consul"
         cacheable: true
 
     - name: Prepare | Clean yum cache

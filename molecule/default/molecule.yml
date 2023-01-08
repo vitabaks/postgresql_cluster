@@ -138,21 +138,14 @@ provisioner:
       group_vars: ../../group_vars/
     host_vars:
       10.172.0.17:  # dcs-node01
-        dcs_type: consul
         consul_node_role: server  # if dcs_type: "consul"
         consul_bootstrap_expect: true  # if dcs_type: "consul"
       10.172.0.18:  # dcs-node02
-        dcs_type: consul
         consul_node_role: server
         consul_bootstrap_expect: true
       10.172.0.19:  # dcs-node03
-        dcs_type: consul
         consul_node_role: server
         consul_bootstrap_expect: true
-      10.172.0.20:  # pgnode01
-        dcs_type: consul
-      10.172.0.21:  # pgnode02
-        dcs_type: consul
   playbooks:
     prepare: prepare.yml
 
