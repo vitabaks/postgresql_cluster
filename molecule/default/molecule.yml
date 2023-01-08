@@ -93,7 +93,11 @@ platforms:
       - 8008/tcp
       - 5432/tcp
       - 6432/tcp
+      - 8300/tcp  # if dcs_type: "consul"
+      - 8301/tcp  # if dcs_type: "consul"
+      - 8302/tcp  # if dcs_type: "consul"
       - 8500/tcp  # if dcs_type: "consul"
+      - 8600/tcp  # if dcs_type: "consul"
     command: ""
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
@@ -115,7 +119,11 @@ platforms:
       - 8008/tcp
       - 5432/tcp
       - 6432/tcp
-      - 8500/tcp  # if dcs_type: "consul"
+      - 8300/tcp
+      - 8301/tcp
+      - 8302/tcp
+      - 8500/tcp
+      - 8600/tcp
     command: ""
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
@@ -148,6 +156,10 @@ provisioner:
       10.172.0.19:  # dcs-node03
         consul_node_role: server
         consul_bootstrap_expect: true
+      10.172.0.20:  # pgnode01
+        consul_node_role: client
+      10.172.0.21:  # pgnode02
+        consul_node_role: client
   playbooks:
     prepare: prepare.yml
 
