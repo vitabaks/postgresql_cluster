@@ -4,19 +4,20 @@
 
 # Proxy variables (optional) for download packages using a proxy server
 proxy_env: {}
-#  http_proxy: http://wz-tmg.ad.webzavod.ru:8080
-#  https_proxy: http://wz-tmg.ad.webzavod.ru:8080
+#  http_proxy: http://imamyshev:Password@proxy.demo.ru:8080
+#  https_proxy: http://imamyshev:Password@proxy.demo.ru:8080
+#  no_proxy: "127.0.0.1,localhost,etcd-n1,etcd-n2,etcd-n3,pgsql-n1,pgsql-n2,pgsql-n3"
 # -------------------------------------------
 
 # Patroni
-patroni_cluster_name: "pgsql"  # specify the cluster name
+patroni_cluster_name: "PGSQL-CL"  # specify the cluster name
 patroni_restapi_port: "8008" # Patroni REST API port (Used https protocol in this project!)
 patroni_install_version: "latest"  # or specific version (example 1.5.6)
 patroni_scripts_dir: "/etc/patroni" # for patroni callback scripts
 patroni_superuser_username: "postgres"
-patroni_superuser_password: "P@ssw0rd"  # please change password
+patroni_superuser_password: "Password"  # please change password
 patroni_replication_username: "replicator"
-patroni_replication_password: "P@ssw0rd"  # please change password
+patroni_replication_password: "Password2"  # please change password
 synchronous_mode: true  # or 'true' for enable synchronous database replication
 synchronous_mode_strict: false  # if 'true' then block all client writes to the master, when a synchronous replica is not available
 synchronous_node_count: 2  # number of synchronous standby databases
@@ -28,13 +29,14 @@ patroni_with_watchdog: true # true or false
 cluster_vip: "172.16.32.180"  # empty or one VIP address (or some VIP addresses in different subnets, separated by commas, for example: "172.16.32.180,172.16.10.180" ), for client access to PostgreSQL
 dnscp:
   vcompname: "{{ patroni_cluster_name }}" # Virtual Computer Name - Client Access Point
-  vcomppassword: "P@ssw0rd" # Password for Virtual Computer Name Account. Empty for anonimous auth to DNS zone.
+  vcomppassword: "Password3" # Password for Virtual Computer Name Account. Empty for anonimous auth to DNS zone.
+  #for set password run powershell command: Get-ADComputer PGSQL-CL | Set-ADAccountPassword -Reset -NewPassword (ConvertTo-SecureString -AsPlainText "Password3" -Force)
   dnszonefqdn: "demo.ru" # Set DNS zone FQDN (AD Domain FQDN).
-  dnsserver: "" # Set FQDN or IP or empty (recommended for automatically detect). Used for register DNS name.
-  encryptionkey: "a94VPhhmLY4xOpRZGCYP1%eY9*fG%SPk6QXaEK*kv47nm1*9xO" # Key to encrypt vcomppassword string value.
+  dnsserver: "" # Set FQDN or IP or empty (empty is recommended for automatically detect). Used for register DNS name.
+  encryptionkey: "StrongEncryptionKey" # Key to encrypt vcomppassword string value.
   #Add to ADDS:
   #sudo hostnamectl set-hostname pgsql-n1
-  #sudo astra-winbind -dc demo.ru -d demo.ru -g DEMO -u mamyshev@demo.ru -p StrongP@ssw0rd -y
+  #sudo astra-winbind -dc demo.ru -d demo.ru -g DEMO -u imamyshev@demo.ru -p StrongP@ssw0rd -y
 
 # DCS (Distributed Consensus Store)
 dcs_exists: false # 'false' or 'true'. Use 'true' if you do not want to install and configure the etcd cluster
@@ -43,27 +45,27 @@ dcs_type: "patroni" # "etcd" or "patroni"
 # if dcs_exists: false and dcs_type: "patroni"
 patroni_raft_data_dir: "/etc/patroni" #"/var/lib/raft"
 patroni_raft_port: "2379"
-patroni_raft_password: "6#TCb9JItl8u78IiXAzKOeE54#V1FVm1OWpDPtMhb0Nh$3S2P$"
+patroni_raft_password: "Password4" # Key to encrypt Patroni raft traffic
 
 # if dcs_exists: false and dcs_type: "patroni"
-with_patroni_raft_controller: true  # 'false' or 'true' if you want to install and configure the Patroni RAFT Controller
+with_patroni_raft_controller: true # 'false' or 'true' if you want to install and configure the Patroni RAFT Controller
 patroni_raft_controller:
   host: "{{ hostvars[groups['patroni_raft_controller'][0]].inventory_hostname }}" # hostname or IP
   port: "{{ patroni_raft_port }}"
 
 # if dcs_exists: false and dcs_type: "etcd"
-etcd_ver: "v3.4.22" #"v3.3.27"  # version for deploy etcd cluster
+etcd_ver: "v3.5.6" # version for deploy etcd cluster
 etcd_data_dir: "/var/lib/etcd"
 etcd_cluster_name: "etcd-{{ patroni_cluster_name }}"  # ETCD_INITIAL_CLUSTER_TOKEN
 
 # if dcs_exists: true and dcs_type: "etcd"
 patroni_etcd_hosts:
   port: "2379"
-  protocol: "https"
+  protocol: "https" # current solution support only https (Mutual TLS)
+  ifname: "eth0"
 
 # more options you can specify in the roles/patroni/templates/patroni.yml.j2
 # https://patroni.readthedocs.io/en/latest/SETTINGS.html#etcd
-# https://patroni.readthedocs.io/en/latest/SETTINGS.html#consul
 
 # Load Balancing
 with_haproxy_load_balancing: false  # 'false' or 'true' if you want to install and configure the load-balancing
@@ -83,29 +85,31 @@ haproxy_timeout:
 
 # PostgreSQL variables
 postgresql_fork: "PostgresPro" # "PostgreSQL" or "PostgresPro"
-postgresql_version: "14" # major version
+postgresql_version: "15" # major version
 # postgresql_data_dir: see vars/Debian.yml
 postgresql_port: "5432"
+postgresql_ifname: "eth0" # forexample "eth0", "bond0" - network interface name on each cluster node
 postgresql_encoding: "UTF8"  # for bootstrap only (initdb)
 postgresql_locale: "ru_RU.UTF-8" #"en_US.UTF-8"  # for bootstrap only (initdb)
 postgresql_data_checksums: true  # for bootstrap only (initdb)
+postgresql_allow_group_access: false # for bootstrap only (initdb)
 postgresql_password_encryption_algorithm: "scram-sha-256"  # or "md5" if your clients do not work with passwords encrypted with SCRAM-SHA-256
 
 
 # postgresql parameters to bootstrap dcs (are parameters for example)
 postgresql_parameters:
-  - {option: "max_connections", value: "500"}
+  - {option: "max_connections", value: "200"}
   - {option: "superuser_reserved_connections", value: "5"}
   - {option: "password_encryption", value: "{{ postgresql_password_encryption_algorithm }}"}
   - {option: "deadlock_timeout", value: "5s"}  # 1s is default
   - {option: "max_locks_per_transaction", value: "256"}  # raise this value (ex. 512) if you have queries that touch many different tables (partitioning)
   - {option: "max_prepared_transactions", value: "0"}
   - {option: "huge_pages", value: "try"}  # or "on" if you set "vm_nr_hugepages" in kernel parameters
-  - {option: "huge_page_size", value: "1GB"} # 0 is default
-  - {option: "shared_buffers", value: "1GB"} # 64GB  # please change this value
-  - {option: "work_mem", value: "64MB"}  # please change this value
-  - {option: "maintenance_work_mem", value: "256MB"}  # 2GB # please change this value
-  - {option: "effective_cache_size", value: "4GB"}  # 192GB # please change this value
+  - {option: "huge_page_size", value: "0"} # 0 is default
+  - {option: "shared_buffers", value: "4GB"} # shared_buffers = 25%-40% of RAM
+  - {option: "work_mem", value: "256MB"}  # work_mem = RAM/32..64
+  - {option: "maintenance_work_mem", value: "1GB"}  # maintenance_work_mem = work_mem*4
+  - {option: "effective_cache_size", value: "4GB"}  # effective_cache_size = RAM - shared_buffers
   - {option: "checkpoint_timeout", value: "30min"} # 5min is default
   - {option: "checkpoint_completion_target", value: "0.9"}
   - {option: "min_wal_size", value: "2GB"}
@@ -113,12 +117,12 @@ postgresql_parameters:
   - {option: "wal_buffers", value: "-1"}
   - {option: "temp_buffers", value: "32MB"} # 8MB is default
   - {option: "default_statistics_target", value: "100"}
-  - {option: "seq_page_cost", value: "1"}
-  - {option: "random_page_cost", value: "1.1"}  # "4" default, "1.1" for SSD storage. Also, if your databases fits in shared_buffers
-  - {option: "effective_io_concurrency", value: "200"}  # "1" default, "200" for SSD storage
+  - {option: "seq_page_cost", value: "1"} # "1" is default, "0.5" for fast SSD storage , "0.1" for NVMe storage.
+  - {option: "random_page_cost", value: "2.0"}  # "4" is default, "1.5-2.0" for HDD RAID storage, "1.1-1.3" for SSD storage, "0.5" for fast SSD storage , "0.1" for NVMe storage.
+  - {option: "effective_io_concurrency", value: "4"}  # "1" default, "2+" for HDD RAID, "200" for SSD storage, "500-1000" for NVMe storage.
   - {option: "synchronous_commit", value: "on"}  # or 'off' if you can you lose single transactions in case of a crash
   - {option: "autovacuum", value: "on"}  # never turn off the autovacuum!
-  - {option: "autovacuum_max_workers", value: "10"} # 3 is default
+  - {option: "autovacuum_max_workers", value: "10"} # 3 is default. autovacuum_max_workers = NumCores/4..2 , but >= 4
   - {option: "autovacuum_vacuum_scale_factor", value: "0.05"}  # or 0.005/0.001
   - {option: "autovacuum_analyze_scale_factor", value: "0.1"}
   - {option: "autovacuum_vacuum_cost_limit", value: "1000"}  # or 1000/5000
@@ -130,7 +134,7 @@ postgresql_parameters:
   - {option: "archive_timeout", value: "1800s"}
   - {option: "archive_command", value: "cd ."}  # not doing anything yet with WAL-s
   - {option: "wal_level", value: "replica"}
-  - {option: "wal_keep_size", value: "32GB"} # 0 is default
+  - {option: "wal_keep_size", value: "8GB"} # 0 is default
   - {option: "max_wal_senders", value: "10"} # max_replication_slots + number of physical replicas
   - {option: "max_replication_slots", value: "10"}
   - {option: "hot_standby", value: "on"}
@@ -167,8 +171,8 @@ postgresql_parameters:
   - {option: "wal_receiver_status_interval", value: "10s"}
   - {option: "idle_in_transaction_session_timeout", value: "90min"}  # reduce this timeout if possible
   - {option: "jit", value: "off"}
-  - {option: "max_worker_processes", value: "40"}
-  - {option: "max_parallel_workers", value: "40"}
+  - {option: "max_worker_processes", value: "8"}
+  - {option: "max_parallel_workers", value: "8"}
   - {option: "max_parallel_workers_per_gather", value: "4"}
   - {option: "max_parallel_maintenance_workers", value: "4"}
 #  - {option: "dynamic_shared_memory_type", value: "posix"}
@@ -190,7 +194,8 @@ postgresql_pg_hba:
   - {type: "host", database: "all", user: "all", address: "::1/128", method: "{{ postgresql_password_encryption_algorithm }}"}
 #  - {type: "host", database: "mydatabase", user: "mydb-user", address: "192.168.0.0/24", method: "{{ postgresql_password_encryption_algorithm }}"}
 #  - {type: "host", database: "all", user: "all", address: "192.168.0.0/24", method: "ident", options: "map=main"}  # use pg_ident
-  - {type: "host", database: "all", user: "all", address: "172.16.0.0/16", method: "{{ postgresql_password_encryption_algorithm }}"}
+#  - {type: "host", database: "all", user: "all", address: "172.16.0.0/16", method: "{{ postgresql_password_encryption_algorithm }}"}
+  - {type: "host", database: "all", user: "all", address: "0.0.0.0/0", method: "{{ postgresql_password_encryption_algorithm }}"} # accept all incoming connections
 
 # list of lines that Patroni will use to generate pg_ident.conf
 postgresql_pg_ident: []
