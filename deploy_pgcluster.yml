@@ -69,8 +69,10 @@
   become: true
   become_method: sudo
   any_errors_fatal: true
+  vars_files:
+    - vars/main.yml
   tasks:
-    - shell: ip -f inet addr show eth0 | sed -En -e 's/.*inet ([0-9.]+).*/\1/p'
+    - shell: ip -f inet addr show "{{ postgresql_ifname }}" | sed -En -e 's/.*inet ([0-9.]+).*/\1/p'
       register: patroni_privateIP
 
 # PKI
@@ -89,7 +91,7 @@
     - name: "File exist"
       debug:
         msg: "ca.key exist, deploy new Root CA skipping"
-      when: pki_ca_key.stat.exists and pki_ca_key.stat.isreg
+      when: pki_ca_key.stat.exists|bool and pki_ca_key.stat.isreg|bool
 
     - name: "Ensure CA certificate file exist"
       stat:
@@ -98,17 +100,17 @@
     - name: "File not exist"
       debug:
         msg: "ca.crt not exist"
-      when: not pki_ca_cert.stat.exists|bool and not pki_ca_cert.stat.isreg|bool
+      when: not pki_ca_cert.stat.exists|bool #and not pki_ca_cert.stat.isreg|bool
   roles:
     # Deploy CA if key file non exist
     - role: ca
-      when: not pki_ca_key.stat.exists|bool and not pki_ca_key.stat.isreg|bool
+      when: not pki_ca_key.stat.exists|bool #and not pki_ca_key.stat.isreg|bool
     - role: install-root-cert
 
 # SSL: Generating Patroni cluster members’ Private Keys and CSRs
 - hosts: localhost
   gather_facts: false
-  become: false
+  become: true
   any_errors_fatal: true
   vars_files:
     - vars/main.yml
