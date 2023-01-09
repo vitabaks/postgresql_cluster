@@ -7,7 +7,8 @@
 #
 # Thanks for the help Nikolay Mishchenko https://github.com/NickNeoOne
 
-#v11082022
+#v01122022
+# https://github.com/IlgizMamyshev/dnscp
 ### Script for multi-site Patroni clusters
 # * Uses Patroni callback
 # * VIP addresses can be from different subnets - one VIP address per subnet.
@@ -204,12 +205,12 @@ function in_subnet {
 #####################################################
 # Network interface name
 #####################################################
-IFNAME=$(ip route | awk '/default/{print $5}') # or "eth0"
+IFNAME=$(ip --oneline addr show | awk '$3 == "inet" && $2 != "lo" { print $2; exit}') # or "eth0"
 
 #####################################################
 # Get network
 #####################################################
-NETWORK=$(ip route | awk '!/default/&&/'$IFNAME'/{print $1}')
+NETWORK=$(ip --oneline addr show | awk '$3 == "inet" && $2 != "lo" { print $4; exit}') # 123.123.123.123/24
 # Get network prefix
 PREFIX=$(echo $NETWORK | awk -F"/" '{print $2}')
 
@@ -238,10 +239,10 @@ else
 				sudo ip address del $VIP/$PREFIX dev $IFNAME;
 				EXITCODE=$?;
 				if [[ $EXITCODE -eq 0 ]]; then
-					MSG="[$LOGHEADER] INFO: Deleting VIP $VIP by Patroni $CB_NAME callback SUCCEEDED"
+					MSG="[$LOGHEADER] INFO: Deleting VIP '$VIP/$PREFIX dev $IFNAME' by Patroni $CB_NAME callback SUCCEEDED"
 					echo $MSG
 				else
-					MSG="[$LOGHEADER] ERROR: Deleting VIP $VIP by Patroni $CB_NAME callback is FAILED with error code $EXITCODE."
+					MSG="[$LOGHEADER] ERROR: Deleting VIP '$VIP/$PREFIX dev $IFNAME' by Patroni $CB_NAME callback is FAILED with error code $EXITCODE."
 					echo $MSG
 				fi
 			else
@@ -258,10 +259,10 @@ else
 					sudo ip address add $VIP/$PREFIX dev $IFNAME;
 					EXITCODE=$?;
 					if [[ $EXITCODE -eq 0 ]]; then
-						MSG="[$LOGHEADER] INFO: Adding VIP $VIP by Patroni $CB_NAME callback SUCCEEDED"
+						MSG="[$LOGHEADER] INFO: Adding VIP '$VIP/$PREFIX dev $IFNAME' by Patroni $CB_NAME callback SUCCEEDED"
 						echo $MSG
 					else
-						MSG="[$LOGHEADER] ERROR: Adding VIP $VIP by Patroni $CB_NAME callback is FAILED with error code $EXITCODE."
+						MSG="[$LOGHEADER] ERROR: Adding VIP '$VIP/$PREFIX dev $IFNAME' by Patroni $CB_NAME callback is FAILED with error code $EXITCODE."
 						echo $MSG
 					fi
 				else
