@@ -42,7 +42,7 @@ listen master
     default-server inter 3s fastinter 1s fall 3 rise 4 on-marked-down shutdown-sessions
 
   {% for host in groups['postgres_cluster'] %}
-server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['ansible_facts']['eth0']['ipv4']['address'] }}:{{ postgresql_port }} check check-ssl port {{ patroni_restapi_port }}
+server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['ansible_facts'][postgresql_ifname]['ipv4']['address'] }}:{{ postgresql_port }} check check-ssl port {{ patroni_restapi_port }}
   {% endfor %}
 
 listen replicas
@@ -62,7 +62,7 @@ listen replicas
     default-server inter 3s fastinter 1s fall 3 rise 2 on-marked-down shutdown-sessions
 
   {% for host in groups['postgres_cluster'] %}
-server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['ansible_facts']['eth0']['ipv4']['address'] }}:{{ postgresql_port }} check check-ssl port {{ patroni_restapi_port }}
+server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['ansible_facts'][postgresql_ifname]['ipv4']['address'] }}:{{ postgresql_port }} check check-ssl port {{ patroni_restapi_port }}
   {% endfor %}
 
 listen replicas_sync
@@ -82,7 +82,7 @@ listen replicas_sync
     default-server inter 3s fastinter 1s fall 3 rise 2 on-marked-down shutdown-sessions
 
   {% for host in groups['postgres_cluster'] %}
-server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['ansible_facts']['eth0']['ipv4']['address'] }}:{{ postgresql_port }} check check-ssl port {{ patroni_restapi_port }}
+server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['ansible_facts'][postgresql_ifname]['ipv4']['address'] }}:{{ postgresql_port }} check check-ssl port {{ patroni_restapi_port }}
   {% endfor %}
 
 listen replicas_async
@@ -102,7 +102,7 @@ listen replicas_async
     default-server inter 3s fastinter 1s fall 3 rise 2 on-marked-down shutdown-sessions
 
   {% for host in groups['postgres_cluster'] %}
-server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['ansible_facts']['eth0']['ipv4']['address'] }}:{{ postgresql_port }} check check-ssl port {{ patroni_restapi_port }}
+server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['ansible_facts'][postgresql_ifname]['ipv4']['address'] }}:{{ postgresql_port }} check check-ssl port {{ patroni_restapi_port }}
   {% endfor %}
 
 
