@@ -183,14 +183,14 @@
     - /etc/patroni
     - /etc/patroni/ssl
 
-#- name: "Copy over the CA certificate"
-#  copy:
-#    src: "{{ pki_cert_artifacts_dir }}/ca.crt"
-#    remote_src: false
-#    dest: /etc/patroni/ssl/ca.crt
-#    owner: postgres
-#    group: postgres
-#    mode: 0644
+- name: "Copy over the CA certificate"
+  copy:
+    src: "{{ pki_cert_artifacts_dir }}/ca.crt"
+    remote_src: false
+    dest: /etc/patroni/ssl/ca.crt
+    owner: postgres
+    group: postgres
+    mode: 0644
 - name: "Copy over the Patroni cluster member certificate"
   copy:
     src: "{{ pki_cert_artifacts_dir }}/{{inventory_hostname}}.crt"
@@ -286,6 +286,7 @@
   when:
     - postgresql_stats_temp_directory_path is defined
     - postgresql_stats_temp_directory_path != 'none'
+    - postgresql_version|int < 15
 
 - name: Prepare PostgreSQL | mount the statistics directory in memory (tmpfs)
   mount:
@@ -297,6 +298,7 @@
   when:
     - postgresql_stats_temp_directory_path is defined
     - postgresql_stats_temp_directory_path != 'none'
+    - postgresql_version|int < 15
 
 - name: Prepare PostgreSQL | make sure the postgresql log directory "{{ postgresql_log_dir }}" exists
   file:
@@ -304,7 +306,7 @@
     owner: postgres
     group: postgres
     state: directory
-    mode: 0700
+    mode: 0750
 
 - name: Prepare PostgreSQL | make sure the custom WAL directory "{{ postgresql_wal_dir }}" exists
   file:
@@ -312,7 +314,7 @@
     owner: postgres
     group: postgres
     state: directory
-    mode: 0700
+    mode: 0750
   when: postgresql_wal_dir is defined and postgresql_wal_dir | length > 0
 
 - block:  # wheh postgresql NOT exists
@@ -322,7 +324,7 @@
         owner: postgres
         group: postgres
         state: directory
-        mode: 0700
+        mode: 0750
 
     - name: Prepare PostgreSQL | check that data directory "{{ postgresql_data_dir }}" is not initialized
       stat:
@@ -366,7 +368,7 @@
         state: "{{ item }}"
         owner: postgres
         group: postgres
-        mode: 0700
+        mode: 0750
       loop:
         - absent
         - directory
@@ -377,7 +379,7 @@
         state: "{{ item }}"
         owner: postgres
         group: postgres
-        mode: 0700
+        mode: 0750
       loop:
         - absent
         - directory
