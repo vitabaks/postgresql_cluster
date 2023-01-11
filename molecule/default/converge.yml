@@ -15,6 +15,7 @@
         consul_node_role: server  # if dcs_type: "consul"
         consul_bootstrap_expect: true  # if dcs_type: "consul"
         consul_iface_check: false  # Added to prevent test failures in CI.
+        consul_gather_server_facts: true
         cacheable: true
 
     - name: Prepare | Clean yum cache
