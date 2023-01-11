@@ -54,7 +54,8 @@
         ansible_distribution|lower == 'centos' or
         ansible_distribution|lower == 'fedora' or
         ansible_distribution|lower == 'amazon' or
-        ansible_distribution|lower == 'rocky'
+        ansible_distribution|lower == 'rocky' or
+        ansible_distribution|lower == 'almalinux'
 
     - name: Add an Apt signing key, uses whichever key is at the URL
       apt_key:

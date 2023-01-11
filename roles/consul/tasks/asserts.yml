@@ -39,7 +39,7 @@
   fail:
     msg: "{{ ansible_distribution_version }} is not a supported version."
   when:
-    - ansible_distribution in ['RedHat', 'CentOS', 'OracleLinux', 'Rocky']
+    - ansible_distribution in ['RedHat', 'CentOS', 'OracleLinux', 'Rocky', 'AlmaLinux']
     - ansible_distribution_version is version_compare(6, '<')
 
 - name: Check Debian version
@@ -75,7 +75,7 @@
     msg: "Use DNSmasq instead of iptables on {{ ansible_distribution }}."
   when:
     - consul_iptables_enable | bool
-    - ansible_distribution in ['RedHat', 'CentOS', 'OracleLinux', 'Rocky']
+    - ansible_distribution in ['RedHat', 'CentOS', 'OracleLinux', 'Rocky', 'AlmaLinux']
     - ansible_distribution_version is version_compare(6, '>=')
 
 - name: Check for both Dnsmasq and iptables enabled
