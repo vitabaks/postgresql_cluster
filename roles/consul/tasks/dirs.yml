@@ -2,30 +2,29 @@
 # File: dirs.yml - Consul directories
 
 - name: Create directories
-  block:
-  - name: Configuration and data directories
-    file:
-      dest: "{{ dir_item }}"
-      state: directory
-      owner: "{{ consul_user }}"
-      group: "{{ consul_group }}"
-      mode: 0700
-    with_items:
-      - "{{ consul_config_path }}"
-      - "{{ consul_configd_path }}"
-      - "{{ consul_data_path }}"
-    loop_control:
-      loop_var: dir_item
-  - name: Run directory
-    file:
-      dest: "{{ consul_run_path }}"
-      state: directory
-      owner: "{{ consul_user }}"
-      group: "{{ consul_group }}"
-      mode: 0750
-    when: not consul_install_from_repo | bool
-
   when: ansible_os_family != 'Windows'
+  block:
+    - name: Configuration and data directories
+      file:
+        dest: "{{ dir_item }}"
+        state: directory
+        owner: "{{ consul_user }}"
+        group: "{{ consul_group }}"
+        mode: 0700
+      with_items:
+        - "{{ consul_config_path }}"
+        - "{{ consul_configd_path }}"
+        - "{{ consul_data_path }}"
+      loop_control:
+        loop_var: dir_item
+    - name: Run directory
+      file:
+        dest: "{{ consul_run_path }}"
+        state: directory
+        owner: "{{ consul_user }}"
+        group: "{{ consul_group }}"
+        mode: 0750
+      when: not consul_install_from_repo | bool
 
 - name: Create log directory
   file:
