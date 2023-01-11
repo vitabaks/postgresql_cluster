@@ -22,7 +22,7 @@ skip_list:
   - no-relative-paths
 
 exclude_paths:
-- roles/consul/ # TODO - https://github.com/ansible-community/ansible-consul/pull/514
+  - roles/consul/ # TODO - https://github.com/ansible-community/ansible-consul/pull/520
 
 # https://ansible-lint.readthedocs.io/configuring/
 # https://ansible-lint.readthedocs.io/rules/
