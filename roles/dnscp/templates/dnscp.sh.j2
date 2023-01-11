@@ -222,126 +222,154 @@ for IP in $(echo $VIPs | awk '{gsub(","," "); print $0}'); do
 done
 
 if [[ -z $VIP ]]; then
-	MSG="[$LOGHEADER] WARNING: No suitable VIP ($VIPs) for $NETWORK"
-	echo $MSG
+    MSG="[$LOGHEADER] WARNING: No suitable VIP ($VIPs) for $NETWORK"
+    echo $MSG
 else
-	#####################################################
-	# VIP
-	#####################################################
-	#MSG="[$LOGHEADER] INFO: VIP $VIP is candidate for current network"
-	#echo $MSG
-	case $CB_NAME in
-		on_stop )
-			#####################################################
-			# Remove service_ip if exists
-			#####################################################
-			if [[ ! -z $(ip address | awk '/'$VIP'/{print $0}') ]]; then
-				sudo ip address del $VIP/$PREFIX dev $IFNAME;
-				EXITCODE=$?;
-				if [[ $EXITCODE -eq 0 ]]; then
-					MSG="[$LOGHEADER] INFO: Deleting VIP '$VIP/$PREFIX dev $IFNAME' by Patroni $CB_NAME callback SUCCEEDED"
-					echo $MSG
-				else
-					MSG="[$LOGHEADER] ERROR: Deleting VIP '$VIP/$PREFIX dev $IFNAME' by Patroni $CB_NAME callback is FAILED with error code $EXITCODE."
-					echo $MSG
-				fi
-			else
-				MSG="[$LOGHEADER] INFO: VIP $VIP not exist, no action required.";
-				#echo $MSG
-			fi
-			;;
-		on_start|on_role_change )
-			if [[ $ROLE == 'master' ]]; then
-				#####################################################
-				# Add service_ip if not exists
-				#####################################################
-				if [[ -z $(ip address | awk '/'$VIP'/{print $0}') ]]; then
-					sudo ip address add $VIP/$PREFIX dev $IFNAME;
-					EXITCODE=$?;
-					if [[ $EXITCODE -eq 0 ]]; then
-						MSG="[$LOGHEADER] INFO: Adding VIP '$VIP/$PREFIX dev $IFNAME' by Patroni $CB_NAME callback SUCCEEDED"
-						echo $MSG
-					else
-						MSG="[$LOGHEADER] ERROR: Adding VIP '$VIP/$PREFIX dev $IFNAME' by Patroni $CB_NAME callback is FAILED with error code $EXITCODE."
-						echo $MSG
-					fi
-				else
-					MSG="[$LOGHEADER] INFO: VIP $VIP already present, no action required.";
-					#echo $MSG
-				fi
-				
-				#####################################################
-				# Register DNS
-				#####################################################
-				if [[ "" != "$DNSzoneFQDN" ]] && [[ "" != "$DNSserver" ]] && [[ "" != "$VCompName" ]]; then
-					MSG="[$LOGHEADER] INFO: Detected DNS zone FQDN is $DNSzoneFQDN"
-					echo $MSG
-					MSG="[$LOGHEADER] INFO: Detected DNS Server is $DNSserver"
-					echo $MSG
-					# Prepare parameters for nsupdate (operator <<- used for use tab symbols)
-					NSDATA=$(cat <<-EOF
-					server $DNSserver
-					zone $DNSzoneFQDN
-					update delete $VCompNameFQDN A
-					update add $VCompNameFQDN $TTL A $VIP
-					send
-					EOF
-					)
-				
-					# Authentication by $VCompName Computer account
-					KINITEXITCODE=-1
-					if [[ "succeeded" == "$JOINED_OK" ]]; then
-						echo "$VCompPassword" | kinit $VCompName$ >/dev/null && KINITEXITCODE=$?
-					fi
+    #####################################################
+    # VIP
+    #####################################################
+    #MSG="[$LOGHEADER] INFO: VIP $VIP is candidate for current network"
+    #echo $MSG
+    case $CB_NAME in
+        on_stop )
+            #####################################################
+            # Remove service_ip if exists
+            #####################################################
+            if [[ ! -z $(ip address | awk '/'$VIP'/{print $0}') ]]; then
+                sudo ip address del $VIP/$PREFIX dev $IFNAME;
+                EXITCODE=$?;
+                if [[ $EXITCODE -eq 0 ]]; then
+                    MSG="[$LOGHEADER] INFO: Deleting VIP '$VIP/$PREFIX dev $IFNAME' by Patroni $CB_NAME callback SUCCEEDED"
+                    echo $MSG
+                else
+                    MSG="[$LOGHEADER] ERROR: Deleting VIP '$VIP/$PREFIX dev $IFNAME' by Patroni $CB_NAME callback is FAILED with error code $EXITCODE."
+                    echo $MSG
+                fi
 
-					# AddOrUpdateDNSRecord
-					if [[ ! -z $VCompPassword ]] && [[ $KINITEXITCODE -eq 0 ]]; then
-						# Active Directory\SAMBA authentication under Computer Account is success
-						# View received Kerberos tickets: klist
-						nsupdate -g -v <(echo "$NSDATA")
-						EXITCODE=$?;
-						if [[ $EXITCODE -eq 0 ]]; then
-							MSG="[$LOGHEADER] INFO: Registering $VCompNameFQDN on $DNSserver with secure DNS update SUCCEEDED"
-							echo $MSG
-						else
-							MSG="[$LOGHEADER] ERROR: Registering $VCompNameFQDN on $DNSserver with secure DNS update FAILED with error code $EXITCODE"
-							echo $MSG
-						fi
-					else
-						# Active Directory\SAMBA authentication is failed. Try to non-secure DNS-update.
-						nsupdate -v <(echo "$NSDATA")
-						EXITCODE=$?;
-						if [[ $EXITCODE -eq 0 ]]; then
-							MSG="[$LOGHEADER] INFO: Registering $VCompNameFQDN on $DNSserver with non-secure DNS update SUCCEEDED"
-							echo $MSG
-						else
-							MSG="[$LOGHEADER] ERROR: Registering $VCompNameFQDN on $DNSserver with non-secure DNS update FAILED with error code $EXITCODE."
-							echo $MSG
-						fi
-					fi
-				fi
-			else
-				#####################################################
-				# Remove service_ip if exists
-				#####################################################
-				if [[ ! -z $(ip address | awk '/'$VIP'/{print $0}') ]]; then
-					sudo ip address del $VIP/$PREFIX dev $IFNAME;
-					EXITCODE=$?;
-					if [[ $EXITCODE -eq 0 ]]; then
-						MSG="[$LOGHEADER] INFO: Deleting VIP $VIP by Patroni $CB_NAME callback SUCCEEDED"
-						echo $MSG
-					else
-						MSG="[$LOGHEADER] ERROR: Deleting VIP $VIP by Patroni $CB_NAME callback is FAILED with error code $EXITCODE."
-						echo $MSG
-					fi
-				else
-					MSG="[$LOGHEADER] INFO: VIP $VIP not exist, no action required.";
-					#echo $MSG
-				fi
-			fi
-		;;
-		* )
-		usage
-		;;
-	esac
+                # Remove cron task
+                sudo crontab -u $(whoami) -l | grep -v "$0" | sudo crontab -u $(whoami) -
+            else
+                MSG="[$LOGHEADER] INFO: VIP $VIP not exist, no action required.";
+                #echo $MSG
+            fi
+            ;;
+        on_start|on_role_change|on_schedule )
+            if [[ $ROLE == 'master' ]]; then
+                #####################################################
+                # Add service_ip if not exists
+                #####################################################
+                if [[ -z $(ip address | awk '/'$VIP'/{print $0}') ]]; then
+                    sudo ip address add $VIP/$PREFIX dev $IFNAME;
+                    EXITCODE=$?;
+                    if [[ $EXITCODE -eq 0 ]]; then
+                        MSG="[$LOGHEADER] INFO: Adding VIP '$VIP/$PREFIX dev $IFNAME' by Patroni $CB_NAME callback SUCCEEDED"
+                        echo $MSG
+                    else
+                        MSG="[$LOGHEADER] ERROR: Adding VIP '$VIP/$PREFIX dev $IFNAME' by Patroni $CB_NAME callback is FAILED with error code $EXITCODE."
+                        echo $MSG
+                    fi
+                else
+                    MSG="[$LOGHEADER] INFO: VIP $VIP already present, no action required.";
+                    #echo $MSG
+                fi
+            fi
+
+            if [[ $ROLE == 'replica' ]]; then
+                #####################################################
+                # Remove service_ip if exists
+                #####################################################
+                if [[ ! -z $(ip address | awk '/'$VIP'/{print $0}') ]]; then
+                    sudo ip address del $VIP/$PREFIX dev $IFNAME;
+                    EXITCODE=$?;
+                    if [[ $EXITCODE -eq 0 ]]; then
+                        MSG="[$LOGHEADER] INFO: Deleting VIP '$VIP/$PREFIX dev $IFNAME' by Patroni $CB_NAME callback SUCCEEDED"
+                        echo $MSG
+                    else
+                        MSG="[$LOGHEADER] ERROR: Deleting VIP '$VIP/$PREFIX dev $IFNAME' by Patroni $CB_NAME callback is FAILED with error code $EXITCODE."
+                        echo $MSG
+                    fi
+
+                    # Remove cron task
+                    sudo crontab -u $(whoami) -l | grep -v "$0" | sudo crontab -u $(whoami) -
+                else
+                    MSG="[$LOGHEADER] INFO: VIP $VIP not exist, no action required.";
+                    #echo $MSG
+                fi
+            fi
+
+            if [[ $ROLE == 'master' ]] || ( [[ $ROLE == 'registerdns' ]] && [[ "" != "$(ip address | awk '/'$VIP'/{print $0}')" ]] ); then
+            #####################################################
+            # Register DNS
+            #####################################################
+            if [[ "" != "$DNSzoneFQDN" ]] && [[ "" != "$DNSserver" ]] && [[ "" != "$VCompName" ]]; then
+                MSG="[$LOGHEADER] INFO: Detected DNS zone FQDN is $DNSzoneFQDN"
+                echo $MSG
+                MSG="[$LOGHEADER] INFO: Detected DNS Server is $DNSserver"
+                echo $MSG
+                # Prepare parameters for nsupdate (operator <<- used for use tab symbols)
+				NSDATA=$(cat <<-EOF
+				server $DNSserver
+				zone $DNSzoneFQDN
+				update delete $VCompNameFQDN A
+				update add $VCompNameFQDN $TTL A $VIP
+				send
+				EOF
+				)
+
+                # Authentication by $VCompName Computer account
+                KINITEXITCODE=-1
+                if [[ "succeeded" == "$JOINED_OK" ]]; then
+                    echo "$VCompPassword" | kinit $VCompName$ >/dev/null && KINITEXITCODE=$?
+                fi
+
+                # AddOrUpdateDNSRecord
+                if [[ ! -z $VCompPassword ]] && [[ $KINITEXITCODE -eq 0 ]]; then
+                # Active Directory\SAMBA authentication under Computer Account is success
+                    # View received Kerberos tickets: klist
+                    nsupdate -g -v <(echo "$NSDATA")
+                    EXITCODE=$?;
+                    if [[ $EXITCODE -eq 0 ]]; then
+                        MSG="[$LOGHEADER] INFO: Registering $VCompNameFQDN on $DNSserver with secure DNS update SUCCEEDED"
+                        echo $MSG
+                    else
+                        MSG="[$LOGHEADER] ERROR: Registering $VCompNameFQDN on $DNSserver with secure DNS update FAILED with error code $EXITCODE."
+                        echo $MSG
+                    fi
+                else
+                    # Active Directory\SAMBA authentication is failed. Try to non-secure DNS-update.
+                    nsupdate -v <(echo "$NSDATA")
+                    EXITCODE=$?;
+                    if [[ $EXITCODE -eq 0 ]]; then
+                        MSG="[$LOGHEADER] INFO: Registering $VCompNameFQDN on $DNSserver with non-secure DNS update SUCCEEDED"
+                        echo $MSG
+                    else
+                        MSG="[$LOGHEADER] ERROR: Registering $VCompNameFQDN on $DNSserver with non-secure DNS update FAILED with error code $EXITCODE."
+                        echo $MSG
+                    fi
+                fi
+            fi
+
+            fi
+            #####################################################
+            # Enable DNS Update cron task if service_ip exists
+            #####################################################
+            # Remove cron task
+            sudo crontab -u $(whoami) -l | grep -v "$0" | sudo crontab -u $(whoami) -
+            MSG="[$LOGHEADER] INFO: 'Dynamic DNS Update' cron task for $(whoami) user removed."
+            echo $MSG
+            if [[ -z $(ip address | awk '/'$VIP'/{print $0}') ]]; then
+                # service_ip not exists
+                MSG="[$LOGHEADER] INFO: service_ip not exists."
+                #echo $MSG
+            else
+                # service_ip exists - Add cron task for Dynamic DNS Updates
+                sudo crontab -u $(whoami) -l 2>/dev/null; echo "53 00 * * * sudo $0 on_schedule registerdns $VCompName" | sudo crontab -u $(whoami) -
+                MSG="[$LOGHEADER] INFO: 'Dynamic DNS Update' cron task for $(whoami) user (re)enabled."
+                echo $MSG
+            fi
+            ;;
+        * )
+            usage
+            ;;
+    esac
 fi
