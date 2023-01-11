@@ -117,7 +117,7 @@ if [[ "" == "$PKG_OK" ]]; then
     exit 1; # Exit with error
 else
     # Detect DNS Server
-    if [[ "" == "$DNSserver" ]] && [[ "succeeded" == "$JOINED_OK" ]]; then
+    if [[ "" == "$DNSserver" ]] && [[ "OK" == "$JOINED_OK" ]]; then
         DNSserver=$(sudo net ads info | awk -F": " '{if ($1 == "LDAP server name") print $2}') # AD DS logon DC
         #MSG="[$LOGHEADER] INFO: Detected DNS Server is $DNSserver"
         #echo $MSG
@@ -314,7 +314,7 @@ else
 
                 # Authentication by $VCompName Computer account
                 KINITEXITCODE=-1
-                if [[ "succeeded" == "$JOINED_OK" ]]; then
+                if [[ "OK" == "$JOINED_OK" ]]; then
                     echo "$VCompPassword" | kinit $VCompName$ >/dev/null && KINITEXITCODE=$?
                 fi
 
