@@ -68,7 +68,6 @@
     msg: "The ethernet interface specified by consul_iface was not found."
   when:
     - ansible_os_family != 'Windows'
-    - (consul_iface_check is not defined or consul_iface_check | bool)
     - consul_iface not in ansible_interfaces
 
 - name: Check iptables on Red Hat, CentOS or Oracle Linux
