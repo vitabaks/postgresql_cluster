@@ -325,10 +325,11 @@ sudo ETCDCTL_API=2 etcdctl --ca-file="/etc/etcd/ssl/ca.crt" --endpoints https://
 
 ## Как начать развёртывание с начала
 Если вам нужно начать с самого начала, используйте для очистки следующие команды:
-- на всех узлах СУБД остановить сервис Patroni и удалить каталог с базами данных (кластер баз данных, PGDATA):
+- на всех узлах СУБД остановить сервис Patroni и удалить кластер баз данных (каталог с базами данных, PGDATA), каталог с конфигурацией Patroni:
     ```shell
     sudo systemctl stop patroni
-    sudo rm -rf /var/lib/postgresql/ # be careful with this if there are other PG clusters
+    sudo rm -rf /var/lib/postgresql/ # будьте осторожны, если есть другие экземпляры PostgreSQL
+    sudo rm -rf /etc/patroni/
     ```
 - затем, если используется etcd, удалите запись в etcd (можно запустить на любом узле etcd):
     ```shell 
