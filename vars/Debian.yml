@@ -8,7 +8,7 @@ postgresql_wal_dir: "" #"/mnt/disk2/main/pg_wal"  # custom WAL dir path (symlink
 postgresql_conf_dir: "{{ postgresql_data_dir }}" #"/etc/postgresql/{{ postgresql_version }}/{{ postgresql_cluster_name }}"
 postgresql_log_dir: "/var/log/postgresql"
 postgresql_home_dir: "/var/lib/postgresql"
-# stats_temp_directory (mount the statistics directory in tmpfs)
+# stats_temp_directory (mount the statistics directory in tmpfs for PostgreSQL < 15)
 postgresql_stats_temp_directory_path: "/var/lib/pgsql_stats_tmp"  # or 'none'
 postgresql_stats_temp_directory_size: "1024m"
 
@@ -16,11 +16,12 @@ postgresql_version_terse: "{{ postgresql_version | replace('.', '') }}"
 
 # Packages (for apt repo)
 os_specific_packages:
-  Debian-9: [python, python-dev, python-psycopg2, python-setuptools, python-pip, python-requests]
+  Debian-9: [python, python-dev, python-psycopg2, python-setuptools] # , python-pip, python-requests
   Debian-10: [python3]  #[python, python-dev, python-psycopg2, python-setuptools]
   Debian-11: [python3]  # python 2 is not required
   Ubuntu-18: [python, python-dev, python-psycopg2, python-setuptools]
   Ubuntu-20: [python3]  # python 2 is not required
+  Ubuntu-22: [python3]  # python 2 is not required
 system_packages:
   - "{{ os_specific_packages[ansible_distribution ~ '-' ~ ansible_distribution_major_version] }}"
   - python3
@@ -39,12 +40,13 @@ system_packages:
   - jq
   - iptables
   - acl
+# for dns updates
+  - dnsutils
 # optional packages
   - htop
 
 # Extra packages
 etcd_package_repo: "https://github.com/etcd-io/etcd/releases/download/{{ etcd_ver }}/etcd-{{ etcd_ver }}-linux-amd64.tar.gz"
-#etcd_package_repo: "http://mlk-pgsql-mpa.demo.ru/opt/etcd/etcd-{{ etcd_ver }}-linux-amd64.tar.gz"
 
 # Patroni package will be installed from the pip (by default).
 # You also have the option of choosing an patroni installation method using the deb package.
@@ -54,7 +56,6 @@ patroni_installation_method: "pip"  # (default)"pip" or "deb"
 # Packages from your repository will be used to install instead of the pip repository.
 pip_package_repo: "https://bootstrap.pypa.io/get-pip.py"  # latest version pip3 for python3 (or use "pip-<version>.tar.gz").
 #pip_package_repo: "https://bootstrap.pypa.io/pip/3.5/get-pip.py"
-#pip_package_repo: "http://mlk-pgsql-mpa.demo.ru/opt/pip/get-pip.py"  # latest version pip3 for python3 (or use "pip-<version>.tar.gz").
 patroni_pip_requirements_repo: []
 #  - "http://my-repo.url/setuptools-41.2.0.zip"
 #  - "http://my-repo.url/setuptools_scm-3.3.3.tar.gz"

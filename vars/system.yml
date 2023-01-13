@@ -33,7 +33,18 @@ sysctl_conf:
 #    - {name: "vm.dirty_expire_centisecs", value: "1000"}
     - {name: "vm.dirty_background_bytes", value: "0"} #"67108864"
 #    - {name: "vm.dirty_bytes", value: "536870912"}
-#    - {name: "vm.nr_hugepages", value: "70"}  # example "9510*2MB"=18GB
+    - {name: "vm.nr_hugepages", value: "2150"}  # Method1 [ hugepages=(shared_buffers + 5%)/huge_page_size , example: 2150 = (4GB + 5%) / 2MB ]
+# Method2: https://www.intel.com/content/www/us/en/docs/programmable/683840/1-2-1/enabling-hugepages.html
+# Huge Pages info
+#  grep Huge /proc/meminfo
+# CPU is support 1GB Huge Pages?
+#  if grep pdpe1gb /proc/cpuinfo >/dev/null 2>&1; then echo "1GB supported."; fi
+# If CPU support 1GB Huge Pages, then sudoedit /etc/default/grub
+# , and add string to end of file [ hugepages=(shared_buffers + 5%)/huge_page_size ]:
+#  GRUB_CMDLINE_LINUX_DEFAULT="${GRUB_CMDLINE_LINUX_DEFAULT} default_hugepagesz=1GB hugepagesz=1G hugepages=4"
+# Save file and run:
+#  sudo update-grub
+#  sudo reboot
     - {name: "vm.zone_reclaim_mode", value: "0"}
     - {name: "kernel.numa_balancing", value: "0"}
     - {name: "kernel.sched_migration_cost_ns", value: "5000000"}
@@ -144,5 +155,4 @@ firewall_additional_rules_for:
   balancers: []
 #    - "iptables -p vrrp -A INPUT -j ACCEPT"  # Keepalived (vrrp)
 #    - "iptables -p vrrp -A OUTPUT -j ACCEPT"  # Keepalived (vrrp)
-
 ...

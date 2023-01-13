@@ -19,16 +19,15 @@
   
   
 #### Основные возможности:
-- развёртывание кластера [Patroni](https://patroni.readthedocs.io/en/latest/) с СУБД PostgreSQL или PostgresPro;
+- развёртывание кластера [Patroni](https://patroni.readthedocs.io/en/latest/) с СУБД PostgreSQL или Postgres Pro;
 - использование встроенного механизма распределённого консенсуса или использование внешней DCS (etcd);
-- развёртывание кластера [etcd](https://etcd.io/docs/v3.5/op-guide/);
 - настройка watchdog для Patroni (защита от split-brain);
+- настройка параметров ядра операционной системы Linux;
+- настройка сетевого брандмауэра;
 - DNS точка подключения клиентов ([DNS Connection Point](https://github.com/IlgizMamyshev/dnscp));
 - поддержка геораспределенного кластера ([DNS Connection Point](https://github.com/IlgizMamyshev/dnscp));
 - развёртывание HAProxy для балансировки доступа к репликам только для чтения;
-- настройка брандмауэра операционной системы;
-- настройка параметров ядра операционной системы Linux;
-- поддержка операционных систем Debian, Astra Linux;
+- развёртывание кластера [etcd](https://etcd.io/docs/v3.5/op-guide/);
 
 ##### Высокодоступный кластер, на базе Patroni (на чистом RAFT) и DNSCP (балансировка с HAProxy опционально):  
 ![PGSQLCluster](https://github.com/IlgizMamyshev/pgsql_cluster/blob/master/doc/PGSQLClusterPatroniOnPureRAFT.png)
@@ -63,12 +62,12 @@
 [**PostgreSQL**](https://www.postgresql.org) - реляционная база данных с открытым исходным кодом. При использовании ОС Astra Linux возможно использование PostgreSQL в составе репозитория ОС.  
 Поддерживаются все поддерживаемые версии PostgreSQL.
 
-:white_check_mark: протестировано: `PostgreSQL 11, 14`
+:white_check_mark: протестировано: `PostgreSQL 11, 14, 15`
 
 [**Postgres Pro**](https://www.postgrespro.ru) - Российская система управления базами данных на основе PostgreSQL. Коммерческий продукт.
 Поддерживаются все версии Postgres Pro, редакции Standard и Enterprise.
 
-:white_check_mark: протестировано: `Postgres Pro 14`
+:white_check_mark: протестировано: `Postgres Pro 14, 15`
 
 #### Операционные Системы:
 - **Debian**: 9, 10, 11
@@ -171,22 +170,20 @@ Patroni может не зависеть от сторонних систем DC
 
 `vim vars/main.yml`
 
-5. Проверьте доступность узлов
+5.1 Запустите playbook для установки кластера etcd (опционально, если используете etcd DCS вместо Patroni RAFT):
 
-`ansible all -m ping`
-
-6.1 Запустите playbook для установки кластера etcd (опционально, если используете etcd DCS вместо Patroni RAFT):
-
-`ansible-playbook etcd_cluster.yml -K` \
+`sudo su` \
+`ansible-playbook etcd_cluster.yml` \
 После успешного развёртывания в /vars/[main.yml](./vars/main.yml) укажите `dcs_exists: true` и `dcs_type: "etcd"`
 
-6.2 Запустите playbook для установки кластера PostgreSQL:
+5.2 Запустите playbook для установки кластера PostgreSQL:
 
-`ansible-playbook deploy_pgcluster.yml -K`
+`sudo su` \
+`ansible-playbook deploy_pgcluster.yml`
 
-6.3 Запустите playbook для установки HA Proxy (опционально):
+5.3 Запустите playbook для установки HA Proxy (опционально):
 
-`ansible-playbook balancers.yml -K` \
+`ansible-playbook balancers.yml` \
 Чтобы установить HA Proxy сразу во время развёртывания кластера PostgreSQL в /vars/[main.yml](./vars/main.yml) укажите `with_haproxy_load_balancing: true`
 
 ## Переменные
@@ -195,17 +192,35 @@ Patroni может не зависеть от сторонних систем DC
 ## Проверка после развёртывания
 ### Patroni
 ##### Статус сервиса
-`sudo systemctl status patroni.service`
+```
+sudo systemctl status patroni.service
+```
 
 ##### Журнал событий
-`sudo grep -i patroni /var/log/syslog` \
-`sudo tail -n 15 /var/log/syslog`
+```
+sudo grep -i patroni /var/log/syslog
+```
+```
+sudo tail -n 15 /var/log/syslog
+```
 
 ##### Здоровье кластера
-`sudo patronictl -c /etc/patroni/patroni.yml list`
+```
+sudo patronictl -c /etc/patroni/patroni.yml list
+```
+```
++ Cluster: PGSQL-CL (1234567890123456789) ----------------+----+-----------+
+| Member          | Host         | Role         | State   | TL | Lag in MB |
++-----------------+--------------+--------------+---------+----+-----------+
+| PGSQL-N2        | 172.16.33.22 | Sync Standby | running |  3 |         0 |
+| PGSQL-N3        | 172.16.33.33 | Leader       | running |  3 |           |
++-----------------+--------------+--------------+---------+----+-----------+
+```
 
 ##### RAFT
-`sudo syncobj_admin -conn pgsql-n2:2379 -pass 6#TCb9JItl8u78IiXAzKOeE54#V1FVm1OWpDPtMhb0Nh$3S2P$ -status`
+```
+sudo syncobj_admin -conn pgsql-n2:2379 -pass Password -status
+```
 
 ### HA Proxy
 ##### Статистика
@@ -214,20 +229,74 @@ Patroni может не зависеть от сторонних систем DC
 
 ### PostgreSQL
 ##### Журнал событий
-`sudo tail -n 20 /var/log/postgresql/postgresql-15.log`
+```
+sudo tail -n 20 /var/log/postgresql/postgresql-15.log
+```
 
 ##### Тестовое подключение
-`/opt/pgpro/std-14/bin/psql -p 5432 -U postgres -d postgres -c "SELECT version();"`
+```
+/opt/pgpro/std-14/bin/psql -p 5432 -U postgres -d postgres -c "SELECT version();"
+```
 
 ### etcd
 ##### Статус сервиса
-`sudo systemctl status etcd.service`
+```
+sudo systemctl status etcd.service
+```
 
 ##### Здоровье кластера
-`sudo ETCDCTL_API=2 etcdctl --ca-file="/etc/etcd/ssl/ca.crt" --endpoints https://127.0.0.1:2379 --cert-file=/etc/etcd/ssl/server.crt --key-file=/etc/etcd/ssl/server.key cluster-health`
+```
+sudo ETCDCTL_API=2 etcdctl --ca-file="/etc/etcd/ssl/ca.crt" --endpoints https://127.0.0.1:2379 --cert-file=/etc/etcd/ssl/server.crt --key-file=/etc/etcd/ssl/server.key cluster-health
+```
+```
+sudo su
+ENDPOINTS=$(ETCDCTL_API=3 etcdctl member list --cacert="/etc/etcd/ssl/ca.crt" --cert=/etc/etcd/ssl/server.crt --key=/etc/etcd/ssl/server.key | grep -o '[^ ]\+:2379' | paste -s -d,)
+ETCDCTL_API=3 etcdctl --endpoints=$ENDPOINTS endpoint health --write-out=table --cacert="/etc/etcd/ssl/ca.crt" --cert=/etc/etcd/ssl/server.crt --key=/etc/etcd/ssl/server.key
+```
+```
++----------------------------+--------+-------------+-------+
+|          ENDPOINT          | HEALTH |    TOOK     | ERROR |
++----------------------------+--------+-------------+-------+
+| https://172.16.32.11:2379  |   true | 23.921885ms |       |
+| https://172.16.64.22:2379  |   true | 35.531942ms |       |
+| https://172.16.96.33:2379  |   true | 36.971386ms |       |
++----------------------------+--------+-------------+-------+
+```
+
+##### Список узлов кластера
+```
+ETCDCTL_API=3 sudo etcdctl member list -w table --cacert="/etc/etcd/ssl/ca.crt" --cert=/etc/etcd/ssl/server.crt --key=/etc/etcd/ssl/server.key
+```
+```
++------------------+---------+-----------------+----------------------------+----------------------------+------------+
+|        ID        | STATUS  |      NAME       |         PEER ADDRS         |        CLIENT ADDRS        | IS LEARNER |
++------------------+---------+-----------------+----------------------------+----------------------------+------------+
+| 1111111111111111 | started | ETCD-N1         | https://172.16.32.11:2380  | https://172.16.32.11:2379  |      false |
+| 2222222222222222 | started | ETCD-N2         | https://172.16.64.22:2380  | https://172.16.64.22:2379  |      false |
+| 3333333333333333 | started | ETCD-N3         | https://172.16.96.33:2380  | https://172.16.96.33:2379  |      false |
++------------------+---------+-----------------+----------------------------+----------------------------+------------+
+```
+  
+  
+```
+sudo su
+ENDPOINTS=$(ETCDCTL_API=3 etcdctl member list --cacert="/etc/etcd/ssl/ca.crt" --cert=/etc/etcd/ssl/server.crt --key=/etc/etcd/ssl/server.key | grep -o '[^ ]\+:2379' | paste -s -d,)
+ETCDCTL_API=3 etcdctl --endpoints=$ENDPOINTS endpoint status --write-out=table --cacert="/etc/etcd/ssl/ca.crt" --cert=/etc/etcd/ssl/server.crt --key=/etc/etcd/ssl/server.key
+```
+```
++----------------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
+|          ENDPOINT          |        ID        | VERSION | DB SIZE | IS LEADER | IS LEARNER | RAFT TERM | RAFT INDEX | RAFT APPLIED INDEX | ERRORS |
++----------------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
+| https://172.16.32.11:2379  | 1111111111111111 |   3.5.6 |   20 kB |     false |      false |         2 |         23 |                 23 |        |
+| https://172.16.64.22:2379  | 2222222222222222 |   3.5.6 |   20 kB |      true |      false |         2 |         23 |                 23 |        |
+| https://172.16.96.33:2379  | 3333333333333333 |   3.5.6 |   20 kB |     false |      false |         2 |         23 |                 23 |        |
++----------------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
+```
 
 ##### Конфигурация PostgreSQL в etcd
-`sudo ETCDCTL_API=2 etcdctl --ca-file="/etc/etcd/ssl/ca.crt" --endpoints https://127.0.0.1:2379 --cert-file=/etc/etcd/ssl/server.crt --key-file=/etc/etcd/ssl/server.key get service/pgsql-cluster/config`
+```
+sudo ETCDCTL_API=2 etcdctl --ca-file="/etc/etcd/ssl/ca.crt" --endpoints https://127.0.0.1:2379 --cert-file=/etc/etcd/ssl/server.crt --key-file=/etc/etcd/ssl/server.key get service/pgsql-cluster/config
+```
 
 ## Обслуживание
 Данный вопрос выходит за рамки данного описания.  
@@ -256,10 +325,11 @@ Patroni может не зависеть от сторонних систем DC
 
 ## Как начать развёртывание с начала
 Если вам нужно начать с самого начала, используйте для очистки следующие команды:
-- на всех узлах СУБД остановить сервис Patroni и удалить каталог с базами данных (кластер баз данных, PGDATA):
+- на всех узлах СУБД остановить сервис Patroni и удалить кластер баз данных (каталог с базами данных, PGDATA), каталог с конфигурацией Patroni:
     ```shell
     sudo systemctl stop patroni
-    sudo rm -rf /var/lib/postgresql/ # be careful with this if there are other PG clusters
+    sudo rm -rf /var/lib/postgresql/ # будьте осторожны, если есть другие экземпляры PostgreSQL
+    sudo rm -rf /etc/patroni/
     ```
 - затем, если используется etcd, удалите запись в etcd (можно запустить на любом узле etcd):
     ```shell 

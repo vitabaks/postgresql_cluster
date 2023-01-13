@@ -25,7 +25,9 @@ restapi:
   connect_address: {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ patroni_restapi_port }}
   certfile: /etc/ssl/certs/server.crt
   keyfile: /etc/ssl/private/server.key
-  ciphers: "ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES128-GCM-SHA256:!SSLv1:!SSLv2:!SSLv3:!TLSv1:!TLSv1.1"
+  cafile: /etc/patroni/ssl/ca.crt
+# ciphers: "ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES128-GCM-SHA256:!SSLv1:!SSLv2:!SSLv3:!TLSv1:!TLSv1.1"
+  ciphers: "ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:!SSLv1:!SSLv2:!SSLv3:!TLSv1:!TLSv1.1"
   verify_client: optional # none, optional or required. For optional the client cert will only be checked for PUT, POST, PATCH, and DELETE requests.
 #  authentication:
 #    username: patroni_restapi_username
@@ -34,9 +36,10 @@ restapi:
 {% if dcs_type == 'etcd' %}
 
 etcd:
-  hosts: {% for host in groups['etcd_cluster'] %}{{ hostvars[host]['ansible_facts']['eth0']['ipv4']['address'] }}:{{ patroni_etcd_hosts.port }}{% if not loop.last %},{% endif %}{% endfor %}
+  hosts: {% for host in groups['etcd_cluster'] %}{{ hostvars[host]['ansible_facts'][patroni_etcd_hosts.ifname]['ipv4']['address'] }}:{{ patroni_etcd_hosts.port }}{% if not loop.last %},{% endif %}{% endfor %}
 
   protocol: {{ patroni_etcd_hosts.protocol }}
+  cacert: /etc/patroni/ssl/ca.crt
   cert: /etc/ssl/certs/server.crt
   key: /etc/ssl/private/server.key
 {% else %}
@@ -100,6 +103,9 @@ bootstrap:
   {% if postgresql_data_checksums|bool %}
     - data-checksums
   {% endif %}
+  {% if postgresql_allow_group_access|bool %}
+    - allow-group-access
+  {% endif %}
 {% endif %}
 
   pg_hba:  # Add following lines to pg_hba.conf after running 'initdb'
@@ -109,11 +115,11 @@ bootstrap:
 
 postgresql:
 {% if cluster_vip is defined and cluster_vip | length > 0 %}
-  listen: {{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }},{{ cluster_vip }},127.0.0.1:{{ postgresql_port }}
+  listen: {{ hostvars[inventory_hostname]['ansible_facts'][postgresql_ifname]['ipv4']['address'] }},{{ cluster_vip }},127.0.0.1:{{ postgresql_port }}
 {% else %}
-  listen: {{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }},127.0.0.1:{{ postgresql_port }}
+  listen: {{ hostvars[inventory_hostname]['ansible_facts'][postgresql_ifname]['ipv4']['address'] }},127.0.0.1:{{ postgresql_port }}
 {% endif %}
-  connect_address: {{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}:{{ postgresql_port }}
+  connect_address: {{ hostvars[inventory_hostname]['ansible_facts'][postgresql_ifname]['ipv4']['address'] }}:{{ postgresql_port }}
 {% if patroni_superuser_username == 'postgres' %}
   use_unix_socket: true
 {% endif %}
@@ -133,7 +139,7 @@ postgresql:
 #      password: rewind_password
   parameters:
     unix_socket_directories: {{ postgresql_unix_socket_dir }}
-{% if postgresql_stats_temp_directory_path is defined and postgresql_stats_temp_directory_path != 'none' %}
+{% if postgresql_stats_temp_directory_path is defined and postgresql_stats_temp_directory_path != 'none' and postgresql_version | int < 15 %}
     stats_temp_directory: {{ postgresql_stats_temp_directory_path }}
 {% endif %}
 
