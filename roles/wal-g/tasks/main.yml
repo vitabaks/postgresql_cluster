@@ -61,9 +61,8 @@
       package:
         name:
           - libbrotli-dev
-          - liblzo2-dev
+          # - liblzo2-dev  # https://github.com/wal-g/wal-g/issues/1412
           - libsodium-dev
-          - make
           - cmake
           - git
         state: present
@@ -73,12 +72,10 @@
       package:
         name:
           - brotli-devel
-          - lzo-devel
+          # - lzo-devel  # https://github.com/wal-g/wal-g/issues/1412
           - libsodium-devel
-          - make
           - cmake
           - gcc
-          - gcc-c++
           - git
         state: present
       when: ansible_os_family == "RedHat"
@@ -102,7 +99,6 @@
       args:
         executable: /bin/bash
       changed_when: false
-      failed_when: false
       register: wal_g_latest_version
 
     - block:  # Install latest Go compiler
