@@ -138,7 +138,7 @@
         params:
           USE_BROTLI: 1
           USE_LIBSODIUM: 1
-          USE_LZO: 1
+          # USE_LZO: 1  # https://github.com/wal-g/wal-g/issues/1412
       environment:
         PATH: "{{ ansible_env.PATH }}:/usr/local/go/bin"
 
@@ -151,7 +151,7 @@
         params:
           USE_BROTLI: 1
           USE_LIBSODIUM: 1
-          USE_LZO: 1
+          # USE_LZO: 1  # https://github.com/wal-g/wal-g/issues/1412
           GOBIN: /usr/local/bin
       environment:
         PATH: "{{ ansible_env.PATH }}:/usr/local/go/bin"
