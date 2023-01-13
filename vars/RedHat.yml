@@ -77,7 +77,6 @@ postgresql_packages:
 
 # Extra packages
 etcd_package_repo: "https://github.com/etcd-io/etcd/releases/download/{{ etcd_ver }}/etcd-{{ etcd_ver }}-linux-amd64.tar.gz"
-wal_g_package_repo: "https://github.com/wal-g/wal-g/releases/download/{{ wal_g_ver }}/wal-g.linux-amd64.tar.gz"
 vip_manager_package_repo: "https://github.com/cybertec-postgresql/vip-manager/releases/download/v{{ vip_manager_version }}/vip-manager-{{ vip_manager_version }}-1.x86_64.rpm"
 # (if with_haproxy_load_balancing: true)
 haproxy_installation_method: "rpm"  # (default)"rpm" or "src"

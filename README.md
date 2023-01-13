@@ -374,11 +374,12 @@ patroni_create_replica_methods:
 postgresql_restore_command: "wal-g wal-fetch %f %p"
 
 wal_g_install: true
-wal_g_ver: "v0.2.15"  # version to install
-wal_g_json:  # see more options https://github.com/wal-g/wal-g#configuration
+wal_g_version: "2.0.1"
+wal_g_json:  # config https://github.com/wal-g/wal-g#configuration
   - {option: "xxxxxxx", value: "xxxxxxx"}
   - {option: "xxxxxxx", value: "xxxxxxx"}
   ...
+wal_g_patroni_cluster_bootstrap_command: "wal-g backup-fetch {{ postgresql_data_dir }} LATEST"
 ```
 2. Run playbook:
 

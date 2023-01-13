@@ -1,52 +1,247 @@
 ---
 
-- block:  # install wal-g package from repo
-    - name: Download "wal-g" binary
+- name: Check if WAL-G is already installed
+  shell: |
+    set -o pipefail;
+    wal-g --version | awk {'print $3'} | tr -d 'v'
+  args:
+    executable: /bin/bash
+  changed_when: false
+  failed_when: false
+  register: wal_g_installed_version
+  environment:
+    PATH: "{{ ansible_env.PATH }}:/usr/local/bin"
+  tags: wal-g, wal_g, wal_g_install
+
+- name: WAL-G check result
+  debug:
+    msg: "WAL-G is already installed, version {{ wal_g_installed_version.stdout }}. Skip the installation."
+  when:
+    - wal_g_installed_version.rc == 0
+    - wal_g_installed_version.stdout == wal_g_version
+  tags: wal-g, wal_g, wal_g_install
+
+# Install WAL-G from a precompiled binary for Ubuntu 18.04 and 20.04
+- block:
+    - name: "Download WAL-G v{{ wal_g_version }} binary"
       get_url:
-        url: "{{ item }}"
+        url: "https://github.com/wal-g/wal-g/releases/download/v{{ wal_g_version }}/wal-g-pg-ubuntu-{{ ansible_distribution_version }}-amd64.tar.gz"
         dest: /tmp/
         timeout: 60
         validate_certs: false
-      loop:
-        - "{{ wal_g_package_repo }}"
       environment: "{{ proxy_env | default({}) }}"
 
-    - name: Extract "wal-g" into /tmp
+    - name: Extract WAL-G into /tmp
       unarchive:
-        src: "/tmp/{{ wal_g_package_repo | basename }}"
+        src: "/tmp/wal-g-pg-ubuntu-{{ ansible_distribution_version }}-amd64.tar.gz"
         dest: /tmp/
         extra_opts:
           - --no-same-owner
         remote_src: true
 
-    - name: copy "wal-g" binary files to /usr/local/bin/
+    - name: Copy WAL-G binary file to /usr/local/bin/
+      copy:
+        src: "/tmp/wal-g-pg-ubuntu-{{ ansible_distribution_version }}-amd64"
+        dest: /usr/local/bin/wal-g
+        mode: u+x,g+x,o+x
+        remote_src: true
+  when:
+    - installation_method == "repo"
+    - wal_g_version is version('1.0', '>=')
+    - (wal_g_installed_version.stderr is search("command not found") or
+       wal_g_installed_version.stdout != wal_g_version)
+    - (ansible_distribution == 'Ubuntu' and
+       (ansible_distribution_version is version('18.04', '==') or
+        ansible_distribution_version is version('20.04', '==')))
+  tags: wal-g, wal_g, wal_g_install
+
+# Build WAL-G from source code for other Linux distributions
+- block:
+    - name: Install lib dependencies to build WAL-G
+      package:
+        name:
+          - libbrotli-dev
+          # - liblzo2-dev  # https://github.com/wal-g/wal-g/issues/1412
+          - libsodium-dev
+          - cmake
+          - git
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Install lib dependencies to build WAL-G
+      package:
+        name:
+          - brotli-devel
+          # - lzo-devel  # https://github.com/wal-g/wal-g/issues/1412
+          - libsodium-devel
+          - cmake
+          - gcc
+          - git
+        state: present
+      when: ansible_os_family == "RedHat"
+
+    - name: Check the installed Go version
+      shell: |
+        set -o pipefail;
+        go version | awk {'print $3'} | tr -d 'go'
+      args:
+        executable: /bin/bash
+      changed_when: false
+      failed_when: false
+      register: go_installed_version
+      environment:
+        PATH: "{{ ansible_env.PATH }}:/usr/local/go/bin"
+
+    - name: Check the latest available Go version
+      shell: |
+        set -o pipefail;
+        curl -s https://go.dev/VERSION?m=text | tr -d 'go'
+      args:
+        executable: /bin/bash
+      changed_when: false
+      register: wal_g_latest_version
+
+    - block:  # Install latest Go compiler
+        - name: "Download Go v{{ wal_g_latest_version.stdout }}"
+          get_url:
+            url: "https://go.dev/dl/go{{ wal_g_latest_version.stdout }}.linux-amd64.tar.gz"
+            dest: /tmp/
+            timeout: 60
+            validate_certs: false
+
+        - name: Install Go
+          unarchive:
+            src: "/tmp/go{{ wal_g_latest_version.stdout }}.linux-amd64.tar.gz"
+            dest: /usr/local/
+            extra_opts:
+              - --no-same-owner
+            remote_src: true
+      when: go_installed_version.stderr is search("command not found") or
+            go_installed_version.stdout is version(wal_g_latest_version.stdout, '<')
+
+    - name: "Download WAL-G v{{ wal_g_version }} source code"
+      git:
+        repo: https://github.com/wal-g/wal-g.git
+        version: v{{ wal_g_version }}
+        dest: /tmp/wal-g
+
+    - name: Build WAL-G deps
+      become: true
+      become_user: root
+      make:
+        chdir: /tmp/wal-g/
+        target: deps
+        params:
+          USE_BROTLI: 1
+          USE_LIBSODIUM: 1
+          # USE_LZO: 1  # https://github.com/wal-g/wal-g/issues/1412
+      environment:
+        PATH: "{{ ansible_env.PATH }}:/usr/local/go/bin"
+
+    - name: Build and install WAL-G
+      become: true
+      become_user: root
+      make:
+        chdir: /tmp/wal-g/
+        target: pg_install
+        params:
+          USE_BROTLI: 1
+          USE_LIBSODIUM: 1
+          # USE_LZO: 1  # https://github.com/wal-g/wal-g/issues/1412
+          GOBIN: /usr/local/bin
+      environment:
+        PATH: "{{ ansible_env.PATH }}:/usr/local/go/bin"
+  environment: "{{ proxy_env | default({}) }}"
+  when:
+    - installation_method == "repo"
+    - wal_g_version is version('1.0', '>=')
+    - (wal_g_installed_version.stderr is search("command not found") or
+       wal_g_installed_version.stdout != wal_g_version)
+    - not (ansible_distribution == 'Ubuntu' and
+           (ansible_distribution_version is version('18.04', '==') or
+            ansible_distribution_version is version('20.04', '==')))
+  tags: wal-g, wal_g, wal_g_install
+
+# older versions of WAL-G (for compatibility)
+- block:
+    - name: "Download WAL-G v{{ wal_g_version }} binary"
+      get_url:
+        url: "https://github.com/wal-g/wal-g/releases/download/v{{ wal_g_version }}/wal-g.linux-amd64.tar.gz"
+        dest: /tmp/
+        timeout: 60
+        validate_certs: false
+      environment: "{{ proxy_env | default({}) }}"
+
+    - name: Extract WAL-G into /tmp
+      unarchive:
+        src: "/tmp/wal-g.linux-amd64.tar.gz"
+        dest: /tmp/
+        extra_opts:
+          - --no-same-owner
+        remote_src: true
+
+    - name: Copy WAL-G binary file to /usr/local/bin/
       copy:
         src: "/tmp/wal-g"
         dest: /usr/local/bin/
         mode: u+x,g+x,o+x
         remote_src: true
-
-  when: installation_method == "repo" and wal_g_package_repo | length > 0
+  when:
+    - installation_method == "repo"
+    - wal_g_version is version('0.2.19', '<=')
+    - (wal_g_installed_version.stderr is search("command not found") or
+       wal_g_installed_version.stdout != wal_g_version)
   tags: wal-g, wal_g, wal_g_install
 
-- block:  # install wal-g package from file
-    - name: Extract "wal-g" into /tmp
+# installation_method == "file"
+
+# A precompiled binary (package in tar.gz)
+- block:
+    - name: "Extract WAL-G archive {{ wal_g_package_file }} into /tmp"
       unarchive:
         src: "{{ wal_g_package_file }}"
         dest: /tmp/
         extra_opts:
           - --no-same-owner
 
-    - name: Copy "wal-g" binary files to /usr/local/bin/
+    - name: Copy WAL-G binary file to /usr/local/bin/
+      copy:
+        src: "/tmp/{{ wal_g_package_file.split('.tar.gz')[0] | basename }}"
+        dest: /usr/local/bin/wal-g
+        mode: u+x,g+x,o+x
+        remote_src: true
+  when:
+    - installation_method == "file"
+    - wal_g_version is version('1.0', '>=')
+    - (wal_g_installed_version.stderr is search("command not found") or
+       wal_g_installed_version.stdout != wal_g_version)
+    - (wal_g_package_file is defined and wal_g_package_file | length > 0)
+  tags: wal-g, wal_g, wal_g_install
+
+# older versions of WAL-G (for compatibility)
+- block:
+    - name: "Extract WAL-G archive {{ wal_g_package_file }} into /tmp"
+      unarchive:
+        src: "{{ wal_g_package_file }}"
+        dest: /tmp/
+        extra_opts:
+          - --no-same-owner
+
+    - name: Copy WAL-G binary file to /usr/local/bin/
       copy:
         src: "/tmp/wal-g"
         dest: /usr/local/bin/
         mode: u+x,g+x,o+x
         remote_src: true
-
-  when: installation_method == "file" and wal_g_package_file | length > 0
+  when:
+    - installation_method == "file"
+    - wal_g_version is version('0.2.19', '<=')
+    - (wal_g_installed_version.stderr is search("command not found") or
+       wal_g_installed_version.stdout != wal_g_version)
+    - wal_g_package_file == "wal-g.linux-amd64.tar.gz"
   tags: wal-g, wal_g, wal_g_install
 
+# Configure walg.json
 - name: "Generate conf file {{ postgresql_home_dir }}/.walg.json"
   template:
     src: templates/walg.json.j2
