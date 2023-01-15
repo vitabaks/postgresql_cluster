@@ -217,6 +217,16 @@ sudo patronictl -c /etc/patroni/patroni.yml list
 +-----------------+--------------+--------------+---------+----+-----------+
 ```
 
+### DNSCP for Patroni
+##### Журнал событий
+```
+sudo grep -i callback /var/log/syslog
+```
+##### Задание Планировщика для обновления динамической DNS-записи
+```
+sudo cat /var/spool/cron/crontabs/postgres
+```
+
 ##### RAFT
 ```
 sudo syncobj_admin -conn pgsql-n2:2379 -pass Password -status
