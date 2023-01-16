@@ -9,7 +9,6 @@
     name:
       - dnsutils
       - openssl
-#      - astra-winbind
     state: present
   environment: "{{ proxy_env | default({}) }}"
 
@@ -38,7 +37,6 @@
       failed_when: result.rc != 0
 
     - name: "DNS Connection Point | Change password file ownership, group and permissions"
-      # https://docs.ansible.com/ansible/latest/collections/ansible/builtin/file_module.html
       file:
         path: "{{ patroni_scripts_dir }}/dnscp.secret"
         owner: postgres
