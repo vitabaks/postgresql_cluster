@@ -48,19 +48,20 @@
 - name: Disable systemd-resolved
   when: ansible_service_mgr == "systemd"
   block:
+
+    - name: Disable systemd-resolved service
+      service:
+        name: systemd-resolved
+        enabled: false
+        state: stopped
+      become: true
+
     - name: Check if resolv.conf is pointing to systemd-resolved
       stat:
         path: /etc/resolv.conf
       register: resolv_dot_conf
 
     - block:
-        - name: Disable systemd-resolved service
-          service:
-            name: systemd-resolved
-            enabled: false
-            state: stopped
-          become: true
-
         - name: Remove resolv.conf association with systemd-resolved
           file:
             path: /etc/resolv.conf
