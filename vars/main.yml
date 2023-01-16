@@ -30,10 +30,10 @@ cluster_vip: "172.16.32.180"  # empty or one VIP address (or some VIP addresses 
 dnscp:
   vcompname: "{{ patroni_cluster_name }}" # Virtual Computer Name - Client Access Point
   vcomppassword: "Password3" # Password for Virtual Computer Name Account. Empty for anonimous auth to DNS zone.
-  #for set password run powershell command: Get-ADComputer PGSQL-CL | Set-ADAccountPassword -Reset -NewPassword (ConvertTo-SecureString -AsPlainText "Password3" -Force)
+  #set password example (powershell): Get-ADComputer PGSQL-CL | Set-ADAccountPassword -Reset -NewPassword (ConvertTo-SecureString -AsPlainText "Password3" -Force)
   dnszonefqdn: "demo.ru" # Set DNS zone FQDN (AD Domain FQDN).
   dnsserver: "" # Set FQDN or IP or empty (empty is recommended for automatically detect). Used for register DNS name.
-  encryptionkey: "StrongEncryptionKey" # Key to encrypt vcomppassword string value.
+  ttl: "1200" # DNS record TTL in seconds. TTL=1200 - default. Set TTL=30 for multi-site clusters (recommended).
   #Add to ADDS:
   #sudo hostnamectl set-hostname pgsql-n1
   #sudo astra-winbind -dc demo.ru -d demo.ru -g DEMO -u imamyshev@demo.ru -p StrongP@ssw0rd -y
