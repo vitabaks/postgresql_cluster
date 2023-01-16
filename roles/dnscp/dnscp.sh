@@ -19,9 +19,9 @@ readonly version="17012023";
 # * Enable using callbacks in Patroni configuration (/etc/patroni/patroni.yml):
 #postgresql:
 #  callbacks:
-#    on_start: /etc/patroni/dnscp.sh -vips '<VIPs>' -pwdfile '/etc/patroni/dnscp.secret' -dnszonefqdn '<DNSzoneFQDN>' -dnsserver '<DNSserver>' -ttl '<TTL>' -- on_schedule registerdns <VCompName>
-#    on_stop: /etc/patroni/dnscp.sh ..
-#    on_role_change: /etc/patroni/dnscp.sh ..
+#    on_start: "/etc/patroni/dnscp.sh -vips '<VIPs>' -pwdfile '/etc/patroni/dnscp.secret' -- "
+#    on_stop: /etc/patroni/dnscp.sh "/etc/patroni/dnscp.sh -vips '<VIPs>' -pwdfile '/etc/patroni/dnscp.secret' -- "
+#    on_role_change: /etc/patroni/dnscp.sh "/etc/patroni/dnscp.sh -vips '<VIPs>' -pwdfile '/etc/patroni/dnscp.secret' -- "
 # * Put script to "/etc/patroni/dnscp.sh" and set executable (adds the execute permission for all users to the existing permissions.):
 #   sudo mv dnscp.sh /etc/patroni/dnscp.sh && sudo chmod ugo+x /etc/patroni/dnscp.sh
 # * View command for dnsupdate:
