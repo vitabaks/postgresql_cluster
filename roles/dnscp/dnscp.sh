@@ -7,7 +7,7 @@
 
 readonly productname="DNS Connection Point for Patroni";
 readonly giturl="https://github.com/IlgizMamyshev/dnscp";
-readonly version="16012023";
+readonly version="17012023";
 
 ### Script for Patroni clusters
 # Script Features:
@@ -194,7 +194,7 @@ readonly VCompName=$3
 [[ "${VERBOSE}" == "" ]] && VERBOSE=0
 [[ "${DEBUG}" == "" ]] && DEBUG=0
 
-if [[ $VERBOSE -eq 1 ]]; then echo $MSG fi
+if [[ $VERBOSE -eq 1 ]]; then echo $MSG; fi
 if [[ $DEBUG -eq 1 ]]; then
     echo "VIPs=$VIPs";
     echo "VCompName=$VCompName";
@@ -360,7 +360,7 @@ else
                 # AddOrUpdateDNSRecord
                 if [[ ! -z $VCompPassword ]] && [[ $KINITEXITCODE -eq 0 ]]; then
                     # Active Directory\SAMBA authentication under Computer Account is success.
-                    NSUPDATERESULT=$((echo "server $DNSserver"; echo "zone $DNSzoneFQDN"; echo "update delete $VCompNameFQDN A"; echo send; echo "update add $VCompNameFQDN $TTL A $VIP"; echo send) | nsupdate -g -v 2>&1)
+                    NSUPDATERESULT=$( (echo "server $DNSserver"; echo "zone $DNSzoneFQDN"; echo "update delete $VCompNameFQDN A"; echo send; echo "update add $VCompNameFQDN $TTL A $VIP"; echo send) | nsupdate -g -v 2>&1)
                     EXITMSG=$(echo "$NSUPDATERESULT" | awk -F": " '{if ($1~/failed/) print $0}');
                     if [[ "" == "$EXITMSG" ]]; then
                         echo "[$LOGHEADER] INFO: Registering $VCompNameFQDN on $DNSserver with secure DNS update SUCCEEDED";
@@ -369,8 +369,8 @@ else
                     fi
                 else
                     # Active Directory\SAMBA authentication is failed. Try to non-secure DNS-update.
-                    (echo "server $DNSserver"; echo "zone $DNSzoneFQDN"; echo "update delete $VCompNameFQDN A"; echo send; echo "update add $VCompNameFQDN $TTL A $VIP"; echo send) | nsupdate -v
-                    EXITCODE=$?;
+                    NSUPDATERESULT=$( (echo "server $DNSserver"; echo "zone $DNSzoneFQDN"; echo "update delete $VCompNameFQDN A"; echo send; echo "update add $VCompNameFQDN $TTL A $VIP"; echo send) | nsupdate -v 2>&1)
+                    EXITMSG=$(echo "$NSUPDATERESULT" | awk -F": " '{if ($1~/failed/) print $0}');
                     if [[ "" == "$EXITMSG" ]]; then
                         echo "[$LOGHEADER] INFO: Registering $VCompNameFQDN on $DNSserver with non-secure DNS update SUCCEEDED";
                     else
