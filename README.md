@@ -23,8 +23,9 @@ In addition to deploying new clusters, this playbook also support the deployment
 
 ## Index
 - [Cluster types](#cluster-types)
-    - [[Type A] PostgreSQL High-Availability with Load Balancing](#type-a-postgresql-high-availability-with-load-balancing)
+    - [[Type A] PostgreSQL High-Availability with HAProxy Load Balancing](#type-a-postgresql-high-availability-with-haproxy-load-balancing)
     - [[Type B] PostgreSQL High-Availability only](#type-b-postgresql-high-availability-only)
+    - [[Type C] PostgreSQL High-Availability with Consul Service Discovery (DNS)](#type-c-postgresql-high-availability-with-consul-service-discovery-dns)
 - [Compatibility](#compatibility)
     - [Supported Linux Distributions:](#supported-linux-distributions)
     - [PostgreSQL versions:](#postgresql-versions)
@@ -54,9 +55,9 @@ In addition to deploying new clusters, this playbook also support the deployment
 
 ## Cluster types
 
-You have two options available for deployment "Type A" and "Type B".
+You have three schemes available for deployment:
 
-### [Type A] PostgreSQL High-Availability with Load Balancing
+### [Type A] PostgreSQL High-Availability with HAProxy Load Balancing
 ![TypeA](images/TypeA.png)
 
 > To use this scheme, specify `with_haproxy_load_balancing: true` in variable file vars/main.yml
@@ -97,12 +98,26 @@ In our configuration keepalived checks the status of the HAProxy service and in 
 
 This is simple scheme without load balancing `Used by default`
 
-To provide a single entry point (VIP) for databases access is used "vip-manager".
+To provide a single entry point (VIP) for database access is used "vip-manager". If the variable `cluster_vip` is specified (optional).
 
 [**vip-manager**](https://github.com/cybertec-postgresql/vip-manager) is a service that gets started on all cluster nodes and connects to the DCS. If the local node owns the leader-key, vip-manager starts the configured VIP. In case of a failover, vip-manager removes the VIP on the old leader and the corresponding service on the new leader starts it there. \
 Written in Go. Cybertec Schönig & Schönig GmbH https://www.cybertec-postgresql.com
 
 
+### [Type C] PostgreSQL High-Availability with Consul Service Discovery (DNS)
+
+This scheme is suitable for master-only access and for basic load balancing for reading across replicas. Consul [Service Discovery](https://developer.hashicorp.com/consul/docs/concepts/service-discovery) with [DNS resolving ](https://developer.hashicorp.com/consul/docs/discovery/dns) is used as a client access point to the database.
+
+Client access point (example):
+
+- `master.postgres-cluster.service.consul`
+- `replica.postgres-cluster.service.consul`
+
+Besides, it can be useful for a distributed cluster across different data centers. We can specify in advance which data center the database server is located in and then use this for applications running in the same data center. 
+
+Example: `replica.postgres-cluster.service.dc1.consul`, `replica.postgres-cluster.service.dc2.consul`
+
+It requires the installation of a consul in client mode on each application server for service DNS resolution (or use [forward DNS](https://developer.hashicorp.com/consul/tutorials/networking/dns-forwarding?utm_source=docs) to the remote consul server instead of installing a local consul client).
 
 ---
 ## Compatibility
