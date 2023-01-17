@@ -19,6 +19,7 @@
   become_method: sudo
   gather_facts: true
   tags: always
+  any_errors_fatal: true
   vars_files:
     - vars/main.yml
     - vars/system.yml
