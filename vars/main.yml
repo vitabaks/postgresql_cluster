@@ -78,6 +78,7 @@ consul_enable_script_checks: true  # This controls whether health checks that ex
 consul_enable_local_script_checks: true  # Enable them when they are defined in the local configuration files
 consul_ui: false  # Enable the consul UI?
 consul_syslog_enable: true  # Enable logging to syslog
+consul_iface: "{{ ansible_default_ipv4.interface }}"  # specify the interface name with a Private IP (ex. "enp7s0")
 # TLS
 # You can enable TLS encryption by dropping a CA certificate, server certificate, and server key in roles/consul/files/
 consul_tls_enable: false
