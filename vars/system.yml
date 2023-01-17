@@ -42,6 +42,7 @@ sysctl_set: true  # or 'false'
 # these parameters for example! Specify kernel options for your system
 sysctl_conf:
   etcd_cluster: []
+  consul_instances: []
   master: []
   replica: []
   postgres_cluster:
@@ -142,6 +143,12 @@ firewall_allowed_tcp_ports_for:
     - "2379"  # ETCD port
     - "2380"  # ETCD port
 #    - ""
+  consul_instances:
+    - 8300
+    - 8301
+    - 8302
+    - 8500
+    - 8600
   balancers:
     - "{{ ansible_ssh_port | default(22) }}"
     - "{{ haproxy_listen_port.master }}"  # HAProxy (read/write) master

@@ -1,0 +1,31 @@
+---
+- name: See if consul service exists
+  become: true
+  become_user: "{{ consul_user }}"
+  command: "launchctl list {{ consul_launchctl_ident }}"
+  changed_when: false
+  ignore_errors: true
+  register: consul_service_list
+
+- name: Get UID for consul user
+  command: "id -u {{ consul_user }}"
+  changed_when: false
+  register: uid
+  when: consul_service_list is failed
+
+- name: Load consul service
+  become: true
+  become_user: "{{ consul_user }}"
+  command: "launchctl bootstrap gui/{{ uid.stdout }} {{ consul_launchctl_plist }}"
+  when: consul_service_list is failed
+
+- name: Assert that consul service is running
+  # Normally we'd want to use `launchctl list` for this, but it has a nasty habit of
+  # randomly not returning the PID in its output, which makes it hard for us to see if the
+  # service is running.
+  command: "pgrep consul"
+  changed_when: false
+  register: consul_mac_service_pgrep
+  retries: 20
+  delay: 3
+  until: consul_mac_service_pgrep is succeeded

@@ -1,0 +1,6 @@
+---
+# File: Flatcar.yml - Flatcar variables for Consul
+
+consul_os_packages: []
+
+consul_systemd_unit_path: "/etc/systemd/system"

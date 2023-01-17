@@ -1,0 +1,7 @@
+---
+# File: RedHat-8.yml - Red Hat OS version 8.x variables for Consul
+
+consul_os_packages:
+  - python3-libselinux
+  - unzip
+dnsmasq_package: dnsmasq

@@ -13,14 +13,70 @@
         msg: "Ansible version must be {{ minimal_ansible_version }} or higher"
       when: ansible_version.full is version(minimal_ansible_version, '<')
 
-- name: Gathering facts from all servers
+- name: Gathering facts from all servers and preparing the system
   hosts: all
+  become: true
+  become_method: sudo
   gather_facts: true
   tags: always
+  vars_files:
+    - vars/main.yml
+    - vars/system.yml
+  environment: "{{ proxy_env | default({}) }}"
+
+  roles:
+    - role: resolv_conf
+    - role: hostname
+    - role: etc_hosts
+    - role: timezone
+
+  tasks:
+    - name: Clean yum cache
+      command: yum clean all
+      when:
+        - ansible_os_family == "RedHat"
+        - ansible_distribution_major_version == '7'
+
+    - name: Clean dnf cache
+      command: dnf clean all
+      when:
+        - ansible_os_family == "RedHat"
+        - ansible_distribution_major_version is version('8', '>=')
+
+    - name: Update apt cache
+      apt:
+        update_cache: true
+        cache_valid_time: 3600
+      when: ansible_os_family == "Debian"
+
+    - name: Make sure the gnupg and apt-transport-https packages are present
+      apt:
+        pkg:
+          - gnupg
+          - apt-transport-https
+        state: present
+      when: ansible_os_family == "Debian"
+
+    # Ansible requires the iproute package for network facts to be populated
+    - name: Make sure that the iproute is installed
+      package:
+        name: iproute
+        state: present
+      when: ansible_os_family == "RedHat"
+
+    - name: Make sure that the iproute is installed
+      apt:
+        name: iproute2
+        state: present
+      when: ansible_os_family == "Debian"
 
 - import_playbook: etcd_cluster.yml
   when: not dcs_exists|bool and dcs_type == "etcd"
   tags: etcd
+
+- import_playbook: consul.yml
+  when: dcs_type == "consul"
+  tags: consul
 
 - hosts: postgres_cluster
   become: true
@@ -54,24 +110,6 @@
         msg: "{{ ansible_distribution_version }} of {{ ansible_distribution }} is not supported"
       when: ansible_distribution_version is version_compare(os_minimum_versions[ansible_distribution], '<')
 
-    - name: Update apt cache
-      apt:
-        update_cache: true
-        cache_valid_time: 3600
-      environment: "{{ proxy_env | default({}) }}"
-      when: ansible_os_family == "Debian" and installation_method == "repo"
-      tags: add_repo, install_packages, install_postgres
-
-    - name: Make sure the gnupg and apt-transport-https packages are present
-      apt:
-        pkg:
-          - gnupg
-          - apt-transport-https
-        state: present
-      environment: "{{ proxy_env | default({}) }}"
-      when: ansible_os_family == "Debian" and installation_method == "repo"
-      tags: add_repo, install_packages, install_postgres
-
     - name: Build a firewall_ports_dynamic_var
       set_fact:
         firewall_ports_dynamic_var: "{{ firewall_ports_dynamic_var | default([]) + (firewall_allowed_tcp_ports_for[item]) }}"
@@ -95,9 +133,6 @@
       when: firewall_enabled_at_boot|bool
       tags: firewall
 
-    - role: hostname
-    - role: resolv_conf
-    - role: etc_hosts
     - role: add-repository
     - role: packages
     - role: sudo
@@ -107,7 +142,6 @@
     - role: pam_limits
     - role: io-scheduler
     - role: locales
-    - role: timezone
     - role: ntp
     - role: ssh-keys
     - role: copy

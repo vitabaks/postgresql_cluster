@@ -7,7 +7,7 @@
 [![GitHub license](https://img.shields.io/github/license/vitabaks/postgresql_cluster)](https://github.com/vitabaks/postgresql_cluster/blob/master/LICENSE) 
 ![GitHub stars](https://img.shields.io/github/stars/vitabaks/postgresql_cluster)
 
-### Deploy a Production Ready PostgreSQL High-Availability Cluster (based on "Patroni" and "DCS(etcd)"). Automating with Ansible.
+### Deploy a Production Ready PostgreSQL High-Availability Cluster (based on "Patroni" and DCS "etcd" or "consul"). Automating with Ansible.
 
 This Ansible playbook is designed for deploying a PostgreSQL high availability cluster on dedicated physical servers for a production environment. The cluster can also be deployed on virtual machines and in the Cloud.
 
@@ -23,15 +23,16 @@ In addition to deploying new clusters, this playbook also support the deployment
 
 ## Index
 - [Cluster types](#cluster-types)
-    - [[Type A] PostgreSQL High-Availability with Load Balancing](#type-a-postgresql-high-availability-with-load-balancing)
+    - [[Type A] PostgreSQL High-Availability with HAProxy Load Balancing](#type-a-postgresql-high-availability-with-haproxy-load-balancing)
     - [[Type B] PostgreSQL High-Availability only](#type-b-postgresql-high-availability-only)
+    - [[Type C] PostgreSQL High-Availability with Consul Service Discovery (DNS)](#type-c-postgresql-high-availability-with-consul-service-discovery-dns)
 - [Compatibility](#compatibility)
     - [Supported Linux Distributions:](#supported-linux-distributions)
     - [PostgreSQL versions:](#postgresql-versions)
     - [Ansible version](#ansible-version)
 - [Requirements](#requirements)
 - [Port requirements](#port-requirements)
-- [Recommendations](#recommendations)
+- [Recommendations](#recommenations)
 - [Deployment: quick start](#deployment-quick-start)
 - [Variables](#variables)
 - [Cluster Scaling](#cluster-scaling)
@@ -54,9 +55,9 @@ In addition to deploying new clusters, this playbook also support the deployment
 
 ## Cluster types
 
-You have two options available for deployment "Type A" and "Type B".
+You have three schemes available for deployment:
 
-### [Type A] PostgreSQL High-Availability with Load Balancing
+### [Type A] PostgreSQL High-Availability with HAProxy Load Balancing
 ![TypeA](images/TypeA.png)
 
 > To use this scheme, specify `with_haproxy_load_balancing: true` in variable file vars/main.yml
@@ -91,18 +92,34 @@ In our configuration keepalived checks the status of the HAProxy service and in 
 [**PgBouncer**](https://pgbouncer.github.io/features.html) is a connection pooler for PostgreSQL.
 
 
-
 ### [Type B] PostgreSQL High-Availability only
 ![TypeB](images/TypeB.png)
 
 This is simple scheme without load balancing `Used by default`
 
-To provide a single entry point (VIP) for databases access is used "vip-manager".
+To provide a single entry point (VIP) for database access is used "vip-manager". If the variable `cluster_vip` is specified (optional).
 
 [**vip-manager**](https://github.com/cybertec-postgresql/vip-manager) is a service that gets started on all cluster nodes and connects to the DCS. If the local node owns the leader-key, vip-manager starts the configured VIP. In case of a failover, vip-manager removes the VIP on the old leader and the corresponding service on the new leader starts it there. \
 Written in Go. Cybertec Schönig & Schönig GmbH https://www.cybertec-postgresql.com
 
 
+### [Type C] PostgreSQL High-Availability with Consul Service Discovery (DNS)
+![TypeC](images/TypeC.png)
+
+> To use this scheme, specify `dcs_type: consul` in variable file vars/main.yml
+
+This scheme is suitable for master-only access and for load balancing (using DNS) for reading across replicas. Consul [Service Discovery](https://developer.hashicorp.com/consul/docs/concepts/service-discovery) with [DNS resolving ](https://developer.hashicorp.com/consul/docs/discovery/dns) is used as a client access point to the database.
+
+Client access point (example):
+
+- `master.postgres-cluster.service.consul`
+- `replica.postgres-cluster.service.consul`
+
+Besides, it can be useful for a distributed cluster across different data centers. We can specify in advance which data center the database server is located in and then use this for applications running in the same data center. 
+
+Example: `replica.postgres-cluster.service.dc1.consul`, `replica.postgres-cluster.service.dc2.consul`
+
+It requires the installation of a consul in client mode on each application server for service DNS resolution (or use [forward DNS](https://developer.hashicorp.com/consul/tutorials/networking/dns-forwarding?utm_source=docs) to the remote consul server instead of installing a local consul client).
 
 ---
 ## Compatibility
@@ -149,6 +166,10 @@ This playbook requires root privileges or sudo.
 
 Ansible ([What is Ansible](https://www.ansible.com/resources/videos/quick-start-video)?)
 
+if `dcs_type: "consul"`, please install consul role requirements on the control node:
+
+`ansible-galaxy install -r roles/consul/requirements.yml`
+
 ## Port requirements
 List of required TCP ports that must be open for the database cluster:
 
@@ -157,7 +178,7 @@ List of required TCP ports that must be open for the database cluster:
 - `8008` (patroni rest api)
 - `2379`, `2380` (etcd)
 
-additionally, for the scheme "[Type A] PostgreSQL High-Availability with Load Balancing":
+for the scheme "[Type A] PostgreSQL High-Availability with Load Balancing":
 
 - `5000` (haproxy - (read/write) master)
 - `5001` (haproxy - (read only) all replicas)
@@ -165,7 +186,16 @@ additionally, for the scheme "[Type A] PostgreSQL High-Availability with Load Ba
 - `5003` (haproxy - (read only) asynchronous replicas only)
 - `7000` (optional, haproxy stats)
 
-## Recommendations
+for the scheme "[Type C] PostgreSQL High-Availability with Consul Service Discovery (DNS)":
+
+- `8300` (Consul Server RPC)
+- `8301` (Consul Serf LAN)
+- `8302` (Consul Serf WAN)
+- `8500` (Consul HTTP API)
+- `8600` (Consul DNS server)
+
+
+## Recommenations
 - **linux (Operation System)**: 
 
 Update your operating system on your target servers before deploying;
@@ -173,15 +203,15 @@ Update your operating system on your target servers before deploying;
 Make sure you have time synchronization is configured (NTP).
 Specify `ntp_enabled:'true'` and `ntp_servers` if you want to install and configure the ntp service.
 
-- **DCS (Distributed Configuration Store)**: 
+- **DCS (Distributed Consensus Store)**: 
 
-Fast drives and a reliable network are the most important factors for the performance and stability of an etcd cluster.
+Fast drives and a reliable network are the most important factors for the performance and stability of an etcd (or consul) cluster.
 
-Avoid storing etcd data on the same drive along with other processes (such as the database) that are intensively using the resources of the disk subsystem! 
-Store the etcd and postgresql data on **different** disks (see `etcd_data_dir` variable), use ssd drives if possible.
-See [hardware recommendations](https://etcd.io/docs/v3.3.12/op-guide/hardware/) and [tuning](https://etcd.io/docs/v3.3.12/tuning/) guides.
+Avoid storing etcd (or consul) data on the same drive along with other processes (such as the database) that are intensively using the resources of the disk subsystem! 
+Store the etcd and postgresql data on **different** disks (see `etcd_data_dir`, `consul_data_path` variables), use ssd drives if possible.
+See [hardware recommendations](https://etcd.io/docs/v3.3/op-guide/hardware/) and [tuning](https://etcd.io/docs/v3.3/tuning/) guides.
 
-Overloaded (highload) database clusters may require the installation of the etcd cluster on dedicated servers, separate from the database servers.
+It is recommended to deploy the DCS cluster on dedicated servers, separate from the database servers.
 
 - **Placement of cluster members in different data centers**:
 
@@ -227,18 +257,16 @@ To minimize the risk of losing data on autofailover, you can configure settings 
 
 ###### Minimum set of variables: 
 - `proxy_env` # if required (*for download packages*)
-
-example:
-```
-proxy_env:
-  http_proxy: http://proxy_server_ip:port
-  https_proxy: http://proxy_server_ip:port
-```
 - `cluster_vip` # for client access to databases in the cluster (optional)
 - `patroni_cluster_name`
-- `with_haproxy_load_balancing` `'true'` (Type A) or `'false'`/default (Type B)
 - `postgresql_version`
 - `postgresql_data_dir`
+- `with_haproxy_load_balancing` `'true'` (Type A) or `'false'`/default (Type B)
+- `dcs_type` # "etcd" (default) or "consul" (Type C)
+
+if `dcs_type: "consul"`, please install consul role requirements on the control node:
+
+`ansible-galaxy install -r roles/consul/requirements.yml`
 
 5. Try to connect to hosts
 

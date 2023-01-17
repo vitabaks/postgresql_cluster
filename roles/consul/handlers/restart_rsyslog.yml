@@ -1,0 +1,9 @@
+---
+- name: restart rsyslog
+  service:
+    name: rsyslog
+    state: restarted
+  when:
+    - ansible_os_family != "Darwin"
+    - ansible_os_family != "Windows"
+  listen: 'restart rsyslog'
