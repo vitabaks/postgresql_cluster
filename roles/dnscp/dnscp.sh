@@ -7,7 +7,7 @@
 
 readonly productname="DNS Connection Point for Patroni";
 readonly giturl="https://github.com/IlgizMamyshev/dnscp";
-readonly version="17012023";
+readonly version="18012023";
 
 ### Script for Patroni clusters
 # Script Features:
@@ -75,7 +75,7 @@ echo "Help Options:";
 echo "  -h, --help                Show help options.";
 echo "";
 echo "Script Options:";
-echo "  -d";
+echo "  -D";
 echo "      Debug mode.";
 echo "  -dnszonefqdn {zonename}";
 echo "      Specify DNS zone full qualified domain name. The default is '' (empty), for automatically detect (recommended).";  
@@ -88,12 +88,10 @@ echo "      Specify the TTL=30 for multi-site clusters (recommended).";
 echo "  -pwdfile {passwordfile}";
 echo "      Path to the file with password for Virtual Computer Name account in Active Directory\SAMBA.";
 echo "      Virtual Computer Name = Patroni Cluster Name. The default is '' (empty). Do not specify for non-secure DNS update.";
-echo "  -v";
+echo "  -V";
 echo "      Verbose mode.";
 echo "  -vips {address[,address..]}";
 echo "      One VIP (IPv4) address (or some VIP addresses in different subnets, separated by commas, for example: '10.0.1.10,10.0.2.10').";
-echo "  -V, -version";
-echo "      Print the version number and exit.";
 exit 1; }
 
 function in_subnet {
@@ -158,11 +156,10 @@ while [ -n "$1" ]
 do
 case "$1" in
 -h | --help) usage; ;;
--d) DEBUG=1
+-D) DEBUG=1
 shift ;;
--v) VERBOSE=1
+-V) VERBOSE=1
 shift ;;
--V | --version) echo "$version"; exit 0; ;;
 -vips) VIPs="$2"
 shift ;;
 -pwdfile) if [[ "" == "$2" ]]; then
