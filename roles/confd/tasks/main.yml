@@ -75,7 +75,7 @@
         src: "files/{{ item.conf }}"
         dest: "{{ item.dest }}"
       loop:
-        - { onf: 'confd.toml', dest: '/etc/confd/confd.toml' }
+        - { conf: 'confd.toml', dest: '/etc/confd/confd.toml' }
         - { conf: 'haproxy.toml', dest: '/etc/confd/conf.d/haproxy.toml' }
         - { conf: 'haproxy.tmpl', dest: '/etc/confd/templates/haproxy.tmpl' }
       loop_control:
