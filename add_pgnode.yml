@@ -112,6 +112,10 @@
     - role: pgbackrest
       when: pgbackrest_install|bool
 
+- import_playbook: consul.yml
+  when: dcs_type == "consul"
+  tags: consul
+
 - hosts: replica
   become: true
   become_method: sudo
