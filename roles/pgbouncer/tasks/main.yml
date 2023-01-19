@@ -80,13 +80,26 @@
     dest: /etc/logrotate.d/pgbouncer
   tags: pgbouncer_logrotate, pgbouncer
 
-- name: Calculate pgbouncer total pool size
+- name: Get count postgres databases
+  become: true
+  become_user: postgres
+  command: >
+    {{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -Atq -c "select count(*) from pg_database where not datistemplate;"
+  register: postgres_database_count
+  tags: pgbouncer_conf, pgbouncer
+
+- name: Calculate pool_size for defined pgbouncer_pools (if not defined pool_size, then calculate as pgbouncer_default_pool_size)
   set_fact:
-    total_pool_size: "{{ total_pool_size|default(0)|int + item.pool_parameters | regex_replace ('[^0-9]') | int }}"
+    defined_pool_size: "{{ defined_pool_size|default(0)|int + item.pool_parameters|regex_replace ('[^0-9]')|default(pgbouncer_default_pool_size, true)|int }}"
   loop: "{{ pgbouncer_pools }}"
   tags: pgbouncer_conf, pgbouncer
 
-- name: Get postgresql max_connections parameter
+- name: Calculate totla_pool_size
+  set_fact:
+    total_pool_size: "{{ defined_pool_size|default(0)|int + (postgres_database_count.stdout|int - pgbouncer_pools|length|int) * pgbouncer_default_pool_size|int }}"
+  tags: pgbouncer_conf, pgbouncer
+
+- name: Check max_connections
   set_fact:
     max_connections: "{{ item.value }}"
   when: item.option == "max_connections"
@@ -96,7 +109,18 @@
 - name: Failed when total_pool_size > max_connections
   fail:
     msg: "total_pool_size: {{ total_pool_size  }} > max_connections: {{ max_connections }}. Need change settings"
-  when: pgbouncer_pools is defined and pgbouncer_pools | length > 0 and total_pool_size > max_connections
+  when: pgbouncer_pools is defined and pgbouncer_pools | length > 0 and total_pool_size | int > max_connections | int
+  tags: pgbouncer_conf, pgbouncer
+
+- name: Update pgbouncer.ini
+  template:
+    src: ../templates/pgbouncer.ini.j2
+    dest: "{{ pgbouncer_conf_dir }}/pgbouncer.ini"
+    owner: postgres
+    group: postgres
+    mode: 0640
+  notify: "restart pgbouncer"
+  when: existing_pgcluster is not defined or not existing_pgcluster|bool
   tags: pgbouncer_conf, pgbouncer
 
 - name: Configure pgbouncer.ini
