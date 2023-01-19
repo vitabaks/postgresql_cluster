@@ -980,8 +980,8 @@
   lineinfile:
     dest: "/etc/environment"
     state: present
-    regexp: "^export PATRONICTL_CONFIG_FILE"
-    line: "export PATRONICTL_CONFIG_FILE=/etc/patroni/patroni.yml"
+    regexp: "^PATRONICTL_CONFIG_FILE"
+    line: "PATRONICTL_CONFIG_FILE=/etc/patroni/patroni.yml"
     owner: root
     group: root
     mode: '0644'
