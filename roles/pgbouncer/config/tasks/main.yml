@@ -8,14 +8,6 @@
     mode: 0750
   tags: pgbouncer, pgbouncer_conf
 
-- name: Get count postgres databases
-  become: true
-  become_user: postgres
-  command: >
-    {{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -Atq -c "select count(*) from pg_database where not datistemplate;"
-  register: postgres_database_count
-  tags: pgbouncer_conf, pgbouncer
-
 - name: Calculate pool_size for defined pgbouncer_pools (if not defined pool_size, then calculate as pgbouncer_default_pool_size)
   set_fact:
     defined_pool_size: "{{ defined_pool_size|default(0)|int + item.pool_parameters|regex_replace ('[^0-9]')|default(pgbouncer_default_pool_size, true)|int }}"
@@ -24,7 +16,7 @@
 
 - name: Calculate totla_pool_size
   set_fact:
-    total_pool_size: "{{ defined_pool_size|default(0)|int + (postgres_database_count.stdout|int - pgbouncer_pools|length|int) * pgbouncer_default_pool_size|int }}"
+    total_pool_size: "{{ defined_pool_size|default(0)|int + (postgresql_databases|length|int - pgbouncer_pools|length|int) * pgbouncer_default_pool_size|int }}"
   tags: pgbouncer_conf, pgbouncer
 
 - name: Check max_connections
