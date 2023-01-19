@@ -3,6 +3,7 @@
 - hosts: postgres_cluster
   vars:
     remove_postgres: false  # or 'true' to remove the database
+    remove_consul: false  # or 'true' to remove the consul data
   become: true
   vars_files:
     - vars/main.yml
@@ -12,6 +13,7 @@
       service:
         name: patroni
         state: stopped
+        enabled: false
     - name: Delete PostgreSQL database content
       file:
         path: "{{ postgresql_data_dir }}"
@@ -23,6 +25,16 @@
         path: /var/lib/pgbackrest
         state: absent
       when: pgbackrest_install|bool
+    - name: Stop Consul service
+      service:
+        name: consul
+        state: stopped
+        enabled: false
+    - name: Delete Consul content
+      file:
+        path: "{{ consul_data_path }}"
+        state: absent
+      when: remove_consul|bool
 
 - hosts: etcd_cluster
   vars:
@@ -35,6 +47,7 @@
       service:
         name: etcd
         state: stopped
+        enabled: false
     - name: Delete Etcd content
       file:
         path: "{{ etcd_data_dir }}/member"
