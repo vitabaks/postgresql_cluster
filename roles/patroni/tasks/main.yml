@@ -18,7 +18,7 @@
 
     - name: Install setuptools
       pip:
-        name: setuptools==65.7.0  # https://github.com/pypa/setuptools/issues/3772
+        name: setuptools<66.0.0  # https://github.com/pypa/setuptools/issues/3772
         state: latest
         executable: pip3
         extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
