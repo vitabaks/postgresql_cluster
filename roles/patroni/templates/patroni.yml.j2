@@ -48,7 +48,7 @@ consul:
 raft:
   data_dir: "{{ patroni_raft_data_dir }}"
   self_addr: "{{ hostvars[inventory_hostname]['inventory_hostname'] }}:5010"
-  partner_addrs: [{% for host in groups['postgres_cluster'] %}{% if hostvars[host]['inventory_hostname'] != hostvars[inventory_hostname]['inventory_hostname']%}{{ hostvars[host]['inventory_hostname'] }}:5010{% if not loop.last %},{% endif %}{% endif %}{% endfor %}
+  partner_addrs: [{% for host in groups['postgres_cluster'] %}{% if hostvars[host]['inventory_hostname'] != hostvars[inventory_hostname]['inventory_hostname']%}'{{ hostvars[host]['inventory_hostname'] }}:5010'{% if not loop.last %},{% endif %}{% endif %}{% endfor %}
 {% endif %}]
 
 bootstrap:
