@@ -80,7 +80,8 @@
     dest: /etc/logrotate.d/pgbouncer
   tags: pgbouncer_logrotate, pgbouncer
 
-- name: Calculate pool_size for defined pgbouncer_pools (if not defined pool_size, then calculate as pgbouncer_default_pool_size)
+# Calculate pool_size for defined pgbouncer_pools (if not defined pool_size, then calculate as pgbouncer_default_pool_size)
+- name: Calculate pool_size
   set_fact:
     defined_pool_size: "{{ defined_pool_size|default(0)|int + item.pool_parameters|regex_search('pool_size=(\\d+)')|regex_replace('[^0-9]', '')|default(pgbouncer_default_pool_size, true)|int }}"
   loop: "{{ pgbouncer_pools }}"
