@@ -15,7 +15,7 @@
   loop: "{{ pgbouncer_pools }}"
   tags: pgbouncer_conf, pgbouncer
 
-- name: Calculate totla_pool_size
+- name: Calculate total_pool_size
   set_fact:
     total_pool_size: "{{ defined_pool_size|default(0)|int + (postgresql_databases|length|int - pgbouncer_pools|length|int) * pgbouncer_default_pool_size|int }}"
   tags: pgbouncer_conf, pgbouncer
