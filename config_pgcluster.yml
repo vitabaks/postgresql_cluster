@@ -69,6 +69,8 @@
     - name: Make sure the gnupg and apt-transport-https packages are present
       apt:
         pkg:
+          - curl
+          - ca-certificates
           - gnupg
           - apt-transport-https
         state: present
