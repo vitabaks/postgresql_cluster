@@ -22,36 +22,48 @@ In addition to deploying new clusters, this playbook also support the deployment
 
 
 ## Index
-- [Cluster types](#cluster-types)
-    - [[Type A] PostgreSQL High-Availability with HAProxy Load Balancing](#type-a-postgresql-high-availability-with-haproxy-load-balancing)
-    - [[Type B] PostgreSQL High-Availability only](#type-b-postgresql-high-availability-only)
-    - [[Type C] PostgreSQL High-Availability with Consul Service Discovery (DNS)](#type-c-postgresql-high-availability-with-consul-service-discovery-dns)
-- [Compatibility](#compatibility)
-    - [Supported Linux Distributions:](#supported-linux-distributions)
-    - [PostgreSQL versions:](#postgresql-versions)
-    - [Ansible version](#ansible-version)
-- [Requirements](#requirements)
-- [Port requirements](#port-requirements)
-- [Recommendations](#recommenations)
-- [Deployment: quick start](#deployment-quick-start)
-- [Variables](#variables)
-- [Cluster Scaling](#cluster-scaling)
-    - [Preparation:](#preparation)
-    - [Steps to add a new node:](#steps-to-add-a-new-node)
-    - [Steps to add a new banlancer node:](#steps-to-add-a-new-banlancer-node)
-- [Restore and Cloning](#restore-and-cloning)
-    - [Create cluster with pgBackRest:](#create-cluster-with-pgbackrest)
-    - [Create cluster with WAL-G:](#create-cluster-with-wal-g)
-    - [Point-In-Time-Recovery:](#point-in-time-recovery)
-- [Maintenance](#maintenance)
-- [Disaster Recovery](#disaster-recovery)
-    - [etcd](#etcd)
-    - [PostgreSQL (databases)](#postgresql-databases)
-- [How to start from scratch](#how-to-start-from-scratch)
-- [License](#license)
-- [Author](#author)
-- [Sponsor this project](#sponsor-this-project)
-- [Feedback, bug-reports, requests, ...](#feedback-bug-reports-requests-)
+- [PostgreSQL High-Availability Cluster :elephant: :sparkling\_heart:](#postgresql-high-availability-cluster-elephant-sparkling_heart)
+    - [Deploy a Production Ready PostgreSQL High-Availability Cluster (based on "Patroni" and DCS "etcd" or "consul"). Automating with Ansible.](#deploy-a-production-ready-postgresql-high-availability-cluster-based-on-patroni-and-dcs-etcd-or-consul-automating-with-ansible)
+  - [Index](#index)
+  - [Cluster types](#cluster-types)
+    - [\[Type A\] PostgreSQL High-Availability with HAProxy Load Balancing](#type-a-postgresql-high-availability-with-haproxy-load-balancing)
+          - [if variable "synchronous\_mode" is 'true' (vars/main.yml):](#if-variable-synchronous_mode-is-true-varsmainyml)
+        - [Components of high availability:](#components-of-high-availability)
+        - [Components of load balancing:](#components-of-load-balancing)
+    - [\[Type B\] PostgreSQL High-Availability only](#type-b-postgresql-high-availability-only)
+    - [\[Type C\] PostgreSQL High-Availability with Consul Service Discovery (DNS)](#type-c-postgresql-high-availability-with-consul-service-discovery-dns)
+    - [\[Type D\] PostgreSQL High-Availability with HAProxy Load Balancing and Patroni raft](#type-d-postgresql-high-availability-with-haproxy-load-balancing-and-patroni-raft)
+          - [if variable "synchronous\_mode" is 'true' (vars/main.yml):](#if-variable-synchronous_mode-is-true-varsmainyml-1)
+        - [Components of high availability:](#components-of-high-availability-1)
+        - [Components of load balancing:](#components-of-load-balancing-1)
+  - [Compatibility](#compatibility)
+          - [Supported Linux Distributions:](#supported-linux-distributions)
+          - [PostgreSQL versions:](#postgresql-versions)
+          - [Ansible version](#ansible-version)
+  - [Requirements](#requirements)
+  - [Port requirements](#port-requirements)
+  - [Recommenations](#recommenations)
+  - [Deployment: quick start](#deployment-quick-start)
+          - [Specify (non-public) IP addresses and connection settings (`ansible_user`, `ansible_ssh_pass` or `ansible_ssh_private_key_file` for your environment](#specify-non-public-ip-addresses-and-connection-settings-ansible_user-ansible_ssh_pass-or-ansible_ssh_private_key_file-for-your-environment)
+          - [Minimum set of variables:](#minimum-set-of-variables)
+  - [Variables](#variables)
+  - [Cluster Scaling](#cluster-scaling)
+          - [Preparation:](#preparation)
+          - [Steps to add a new node:](#steps-to-add-a-new-node)
+          - [Steps to add a new banlancer node:](#steps-to-add-a-new-banlancer-node)
+  - [Restore and Cloning](#restore-and-cloning)
+        - [Create cluster with pgBackRest:](#create-cluster-with-pgbackrest)
+        - [Create cluster with WAL-G:](#create-cluster-with-wal-g)
+        - [Point-In-Time-Recovery:](#point-in-time-recovery)
+  - [Maintenance](#maintenance)
+  - [Disaster Recovery](#disaster-recovery)
+        - [etcd](#etcd)
+        - [PostgreSQL (databases)](#postgresql-databases)
+  - [How to start from scratch](#how-to-start-from-scratch)
+  - [License](#license)
+  - [Author](#author)
+  - [Sponsor this project](#sponsor-this-project)
+  - [Feedback, bug-reports, requests, ...](#feedback-bug-reports-requests-)
 
 ## Cluster types
 
@@ -120,6 +132,42 @@ Besides, it can be useful for a distributed cluster across different data center
 Example: `replica.postgres-cluster.service.dc1.consul`, `replica.postgres-cluster.service.dc2.consul`
 
 It requires the installation of a consul in client mode on each application server for service DNS resolution (or use [forward DNS](https://developer.hashicorp.com/consul/tutorials/networking/dns-forwarding?utm_source=docs) to the remote consul server instead of installing a local consul client).
+
+
+### [Type D] PostgreSQL High-Availability with HAProxy Load Balancing and Patroni raft
+![TypeA](images/TypeA.png)
+
+> To use this scheme, specify `with_haproxy_load_balancing: true` in variable file vars/main.yml and `dcs_type: patroni_raft` in variable file vars/main.yml
+
+This scheme provides the ability to distribute the load on reading. This also allows us to scale out the cluster (with read-only replicas).
+
+- port 5000 (read / write) master
+- port 5001 (read only) all replicas
+
+###### if variable "synchronous_mode" is 'true' (vars/main.yml):
+- port 5002 (read only) synchronous replica only
+- port 5003 (read only) asynchronous replicas only
+
+> :heavy_exclamation_mark: Your application must have support sending read requests to a custom port (ex 5001), and write requests (ex 5000).
+
+##### Components of high availability:
+[**Patroni**](https://github.com/zalando/patroni) is a template for you to create your own customized, high-availability solution using Python and - for maximum accessibility - a distributed configuration store like ZooKeeper, etcd, Consul or Kubernetes. Used for automate the management of PostgreSQL instances and auto failover.
+
+[**Patroni_raft**](TBD) .
+
+[What is Distributed Consensus?](http://thesecretlivesofdata.com/raft/)
+
+##### Components of load balancing:
+[**HAProxy**](http://www.haproxy.org/) is a free, very fast and reliable solution offering high availability, load balancing, and proxying for TCP and HTTP-based applications. 
+
+[**confd**](https://github.com/kelseyhightower/confd) manage local application configuration files using templates and data from etcd or consul. Used to automate HAProxy configuration file management.
+
+[**Keepalived**](https://github.com/acassen/keepalived) provides a virtual high-available IP address (VIP) and single entry point for databases access.
+Implementing VRRP (Virtual Router Redundancy Protocol) for Linux.
+In our configuration keepalived checks the status of the HAProxy service and in case of a failure delegates the VIP to another server in the cluster.
+
+[**PgBouncer**](https://pgbouncer.github.io/features.html) is a connection pooler for PostgreSQL.
+
 
 ---
 ## Compatibility
@@ -208,7 +256,7 @@ Specify `ntp_enabled:'true'` and `ntp_servers` if you want to install and config
 Fast drives and a reliable network are the most important factors for the performance and stability of an etcd (or consul) cluster.
 
 Avoid storing etcd (or consul) data on the same drive along with other processes (such as the database) that are intensively using the resources of the disk subsystem! 
-Store the etcd and postgresql data on **different** disks (see `etcd_data_dir`, `consul_data_path` variables), use ssd drives if possible.
+Store the etcd and postgresql data on **different** disks (see `etcd_data_dir`, `consul_data_path`, `patroni_raft_path` variables), use ssd drives if possible.
 See [hardware recommendations](https://etcd.io/docs/v3.3/op-guide/hardware/) and [tuning](https://etcd.io/docs/v3.3/tuning/) guides.
 
 It is recommended to deploy the DCS cluster on dedicated servers, separate from the database servers.

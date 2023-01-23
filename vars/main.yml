@@ -49,7 +49,7 @@ vip_manager_mask: "24"  # netmask for the virtual ip
 
 # DCS (Distributed Consensus Store)
 dcs_exists: false  # or 'true' if you don't want to deploy a new etcd cluster
-dcs_type: "etcd"  # or 'consul'
+dcs_type: "patroni_raft"  # or 'consul' or 'etcd'
 
 # if dcs_type: "etcd" and dcs_exists: false
 etcd_ver: "v3.3.27"  # version for deploy etcd cluster
@@ -128,6 +128,7 @@ consul_services:
 #      - { http: "http://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:8008/async", interval: "2s" }
 #      - { args: ["systemctl", "status", "pgbouncer"], interval: "5s" }
 
+patroni_raft_data_dir: "/var/lib/raft"
 
 # PostgreSQL variables
 postgresql_version: "14"
