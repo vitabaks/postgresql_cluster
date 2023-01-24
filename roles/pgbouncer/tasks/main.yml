@@ -92,9 +92,16 @@
     total_pool_size: "{{ defined_pool_size|default(0)|int + (postgresql_databases|length|int - pgbouncer_pools|length|int) * pgbouncer_default_pool_size|int }}"
   tags: pgbouncer_conf, pgbouncer
 
-- name: Check max_connections
+- name: Set default value to max_connections
   set_fact:
-    max_connections: "{{ postgresql_parameters|json_query(\"[? option == 'max_connections'].value\")|first|default(100, true) }}"
+    max_connections: 100
+  tags: pgbouncer_conf, pgbouncer
+
+- name: Set max_connections from vars if it defined
+  set_fact:
+    max_connections: "{{ item.value|default(100, true) }}"
+  when: item.option == "max_connections"
+  loop: "{{ postgresql_parameters }}"
   tags: pgbouncer_conf, pgbouncer
 
 - name: Failed when total_pool_size > max_connections
