@@ -80,13 +80,14 @@
     dest: /etc/logrotate.d/pgbouncer
   tags: pgbouncer_logrotate, pgbouncer
 
-- name: Calculate pool_size for defined pgbouncer_pools (if not defined pool_size, then calculate as pgbouncer_default_pool_size)
+# Calculate pool_size for defined pgbouncer_pools (if not defined pool_size, then calculate as pgbouncer_default_pool_size)
+- name: Calculate pool_size
   set_fact:
     defined_pool_size: "{{ defined_pool_size|default(0)|int + item.pool_parameters|regex_search('pool_size=(\\d+)')|regex_replace('[^0-9]', '')|default(pgbouncer_default_pool_size, true)|int }}"
   loop: "{{ pgbouncer_pools }}"
   tags: pgbouncer_conf, pgbouncer
 
-- name: Calculate totla_pool_size
+- name: Calculate total_pool_size
   set_fact:
     total_pool_size: "{{ defined_pool_size|default(0)|int + (postgresql_databases|length|int - pgbouncer_pools|length|int) * pgbouncer_default_pool_size|int }}"
   tags: pgbouncer_conf, pgbouncer
@@ -100,17 +101,6 @@
   fail:
     msg: "total_pool_size: {{ total_pool_size  }} > max_connections: {{ max_connections }}. Need change settings"
   when: pgbouncer_pools is defined and pgbouncer_pools | length > 0 and total_pool_size | int > max_connections | int
-  tags: pgbouncer_conf, pgbouncer
-
-- name: Update pgbouncer.ini
-  template:
-    src: ../templates/pgbouncer.ini.j2
-    dest: "{{ pgbouncer_conf_dir }}/pgbouncer.ini"
-    owner: postgres
-    group: postgres
-    mode: 0640
-  notify: "restart pgbouncer"
-  when: existing_pgcluster is not defined or not existing_pgcluster|bool
   tags: pgbouncer_conf, pgbouncer
 
 - name: Configure pgbouncer.ini
