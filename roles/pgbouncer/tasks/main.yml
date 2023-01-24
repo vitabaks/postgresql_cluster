@@ -105,17 +105,6 @@
   when: pgbouncer_pools is defined and pgbouncer_pools | length > 0 and total_pool_size | int > max_connections | int
   tags: pgbouncer_conf, pgbouncer
 
-- name: Update pgbouncer.ini
-  template:
-    src: ../templates/pgbouncer.ini.j2
-    dest: "{{ pgbouncer_conf_dir }}/pgbouncer.ini"
-    owner: postgres
-    group: postgres
-    mode: 0640
-  notify: "restart pgbouncer"
-  when: existing_pgcluster is not defined or not existing_pgcluster|bool
-  tags: pgbouncer_conf, pgbouncer
-
 - name: Configure pgbouncer.ini
   template:
     src: templates/pgbouncer.ini.j2
