@@ -21,9 +21,7 @@
 
 - name: Check max_connections
   set_fact:
-    max_connections: "{{ item.value }}"
-  when: item.option == "max_connections"
-  loop: "{{ postgresql_parameters }}"
+    max_connections: "{{ postgresql_parameters|json_query(\"[? option == 'max_connections'].value\")|first|default(100, true) }}"
   tags: pgbouncer_conf, pgbouncer
 
 - name: Failed when total_pool_size > max_connections
