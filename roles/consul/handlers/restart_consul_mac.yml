@@ -1,0 +1,4 @@
+---
+- import_tasks: "stop_consul_mac.yml"
+
+- import_tasks: "start_consul_mac.yml"

@@ -1,0 +1,39 @@
+{
+  "service": {
+    "name": "{{ service_item.name }}",
+    {% if service_item.id is defined -%}
+    "id": "{{ service_item.id }}",
+    {% endif -%}
+    {% if service_item.port is defined -%}
+    "port": {{ service_item.port }},
+    {% endif -%}
+    {% if service_item.address is defined -%}
+    "address": "{{ service_item.address }}",
+    {% endif -%}
+    {% if service_item.enable_tag_override is defined -%}
+    "enable_tag_override": {{ service_item.enable_tag_override | bool | to_json }},
+    {% endif -%}
+    {% if service_item.kind is defined -%}
+    "kind": "{{ service_item.kind }}",
+    {% endif -%}
+    {% if service_item.proxy is defined -%}
+    "proxy": {{ service_item.proxy | to_json(sort_keys=True) }},
+    {% endif -%}
+    {% if service_item.meta is defined -%}
+    "meta": {{ service_item.meta | to_json(sort_keys=True) }},
+    {% endif -%}
+    {% if service_item.checks is defined -%}
+    "checks": {{ service_item.checks | to_json(sort_keys=True) }},
+    {% endif -%}
+    {% if service_item.connect is defined -%}
+    "connect": {{ service_item.connect | to_json(sort_keys=True) }},
+    {% endif -%}
+    {% if service_item.weights is defined -%}
+    "weights": {{ service_item.weights | to_json(sort_keys=True) }},
+    {% endif -%}
+    {% if service_item.token is defined -%}
+    "token": {{ service_item.token | to_json }},
+    {% endif -%}
+    "tags": {{ service_item.tags|default([])|to_json(sort_keys=True) }}
+  }
+}

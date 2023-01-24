@@ -1,6 +1,4 @@
 ---
-# yamllint disable rule:line-length
-
 - name: configure storage for pgsql nodes
   hosts: postgres_cluster
   become: true
@@ -10,7 +8,7 @@
         vg: vg_data
         pvs: /dev/sdb
 
-    - name: ensure volume group for vg_data exists
+    - name: ensure logical volume for lv_pgsql exists
       community.general.lvol:
         vg: vg_data
         lv: lv_pgsql
@@ -35,12 +33,12 @@
     - name: ensure ufw is disabled
       community.general.ufw:
         state: disabled
-
+        
 - name: Deploy PostgreSQL HA Cluster (based on "Patroni" and "{{ dcs_type }}")
   hosts: localhost
   gather_facts: false
   vars_files:
-    - vars/main.yml
+    - "vars/main-{{ environment }}.yml"
   vars:
     minimal_ansible_version: 2.7.0
   tasks:
@@ -49,14 +47,71 @@
         msg: "Ansible version must be {{ minimal_ansible_version }} or higher"
       when: ansible_version.full is version(minimal_ansible_version, '<')
 
-- name: Gathering facts from all servers
+- name: Gathering facts from all servers and preparing the system
   hosts: all
+  become: true
+  become_method: sudo
   gather_facts: true
   tags: always
+  any_errors_fatal: true
+  vars_files:
+    - "vars/main-{{ environment }}.yml"
+    - vars/system.yml
+  environment: "{{ proxy_env | default({}) }}"
+
+  roles:
+    - role: resolv_conf
+    - role: hostname
+    - role: etc_hosts
+    - role: timezone
+
+  tasks:
+    - name: Clean yum cache
+      command: yum clean all
+      when:
+        - ansible_os_family == "RedHat"
+        - ansible_distribution_major_version == '7'
+
+    - name: Clean dnf cache
+      command: dnf clean all
+      when:
+        - ansible_os_family == "RedHat"
+        - ansible_distribution_major_version is version('8', '>=')
+
+    - name: Update apt cache
+      apt:
+        update_cache: true
+        cache_valid_time: 3600
+      when: ansible_os_family == "Debian"
+
+    - name: Make sure the gnupg and apt-transport-https packages are present
+      apt:
+        pkg:
+          - gnupg
+          - apt-transport-https
+        state: present
+      when: ansible_os_family == "Debian"
+
+    # Ansible requires the iproute package for network facts to be populated
+    - name: Make sure that the iproute is installed
+      package:
+        name: iproute
+        state: present
+      when: ansible_os_family == "RedHat"
+
+    - name: Make sure that the iproute is installed
+      apt:
+        name: iproute2
+        state: present
+      when: ansible_os_family == "Debian"
 
 - import_playbook: etcd_cluster.yml
   when: not dcs_exists|bool and dcs_type == "etcd"
   tags: etcd
+
+- import_playbook: consul.yml
+  when: dcs_type == "consul"
+  tags: consul
 
 - hosts: postgres_cluster
   become: true
@@ -64,7 +119,7 @@
   gather_facts: true
   any_errors_fatal: true
   vars_files:
-    - vars/main.yml
+    - "vars/main-{{ environment }}.yml"
     - vars/system.yml
 
   pre_tasks:
@@ -90,34 +145,16 @@
         msg: "{{ ansible_distribution_version }} of {{ ansible_distribution }} is not supported"
       when: ansible_distribution_version is version_compare(os_minimum_versions[ansible_distribution], '<')
 
-    - name: Update apt cache
-      apt:
-        update_cache: true
-        cache_valid_time: 3600
-      environment: "{{ proxy_env | default({}) }}"
-      when: ansible_os_family == "Debian" and installation_method == "repo"
-      tags: add_repo, install_packages, install_postgres
-
-    - name: Make sure the gnupg and apt-transport-https packages are present
-      apt:
-        pkg:
-          - gnupg
-          - apt-transport-https
-        state: present
-      environment: "{{ proxy_env | default({}) }}"
-      when: ansible_os_family == "Debian" and installation_method == "repo"
-      tags: add_repo, install_packages, install_postgres
-
     - name: Build a firewall_ports_dynamic_var
       set_fact:
-        firewall_ports_dynamic_var: "{{ firewall_ports_dynamic_var |default([]) }} + {{ firewall_allowed_tcp_ports_for[item] }}"
+        firewall_ports_dynamic_var: "{{ firewall_ports_dynamic_var | default([]) + (firewall_allowed_tcp_ports_for[item]) }}"
       loop: "{{ hostvars[inventory_hostname].group_names }}"
       when: firewall_enabled_at_boot|bool
       tags: firewall
 
     - name: Build a firewall_rules_dynamic_var
       set_fact:
-        firewall_rules_dynamic_var: "{{ firewall_rules_dynamic_var |default([]) }} + {{ firewall_additional_rules_for[item] }}"
+        firewall_rules_dynamic_var: "{{ firewall_rules_dynamic_var | default([]) + (firewall_additional_rules_for[item]) }}"
       loop: "{{ hostvars[inventory_hostname].group_names }}"
       when: firewall_enabled_at_boot|bool
       tags: firewall
@@ -126,14 +163,11 @@
     - role: ansible-role-firewall
       environment: "{{ proxy_env | default({}) }}"
       vars:
-        firewall_allowed_tcp_ports: "{{ firewall_ports_dynamic_var|list | unique }}"
-        firewall_additional_rules: "{{ firewall_rules_dynamic_var|list | unique }}"
+        firewall_allowed_tcp_ports: "{{ firewall_ports_dynamic_var | unique }}"
+        firewall_additional_rules: "{{ firewall_rules_dynamic_var | unique }}"
       when: firewall_enabled_at_boot|bool
       tags: firewall
 
-    - role: hostname
-    - role: resolv_conf
-    - role: etc_hosts
     - role: add-repository
     - role: packages
     - role: sudo
@@ -143,7 +177,6 @@
     - role: pam_limits
     - role: io-scheduler
     - role: locales
-    - role: timezone
     - role: ntp
     - role: ssh-keys
     - role: copy
@@ -158,7 +191,7 @@
   gather_facts: true
   any_errors_fatal: true
   vars_files:
-    - vars/main.yml
+    - "vars/main-{{ environment }}.yml"
   pre_tasks:
     - name: Include OS-specific variables
       include_vars: "vars/{{ ansible_os_family }}.yml"
@@ -180,8 +213,10 @@
   become_method: sudo
   gather_facts: true
   any_errors_fatal: true
+  handlers:
+    - include: roles/pgbouncer/handlers/main.yml
   vars_files:
-    - vars/main.yml
+    - "vars/main-{{ environment }}.yml"
     - vars/system.yml
 
   pre_tasks:
@@ -220,10 +255,13 @@
     - role: postgresql-databases
       when: is_master == "true" and postgresql_databases | length > 0
 
+    - role: postgresql-schemas
+      when: is_master == "true" and postgresql_schemas | length > 0
+
     - role: postgresql-extensions
       when: is_master == "true" and postgresql_extensions | length > 0
 
-    - role: pgbouncer/userlist
+    - role: pgbouncer/config
       when: pgbouncer_install|bool and pgbouncer_generate_userlist|bool
 
     - role: netdata

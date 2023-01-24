@@ -9,7 +9,7 @@ nodes = [
 {% endif %}
 {% if dcs_exists|bool and dcs_type == 'etcd' %}
   {% for etcd_hosts in patroni_etcd_hosts %}
-  {{etcd_hosts.host}}:{{etcd_hosts.port}},
+  "http://{{etcd_hosts.host}}:{{etcd_hosts.port}}",
   {% endfor %}
 {% endif %}
 ]

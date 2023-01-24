@@ -1,5 +1,4 @@
 ---
-# yamllint disable rule:comments-indentation
 
 - name: Add extensions to the databases
   become: true
@@ -7,6 +6,7 @@
   postgresql_ext:
     db: "{{ item.db }}"
     name: "{{ item.ext }}"
+    schema: "{{ item.schema | default('public') }}"
     login_host: "127.0.0.1"
     login_port: "{{ postgresql_port }}"
     login_user: "{{ patroni_superuser_username }}"

@@ -1,0 +1,12 @@
+---
+# File: Amazon.yml - Amazonlinux variables for Consul
+consul_os_packages:
+  - git
+  - unzip
+
+consul_syslog_enable: false
+
+consul_repo_prerequisites:
+  - yum-utils
+
+consul_repo_url: https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo

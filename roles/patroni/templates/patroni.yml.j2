@@ -38,6 +38,11 @@ etcd:
   hosts: {% for etcd_hosts in patroni_etcd_hosts %}{{etcd_hosts.host}}:{{etcd_hosts.port}}{% if not loop.last %},{% endif %}{% endfor %}
 {% endif %}
 
+{% if dcs_type == 'consul' %}
+consul:
+  host: 127.0.0.1:8500
+  checks: []
+{% endif %}
 
 bootstrap:
   method: {{ patroni_cluster_bootstrap_method }}

@@ -1,5 +1,4 @@
 ---
-# yamllint disable rule:line-length
 
 # PostgreSQL variables
 postgresql_cluster_name: "main"
@@ -21,18 +20,18 @@ postgresql_version_terse: "{{ postgresql_version | replace('.', '') }}"
 apt_repository_keys:
   - key: "https://www.postgresql.org/media/keys/ACCC4CF8.asc"  # postgresql repository apt key
 apt_repository:
-  - repo: "deb http://apt.postgresql.org/pub/repos/apt/ {{ ansible_distribution_release }}-pgdg main"  # postgresql apt repository
+  - repo: "deb https://apt.postgresql.org/pub/repos/apt/ {{ ansible_distribution_release }}-pgdg main"  # postgresql apt repository
 #  - repo: "deb https://deb.debian.org/debian/ {{ ansible_distribution_release }} main"  # debian repo (optional)
 #  - repo: "deb https://deb.debian.org/debian/ {{ ansible_distribution_release }}-updates main"  # debian repo (optional)
 #  - repo: "deb https://security.debian.org/debian-security/ {{ ansible_distribution_release }}/updates main"  # debian repo (optional)
 
 # Packages (for apt repo)
 os_specific_packages:
-  Debian-9: [python, python-dev, python-psycopg2, python-setuptools]
   Debian-10: [python, python-dev, python-psycopg2, python-setuptools]
   Debian-11: [python3]  # python 2 is not required
   Ubuntu-18: [python, python-dev, python-psycopg2, python-setuptools]
   Ubuntu-20: [python3]  # python 2 is not required
+  Ubuntu-22: [python3]  # python 2 is not required
 system_packages:
   - "{{ os_specific_packages[ansible_distribution ~ '-' ~ ansible_distribution_major_version] }}"
   - python3
@@ -48,6 +47,7 @@ system_packages:
   - jq
   - iptables
   - acl
+  - dnsutils
 
 postgresql_packages:
   - postgresql-{{ postgresql_version }}
@@ -58,12 +58,11 @@ postgresql_packages:
 
 # Extra packages
 etcd_package_repo: "https://github.com/etcd-io/etcd/releases/download/{{ etcd_ver }}/etcd-{{ etcd_ver }}-linux-amd64.tar.gz"
-wal_g_package_repo: "https://github.com/wal-g/wal-g/releases/download/{{ wal_g_ver }}/wal-g.linux-amd64.tar.gz"
 vip_manager_package_repo: "https://github.com/cybertec-postgresql/vip-manager/releases/download/v{{ vip_manager_version }}/vip-manager_{{ vip_manager_version }}-1_amd64.deb"
 # (if with_haproxy_load_balancing: true)
 haproxy_installation_method: "deb"  # (default)"deb" or "src"
 haproxy_install_repo: true  # or 'false'
-# for Debian 9/10 the haproxy version 1.8 (LTS) will be installed from the haproxy.debian.net repository.
+# for Debian 10 the haproxy version 1.8 (LTS) will be installed from the haproxy.debian.net repository.
 # for Ubuntu 18.04 the haproxy version 1.8 (LTS) will be installed from the ppa:vbernat/haproxy-1.8 repository.
 # you can preload the haproxy deb packages to your APT repository (in this case specify "haproxy_install_repo: false").
 confd_package_repo: "https://github.com/kelseyhightower/confd/releases/download/v0.16.0/confd-0.16.0-linux-amd64"
@@ -126,7 +125,7 @@ patroni_pip_package_repo: []
 # ( if patroni_installation_type: "deb" )
 # You can preload the patroni deb package to your APT repository, or explicitly specify the path to the package in this variable:
 patroni_deb_package_repo: []
-#  - "https://apt.postgresql.org/pub/repos/apt/pool/main/p/patroni/patroni_1.6.5-2.pgdg100%2B1_all.deb"  # (package for Debian 10)
+#  - "https://apt.postgresql.org/pub/repos/apt/pool/main/p/patroni/patroni_2.1.4-2.pgdg22.04%2B1_all.deb"  # (package for Ubuntu 22.04)
 
 
 # ================================================================================================= #
@@ -160,12 +159,12 @@ patroni_pip_package_file:
   - "patroni-1.6.0.tar.gz"  # https://pypi.org/project/patroni/#files
 
 # ( if installation_method: "file" and patroni_installation_type: "deb")
-patroni_deb_package_file: "patroni_1.6.0-2.pgdg90+1_all.deb"  # (package for Debian 9) https://apt.postgresql.org/pub/repos/apt/pool/main/p/patroni/
+patroni_deb_package_file: "patroni_2.1.4-2.pgdg22.04+1_all.deb"  # (package for Ubuntu 22.04) https://apt.postgresql.org/pub/repos/apt/pool/main/p/patroni/
 
 # additional packages
-etcd_package_file: "etcd-v3.3.15-linux-amd64.tar.gz"  # https://github.com/etcd-io/etcd/releases
+etcd_package_file: "etcd-v3.3.27-linux-amd64.tar.gz"  # https://github.com/etcd-io/etcd/releases
 wal_g_package_file: "wal-g.linux-amd64.tar.gz"  # https://github.com/wal-g/wal-g/releases
-vip_manager_package_file: "vip-manager_0.6-1_amd64.deb"  # https://github.com/cybertec-postgresql/vip-manager/releases
+vip_manager_package_file: "vip-manager_1.0.2-1_amd64.deb"  # https://github.com/cybertec-postgresql/vip-manager/releases
 # (if with_haproxy_load_balancing: true)
 haproxy_package_file: []
 #  - "haproxy_1.8.21-1~bpo9+1_amd64.deb"

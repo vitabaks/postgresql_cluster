@@ -1,5 +1,4 @@
 ---
-# yamllint disable rule:line-length
 
 - hosts: balancers
   become: true
@@ -7,7 +6,7 @@
   any_errors_fatal: true
   gather_facts: true
   vars_files:
-    - vars/main.yml
+    - "vars/main-{{ environment }}.yml"
     - vars/system.yml
   vars:
     vip_manager_disable: false  # or 'true' for disable vip-manager service (if installed)
@@ -53,14 +52,14 @@
 
     - name: Build a firewall_ports_dynamic_var
       set_fact:
-        firewall_ports_dynamic_var: "{{ firewall_ports_dynamic_var |default([]) }} + {{ firewall_allowed_tcp_ports_for[item] }}"
+        firewall_ports_dynamic_var: "{{ firewall_ports_dynamic_var | default([]) + (firewall_allowed_tcp_ports_for[item]) }}"
       loop: "{{ hostvars[inventory_hostname].group_names }}"
       when: firewall_enabled_at_boot|bool
       tags: firewall
 
     - name: Build a firewall_rules_dynamic_var
       set_fact:
-        firewall_rules_dynamic_var: "{{ firewall_rules_dynamic_var |default([]) }} + {{ firewall_additional_rules_for[item] }}"
+        firewall_rules_dynamic_var: "{{ firewall_rules_dynamic_var | default([]) + (firewall_additional_rules_for[item]) }}"
       loop: "{{ hostvars[inventory_hostname].group_names }}"
       when: firewall_enabled_at_boot|bool
       tags: firewall
@@ -69,8 +68,8 @@
     - role: ansible-role-firewall
       environment: "{{ proxy_env | default({}) }}"
       vars:
-        firewall_allowed_tcp_ports: "{{ firewall_ports_dynamic_var|list | unique }}"
-        firewall_additional_rules: "{{ firewall_rules_dynamic_var|list | unique }}"
+        firewall_allowed_tcp_ports: "{{ firewall_ports_dynamic_var | unique }}"
+        firewall_additional_rules: "{{ firewall_rules_dynamic_var | unique }}"
       when: firewall_enabled_at_boot|bool
       tags: firewall
 

@@ -33,6 +33,7 @@
 - - etcd_conf
 - - etcd_start
 - - etcd_status
+- consul
 - patroni
 - - pip
 - - patroni_install
@@ -76,6 +77,7 @@
 - - vip_manager_restart
 - postgresql_users
 - postgresql_databases
+- postgresql_schemas
 - postgresql_extensions
 - cluster_info
 - - patroni_status
@@ -91,5 +93,8 @@
 - - pgbackrest_install
 - - pgbackrest_conf
 - - pgbackrest_ssh_keys
+- - pgbackrest_cron
+- pg_probackup
+- - pg_probackup_repo
+- - pg_probackup_install
 - netdata
-

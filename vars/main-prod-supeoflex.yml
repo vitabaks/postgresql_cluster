@@ -1,0 +1,463 @@
+---
+# ---------------------------------------------------------------------
+# Proxy variables (optional) for download packages using a proxy server
+proxy_env: {}  # yamllint disable rule:braces
+#  http_proxy: http://10.128.64.9:3128
+#  https_proxy: http://10.128.64.9:3128
+# ---------------------------------------------------------------------
+
+# Cluster variables
+cluster_vip: "10.20.6.52"  # ip address for client access to databases in the cluster (optional)
+vip_interface: "{{ ansible_default_ipv4.interface }}"  # interface name (ex. "ens32")
+
+patroni_cluster_name: "postgres-cluster"  # specify the cluster name
+patroni_install_version: "latest"  # or specific version (example 1.5.6)
+
+patroni_superuser_username: "postgres"
+patroni_superuser_password: !vault |
+  $ANSIBLE_VAULT;1.1;AES256
+  34393433663136626265383036346637383234336136326130613761336166326538656631633135
+  3265633263623236333061626133663465343934353235630a373730643335383566663130313134
+  35316239346565363562643538633133636463396433623533623130633761336637383637613732
+  6333646135623434350a653939646436343632373365313962376131353965613636333865343136
+  35333662666437613264383530313765393861346632306331643839343866653763316164613930
+  6161363764393862346633623165633639663664396531396564
+patroni_replication_username: "replicator"
+patroni_replication_password: !vault |
+  $ANSIBLE_VAULT;1.1;AES256
+  35626332656266613535653830656239646539356634356433653634366333633035656633333533
+  3832383736333630333036373733336661623432613039650a306561303931323639616434616664
+  32313738376333653437656532316338623661383538373931343265313733656434326337303434
+  3661653964353935320a636562363963306163393431396561616537313436343830623430643638
+  32333438616466346432313234366134323639326635353032643438346439663335333439353234
+  6439376233393037623566643535363930646334356433666364
+
+synchronous_mode: false  # or 'true' for enable synchronous database replication
+synchronous_mode_strict: false  # if 'true' then block all client writes to the master, when a synchronous replica is not available
+synchronous_node_count: 1  # number of synchronous standby databases
+
+# Load Balancing
+with_haproxy_load_balancing: false  # or 'true' if you want to install and configure the load-balancing
+haproxy_listen_port:
+  master: 5000
+  replicas: 5001
+  replicas_sync: 5002
+  replicas_async: 5003
+  stats: 7000
+haproxy_maxconn:
+  global: 100000
+  master: 10000
+  replica: 10000
+haproxy_timeout:
+  client: "60m"
+  server: "60m"
+
+# vip-manager (if cluster_vip is specified and with_haproxy_load_balancing: false)
+vip_manager_version: "1.0.2"  # version to install
+vip_manager_conf: "/etc/patroni/vip-manager.yml"
+vip_manager_interval: "1000"  # time (in milliseconds) after which vip-manager wakes up and checks if it needs to register or release ip addresses.
+vip_manager_iface: "{{ vip_interface }}"  # interface to which the virtual ip will be added
+vip_manager_ip: "{{ cluster_vip }}"  # the virtual ip address to manage
+vip_manager_mask: "28"  # netmask for the virtual ip
+
+
+# DCS (Distributed Consensus Store)
+dcs_exists: false  # or 'true' if you don't want to deploy a new etcd cluster
+dcs_type: "etcd"  # or 'consul'
+
+# if dcs_type: "etcd" and dcs_exists: false
+etcd_ver: "v3.3.27"  # version for deploy etcd cluster
+etcd_data_dir: "/var/lib/etcd"
+etcd_cluster_name: "etcd-{{ patroni_cluster_name }}"  # ETCD_INITIAL_CLUSTER_TOKEN
+
+# if dcs_type: "etcd" and dcs_exists: true
+patroni_etcd_hosts: []  # list of servers of an existing etcd cluster
+#  - { host: "10.128.64.140", port: "2379" }
+#  - { host: "10.128.64.142", port: "2379" }
+#  - { host: "10.128.64.143", port: "2379" }
+
+# more options you can specify in the roles/patroni/templates/patroni.yml.j2
+# https://patroni.readthedocs.io/en/latest/SETTINGS.html#etcd
+# https://patroni.readthedocs.io/en/latest/SETTINGS.html#consul
+
+# if dcs_type: "consul"
+consul_version: "1.14.3"
+consul_config_path: "/etc/consul"
+consul_configd_path: "{{ consul_config_path }}/conf.d"
+consul_data_path: "/var/lib/consul"
+consul_domain: "consul"  # Consul domain name
+consul_datacenter: "dc1"  # Datacenter label (can be specified for each host in the inventory)
+consul_disable_update_check: true  # Disables automatic checking for security bulletins and new version releases
+consul_enable_script_checks: true  # This controls whether health checks that execute scripts are enabled on this agent
+consul_enable_local_script_checks: true  # Enable them when they are defined in the local configuration files
+consul_ui: false  # Enable the consul UI?
+consul_syslog_enable: true  # Enable logging to syslog
+consul_iface: "{{ ansible_default_ipv4.interface }}"  # specify the interface name with a Private IP (ex. "enp7s0")
+# TLS
+# You can enable TLS encryption by dropping a CA certificate, server certificate, and server key in roles/consul/files/
+consul_tls_enable: false
+consul_tls_ca_crt: "ca.crt"
+consul_tls_server_crt: "server.crt"
+consul_tls_server_key: "server.key"
+# DNS
+consul_recursors: []  # List of upstream DNS servers
+consul_dnsmasq_enable: true  # Enable DNS forwarding with Dnsmasq
+consul_dnsmasq_cache: 0  # dnsmasq cache-size (0 - disable caching)
+consul_dnsmasq_servers:  # Upstream DNS servers used by dnsmasq
+  - "8.8.8.8"
+  - "9.9.9.9"
+consul_join: []  # List of LAN servers of an existing consul cluster, to join.
+# - "10.128.64.140"
+# - "10.128.64.142"
+# - "10.128.64.143"
+
+# https://developer.hashicorp.com/consul/docs/discovery/services
+consul_services:
+  - name: "{{ patroni_cluster_name }}"
+    id: "{{ patroni_cluster_name }}-master"
+    tags: ['master']
+    port: "{{ pgbouncer_listen_port }}"  # or "{{ pgbouncer_listen_port }}" if pgbouncer_install: false
+    checks:
+      - { http: "http://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:8008/master", interval: "2s" }
+      - { args: ["systemctl", "status", "pgbouncer"], interval: "5s" }  # comment out this check if pgbouncer_install: false
+  - name: "{{ patroni_cluster_name }}"
+    id: "{{ patroni_cluster_name }}-replica"
+    tags: ['replica']
+    port: "{{ pgbouncer_listen_port }}"
+    checks:
+      - { http: "http://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:8008/replica", interval: "2s" }
+      - { args: ["systemctl", "status", "pgbouncer"], interval: "5s" }
+#  - name: "{{ patroni_cluster_name }}"
+#    id: "{{ patroni_cluster_name }}-sync-replica"
+#    tags: ['sync-replica']
+#    port: "{{ pgbouncer_listen_port }}"
+#    checks:
+#      - { http: "http://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:8008/sync", interval: "2s" }
+#      - { args: ["systemctl", "status", "pgbouncer"], interval: "5s" }
+#  - name: "{{ patroni_cluster_name }}"
+#    id: "{{ patroni_cluster_name }}-async-replica"
+#    tags: ['async-replica']
+#    port: "{{ pgbouncer_listen_port }}"
+#    checks:
+#      - { http: "http://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:8008/async", interval: "2s" }
+#      - { args: ["systemctl", "status", "pgbouncer"], interval: "5s" }
+
+
+# PostgreSQL variables
+postgresql_version: "14"
+# postgresql_data_dir: see vars/Debian.yml or vars/RedHat.yml
+postgresql_port: "5432"
+postgresql_encoding: "UTF8"  # for bootstrap only (initdb)
+postgresql_locale: "en_US.UTF-8"  # for bootstrap only (initdb)
+postgresql_data_checksums: true  # for bootstrap only (initdb)
+postgresql_password_encryption_algorithm: "scram-sha-256"  # or "md5" if your clients do not work with passwords encrypted with SCRAM-SHA-256
+
+# (optional) list of users to be created (if not already exists)
+postgresql_users:
+  - name: flex_trafik_prod
+    password: !vault |
+      $ANSIBLE_VAULT;1.1;AES256
+      63353832323361396666336661613235643064653238356431376361663738663862353035373138
+      3035313564643966343266653236363962323337356166360a623861383535376566323632356138
+      62326639663739333831653733343365656466646564326166393538346634663461656462643438
+      3036343666623232310a616539353466613736303535666164633263613032336636303261616563
+      36326431323635376165616339366365313532626630393864623039633739356234363839303838
+      3561393631656261346263366466363664373132313765336533
+    flags: "NOSUPERUSER"
+#  - { name: "mydb-user", password: "mydb-user-pass", flags: "SUPERUSER" }
+#  - { name: "", password: "", flags: "NOSUPERUSER" }
+#  - { name: "", password: "", flags: "NOSUPERUSER" }
+#  - { name: "", password: "", flags: "NOLOGIN" }
+
+# (optional) list of databases to be created (if not already exists)
+postgresql_databases:
+  - db: flex_trafik_prod
+    owner: flex_trafik_prod
+    encoding: "UTF8"
+    lc_collate: "en_US.UTF-8"
+    lc_ctype: "en_US.UTF-8"
+#  - { db: "mydatabase", encoding: "UTF8", lc_collate: "ru_RU.UTF-8", lc_ctype: "ru_RU.UTF-8", owner: "mydb-user" }
+#  - { db: "", encoding: "UTF8", lc_collate: "en_US.UTF-8", lc_ctype: "en_US.UTF-8", owner: "" }
+#  - { db: "", encoding: "UTF8", lc_collate: "en_US.UTF-8", lc_ctype: "en_US.UTF-8", owner: "" }
+
+# (optional) list of schemas to be created (if not already exists)
+postgresql_schemas: []
+#  - { schema: "myschema", db: "mydatabase", owner: "mydb-user" }
+
+# (optional) list of database extensions to be created (if not already exists)
+postgresql_extensions: []
+#  - { ext: "pg_stat_statements", db: "postgres" }
+#  - { ext: "pg_stat_statements", db: "mydatabase" }
+#  - { ext: "pg_stat_statements", db: "mydatabase", schema: "myschema" }
+#  - { ext: "pg_stat_statements", db: "" }
+#  - { ext: "pg_stat_statements", db: "" }
+#  - { ext: "pg_repack", db: "" }  # postgresql-<version>-repack package is required
+#  - { ext: "pg_stat_kcache", db: "" }  # postgresql-<version>-pg-stat-kcache package is required
+#  - { ext: "", db: "" }
+#  - { ext: "", db: "" }
+
+
+# postgresql parameters to bootstrap dcs (are parameters for example)
+postgresql_parameters:
+  - { option: "max_connections", value: "500" }
+  - { option: "superuser_reserved_connections", value: "5" }
+  - { option: "password_encryption", value: "{{ postgresql_password_encryption_algorithm }}" }
+  - { option: "max_locks_per_transaction", value: "64" }  # raise this value (ex. 512) if you have queries that touch many different tables (partitioning)
+  - { option: "max_prepared_transactions", value: "0" }
+  - { option: "huge_pages", value: "try" }  # or "on" if you set "vm_nr_hugepages" in kernel parameters
+  - { option: "shared_buffers", value: "512MB" }  # please change this value
+  - { option: "work_mem", value: "128MB" }  # please change this value
+  - { option: "maintenance_work_mem", value: "256MB" }  # please change this value
+  - { option: "effective_cache_size", value: "4GB" }  # please change this value
+  - { option: "checkpoint_timeout", value: "15min" }
+  - { option: "checkpoint_completion_target", value: "0.9" }
+  - { option: "min_wal_size", value: "2GB" }
+  - { option: "max_wal_size", value: "8GB" }  # or 16GB/32GB
+  - { option: "wal_buffers", value: "32MB" }
+  - { option: "default_statistics_target", value: "1000" }
+  - { option: "seq_page_cost", value: "1" }
+  - { option: "random_page_cost", value: "4" }  # "1.1" for SSD storage. Also, if your databases fits in shared_buffers
+  - { option: "effective_io_concurrency", value: "2" }  # "200" for SSD storage
+  - { option: "synchronous_commit", value: "on" }  # or 'off' if you can you lose single transactions in case of a crash
+  - { option: "autovacuum", value: "on" }  # never turn off the autovacuum!
+  - { option: "autovacuum_max_workers", value: "5" }
+  - { option: "autovacuum_vacuum_scale_factor", value: "0.01" }  # or 0.005/0.001
+  - { option: "autovacuum_analyze_scale_factor", value: "0.01" }
+  - { option: "autovacuum_vacuum_cost_limit", value: "500" }  # or 1000/5000
+  - { option: "autovacuum_vacuum_cost_delay", value: "2" }
+  - { option: "autovacuum_naptime", value: "1s" }
+  - { option: "max_files_per_process", value: "4096" }
+  - { option: "archive_mode", value: "on" }
+  - { option: "archive_timeout", value: "1800s" }
+  - { option: "archive_command", value: "cd ." }  # not doing anything yet with WAL-s
+#  - { option: "archive_command", value: "wal-g wal-push %p" }  # archive WAL-s using WAL-G
+#  - { option: "archive_command", value: "pgbackrest --stanza={{ pgbackrest_stanza }} archive-push %p" }  # archive WAL-s using pgbackrest
+  - { option: "wal_level", value: "replica" }
+  - { option: "wal_keep_size", value: "2GB" }
+  - { option: "max_wal_senders", value: "10" }
+  - { option: "max_replication_slots", value: "10" }
+  - { option: "hot_standby", value: "on" }
+  - { option: "wal_log_hints", value: "on" }
+  - { option: "wal_compression", value: "on" }
+  - { option: "shared_preload_libraries", value: "pg_stat_statements,auto_explain" }
+  - { option: "pg_stat_statements.max", value: "10000" }
+  - { option: "pg_stat_statements.track", value: "all" }
+  - { option: "pg_stat_statements.track_utility", value: "false" }
+  - { option: "pg_stat_statements.save", value: "true" }
+  - { option: "auto_explain.log_min_duration", value: "10s" }  # enable auto_explain for 10-second logging threshold. Decrease this value if necessary
+  - { option: "auto_explain.log_analyze", value: "true" }
+  - { option: "auto_explain.log_buffers", value: "true" }
+  - { option: "auto_explain.log_timing", value: "false" }
+  - { option: "auto_explain.log_triggers", value: "true" }
+  - { option: "auto_explain.log_verbose", value: "true" }
+  - { option: "auto_explain.log_nested_statements", value: "true" }
+  - { option: "auto_explain.sample_rate", value: "0.01" }  # enable auto_explain for 1% of queries logging threshold
+  - { option: "track_io_timing", value: "on" }
+  - { option: "log_lock_waits", value: "on" }
+  - { option: "log_temp_files", value: "0" }
+  - { option: "track_activities", value: "on" }
+  - { option: "track_counts", value: "on" }
+  - { option: "track_functions", value: "all" }
+  - { option: "log_checkpoints", value: "on" }
+  - { option: "logging_collector", value: "on" }
+  - { option: "log_truncate_on_rotation", value: "on" }
+  - { option: "log_rotation_age", value: "1d" }
+  - { option: "log_rotation_size", value: "0" }
+  - { option: "log_line_prefix", value: "'%t [%p-%l] %r %q%u@%d '" }
+  - { option: "log_filename", value: "postgresql-%a.log" }
+  - { option: "log_directory", value: "{{ postgresql_log_dir }}" }
+  - { option: "hot_standby_feedback", value: "on" }  # allows feedback from a hot standby to the primary that will avoid query conflicts
+  - { option: "max_standby_streaming_delay", value: "30s" }
+  - { option: "wal_receiver_status_interval", value: "10s" }
+  - { option: "idle_in_transaction_session_timeout", value: "10min" }  # reduce this timeout if possible
+  - { option: "jit", value: "off" }
+  - { option: "max_worker_processes", value: "24" }
+  - { option: "max_parallel_workers", value: "8" }
+  - { option: "max_parallel_workers_per_gather", value: "2" }
+  - { option: "max_parallel_maintenance_workers", value: "2" }
+#  - { option: "old_snapshot_threshold", value: "60min" }
+#  - { option: "", value: "" }
+#  - { option: "", value: "" }
+
+
+# specify additional hosts that will be added to the pg_hba.conf
+postgresql_pg_hba:
+  - { type: "local", database: "all", user: "{{ patroni_superuser_username }}", address: "", method: "trust" }
+  - { type: "local", database: "all", user: "all", address: "", method: "peer" }
+  - { type: "host", database: "all", user: "all", address: "127.0.0.1/32", method: "{{ postgresql_password_encryption_algorithm }}" }
+  - { type: "host", database: "all", user: "all", address: "::1/128", method: "{{ postgresql_password_encryption_algorithm }}" }
+#  - { type: "host", database: "mydatabase", user: "mydb-user", address: "192.168.0.0/24", method: "{{ postgresql_password_encryption_algorithm }}" }
+#  - { type: "host", database: "all", user: "all", address: "192.168.0.0/24", method: "ident", options: "map=main" }  # use pg_ident
+
+# list of lines that Patroni will use to generate pg_ident.conf
+postgresql_pg_ident: []
+#  - { mapname: "main", system_username: "postgres", pg_username: "backup" }
+#  - { mapname: "", system_username: "", pg_username: "" }
+
+
+# PgBouncer parameters
+pgbouncer_install: true  # or 'false' if you do not want to install and configure the pgbouncer service
+pgbouncer_conf_dir: "/etc/pgbouncer"
+pgbouncer_log_dir: "/var/log/pgbouncer"
+pgbouncer_listen_port: 6432
+pgbouncer_max_client_conn: 10000
+pgbouncer_max_db_connections: 1000
+pgbouncer_default_pool_size: 20
+pgbouncer_default_pool_mode: "session"
+pgbouncer_admin_users: "postgres"  # comma-separated list of users, who are allowed to change settings
+pgbouncer_stats_users: "postgres"  # comma-separated list of users who are just allowed to use SHOW command
+pgbouncer_generate_userlist: true  # generate the authentication file (userlist.txt) from the pg_shadow system table
+pgbouncer_auth_type: "{{ postgresql_password_encryption_algorithm }}"
+pgbouncer_ignore_startup_parameters: "extra_float_digits,geqo,search_path"
+
+pgbouncer_pools:
+  - { name: "postgres", dbname: "postgres", pool_parameters: "" }
+#  - { name: "mydatabase", dbname: "mydatabase", pool_parameters: "pool_size=20 pool_mode=transaction" }
+#  - { name: "", dbname: "", pool_parameters: "" }
+#  - { name: "", dbname: "", pool_parameters: "" }
+
+
+# Extended variables (optional)
+patroni_ttl: 30
+patroni_loop_wait: 10
+patroni_retry_timeout: 10
+patroni_maximum_lag_on_failover: 1048576
+patroni_master_start_timeout: 300
+
+# https://patroni.readthedocs.io/en/latest/replica_bootstrap.html#standby-cluster
+patroni_standby_cluster:
+  host: ""  # an address of remote master
+  port: "5432"  # a port of remote master
+#  primary_slot_name: ""  # which slot on the remote master to use for replication (optional)
+#  restore_command: ""  # command to restore WAL records from the remote master to standby leader (optional)
+#  recovery_min_apply_delay: ""  # how long to wait before actually apply WAL records on a standby leader (optional)
+
+patroni_log_destination: stderr  # or 'logfile'
+# if patroni_log_destination: logfile
+patroni_log_dir: /var/log/patroni
+patroni_log_level: info
+patroni_log_traceback_level: error
+patroni_log_format: "%(asctime)s %(levelname)s: %(message)s"
+patroni_log_dateformat: ""
+patroni_log_max_queue_size: 1000
+patroni_log_file_num: 4
+patroni_log_file_size: 25000000  # bytes
+patroni_log_loggers_patroni_postmaster: warning
+patroni_log_loggers_urllib3: warning  # or 'debug'
+
+patroni_postgresql_use_pg_rewind: true  # or 'false'
+# try to use pg_rewind on the former leader when it joins cluster as a replica.
+
+patroni_remove_data_directory_on_rewind_failure: false  # or 'true' (if use_pg_rewind: 'true')
+# avoid removing the data directory on an unsuccessful rewind
+# if 'true', Patroni will remove the PostgreSQL data directory and recreate the replica.
+
+patroni_remove_data_directory_on_diverged_timelines: false  # or 'true'
+# if 'true', Patroni will remove the PostgreSQL data directory and recreate the replica
+# if it notices that timelines are diverging and the former master can not start streaming from the new master.
+
+# https://patroni.readthedocs.io/en/latest/replica_bootstrap.html#bootstrap
+patroni_cluster_bootstrap_method: "initdb"  # or "wal-g", "pgbackrest", "pg_probackup"
+
+# https://patroni.readthedocs.io/en/latest/replica_bootstrap.html#building-replicas
+patroni_create_replica_methods:
+#  - pgbackrest
+#  - wal_g
+#  - pg_probackup
+  - basebackup
+
+pgbackrest:
+  - { option: "command", value: "/usr/bin/pgbackrest --stanza={{ pgbackrest_stanza }} --delta restore" }
+  - { option: "keep_data", value: "True" }
+  - { option: "no_params", value: "True" }
+wal_g:
+  - { option: "command", value: "wal-g backup-fetch {{ postgresql_data_dir }} LATEST" }
+  - { option: "no_params", value: "True" }
+basebackup:
+  - { option: "max-rate", value: "100M" }
+  - { option: "checkpoint", value: "fast" }
+pg_probackup:
+  - { option: "command", value: "pg_probackup-{{ pg_probackup_version }} restore -B {{ pg_probackup_dir }} --instance {{ pg_probackup_instance }} -j {{ pg_probackup_threads }} {{ pg_probackup_add_keys }}" }
+  - { option: "no_params", value: "true" }
+
+# "restore_command" written to recovery.conf when configuring follower (create replica)
+postgresql_restore_command: ""
+# postgresql_restore_command: "wal-g wal-fetch %f %p"  # restore WAL-s using WAL-G
+# postgresql_restore_command: "pgbackrest --stanza={{ pgbackrest_stanza }} archive-get %f %p"  # restore WAL-s using pgbackrest
+# postgresql_restore_command: "pg_probackup-{{ pg_probackup_version }} archive-get -B {{ pg_probackup_dir }} --instance {{ pg_probackup_instance }} --wal-file-path=%p --wal-file-name=%f"  # restore WAL-s using pg_probackup
+
+# pg_probackup
+pg_probackup_install: false  # or 'true'
+pg_probackup_install_from_postgrespro_repo: true  # or 'false'
+pg_probackup_version: "{{ postgresql_version }}"
+pg_probackup_instance: "pg_probackup_instance_name"
+pg_probackup_dir: "/mnt/backup_dir"
+pg_probackup_threads: "4"
+pg_probackup_add_keys: "--recovery-target=latest --skip-external-dirs --no-validate"
+pg_probackup_patroni_cluster_bootstrap_command: "pg_probackup-{{ pg_probackup_version }} restore -B {{ pg_probackup_dir }} --instance {{ pg_probackup_instance }} -j {{ pg_probackup_threads }} {{ pg_probackup_add_keys }}"
+
+# WAL-G
+wal_g_install: false  # or 'true'
+wal_g_version: "2.0.1"
+wal_g_json:  # config https://github.com/wal-g/wal-g#configuration
+  - { option: "AWS_ACCESS_KEY_ID", value: "minio" }
+  - { option: "AWS_SECRET_ACCESS_KEY", value: "miniosecret" }
+  - { option: "AWS_ENDPOINT", value: "http://172.26.9.200:9000" }
+  - { option: "WALG_S3_PREFIX", value: "s3://bucket" }
+  - { option: "AWS_S3_FORCE_PATH_STYLE", value: "true" }
+  - { option: "WALG_COMPRESSION_METHOD", value: "brotli" }
+  - { option: "PGDATA", value: "{{ postgresql_data_dir }}" }
+  - { option: "PGHOST", value: "{{ postgresql_unix_socket_dir }}" }
+#  - { option: "AWS_REGION", value: "us-east-1" }
+#  - { option: "WALG_S3_CA_CERT_FILE", value: "/path/to/custom/ca/file" }
+#  - { option: "", value: "" }
+wal_g_patroni_cluster_bootstrap_command: "wal-g backup-fetch {{ postgresql_data_dir }} LATEST"
+
+# pgBackRest
+pgbackrest_install: false  # or 'true'
+pgbackrest_install_from_pgdg_repo: true  # or 'false'
+pgbackrest_stanza: "stanza_name"  # specify your --stanza
+pgbackrest_repo_type: "posix"  # or "s3"
+pgbackrest_repo_host: "10.128.64.50"  # dedicated repository host (if repo_type: "posix")
+pgbackrest_repo_user: "postgres"  # if "repo_host" is set
+pgbackrest_conf_file: "/etc/pgbackrest/pgbackrest.conf"
+# see more options https://pgbackrest.org/configuration.html
+pgbackrest_conf:
+  global:  # [global] section
+    - { option: "log-level-file", value: "detail" }
+    - { option: "log-path", value: "/var/log/pgbackrest" }
+    - { option: "repo1-type", value: "{{ pgbackrest_repo_type |lower }}" }
+    - { option: "repo1-host", value: "{{ pgbackrest_repo_host }}" }
+    - { option: "repo1-host-user", value: "{{ pgbackrest_repo_user }}" }
+#    - { option: "", value: "" }
+  stanza:  # [stanza_name] section
+    - { option: "pg1-path", value: "{{ postgresql_data_dir }}" }
+    - { option: "process-max", value: "2" }
+    - { option: "recovery-option", value: "recovery_target_action=promote" }
+#    - { option: "", value: "" }
+pgbackrest_patroni_cluster_restore_command:
+  '/usr/bin/pgbackrest --stanza={{ pgbackrest_stanza }} --delta restore'  # restore from latest backup
+#  '/usr/bin/pgbackrest --stanza={{ pgbackrest_stanza }} --type=time "--target=2020-06-01 11:00:00+03" --delta restore'  # Point-in-Time Recovery (example)
+pgbackrest_cron: []
+#  - { name: "Full Backup", type: "full", hour: "06", minute: "30", dow: "0" }
+#  - { name: "Diff Backup", type: "diff", hour: "06", minute: "30", dow: "1-6" }
+
+# PITR mode (if patroni_cluster_bootstrap_method: "pgbackrest" or "wal-g"):
+# 1) The database cluster directory will be cleaned (for "wal-g") or overwritten (for "pgbackrest" --delta restore).
+# 2) And also the patroni cluster "{{ patroni_cluster_name }}" will be removed from the DCS (if exist) before recovery.
+
+disable_archive_command: true  # or 'false' to not disable archive_command after restore
+keep_patroni_dynamic_json: true  # or 'false' to remove patroni.dynamic.json after restore (if exists)
+
+
+# Netdata - https://github.com/netdata/netdata
+netdata_install: false  # or 'true' for install Netdata on postgresql cluster nodes (with kickstart.sh)
+netdata_install_options: "--stable-channel --disable-telemetry --dont-wait"
+netdata_conf:
+  web_bind_to: "*"
+  # https://learn.netdata.cloud/docs/store/change-metrics-storage
+  memory_mode: "dbengine"  # The long-term metrics storage with efficient RAM and disk usage.
+  page_cache_size: 64  # Determines the amount of RAM in MiB that is dedicated to caching Netdata metric values.
+  dbengine_disk_space: 1024  # Determines the amount of disk space in MiB that is dedicated to storing Netdata metric values.
+
+...

@@ -1,0 +1,16 @@
+---
+# File: MacOSX.yml - Mac OS X variables for Consul
+
+consul_config_path: "/Users/{{ consul_user }}/Library/Preferences/io.consul"
+
+consul_configd_path: "{{ consul_config_path }}/consul.d"
+
+consul_launchctl_ident: "io.consul"
+
+consul_launchctl_plist: "/Library/LaunchAgents/{{ consul_launchctl_ident }}.plist"
+
+consul_log_path: "/Users/{{ consul_user }}/Library/Logs/consul"
+
+consul_os_packages: []
+
+consul_run_path: "/Users/{{ consul_user }}/Library/Caches/io.consul"

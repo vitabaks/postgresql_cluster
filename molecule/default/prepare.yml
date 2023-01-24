@@ -18,4 +18,9 @@
         labels:
           owner: molecule
 
+    - name: "Install netaddr dependency on controlling host"
+      pip:
+        name: netaddr
+      become: false
+
 ...

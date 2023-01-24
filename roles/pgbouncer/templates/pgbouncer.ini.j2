@@ -17,7 +17,8 @@ listen_port = {{ pgbouncer_listen_port | default(6432) }}
 unix_socket_dir = /var/run/postgresql
 auth_type = {{ pgbouncer_auth_type }}
 auth_file = /etc/pgbouncer/userlist.txt
-admin_users = postgres
+admin_users = {{ pgbouncer_admin_users }}
+stats_users = {{ pgbouncer_stats_users }}
 ignore_startup_parameters = {{ pgbouncer_ignore_startup_parameters }}
 
 pool_mode = {{ pgbouncer_default_pool_mode }}

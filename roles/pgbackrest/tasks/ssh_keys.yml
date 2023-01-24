@@ -1,5 +1,4 @@
 ---
-# yamllint disable rule:line-length
 
 - name: ssh_keys | Ensure ssh key are created for "{{ pgbackrest_repo_user }}" user on pgbackrest server
   user:

@@ -1,0 +1,7 @@
+rich>=10.0.0,<11.0.0
+molecule===2.22
+docker
+netaddr
+testinfra
+flake8
+yamllint

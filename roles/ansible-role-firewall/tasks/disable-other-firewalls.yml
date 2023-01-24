@@ -1,8 +1,6 @@
 ---
 - name: Check if firewalld package is installed (on RHEL).
   command: yum list installed firewalld
-  args:
-    warn: false
   register: firewalld_installed
   failed_when: false
   changed_when: false
@@ -23,8 +21,6 @@
 
 - name: Check if ufw package is installed (on Ubuntu).
   command: service ufw status
-  args:
-    warn: false
   register: ufw_installed
   failed_when: false
   changed_when: false
@@ -45,8 +41,6 @@
 
 - name: Check if ufw package is installed (on Archlinux).
   command: pacman -Q ufw
-  args:
-    warn: false
   register: ufw_installed
   ignore_errors: true
   changed_when: false

@@ -1,6 +1,4 @@
 ---
-# yamllint disable rule:comments-indentation
-# yamllint disable rule:line-length
 
 dependency:
   name: galaxy
@@ -9,7 +7,7 @@ driver:
   name: docker
 platforms:
   - name: 10.172.0.17
-    hostname: etcd01
+    hostname: dcs-node01
     image: "${IMAGE_NAMESPACE:-geerlingguy}/docker-${IMAGE_DISTRO:-centos8}-ansible:${IMAGE_TAG:-latest}"
     # docker_networks:  # TODO github.com/ansible-community/molecule/pull/2696
       # - name: test_docker_network
@@ -20,21 +18,25 @@ platforms:
       - name: test_docker_network
         ipv4_address: 10.172.0.17
     exposed_ports:
-      - 2379/tcp
-      - 2380/tcp
+      - 2379/tcp  # if dcs_type: "etcd"
+      - 2380/tcp  # if dcs_type: "etcd"
+      - 8300/tcp  # if dcs_type: "consul"
+      - 8301/tcp  # if dcs_type: "consul"
+      - 8302/tcp  # if dcs_type: "consul"
+      - 8500/tcp  # if dcs_type: "consul"
+      - 8600/tcp  # if dcs_type: "consul"
     command: ""
     volumes:
-      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    cgroupns_mode: host
     privileged: true
     pre_build_image: true
-    env:
-      LANG: en_US.UTF-8
-      LC_ALL: en_US.UTF-8
     groups:
-      - etcd_cluster
+      - etcd_cluster  # if dcs_type: "etcd"
+      - consul_instances  # if dcs_type: "consul"
 
   - name: 10.172.0.18
-    hostname: etcd02
+    hostname: dcs-node02
     image: "${IMAGE_NAMESPACE:-geerlingguy}/docker-${IMAGE_DISTRO:-centos8}-ansible:${IMAGE_TAG:-latest}"
     networks:
       - name: test_docker_network
@@ -42,19 +44,23 @@ platforms:
     exposed_ports:
       - 2379/tcp
       - 2380/tcp
+      - 8300/tcp
+      - 8301/tcp
+      - 8302/tcp
+      - 8500/tcp
+      - 8600/tcp
     command: ""
     volumes:
-      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    cgroupns_mode: host
     privileged: true
     pre_build_image: true
-    env:
-      LANG: en_US.UTF-8
-      LC_ALL: en_US.UTF-8
     groups:
       - etcd_cluster
+      - consul_instances
 
   - name: 10.172.0.19
-    hostname: etcd03
+    hostname: dcs-node03
     image: "${IMAGE_NAMESPACE:-geerlingguy}/docker-${IMAGE_DISTRO:-centos8}-ansible:${IMAGE_TAG:-latest}"
     networks:
       - name: test_docker_network
@@ -62,16 +68,20 @@ platforms:
     exposed_ports:
       - 2379/tcp
       - 2380/tcp
+      - 8300/tcp
+      - 8301/tcp
+      - 8302/tcp
+      - 8500/tcp
+      - 8600/tcp
     command: ""
     volumes:
-      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    cgroupns_mode: host
     privileged: true
     pre_build_image: true
-    env:
-      LANG: en_US.UTF-8
-      LC_ALL: en_US.UTF-8
     groups:
       - etcd_cluster
+      - consul_instances
 
   - name: 10.172.0.20
     hostname: pgnode01
@@ -83,18 +93,22 @@ platforms:
       - 8008/tcp
       - 5432/tcp
       - 6432/tcp
+      - 8300/tcp  # if dcs_type: "consul"
+      - 8301/tcp  # if dcs_type: "consul"
+      - 8302/tcp  # if dcs_type: "consul"
+      - 8500/tcp  # if dcs_type: "consul"
+      - 8600/tcp  # if dcs_type: "consul"
     command: ""
     volumes:
-      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    cgroupns_mode: host
     privileged: true
     pre_build_image: true
-    env:
-      LANG: en_US.UTF-8
-      LC_ALL: en_US.UTF-8
     groups:
       - master
       - postgres_cluster
       - balancers
+      - consul_instances
 
   - name: 10.172.0.21
     hostname: pgnode02
@@ -106,18 +120,22 @@ platforms:
       - 8008/tcp
       - 5432/tcp
       - 6432/tcp
+      - 8300/tcp
+      - 8301/tcp
+      - 8302/tcp
+      - 8500/tcp
+      - 8600/tcp
     command: ""
     volumes:
-      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    cgroupns_mode: host
     privileged: true
     pre_build_image: true
-    env:
-      LANG: en_US.UTF-8
-      LC_ALL: en_US.UTF-8
     groups:
       - replica
       - postgres_cluster
       - balancers
+      - consul_instances
 
 provisioner:
   name: ansible

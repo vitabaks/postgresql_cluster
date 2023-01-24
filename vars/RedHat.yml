@@ -1,5 +1,4 @@
 ---
-# yamllint disable rule:line-length
 
 # PostgreSQL variables
 postgresql_data_dir: "/var/lib/pgsql/{{ postgresql_version }}/data"  # You can specify custom data dir path
@@ -43,6 +42,10 @@ os_specific_packages:
     - python3-libselinux
     - python3-libsemanage
     - python3-policycoreutils
+  RedHat-9:
+    - python3-libselinux
+    - python3-libsemanage
+    - python3-policycoreutils
 system_packages:
   - "{{ os_specific_packages[ansible_os_family ~ '-' ~ ansible_distribution_major_version] }}"
   - python3
@@ -50,7 +53,6 @@ system_packages:
   - python3-psycopg2
   - python3-setuptools
   - python3-pip
-  - curl
   - less
   - sudo
   - vim
@@ -58,6 +60,7 @@ system_packages:
   - jq
   - iptables
   - acl
+  - bind-utils
 
 # The glibc-langpack package includes the basic information required to support the language in your applications.
 # for RHEL version 8 (only)
@@ -75,7 +78,6 @@ postgresql_packages:
 
 # Extra packages
 etcd_package_repo: "https://github.com/etcd-io/etcd/releases/download/{{ etcd_ver }}/etcd-{{ etcd_ver }}-linux-amd64.tar.gz"
-wal_g_package_repo: "https://github.com/wal-g/wal-g/releases/download/{{ wal_g_ver }}/wal-g.linux-amd64.tar.gz"
 vip_manager_package_repo: "https://github.com/cybertec-postgresql/vip-manager/releases/download/v{{ vip_manager_version }}/vip-manager-{{ vip_manager_version }}-1.x86_64.rpm"
 # (if with_haproxy_load_balancing: true)
 haproxy_installation_method: "rpm"  # (default)"rpm" or "src"
@@ -141,7 +143,7 @@ patroni_pip_package_repo: []
 # (if patroni_installation_type: "rpm")
 # You can preload the patroni rpm package to your YUM repository, or explicitly specify the path to the package in this variable:
 patroni_rpm_package_repo: []
-#  - "https://github.com/cybertec-postgresql/patroni-packaging/releases/download/1.6.5-1/patroni-1.6.5-1.rhel7.x86_64.rpm"  # (package for RHEL/CentOS 7)
+#  - "https://download.postgresql.org/pub/repos/yum/common/redhat/rhel-8-x86_64/patroni-2.1.4-1.rhel8.x86_64.rpm"  # (package for RHEL/CentOS 8)
 
 
 # ================================================================================================= #
@@ -174,18 +176,20 @@ patroni_pip_requirements_file:
 patroni_pip_package_file:
   - "patroni-1.6.0.tar.gz"  # https://pypi.org/project/patroni/#files
 
-# ( if patroni_installation_type: "rpm" and installation_method: "file" )
-patroni_rpm_package_file: "patroni-1.6.0-1.rhel7.x86_64.rpm"  # (package for RHEL/CentOS 7) https://github.com/cybertec-postgresql/patroni-packaging/releases/
+#  ( if patroni_installation_type: "rpm" and installation_method: "file" )
+patroni_rpm_package_file: "patroni-2.1.4-1.rhel8.x86_64.rpm"  # (package for RHEL/CentOS 8) https://download.postgresql.org/pub/repos/yum/common/redhat/rhel-8-x86_64/
 
 # additional packages
-etcd_package_file: "etcd-v3.3.15-linux-amd64.tar.gz"  # https://github.com/etcd-io/etcd/releases
+etcd_package_file: "etcd-v3.3.27-linux-amd64.tar.gz"  # https://github.com/etcd-io/etcd/releases
 wal_g_package_file: "wal-g.linux-amd64.tar.gz"  # https://github.com/wal-g/wal-g/releases
-vip_manager_package_file: "vip-manager_0.6-1_amd64.rpm"  # https://github.com/cybertec-postgresql/vip-manager/releases
-## (if with_haproxy_load_balancing: true)
+vip_manager_package_file: "vip-manager-1.0.2-1.x86_64.rpm"  # https://github.com/cybertec-postgresql/vip-manager/releases
+
+# if with_haproxy_load_balancing: true
 haproxy_package_file: []
 #  - "rh-haproxy18-runtime-3.1-2.el7.x86_64.rpm"
 #  - "rh-haproxy18-haproxy-1.8.17-1.el7.x86_64.rpm"
 confd_package_file: "confd-0.16.0-linux-amd64"  # https://github.com/kelseyhightower/confd/releases
+
 # (optional) if haproxy_installation_method: 'src'
 lua_src_file: "lua-5.3.5.tar.gz"  # https://www.lua.org/ftp/lua-5.3.5.tar.gz (required for build haproxy)
 haproxy_src_file: "haproxy-1.8.21.tar.gz"  # http://www.haproxy.org/download/1.8/src/

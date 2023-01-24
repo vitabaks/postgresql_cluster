@@ -29,14 +29,10 @@
 - block:  # RedHat (update cache)
     - name: Clean yum cache
       command: yum clean all
-      args:
-        warn: false
       when: ansible_distribution_major_version == '7'
 
     - name: Clean dnf cache
       command: dnf clean all
-      args:
-        warn: false
       when: ansible_distribution_major_version is version('8', '>=')
   environment: "{{ proxy_env | default({}) }}"
   when: ansible_os_family == "RedHat" and installation_method == "repo"
@@ -47,7 +43,7 @@
 - name: Install system packages
   package:
     name: "{{ item }}"
-    state: latest
+    state: present
   loop: "{{ system_packages }}"
   environment: "{{ proxy_env | default({}) }}"
   when: ansible_os_family == "RedHat" and installation_method == "repo"
@@ -57,7 +53,7 @@
 - name: Install system packages
   apt:
     name: "{{ item }}"
-    state: latest
+    state: present
   loop: "{{ system_packages }}"
   environment: "{{ proxy_env | default({}) }}"
   when: ansible_os_family == "Debian" and installation_method == "repo"
@@ -90,13 +86,9 @@
       command: 'dnf -y -C module list postgresql'
       register: postgresql_module_result
       changed_when: false
-      args:
-        warn: false
 
     - name: PostgreSQL | disable appstream module
       command: 'dnf -y -C module disable postgresql'
-      args:
-        warn: false
       when: "'[x] ' not in postgresql_module_result.stdout"
   when: installation_method == "repo" and
         ansible_os_family == "RedHat" and
@@ -113,7 +105,7 @@
   loop: "{{ postgresql_packages }}"
   environment: "{{ proxy_env | default({}) }}"
   when: ansible_os_family == "RedHat" and installation_method == "repo"
-  tags: install_postgres
+  tags: install_packages, install_postgres
 
 # Debian
 - name: Install PostgreSQL packages
@@ -123,6 +115,6 @@
   loop: "{{ postgresql_packages }}"
   environment: "{{ proxy_env | default({}) }}"
   when: ansible_os_family == "Debian" and installation_method == "repo"
-  tags: install_postgres
+  tags: install_packages, install_postgres
 
 ...

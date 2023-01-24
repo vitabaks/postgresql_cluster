@@ -1,5 +1,4 @@
 ---
-# yamllint disable rule:line-length
 
 - block:  # Debian pgdg repo
     - name: Make sure the gnupg and apt-transport-https packages are present
@@ -31,7 +30,7 @@
 - block:  # RedHat pgdg repo
     - name: Get pgdg-redhat-repo-latest.noarch.rpm
       get_url:
-        url: "https://download.postgresql.org/pub/repos/yum/reporpms/EL-{{ ansible_distribution_major_version }}-x86_64/pgdg-redhat-repo-latest.noarch.rpm"  # noqa 204
+        url: "https://download.postgresql.org/pub/repos/yum/reporpms/EL-{{ ansible_distribution_major_version }}-x86_64/pgdg-redhat-repo-latest.noarch.rpm"
         dest: /tmp/
         timeout: 30
         validate_certs: false
@@ -43,14 +42,10 @@
 
     - name: Clean yum cache
       command: yum clean all
-      args:
-        warn: false
       when: ansible_distribution_major_version == '7'
 
     - name: Clean dnf cache
       command: dnf clean all
-      args:
-        warn: false
       when: ansible_distribution_major_version is version('8', '>=')
   environment: "{{ proxy_env | default({}) }}"
   when:
@@ -86,7 +81,7 @@
 - name: Install pgbackrest
   package:
     name: pgbackrest
-    state: latest
+    state: present
   environment: "{{ proxy_env | default({}) }}"
   tags: pgbackrest, pgbackrest_install
 
@@ -120,5 +115,20 @@
 #    - patroni_cluster_bootstrap_method == "pgbackrest"
 #    - "'postgres_cluster' in group_names"
 #  tags: pgbackrest, pgbackrest_bootstrap_script
+
+- name: Crontab pgbackrest
+  become: true
+  cron:
+    name: "{{ item.name | default('Backup') }}"
+    cron_file: /etc/cron.d/pgbackrest
+    job: "/usr/bin/pgbackrest --type={{ item.type }} --stanza={{ pgbackrest_stanza }} backup"
+    user: postgres
+    dow: "{{ item.dow }}"
+    hour: "{{ item.hour }}"
+    minute: "{{ item.minute }}"
+  ignore_errors: true
+  loop: "{{ pgbackrest_cron | flatten(1) }}"
+  when: pgbackrest_cron is defined and pgbackrest_cron | length > 0
+  tags: pgbackrest_cron
 
 ...

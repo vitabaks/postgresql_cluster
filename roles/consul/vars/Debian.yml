@@ -1,0 +1,12 @@
+---
+# File: Debian.yml - Debian OS variables for Consul
+
+consul_os_packages:
+  - unzip
+
+dnsmasq_package: dnsmasq
+
+consul_repo_prerequisites:
+  - gpg
+
+consul_repo_url: "https://apt.releases.hashicorp.com"

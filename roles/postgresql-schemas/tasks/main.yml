@@ -1,0 +1,18 @@
+---
+
+- name: Make sure the PostgreSQL schemas are present
+  become: true
+  become_user: postgres
+  postgresql_schema:
+    name: "{{ item.schema }}"
+    database: "{{ item.db }}"
+    owner: "{{ item.owner }}"
+    login_unix_socket: "{{ postgresql_unix_socket_dir }}"
+    port: "{{ postgresql_port }}"
+    state: present
+  ignore_errors: true
+  loop: "{{ postgresql_schemas | flatten(1) }}"
+  when: postgresql_schemas is defined and postgresql_schemas | length > 0
+  tags: postgresql_schemas
+
+...

@@ -1,0 +1,36 @@
+---
+- name: Daemon reload systemd in case the binaries upgraded
+  systemd:
+    daemon_reload: true
+  become: true
+  when: ansible_service_mgr == "systemd"
+  listen: 'reload systemd daemon'
+
+- name: restart consul on unix
+  service:
+    name: consul
+    state: restarted
+  when:
+    - ansible_os_family != "Darwin"
+    - ansible_os_family != "Windows"
+  listen: 'restart consul'
+
+- name: restart consul on Mac
+  include_tasks: "{{ role_path }}/handlers/restart_consul_mac.yml"
+  when: ansible_os_family == "Darwin"
+  listen: 'restart consul'
+
+- name: restart consul on windows
+  win_service:
+    name: consul
+    state: restarted
+  # Some tasks with `become: true` end up calling this task. Unfortunately, the `become`
+  # property is evaluated before the `when` condition and this results in an Ansible
+  # error.
+  become: false
+  when: ansible_os_family == "Windows"
+  register: windows_service_started
+  retries: 3
+  delay: 1
+  until: windows_service_started is succeeded
+  listen: 'restart consul'

@@ -1,5 +1,4 @@
 ---
-# yamllint disable rule:line-length
 
 - name: Make sure handlers are flushed immediately
   meta: flush_handlers
@@ -60,7 +59,7 @@
   ignore_errors: true
   tags: databases, db_list, cluster_info, cluster_status, point_in_time_recovery
 
-- block:
+- block:  # if cluster_vip is defined
     - name: PostgreSQL Cluster connection info
       run_once: true
       debug:
@@ -72,8 +71,9 @@
           - port {{ haproxy_listen_port.replicas_sync }} (read only)  synchronous replica only
           - port {{ haproxy_listen_port.replicas_async }} (read only)  asynchronous replicas only
           - +------------------------------------------------+
-      when: with_haproxy_load_balancing|bool and
-            synchronous_mode|bool
+      when:
+        - with_haproxy_load_balancing | bool
+        - synchronous_mode | bool
 
     - name: PostgreSQL Cluster connection info
       run_once: true
@@ -84,8 +84,9 @@
           - port {{ haproxy_listen_port.master }} (read/write) master
           - port {{ haproxy_listen_port.replicas }} (read only)  all replicas
           - +------------------------------------------------+
-      when: with_haproxy_load_balancing|bool and
-            not synchronous_mode|bool
+      when:
+        - with_haproxy_load_balancing | bool
+        - not synchronous_mode | bool
 
     - name: PostgreSQL Cluster connection info
       run_once: true
@@ -93,22 +94,13 @@
         msg:
           - +------------------------------------------------+
           - address (VIP) {{ cluster_vip }}
-          - port {{ pgbouncer_listen_port }} (pgbouncer)
+          - port {% if pgbouncer_install %}{{ pgbouncer_listen_port }} (pgbouncer){% else %}{{ postgresql_port }}{% endif %}
           - +------------------------------------------------+
-      when: not with_haproxy_load_balancing|bool and
-            pgbouncer_install|bool
-
-    - name: PostgreSQL Cluster connection info
-      run_once: true
-      debug:
-        msg:
-          - +------------------------------------------------+
-          - address (VIP) {{ cluster_vip }}
-          - port {{ postgresql_port }}
-          - +------------------------------------------------+
-      when: not with_haproxy_load_balancing|bool and
-            not pgbouncer_install|bool
-  when: cluster_vip is defined and cluster_vip | length > 0
+      when:
+        - not with_haproxy_load_balancing | bool
+  when:
+    - (cluster_vip is defined and cluster_vip | length > 0)
+    - dcs_type == "etcd"
   ignore_errors: true
   tags: conn_info, cluster_info, cluster_status
 
@@ -125,7 +117,9 @@
           "Cluster ip address (VIP) {{ cluster_vip }}
            is running on server {{ ansible_hostname }}"
       when: man_ip is defined and man_ip == cluster_vip
-  when: cluster_vip is defined and cluster_vip | length > 0
+  when:
+    - (cluster_vip is defined and cluster_vip | length > 0)
+    - dcs_type == "etcd"
   ignore_errors: true
   tags: vip_owner, vip_status, cluster_info, cluster_status
 
@@ -134,8 +128,8 @@
     - name: Create list of nodes
       run_once: true
       set_fact:
-        haproxy_nodes: "{% for host in groups['balancers'] %}{{ hostvars[host]['inventory_hostname'] }}{% if not loop.last %},{% endif %}{% endfor %}"  # noqa 204
-        postgres_cluster_nodes: "{% for host in groups['postgres_cluster'] %}{{ hostvars[host]['inventory_hostname'] }}{% if not loop.last %},{% endif %}{% endfor %}"  # noqa 204
+        haproxy_nodes: "{% for host in groups['balancers'] %}{{ hostvars[host]['inventory_hostname'] }}{% if not loop.last %},{% endif %}{% endfor %}"
+        postgres_cluster_nodes: "{% for host in groups['postgres_cluster'] %}{{ hostvars[host]['inventory_hostname'] }}{% if not loop.last %},{% endif %}{% endfor %}"
 
     - name: PostgreSQL Cluster connection info
       run_once: true
@@ -148,8 +142,9 @@
           - port {{ haproxy_listen_port.replicas_sync }} (read only)  synchronous replica only
           - port {{ haproxy_listen_port.replicas_async }} (read only)  asynchronous replicas only
           - +------------------------------------------------+
-      when: with_haproxy_load_balancing|bool and
-            synchronous_mode|bool
+      when:
+        - with_haproxy_load_balancing | bool
+        - synchronous_mode | bool
 
     - name: PostgreSQL Cluster connection info
       run_once: true
@@ -160,8 +155,9 @@
           - port {{ haproxy_listen_port.master }} (read/write) master
           - port {{ haproxy_listen_port.replicas }} (read only)  all replicas
           - +------------------------------------------------+
-      when: with_haproxy_load_balancing|bool and
-            not synchronous_mode|bool
+      when:
+        - with_haproxy_load_balancing | bool
+        - not synchronous_mode | bool
 
     - name: PostgreSQL Cluster connection info
       run_once: true
@@ -169,23 +165,43 @@
         msg:
           - +------------------------------------------------+
           - address {{ postgres_cluster_nodes }}
-          - port {{ pgbouncer_listen_port }} (pgbouncer)
+          - port {% if pgbouncer_install %}{{ pgbouncer_listen_port }} (pgbouncer){% else %}{{ postgresql_port }}{% endif %}
           - +------------------------------------------------+
-      when: not with_haproxy_load_balancing|bool and
-            pgbouncer_install|bool
-
-    - name: PostgreSQL Cluster connection info
-      run_once: true
-      debug:
-        msg:
-          - +------------------------------------------------+
-          - address {{ postgres_cluster_nodes }}
-          - port {{ postgresql_port }}
-          - +------------------------------------------------+
-      when: not with_haproxy_load_balancing|bool and
-            not pgbouncer_install|bool
+      when:
+        - not with_haproxy_load_balancing | bool
   ignore_errors: true
-  when: cluster_vip is not defined or cluster_vip | length < 1
+  when:
+    - (cluster_vip is not defined or cluster_vip | length < 1)
+    - dcs_type == "etcd"
   tags: conn_info, cluster_info, cluster_status
+
+
+- block:  # if dcs_type: "consul"
+    - name: PostgreSQL Cluster connection info
+      run_once: true
+      debug:
+        msg:
+          - +------------------------------------------------+
+          - "Client access point (DNS):"
+          - " master.{{ patroni_cluster_name }}.service.consul "
+          - " replica.{{ patroni_cluster_name }}.service.consul "
+          - port {% if pgbouncer_install %}{{ pgbouncer_listen_port }} (pgbouncer){% else %}{{ postgresql_port }}{% endif %}
+          - +------------------------------------------------+
+      when: not synchronous_mode | bool
+
+    - name: PostgreSQL Cluster connection info
+      run_once: true
+      debug:
+        msg:
+          - +------------------------------------------------+
+          - "Client access point (DNS):"
+          - " master.{{ patroni_cluster_name }}.service.consul "
+          - " replica.{{ patroni_cluster_name }}.service.consul "
+          - " sync-replica.{{ patroni_cluster_name }}.service.consul "
+          - " async-replica.{{ patroni_cluster_name }}.service.consul "
+          - port {% if pgbouncer_install %}{{ pgbouncer_listen_port }} (pgbouncer){% else %}{{ postgresql_port }}{% endif %}
+          - +------------------------------------------------+
+      when: synchronous_mode | bool
+  when: dcs_type == "consul"
 
 ...
