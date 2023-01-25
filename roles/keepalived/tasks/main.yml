@@ -30,7 +30,7 @@
   copy:
     content: |
       #!/bin/bash
-      /bin/kill -0 `cat /var/run/haproxy/haproxy.pid`
+      /bin/kill -0 `cat /run/haproxy/haproxy.pid`
     dest: /usr/libexec/keepalived/haproxy_check.sh
     owner: root
     group: root

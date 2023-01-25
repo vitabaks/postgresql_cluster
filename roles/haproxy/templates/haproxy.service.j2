@@ -3,8 +3,8 @@ Description=HAProxy Load Balancer
 After=network.target
 
 [Service]
-Environment="CONFIG=/etc/haproxy/haproxy.cfg" "PIDFILE=/var/run/haproxy/haproxy.pid"
-ExecStartPre=/bin/mkdir -p /var/run/haproxy
+Environment="CONFIG=/etc/haproxy/haproxy.cfg" "PIDFILE=/run/haproxy/haproxy.pid"
+ExecStartPre=/bin/mkdir -p /run/haproxy
 {% if haproxy_installation_method == "src" %}
 ExecStartPre=/usr/local/sbin/haproxy -f $CONFIG -c -q
 ExecStart=/usr/local/sbin/haproxy -Ws -f $CONFIG -p $PIDFILE

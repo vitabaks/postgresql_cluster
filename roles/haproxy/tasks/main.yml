@@ -343,7 +343,7 @@
     group: haproxy
   loop:
     - /etc/haproxy
-    - /var/run/haproxy
+    - /run/haproxy
     - /var/lib/haproxy/dev
   tags: haproxy, load_balancing
 
