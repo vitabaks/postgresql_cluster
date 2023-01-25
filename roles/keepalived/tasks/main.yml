@@ -27,10 +27,8 @@
   tags: keepalived_conf, keepalived
 
 - name: Create vrrp_script "/usr/libexec/keepalived/haproxy_check.sh"
-  copy:
-    content: |
-      #!/bin/bash
-      /bin/kill -0 `cat /var/run/haproxy/haproxy.pid`
+  template:
+    src: templates/haproxy_check.sh.j2
     dest: /usr/libexec/keepalived/haproxy_check.sh
     owner: root
     group: root

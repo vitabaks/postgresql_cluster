@@ -296,6 +296,9 @@ patroni_retry_timeout: 10
 patroni_maximum_lag_on_failover: 1048576
 patroni_master_start_timeout: 300
 
+patroni_watchdog: "off"  # or 'automatic' or 'required' if you want to use the watchdog
+patroni_watchdog_device: "/dev/watchdog"
+
 # https://patroni.readthedocs.io/en/latest/replica_bootstrap.html#standby-cluster
 patroni_standby_cluster:
   host: ""  # an address of remote master

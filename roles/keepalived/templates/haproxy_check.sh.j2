@@ -1,0 +1,10 @@
+#!/bin/bash
+
+CURRRENT_ROLE=$(curl http://{{ hostvars[host]['inventory_hostname'] }}:8008/master --silent | jq ' .role' | sed 's/"//g')
+
+if [ $CURRRENT_ROLE == 'master' ] 
+then
+  exit 0
+fi
+
+exit 1
