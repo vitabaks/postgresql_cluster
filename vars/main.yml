@@ -102,30 +102,30 @@ consul_services:
   - name: "{{ patroni_cluster_name }}"
     id: "{{ patroni_cluster_name }}-master"
     tags: ['master']
-    port: "{{ pgbouncer_listen_port }}"  # or "{{ pgbouncer_listen_port }}" if pgbouncer_install: false
+    port: "{{ pgbouncer_listen_port }}"  # or "{{ postgresql_port }}" if pgbouncer_install: false
     checks:
-      - { http: "http://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:8008/master", interval: "2s" }
+      - { http: "http://{{ inventory_hostname }}:8008/master", interval: "2s" }
       - { args: ["systemctl", "status", "pgbouncer"], interval: "5s" }  # comment out this check if pgbouncer_install: false
   - name: "{{ patroni_cluster_name }}"
     id: "{{ patroni_cluster_name }}-replica"
     tags: ['replica']
     port: "{{ pgbouncer_listen_port }}"
     checks:
-      - { http: "http://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:8008/replica", interval: "2s" }
+      - { http: "http://{{ inventory_hostname }}:8008/replica", interval: "2s" }
       - { args: ["systemctl", "status", "pgbouncer"], interval: "5s" }
 #  - name: "{{ patroni_cluster_name }}"
 #    id: "{{ patroni_cluster_name }}-sync-replica"
 #    tags: ['sync-replica']
 #    port: "{{ pgbouncer_listen_port }}"
 #    checks:
-#      - { http: "http://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:8008/sync", interval: "2s" }
+#      - { http: "http://{{ inventory_hostname }}:8008/sync", interval: "2s" }
 #      - { args: ["systemctl", "status", "pgbouncer"], interval: "5s" }
 #  - name: "{{ patroni_cluster_name }}"
 #    id: "{{ patroni_cluster_name }}-async-replica"
 #    tags: ['async-replica']
 #    port: "{{ pgbouncer_listen_port }}"
 #    checks:
-#      - { http: "http://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:8008/async", interval: "2s" }
+#      - { http: "http://{{ inventory_hostname }}:8008/async", interval: "2s" }
 #      - { args: ["systemctl", "status", "pgbouncer"], interval: "5s" }
 
 
