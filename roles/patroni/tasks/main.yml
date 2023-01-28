@@ -333,6 +333,7 @@
   when:
     - postgresql_stats_temp_directory_path is defined
     - postgresql_stats_temp_directory_path != 'none'
+    - postgresql_version is version('14', '<=')
   tags: patroni, pgsql_stats_tmp
 
 - name: Prepare PostgreSQL | mount the statistics directory in memory (tmpfs)
@@ -345,6 +346,7 @@
   when:
     - postgresql_stats_temp_directory_path is defined
     - postgresql_stats_temp_directory_path != 'none'
+    - postgresql_version is version('14', '<=')
   tags: patroni, pgsql_stats_tmp
 
 - name: Prepare PostgreSQL | make sure the postgresql log directory "{{ postgresql_log_dir }}" exists
