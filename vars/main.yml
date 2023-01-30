@@ -102,36 +102,36 @@ consul_services:
   - name: "{{ patroni_cluster_name }}"
     id: "{{ patroni_cluster_name }}-master"
     tags: ['master']
-    port: "{{ pgbouncer_listen_port }}"  # or "{{ pgbouncer_listen_port }}" if pgbouncer_install: false
+    port: "{{ pgbouncer_listen_port }}"  # or "{{ postgresql_port }}" if pgbouncer_install: false
     checks:
-      - { http: "http://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:8008/master", interval: "2s" }
+      - { http: "http://{{ inventory_hostname }}:8008/master", interval: "2s" }
       - { args: ["systemctl", "status", "pgbouncer"], interval: "5s" }  # comment out this check if pgbouncer_install: false
   - name: "{{ patroni_cluster_name }}"
     id: "{{ patroni_cluster_name }}-replica"
     tags: ['replica']
     port: "{{ pgbouncer_listen_port }}"
     checks:
-      - { http: "http://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:8008/replica", interval: "2s" }
+      - { http: "http://{{ inventory_hostname }}:8008/replica", interval: "2s" }
       - { args: ["systemctl", "status", "pgbouncer"], interval: "5s" }
 #  - name: "{{ patroni_cluster_name }}"
 #    id: "{{ patroni_cluster_name }}-sync-replica"
 #    tags: ['sync-replica']
 #    port: "{{ pgbouncer_listen_port }}"
 #    checks:
-#      - { http: "http://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:8008/sync", interval: "2s" }
+#      - { http: "http://{{ inventory_hostname }}:8008/sync", interval: "2s" }
 #      - { args: ["systemctl", "status", "pgbouncer"], interval: "5s" }
 #  - name: "{{ patroni_cluster_name }}"
 #    id: "{{ patroni_cluster_name }}-async-replica"
 #    tags: ['async-replica']
 #    port: "{{ pgbouncer_listen_port }}"
 #    checks:
-#      - { http: "http://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:8008/async", interval: "2s" }
+#      - { http: "http://{{ inventory_hostname }}:8008/async", interval: "2s" }
 #      - { args: ["systemctl", "status", "pgbouncer"], interval: "5s" }
 
 patroni_raft_data_dir: "/var/lib/raft"
 
 # PostgreSQL variables
-postgresql_version: "14"
+postgresql_version: "15"
 # postgresql_data_dir: see vars/Debian.yml or vars/RedHat.yml
 postgresql_port: "5432"
 postgresql_encoding: "UTF8"  # for bootstrap only (initdb)
@@ -280,7 +280,7 @@ pgbouncer_admin_users: "postgres"  # comma-separated list of users, who are allo
 pgbouncer_stats_users: "postgres"  # comma-separated list of users who are just allowed to use SHOW command
 pgbouncer_generate_userlist: true  # generate the authentication file (userlist.txt) from the pg_shadow system table
 pgbouncer_auth_type: "{{ postgresql_password_encryption_algorithm }}"
-pgbouncer_ignore_startup_parameters: "extra_float_digits,geqo"
+pgbouncer_ignore_startup_parameters: "extra_float_digits,geqo,search_path"
 
 pgbouncer_pools:
   - { name: "postgres", dbname: "postgres", pool_parameters: "" }

@@ -7,7 +7,7 @@
 
 [pgbouncer]
 logfile = {{ pgbouncer_log_dir }}/pgbouncer.log
-pidfile = /var/run/pgbouncer/pgbouncer.pid
+pidfile = /run/pgbouncer/pgbouncer.pid
 {% if not with_haproxy_load_balancing|bool and cluster_vip is defined and cluster_vip | length > 0 %}
 listen_addr = {{ hostvars[inventory_hostname]['inventory_hostname'] }},{{ cluster_vip }}
 {% else %}

@@ -214,7 +214,7 @@ This playbook requires root privileges or sudo.
 
 Ansible ([What is Ansible](https://www.ansible.com/resources/videos/quick-start-video)?)
 
-if `dcs_type: "consul"`, please install consul role requirements on the control node:
+if dcs_type: "consul", please install consul role requirements on the control node:
 
 `ansible-galaxy install -r roles/consul/requirements.yml`
 
@@ -312,7 +312,7 @@ To minimize the risk of losing data on autofailover, you can configure settings 
 - `with_haproxy_load_balancing` `'true'` (Type A) or `'false'`/default (Type B)
 - `dcs_type` # "etcd" (default) or "consul" (Type C)
 
-if `dcs_type: "consul"`, please install consul role requirements on the control node:
+if dcs_type: "consul", please install consul role requirements on the control node:
 
 `ansible-galaxy install -r roles/consul/requirements.yml`
 
@@ -533,7 +533,7 @@ Should you need to start from very beginning, use the playbook `remove_cluster.y
 To prevent the script to be used by accident in a production environment, edit `remove_cluster.yml` and remove the *safety pin*. Change these variables accordingly:
 
 - remove_postgres: true
-- remove_etcd: true
+- remove_etcd: true (or remove_consul)
 
 Run the script and all the data are gone.
 

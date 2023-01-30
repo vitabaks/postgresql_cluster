@@ -9,8 +9,8 @@ User=postgres
 Group=postgres
 
 PermissionsStartOnly=true
-ExecStartPre=-/bin/mkdir -p /var/run/pgbouncer {{ pgbouncer_log_dir }}
-ExecStartPre=/bin/chown -R postgres:postgres /var/run/pgbouncer {{ pgbouncer_log_dir }}
+ExecStartPre=-/bin/mkdir -p /run/pgbouncer {{ pgbouncer_log_dir }}
+ExecStartPre=/bin/chown -R postgres:postgres /run/pgbouncer {{ pgbouncer_log_dir }}
 {% if ansible_os_family == "Debian" %}
 ExecStart=/usr/sbin/pgbouncer -d {{ pgbouncer_conf_dir }}/pgbouncer.ini
 {% endif %}
@@ -18,7 +18,7 @@ ExecStart=/usr/sbin/pgbouncer -d {{ pgbouncer_conf_dir }}/pgbouncer.ini
 ExecStart=/usr/bin/pgbouncer -d {{ pgbouncer_conf_dir }}/pgbouncer.ini
 {% endif %}
 ExecReload=/bin/kill -SIGHUP $MAINPID
-PIDFile=/var/run/pgbouncer/pgbouncer.pid
+PIDFile=/run/pgbouncer/pgbouncer.pid
 Restart=on-failure
 
 LimitNOFILE=100000
