@@ -22,48 +22,37 @@ In addition to deploying new clusters, this playbook also support the deployment
 
 
 ## Index
-- [PostgreSQL High-Availability Cluster :elephant: :sparkling\_heart:](#postgresql-high-availability-cluster-elephant-sparkling_heart)
-    - [Deploy a Production Ready PostgreSQL High-Availability Cluster (based on "Patroni" and DCS "etcd" or "consul"). Automating with Ansible.](#deploy-a-production-ready-postgresql-high-availability-cluster-based-on-patroni-and-dcs-etcd-or-consul-automating-with-ansible)
-  - [Index](#index)
-  - [Cluster types](#cluster-types)
-    - [\[Type A\] PostgreSQL High-Availability with HAProxy Load Balancing](#type-a-postgresql-high-availability-with-haproxy-load-balancing)
-          - [if variable "synchronous\_mode" is 'true' (vars/main.yml):](#if-variable-synchronous_mode-is-true-varsmainyml)
-        - [Components of high availability:](#components-of-high-availability)
-        - [Components of load balancing:](#components-of-load-balancing)
-    - [\[Type B\] PostgreSQL High-Availability only](#type-b-postgresql-high-availability-only)
-    - [\[Type C\] PostgreSQL High-Availability with Consul Service Discovery (DNS)](#type-c-postgresql-high-availability-with-consul-service-discovery-dns)
-    - [\[Type D\] PostgreSQL High-Availability with HAProxy Load Balancing and Patroni raft](#type-d-postgresql-high-availability-with-haproxy-load-balancing-and-patroni-raft)
-          - [if variable "synchronous\_mode" is 'true' (vars/main.yml):](#if-variable-synchronous_mode-is-true-varsmainyml-1)
-        - [Components of high availability:](#components-of-high-availability-1)
-        - [Components of load balancing:](#components-of-load-balancing-1)
-  - [Compatibility](#compatibility)
-          - [Supported Linux Distributions:](#supported-linux-distributions)
-          - [PostgreSQL versions:](#postgresql-versions)
-          - [Ansible version](#ansible-version)
-  - [Requirements](#requirements)
-  - [Port requirements](#port-requirements)
-  - [Recommenations](#recommenations)
-  - [Deployment: quick start](#deployment-quick-start)
-          - [Specify (non-public) IP addresses and connection settings (`ansible_user`, `ansible_ssh_pass` or `ansible_ssh_private_key_file` for your environment](#specify-non-public-ip-addresses-and-connection-settings-ansible_user-ansible_ssh_pass-or-ansible_ssh_private_key_file-for-your-environment)
-          - [Minimum set of variables:](#minimum-set-of-variables)
-  - [Variables](#variables)
-  - [Cluster Scaling](#cluster-scaling)
-          - [Preparation:](#preparation)
-          - [Steps to add a new node:](#steps-to-add-a-new-node)
-          - [Steps to add a new banlancer node:](#steps-to-add-a-new-banlancer-node)
-  - [Restore and Cloning](#restore-and-cloning)
-        - [Create cluster with pgBackRest:](#create-cluster-with-pgbackrest)
-        - [Create cluster with WAL-G:](#create-cluster-with-wal-g)
-        - [Point-In-Time-Recovery:](#point-in-time-recovery)
-  - [Maintenance](#maintenance)
-  - [Disaster Recovery](#disaster-recovery)
-        - [etcd](#etcd)
-        - [PostgreSQL (databases)](#postgresql-databases)
-  - [How to start from scratch](#how-to-start-from-scratch)
-  - [License](#license)
-  - [Author](#author)
-  - [Sponsor this project](#sponsor-this-project)
-  - [Feedback, bug-reports, requests, ...](#feedback-bug-reports-requests-)
+- [Cluster types](#cluster-types)
+    - [[Type A] PostgreSQL High-Availability with HAProxy Load Balancing](#type-a-postgresql-high-availability-with-haproxy-load-balancing)
+    - [[Type B] PostgreSQL High-Availability only](#type-b-postgresql-high-availability-only)
+    - [[Type C] PostgreSQL High-Availability with Consul Service Discovery (DNS)](#type-c-postgresql-high-availability-with-consul-service-discovery-dns)
+    - [[Type D] PostgreSQL High-Availability with HAProxy Load Balancing and Patroni raft](#type-d-postgresql-high-availability-with-haproxy-load-balancing-and-patroni-raft)
+- [Compatibility](#compatibility)
+    - [Supported Linux Distributions:](#supported-linux-distributions)
+    - [PostgreSQL versions:](#postgresql-versions)
+    - [Ansible version](#ansible-version)
+- [Requirements](#requirements)
+- [Port requirements](#port-requirements)
+- [Recommendations](#recommenations)
+- [Deployment: quick start](#deployment-quick-start)
+- [Variables](#variables)
+- [Cluster Scaling](#cluster-scaling)
+    - [Preparation:](#preparation)
+    - [Steps to add a new node:](#steps-to-add-a-new-node)
+    - [Steps to add a new banlancer node:](#steps-to-add-a-new-banlancer-node)
+- [Restore and Cloning](#restore-and-cloning)
+    - [Create cluster with pgBackRest:](#create-cluster-with-pgbackrest)
+    - [Create cluster with WAL-G:](#create-cluster-with-wal-g)
+    - [Point-In-Time-Recovery:](#point-in-time-recovery)
+- [Maintenance](#maintenance)
+- [Disaster Recovery](#disaster-recovery)
+    - [etcd](#etcd)
+    - [PostgreSQL (databases)](#postgresql-databases)
+- [How to start from scratch](#how-to-start-from-scratch)
+- [License](#license)
+- [Author](#author)
+- [Sponsor this project](#sponsor-this-project)
+- [Feedback, bug-reports, requests, ...](#feedback-bug-reports-requests-)
 
 ## Cluster types
 
@@ -135,7 +124,8 @@ It requires the installation of a consul in client mode on each application serv
 
 
 ### [Type D] PostgreSQL High-Availability with HAProxy Load Balancing and Patroni raft
-![TypeA](images/TypeA.png)
+
+Image to be added!
 
 > To use this scheme, specify `with_haproxy_load_balancing: true` in variable file vars/main.yml and `dcs_type: patroni_raft` in variable file vars/main.yml
 
@@ -153,9 +143,7 @@ This scheme provides the ability to distribute the load on reading. This also al
 ##### Components of high availability:
 [**Patroni**](https://github.com/zalando/patroni) is a template for you to create your own customized, high-availability solution using Python and - for maximum accessibility - a distributed configuration store like ZooKeeper, etcd, Consul or Kubernetes. Used for automate the management of PostgreSQL instances and auto failover.
 
-[**Patroni_raft**](TBD) .
-
-[What is Distributed Consensus?](http://thesecretlivesofdata.com/raft/)
+[**Patroni_raft**](https://github.com/zalando/patroni) is a native consensus raft present on patroni starting from v2. You can deploy also a node with patroni and raft without deploy Postgres.
 
 ##### Components of load balancing:
 [**HAProxy**](http://www.haproxy.org/) is a free, very fast and reliable solution offering high availability, load balancing, and proxying for TCP and HTTP-based applications. 
