@@ -265,6 +265,9 @@ postgresql_pg_ident: []
 #  - { mapname: "main", system_username: "postgres", pg_username: "backup" }
 #  - { mapname: "", system_username: "", pg_username: "" }
 
+# list of callbacks for patroni.yml
+patroni_callbacks: []
+#  - {action: "on_role_change", script: "/etc/patroni/script.sh"}
 
 # PgBouncer parameters
 pgbouncer_install: true  # or 'false' if you do not want to install and configure the pgbouncer service

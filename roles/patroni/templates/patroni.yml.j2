@@ -156,6 +156,12 @@ postgresql:
 #    on_restart:
 #    on_reload:
 #    on_role_change:
+{% if patroni_callbacks is defined and patroni_callbacks | length > 0 %}
+  callbacks:
+  {% for callback in patroni_callbacks %}
+    {{ callback.action }}: '{{ callback.script }}'
+  {% endfor %}
+{% endif %}
 
   create_replica_methods:
 {% if patroni_create_replica_methods is defined and patroni_create_replica_methods | length > 0 %}
