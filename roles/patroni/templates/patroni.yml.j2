@@ -201,8 +201,8 @@ postgresql:
 {% endif %}
 
 watchdog:
-  mode: off  # Allowed values: off, automatic, required
-  device: /dev/watchdog
+  mode: {{ patroni_watchdog_mode if patroni_watchdog_mode in ['off', 'automatic', 'required'] else 'off'}}  # Allowed values: off, automatic, required
+  device: {{ patroni_watchdog_device }}  # Path to the watchdog device
   safety_margin: 5
 
 tags:
