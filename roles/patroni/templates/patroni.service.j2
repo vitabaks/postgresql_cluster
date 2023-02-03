@@ -20,7 +20,7 @@ EnvironmentFile=-/etc/patroni_env.conf
 
 # Pre-commands to start watchdog device
 # Uncomment if watchdog is part of your patroni setup
-{% if patroni_watchdog in ['automatic', 'required']  %}
+{% if patroni_watchdog_mode in ['automatic', 'required']  %}
 ExecStartPre=-/usr/bin/sudo /sbin/modprobe softdog
 ExecStartPre=-/usr/bin/sudo /bin/chown postgres {{ patroni_watchdog_device }} 
 {% else %}
