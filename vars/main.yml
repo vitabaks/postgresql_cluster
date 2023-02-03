@@ -316,6 +316,9 @@ patroni_log_file_size: 25000000  # bytes
 patroni_log_loggers_patroni_postmaster: warning
 patroni_log_loggers_urllib3: warning  # or 'debug'
 
+patroni_watchdog_mode: automatic  # or 'off', 'required'
+patroni_watchdog_device: /dev/watchdog
+
 patroni_postgresql_use_pg_rewind: true  # or 'false'
 # try to use pg_rewind on the former leader when it joins cluster as a replica.
 
