@@ -453,13 +453,25 @@ Or set `disable_archive_command: false` to not disable archive_command after res
 
 
 ## Maintenance
-Please note that the original design goal of this playbook was more concerned with the initial deploiment of a PostgreSQL HA Cluster and so it does not currently concern itself with performing ongoing maintenance of a cluster.
 
-You should learn each component of the cluster for its further maintenance.
+I recommend that you study the following materials for further maintenance of the cluster:
 
 - [Tutorial: Management of High-Availability PostgreSQL clusters with Patroni](https://pgconf.ru/en/2018/108567)
 - [Patroni documentation](https://patroni.readthedocs.io/en/latest/)
 - [etcd operations guide](https://etcd.io/docs/v3.3.12/op-guide/)
+
+## Using Git for cluster configuration management (IaC/GitOps)
+
+Infrastructure as Code (IaC) is the managing and provisioning of infrastructure through code instead of through manual processes. \
+GitOps automates infrastructure updates using a Git workflow with continuous integration (CI) and continuous delivery (CI/CD). When new code is merged, the CI/CD pipeline enacts the change in the environment. Any configuration drift, such as manual changes or errors, is overwritten by GitOps automation so the environment converges on the desired state defined in Git. 
+
+Once the cluster is deployed, you can use the `config_pgcluster.yml` playbook to integrate with Git to manage cluster configurations. \
+For example, GitHub Action ([link](https://github.com/marketplace/actions/run-ansible-playbook)), GitLab CI/CD ([link](https://medium.com/geekculture/how-to-run-an-ansible-playbook-using-gitlab-ci-cd-2135f76d7f1e))
+
+Details about IaC and GitOps:
+
+- [What is GitOps](https://about.gitlab.com/topics/gitops/)?
+- [What is Infrastructure as Code (IaC)](https://www.redhat.com/en/topics/automation/what-is-infrastructure-as-code-iac)?
 
 ## Disaster Recovery
 
