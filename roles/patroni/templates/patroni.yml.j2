@@ -159,7 +159,9 @@ postgresql:
 {% if patroni_callbacks is defined and patroni_callbacks | length > 0 %}
   callbacks:
   {% for callback in patroni_callbacks %}
-    {{ callback.action }}: '{{ callback.script }}'
+    {% if callback.script | length > 0 %}
+      {{ callback.action }}: '{{ callback.script }}'
+    {% endif %}
   {% endfor %}
 {% endif %}
 
