@@ -150,12 +150,6 @@ postgresql:
   remove_data_directory_on_rewind_failure: {{ patroni_remove_data_directory_on_rewind_failure |string |d(false, true) |lower }}
   remove_data_directory_on_diverged_timelines: {{ patroni_remove_data_directory_on_diverged_timelines |string |d(false, true) |lower }}
 
-#  callbacks:
-#    on_start:
-#    on_stop:
-#    on_restart:
-#    on_reload:
-#    on_role_change:
 {% if patroni_callbacks is defined and patroni_callbacks | length > 0 %}
   callbacks:
   {% for callback in patroni_callbacks %}
