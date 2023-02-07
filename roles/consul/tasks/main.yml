@@ -10,6 +10,15 @@
   when:
     - consul_install_dependencies | bool
   block:
+    - name: Make sure the python3-pip package are present on controlling host
+      package:
+        name: python3-pip
+        state: present
+      delegate_to: 127.0.0.1
+      run_once: true
+      ignore_errors: true
+      when: not is_virtualenv or is_virtualenv == None
+
     - name: Install netaddr dependency on controlling host (with --user)
       pip:
         name: netaddr
