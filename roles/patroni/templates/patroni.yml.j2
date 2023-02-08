@@ -155,11 +155,11 @@ postgresql:
 
 {% if cluster_vip is defined and cluster_vip | length > 0 %}
   callbacks:
-    on_start: {{ patroni_scripts_dir }}/dnscp.sh
-    on_stop: {{ patroni_scripts_dir }}/dnscp.sh
+    on_start: "{{ patroni_scripts_dir }}/dnscp.sh -vips '{{ cluster_vip }}' -pwdfile '{{ patroni_scripts_dir }}/dnscp.secret' -dnszonefqdn '{{ dnscp.dnszonefqdn }}' -dnsserver '{{ dnscp.dnsserver }}' -ttl '{{ dnscp.ttl }}' -- "
+    on_stop: "{{ patroni_scripts_dir }}/dnscp.sh -vips '{{ cluster_vip }}' -pwdfile '{{ patroni_scripts_dir }}/dnscp.secret' -dnszonefqdn '{{ dnscp.dnszonefqdn }}' -dnsserver '{{ dnscp.dnsserver }}' -ttl '{{ dnscp.ttl }}' -- "
 #    on_restart:
 #    on_reload:
-    on_role_change: {{ patroni_scripts_dir }}/dnscp.sh
+    on_role_change: "{{ patroni_scripts_dir }}/dnscp.sh -vips '{{ cluster_vip }}' -pwdfile '{{ patroni_scripts_dir }}/dnscp.secret' -dnszonefqdn '{{ dnscp.dnszonefqdn }}' -dnsserver '{{ dnscp.dnsserver }}' -ttl '{{ dnscp.ttl }}' -- "
 {% endif %}
 
   create_replica_methods:

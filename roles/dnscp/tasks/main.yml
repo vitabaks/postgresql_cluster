@@ -9,7 +9,6 @@
     name:
       - dnsutils
       - openssl
-#      - astra-winbind
     state: present
   environment: "{{ proxy_env | default({}) }}"
 
@@ -22,21 +21,22 @@
     mode: 0750
 
 - block:
-    - name: "DNS Connection Point | Generate script file and assign permissions"
-      template:
-        src: "templates/dnscp.sh.j2"
+    - name: "DNS Connection Point | Copy script from Ansible host to remote and assign permissions"
+      copy:
+        src: "dnscp.sh"
+        remote_src: false
         dest: "{{ patroni_scripts_dir }}/dnscp.sh"
         owner: postgres
         group: postgres
         mode: 0771
+      ignore_errors: false
 
-    - name: "DNS Connection Point | Save computer account password to encrypted string"
-      shell: "echo '{{ dnscp.vcomppassword }}' | openssl enc -aes-256-cbc -md sha512 -a -pbkdf2 -iter 100000 -salt -pass pass:{{ dnscp.encryptionkey }} > {{ patroni_scripts_dir }}/dnscp.secret"
+    - name: "DNS Connection Point | Save computer account password to file"
+      shell: "echo '{{ dnscp.vcomppassword }}' > {{ patroni_scripts_dir }}/dnscp.secret"
       register: result
       failed_when: result.rc != 0
 
-    - name: "DNS Connection Point | Change file ownership, group and permissions"
-      # https://docs.ansible.com/ansible/latest/collections/ansible/builtin/file_module.html
+    - name: "DNS Connection Point | Change password file ownership, group and permissions"
       file:
         path: "{{ patroni_scripts_dir }}/dnscp.secret"
         owner: postgres
