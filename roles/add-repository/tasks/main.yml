@@ -116,7 +116,14 @@
       command: dnf config-manager --set-enabled "[Pp]ower[Tt]ools"
       when:
         - ansible_os_family == "RedHat"
-        - ansible_distribution_major_version is version('8', '>=')
+        - ansible_distribution_major_version is version('8', '==')
+
+    # CodeReady Linux Builder (crb) repository (to install dependencies for postgresql<version>-devel package)
+    - name: Enable CodeReady Linux Builder (crb) repository
+      command: dnf config-manager --set-enabled crb
+      when:
+        - ansible_os_family == "RedHat"
+        - ansible_distribution_major_version is version('9', '>=')
 
     # Install PostgreSQL Repository
     - name: Get pgdg-redhat-repo-latest.noarch.rpm
