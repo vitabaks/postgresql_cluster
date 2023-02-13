@@ -111,6 +111,13 @@
             ansible_distribution_major_version == '7')
       tags: install_scl_repo
 
+    # PowerTools repository (to install dependencies for postgresql<version>-devel package)
+    - name: Enable PowerTools repository
+      command: dnf config-manager --set-enabled "[Pp]ower[Tt]ools"
+      when:
+        - ansible_os_family == "RedHat"
+        - ansible_distribution_major_version is version('8', '>=')
+
     # Install PostgreSQL Repository
     - name: Get pgdg-redhat-repo-latest.noarch.rpm
       get_url:
