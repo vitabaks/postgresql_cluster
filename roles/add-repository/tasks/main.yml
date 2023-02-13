@@ -115,15 +115,22 @@
     - name: Enable PowerTools repository
       command: dnf config-manager --set-enabled "[Pp]ower[Tt]ools"
       when:
-        - ansible_os_family == "RedHat"
         - ansible_distribution_major_version is version('8', '==')
+        - ansible_distribution != "OracleLinux"
 
     # CodeReady Linux Builder (crb) repository (to install dependencies for postgresql<version>-devel package)
     - name: Enable CodeReady Linux Builder (crb) repository
       command: dnf config-manager --set-enabled crb
       when:
-        - ansible_os_family == "RedHat"
         - ansible_distribution_major_version is version('9', '>=')
+        - ansible_distribution != "OracleLinux"
+
+    # CodeReady Builder repository for OracleLinux (to install dependencies for postgresql<version>-devel package)
+    - name: Enable CodeReady Builder repository
+      command: dnf config-manager --enable ol{{ ansible_distribution_major_version }}_codeready_builder
+      when:
+        - ansible_distribution == "OracleLinux"
+        - ansible_distribution_major_version is version('8', '>=')
 
     # Install PostgreSQL Repository
     - name: Get pgdg-redhat-repo-latest.noarch.rpm
