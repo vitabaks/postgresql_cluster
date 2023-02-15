@@ -154,7 +154,7 @@ postgresql_password_encryption_algorithm: "scram-sha-256"  # or "md5" if your cl
 
 # (optional) list of users to be created (if not already exists)
 postgresql_users:
-  - name: flex_trafik_prod
+  - name: supeoflex_sydtrafik_prod
     password: !vault |
       $ANSIBLE_VAULT;1.1;AES256
       63353832323361396666336661613235643064653238356431376361663738663862353035373138
@@ -171,8 +171,8 @@ postgresql_users:
 
 # (optional) list of databases to be created (if not already exists)
 postgresql_databases:
-  - db: flex_trafik_prod
-    owner: flex_trafik_prod
+  - db: supeoflex_sydtrafik_prod
+    owner: supeoflex_sydtrafik_prod
     encoding: "UTF8"
     lc_collate: "en_US.UTF-8"
     lc_ctype: "en_US.UTF-8"
