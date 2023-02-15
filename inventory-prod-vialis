@@ -1,0 +1,59 @@
+# Please specify the ip addresses and connection settings for your environment
+# The specified ip addresses will be used to listen by the cluster components.
+
+# "postgresql_exists='true'" if PostgreSQL is already exists and running
+# "hostname=" variable is optional (used to change the server name)
+
+# In this example, all components will be installed on PostgreSQL nodes.
+# You can deploy the haproxy balancers and the etcd or consul cluster on other dedicated servers (recomended).
+
+# if dcs_exists: false and dcs_type: "etcd"
+[etcd_cluster]  # recommendation: 3, or 5-7 nodes
+10.20.6.65
+10.20.6.66
+10.20.6.67
+
+# if dcs_exists: false and dcs_type: "consul"
+[consul_instances]  # recommendation: 3 or 5-7 nodes
+10.20.6.65 consul_node_role=server consul_bootstrap_expect=true consul_datacenter=dc1
+10.20.6.66 consul_node_role=server consul_bootstrap_expect=true consul_datacenter=dc1
+10.20.6.67 consul_node_role=server consul_bootstrap_expect=true consul_datacenter=dc1
+#10.128.64.144 consul_node_role=client consul_datacenter=dc1
+#10.128.64.145 consul_node_role=client consul_datacenter=dc2
+
+# if with_haproxy_load_balancing: true
+[balancers]
+10.20.6.65
+10.20.6.66
+10.20.6.67
+
+# PostgreSQL nodes
+[master]
+10.20.6.65 hostname=pgsql10 postgresql_exists='false'
+
+[replica]
+10.20.6.66 hostname=pgsql11 postgresql_exists='false'
+10.20.6.67 hostname=pgsql12 postgresql_exists='false'
+
+[postgres_cluster:children]
+master
+replica
+
+# if pgbackrest_install: true and "repo_host" is set
+[pgbackrest]  # optional (Dedicated Repository Host)
+
+
+# Connection settings
+[all:vars]
+ansible_connection='ssh'
+ansible_ssh_port='22'
+environment='prod-vialis'
+#ansible_user='root'
+#ansible_ssh_pass='secretpassword'  # "sshpass" package is required for use "ansible_ssh_pass"
+#ansible_ssh_private_key_file=
+#ansible_python_interpreter='/usr/bin/python3'  # is required for use python3
+
+[pgbackrest:vars]
+ansible_user='postgres'
+ansible_ssh_pass='secretpassword'
+
