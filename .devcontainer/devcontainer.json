@@ -1,0 +1,12 @@
+{
+	"name": "Ansible",
+	"build": {
+		"context": "..",
+		"dockerfile": "../Dockerfile"
+	},
+	"mounts": [
+		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/root/.ssh,type=bind,consistency=cached",
+		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig,target=/root/.gitconfig,type=bind,consistency=cached",
+		"source=projectname-bashhistory,target=/commandhistory,type=volume"
+	]
+}
