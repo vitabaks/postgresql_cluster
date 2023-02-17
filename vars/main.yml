@@ -304,6 +304,7 @@ patroni_callbacks: []
 #  - {action: "on_role_change", script: ""}
 
 # https://patroni.readthedocs.io/en/latest/replica_bootstrap.html#standby-cluster
+# Requirement: the IP addresses of the Standby CLuster servers must be added to the pg_hba.conf of the Main Cluster.
 patroni_standby_cluster:
   host: ""  # an address of remote master
   port: "5432"  # a port of remote master
