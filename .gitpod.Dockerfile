@@ -3,7 +3,7 @@ FROM ubuntu:jammy
 USER root
 
 # install packages
-RUN apt update && apt install ca-certificates curl gnupg lsb-release -yq git git-lfs sudo python3
+RUN apt update && apt install ca-certificates curl gnupg lsb-release -yq git git-lfs sudo python3 python3-pip
 
 # install docker
 #RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg \
