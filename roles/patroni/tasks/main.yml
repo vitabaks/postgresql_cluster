@@ -5,7 +5,9 @@
 
 # pip install
 - import_tasks: pip.yml
-  when: patroni_installation_method == "pip"
+  when:
+    - patroni_installation_method == "pip"
+    - system_packages is not search("python3-pip")
   tags: patroni, patroni_install, pip
 
 # Patroni install
