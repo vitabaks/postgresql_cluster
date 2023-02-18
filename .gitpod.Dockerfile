@@ -12,7 +12,7 @@ RUN apt update \
     # install python
     && apt install python3 \
     # install molecule and ansible
-    && pip3 install molecule[docker] ansible
+    && pip3 install molecule[docker] ansible \
     # clean
     && apt clean && rm -rf /var/lib/apt/lists/* /tmp/*
 
