@@ -12,7 +12,7 @@ RUN apt update && apt install ca-certificates curl gnupg lsb-release -yq git git
 #    && apt update && apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
 # install molecule and ansible
-RUN pip3 install molecule[docker] ansible
+RUN pip3 install molecule[docker] ansible ansible-lint yamllint
 
 # clean
 RUN apt clean && rm -rf /var/lib/apt/lists/* /tmp/*
