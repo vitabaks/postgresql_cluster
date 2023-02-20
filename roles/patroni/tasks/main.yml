@@ -699,12 +699,12 @@
         - name: Stop PostgreSQL  # "Debian"
           command: "/usr/bin/pg_ctlcluster {{ postgresql_version }} {{ postgresql_cluster_name }} stop -m fast -- -w -t 600"
           when: ansible_os_family == "Debian" and
-                (pg_ctl_status_result.rc is defined and pg_ctl_status_result.rc != 3)
+                (pg_ctl_status_result.rc is defined and (pg_ctl_status_result.rc != 3 and pg_ctl_status_result.rc != 4))
 
         - name: Stop PostgreSQL  # "RedHat" or PostgresPro
           command: "{{ postgresql_bin_dir }}/pg_ctl stop -D {{ postgresql_data_dir }} -m fast -w -t 600"
           when: (ansible_os_family == "RedHat" or postgresql_packages|join(" ") is search("postgrespro")) and
-                (pg_ctl_status_result.rc is defined and pg_ctl_status_result.rc != 3)
+                (pg_ctl_status_result.rc is defined and (pg_ctl_status_result.rc != 3 and pg_ctl_status_result.rc != 4))
       when: patroni_cluster_bootstrap_method == "pgbackrest"
       become: true
       become_user: postgres
