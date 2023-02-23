@@ -104,7 +104,7 @@
 # if pgbackrest_repo_type: "posix" and pgbackrest_repo_host is set
 - import_tasks: ssh_keys.yml
   when:
-    - pgbackrest_repo_type|lower != "s3"
+    - pgbackrest_repo_type|lower == "posix"
     - pgbackrest_repo_host is defined
     - pgbackrest_repo_host | length > 0
   tags: pgbackrest, pgbackrest_ssh_keys

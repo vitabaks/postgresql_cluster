@@ -400,7 +400,7 @@ wal_g_patroni_cluster_bootstrap_command: "wal-g backup-fetch {{ postgresql_data_
 pgbackrest_install: false  # or 'true'
 pgbackrest_install_from_pgdg_repo: true  # or 'false'
 pgbackrest_stanza: "stanza_name"  # specify your --stanza
-pgbackrest_repo_type: "posix"  # or "s3"
+pgbackrest_repo_type: "posix"  # or "s3", "gcs", "azure"
 pgbackrest_repo_host: "10.128.64.50"  # dedicated repository host (if repo_type: "posix")
 pgbackrest_repo_user: "postgres"  # if "repo_host" is set
 pgbackrest_conf_file: "/etc/pgbackrest/pgbackrest.conf"
