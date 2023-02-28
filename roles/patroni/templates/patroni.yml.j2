@@ -69,6 +69,13 @@ bootstrap:
     synchronous_mode: {{ synchronous_mode |string |d(false, true) |lower }}
     synchronous_mode_strict: {{ synchronous_mode_strict |string |d(false, true) |lower }}
     synchronous_node_count: {{ synchronous_node_count |d(1, true) |int }}
+    postgresql:
+      use_pg_rewind: {{ patroni_postgresql_use_pg_rewind |string |d(false, true) |lower }}
+      use_slots: true
+      parameters:
+      {% for parameter in postgresql_parameters %}
+        {{ parameter.option }}: {{ parameter.value }}
+      {% endfor %}
   {% if patroni_standby_cluster.host is defined and patroni_standby_cluster.host | length > 0 %}
     standby_cluster:
       host: {{ patroni_standby_cluster.host }}
@@ -83,13 +90,6 @@ bootstrap:
       recovery_min_apply_delay: {{ patroni_standby_cluster.recovery_min_apply_delay }}
     {% endif %}
   {% endif %}
-    postgresql:
-      use_pg_rewind: {{ patroni_postgresql_use_pg_rewind |string |d(false, true) |lower }}
-      use_slots: true
-      parameters:
-      {% for parameter in postgresql_parameters %}
-        {{ parameter.option }}: {{ parameter.value }}
-      {% endfor %}
 
 {% if postgresql_exists == 'true' %}
 #  initdb:  # List options to be passed on to initdb
