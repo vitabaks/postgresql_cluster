@@ -25,6 +25,11 @@
         path: /var/lib/pgbackrest
         state: absent
       when: pgbackrest_install|bool
+    - name: Delete PgBackRest cron
+      file:
+        path: /etc/cron.d/pgbackrest
+        state: absent
+      when: pgbackrest_install|bool
     - name: Stop Consul service
       service:
         name: consul
