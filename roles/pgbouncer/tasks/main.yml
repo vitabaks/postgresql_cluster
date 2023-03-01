@@ -155,6 +155,16 @@
         - pgbouncer.ini
         - userlist.txt
 
+    - name: Remove pgbouncer.ini and userlist.txt conf files from localhost
+      run_once: true
+      file:
+        path: "files/{{ item }}"
+        state: absent
+      loop:
+        - pgbouncer.ini
+        - userlist.txt
+      delegate_to: localhost
+
     - name: Prepare pgbouncer.ini conf file (replace "listen_addr")
       lineinfile:
         path: /etc/pgbouncer/pgbouncer.ini
@@ -185,3 +195,4 @@
   tags: pgbouncer_conf, pgbouncer
 
 ...
+
