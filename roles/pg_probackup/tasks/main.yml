@@ -1,6 +1,6 @@
 ---
 
-- block:  # Debian pgdg repo
+- block:  # Debian family
     - name: Make sure the gnupg and apt-transport-https packages are present
       apt:
         pkg:
@@ -20,6 +20,13 @@
     - name: Update apt cache
       apt:
         update_cache: true
+
+    - name: Install pg_probackup
+      package:
+        name:
+          - pg-probackup-{{ pg_probackup_version }}
+          - pg-probackup-{{ pg_probackup_version }}-dbg
+        state: present
   environment: "{{ proxy_env | default({}) }}"
   when:
     - installation_method == "repo"
@@ -27,17 +34,37 @@
     - pg_probackup_install_from_postgrespro_repo|bool
   tags: pg_probackup, pg_probackup_repo, pg_probackup_install
 
-- block:  # RedHat pgdg repo
+- block:  # RedHat family
+    # RPM Centos Packages
+    - name: Get pg_probackup-repo-centos.noarch.rpm
+      get_url:
+        url: "https://repo.postgrespro.ru/pg_probackup/keys/pg_probackup-repo-centos.noarch.rpm"
+        dest: "/tmp/pg_probackup-repo.rpm"
+        timeout: 30
+        validate_certs: false
+      when: ansible_distribution == 'CentOS'
+    # RPM Oracle Linux Packages
+    - name: Get pg_probackup-repo-oraclelinux.noarch.rpm
+      get_url:
+        url: "https://repo.postgrespro.ru/pg_probackup/keys/pg_probackup-repo-oraclelinux.noarch.rpm"
+        dest: "/tmp/pg_probackup-repo.rpm"
+        timeout: 30
+        validate_certs: false
+      when: ansible_distribution == 'OracleLinux'
+    # RPM RHEL Packages
     - name: Get pg_probackup-repo-rhel.noarch.rpm
       get_url:
         url: "https://repo.postgrespro.ru/pg_probackup/keys/pg_probackup-repo-rhel.noarch.rpm"
-        dest: /tmp/
+        dest: "/tmp/pg_probackup-repo.rpm"
         timeout: 30
         validate_certs: false
+      when:
+        - ansible_distribution != 'CentOS'
+        - ansible_distribution != 'OracleLinux'
 
     - name: Make sure pgdg repository is installed
       package:
-        name: /tmp/pg_probackup-repo-rhel.noarch.rpm
+        name: /tmp/pg_probackup-repo.rpm
         state: present
 
     - name: Clean yum cache
@@ -47,35 +74,18 @@
     - name: Clean dnf cache
       command: dnf clean all
       when: ansible_distribution_major_version is version('8', '>=')
+
+    - name: Install pg_probackup
+      package:
+        name:
+          - pg_probackup-{{ pg_probackup_version }}
+          - pg_probackup-{{ pg_probackup_version }}-debuginfo
+        state: present
   environment: "{{ proxy_env | default({}) }}"
   when:
     - installation_method == "repo"
     - ansible_os_family == "RedHat"
     - pg_probackup_install_from_postgrespro_repo|bool
   tags: pg_probackup, pg_probackup_repo, pg_probackup_install
-
-- name: Install pg_probackup
-  package:
-    name:
-      - pg-probackup-{{ pg_probackup_version }}
-      - pg-probackup-{{ pg_probackup_version }}-dbg
-    state: present
-  environment: "{{ proxy_env | default({}) }}"
-  when:
-    - installation_method == "repo"
-    - ansible_os_family == "Debian"
-  tags: pg_probackup, pg_probackup_install
-
-- name: Install pg_probackup
-  package:
-    name:
-      - pg_probackup-{{ pg_probackup_version }}
-      - pg_probackup-{{ pg_probackup_version }}-debuginfo
-    state: present
-  environment: "{{ proxy_env | default({}) }}"
-  when:
-    - installation_method == "repo"
-    - ansible_os_family == "RedHat"
-  tags: pg_probackup, pg_probackup_install
 
 ...
