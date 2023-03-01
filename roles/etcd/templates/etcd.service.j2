@@ -3,7 +3,7 @@ Description=Etcd Server
 After=network.target
 After=network-online.target
 Wants=network-online.target
-  
+
 [Service]
 Type=notify
 WorkingDirectory={{ etcd_data_dir }}
@@ -13,9 +13,12 @@ User=etcd
 ExecStart=/bin/bash -c "GOMAXPROCS=$(nproc) /usr/local/bin/etcd"
 Restart=on-failure
 LimitNOFILE=65536
+
+{% if ansible_virtualization_type not in ['docker', 'lxc', 'podman'] %}
 IOSchedulingClass=realtime
 IOSchedulingPriority=0
 Nice=-20
- 
+{% endif %}
+
 [Install]
 WantedBy=multi-user.target
