@@ -59,6 +59,8 @@
         name: systemd-resolved
         enabled: false
         state: stopped
+        # Needed to force SysV service manager on Docker for Molecule tests
+        use: "{{ ansible_service_mgr }}"
       become: true
       when: systemd_resolved_service.stat.exists
 
@@ -73,22 +75,17 @@
             path: /etc/resolv.conf
             state: absent
 
-        - name: Create /etc/resolv.conf
-          file:
-            path: /etc/resolv.conf
-            state: touch
-            owner: root
-            group: root
-            mode: u=rw,g=r,o=r
-
         - name: Add a nameserver entry poining to localhost for dnsmasq
           lineinfile:
             path: /etc/resolv.conf
             regexp: "^nameserver 127.0.0.1"
             line: "nameserver 127.0.0.1"
-            unsafe_writes: true  # to prevent failures in CI
+            create: true
+            owner: root
+            group: root
+            mode: "u=rw,g=r,o=r"
       become: true
       when:
-        - resolv_dot_conf.stat.islnk is defined
+        - resolv_dot_conf.stat.exists
         - resolv_dot_conf.stat.islnk
         - resolv_dot_conf.stat.lnk_source == "/run/systemd/resolve/stub-resolv.conf"
