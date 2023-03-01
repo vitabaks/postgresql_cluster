@@ -284,6 +284,13 @@
         group: postgres
         mode: 0640
 
+    - name: Remove patroni.yml conf files from localhost
+      run_once: true
+      file:
+        path: files/patroni.yml
+        state: absent
+      delegate_to: localhost
+
     - name: Prepare patroni.yml conf file (replace "name","listen","connect_address")
       lineinfile:
         path: /etc/patroni/patroni.yml
