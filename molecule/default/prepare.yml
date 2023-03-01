@@ -8,6 +8,8 @@
       docker_network:
         name: test_docker_network
         driver: bridge
+        driver_options:
+          com.docker.network.driver.mtu: 1440
         enable_ipv6: false
         internal: false
         ipam_config:
