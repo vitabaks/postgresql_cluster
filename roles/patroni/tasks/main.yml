@@ -155,14 +155,14 @@
     # Debian
     - name: Install patroni package
       package:
-        name: patroni
+        name: "{{ patroni_packages| default('patroni')}}"
         state: present
       when: ansible_os_family == "Debian" and patroni_deb_package_repo | length < 1
 
     # RedHat
     - name: Install patroni package
       package:
-        name: patroni
+        name: "{{ patroni_packages| default('patroni')}}"
         state: present
       when: ansible_os_family == "RedHat" and patroni_rpm_package_repo | length < 1
 
