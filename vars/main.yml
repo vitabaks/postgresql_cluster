@@ -176,10 +176,10 @@ postgresql_parameters:
   - { option: "max_locks_per_transaction", value: "64" }  # raise this value (ex. 512) if you have queries that touch many different tables (partitioning)
   - { option: "max_prepared_transactions", value: "0" }
   - { option: "huge_pages", value: "try" }  # or "on" if you set "vm_nr_hugepages" in kernel parameters
-  - { option: "shared_buffers", value: "512MB" }  # please change this value
+  - { option: "shared_buffers", value: "{{ (ansible_memtotal_mb * 0.25)|int }}MB" }  # by default, 25% of RAM
+  - { option: "effective_cache_size", value: "{{ (ansible_memtotal_mb * 0.75)|int }}MB" }  # by default, 75% of RAM
   - { option: "work_mem", value: "128MB" }  # please change this value
   - { option: "maintenance_work_mem", value: "256MB" }  # please change this value
-  - { option: "effective_cache_size", value: "4GB" }  # please change this value
   - { option: "checkpoint_timeout", value: "15min" }
   - { option: "checkpoint_completion_target", value: "0.9" }
   - { option: "min_wal_size", value: "2GB" }
