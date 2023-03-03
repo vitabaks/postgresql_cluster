@@ -1,0 +1,25 @@
+[etcd_cluster]
+10.20.6.17
+10.20.6.18
+10.20.6.19
+
+[balancers]
+10.20.6.17
+10.20.6.18
+10.20.6.19
+
+[master]
+10.20.6.17 hostname=pgsql04 postgresql_exists='false'
+
+[replica]
+10.20.6.18 hostname=pgsql05 postgresql_exists='false'
+10.20.6.19 hostname=pgsql06 postgresql_exists='false'
+
+[postgres_cluster:children]
+master
+replica
+
+[all:vars]
+ansible_connection='ssh'
+ansible_ssh_port='22'
+environment='prod-its'

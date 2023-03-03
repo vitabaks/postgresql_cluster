@@ -1,27 +1,27 @@
 ---
 proxy_env: {}
-cluster_vip: "10.20.6.68"
+cluster_vip: "10.20.6.20"
 vip_interface: "{{ ansible_default_ipv4.interface }}"
 patroni_cluster_name: "postgres-cluster"
 patroni_install_version: "latest"
 patroni_superuser_username: "postgres"
 patroni_superuser_password: !vault |
   $ANSIBLE_VAULT;1.1;AES256
-  64383465326566616335343961353234626136343332356234393535633534376632626165313166
-  3736663361386434623461393239666236363964343434350a303565373166363134393931323763
-  66643535383163336639663539643464373765653231363937346538333166393562353661313162
-  3564363866303434380a353634626337613634376666656336383063613964353735336539363465
-  61386461313932306339666239373930613132623363303336616133613331653537366662613530
-  6237623361303965343534356134336464333036393063643235
+  33626166386437613134363638386231386464383963303631613666363033663936316633323365
+  3863373834373432666634383930316564303132633833320a343063343365643338383465613464
+  66376337353865646433353731656135353364393632323032383136376636366630633337356232
+  3934363032373839380a613365303135323639643031383038313530363562636633313139626465
+  61326163306465643034313137393837626539393634666336653530613335636539373330356235
+  6338313334383633323561656637376635393561313730336535
 patroni_replication_username: "replicator"
 patroni_replication_password: !vault |
   $ANSIBLE_VAULT;1.1;AES256
-  31626436343838636133613065643661336566633364363463343831326461396531346633323464
-  3264316162623335316433653537356561393430313363330a393835663932343866353735613062
-  39643562333230633432666564353639383362386232396436613864313636333862333964326332
-  3165623137623431350a316564376461386130623233636463386632353266646666313936306433
-  31376638666333366365643965623632346334383636356466303831323832663064343666656534
-  6539333239333962653838613138303136333436306663626138
+  38386130653165653539323435373337366336613966393961376662616131656665303563363963
+  3130323566623962623434636338353462626435316563370a636430303832643964333162613935
+  31623131353336643561326366326634653463616437353633306362626164376162643235316631
+  6266386263633563630a346231633039323964363765396130656639343137323161383462623366
+  66376266396539636666636130316537323633356331313062353964663266663664353531663531
+  6138383439613964353864666632636463326335633534653262
 synchronous_mode: false
 synchronous_mode_strict: false
 synchronous_node_count: 1
@@ -58,23 +58,62 @@ postgresql_locale: "en_US.UTF-8"
 postgresql_data_checksums: true
 postgresql_password_encryption_algorithm: "scram-sha-256"
 postgresql_users:
-  - name: vialis_fas_prod
+  - name: its_prod
     password: !vault |
       $ANSIBLE_VAULT;1.1;AES256
-      35386439383232353766663431363530386337363265333338383630626562336433663062666631
-      3437616538623461326266333564303932663065663564330a323234386530376430326134363763
-      31353037653661636666633630363638346539306633323061613332313830343364623239616465
-      6339373739336236390a663731666230306330653031623334303833346535396630633633346465
-      34613332393431373837393932363538663166656534396563386335313334353532623435343633
-      6333643938323133316138643562373035643037386166653765
+      37623132616439353830303330663139376134656238376362373162633337383063316138316263
+      6634336364643133323133636563396138306464613938300a656261653136336165656632616262
+      62636333333265633662646136396562383834343932303633653061643936643838386632386562
+      3532663033616563360a393434666137393362613538353539396366353133326439663166653631
+      66343862626236353463363030633461653762376133613932636337633266633766346532363435
+      6135373561373933376437303162616430306131326462663165
+    flags: "NOSUPERUSER"
+  - name: its_metabase_prod
+    password: !vault |
+      $ANSIBLE_VAULT;1.1;AES256
+      30356134333963643736643237623336363632663131396565343433663931313664356333393866
+      3234306365656362343535366435393866336236353933360a623333616432626530393534343136
+      61646232653635336334306637316533623834626637666662326262323936373061623563633162
+      3137353165333635610a353635313231393461396332336261383431313436303563363739613532
+      30376234343063363465373833303963373732323839336635366334306661383135663237663662
+      6438363266633264636332393363323837323231623630646438
+    flags: "NOSUPERUSER"
+  - name: tms_prod
+    password: !vault |
+      $ANSIBLE_VAULT;1.1;AES256
+      61636666346639326235363935666362313134363834646666366131666232376461616332643736
+      3031313532653138353730313436663663386236646164390a666364323365616132663165326539
+      62646131353533663834333530636138663135373761333762376364376363633766306561663230
+      6433383438653065640a653638663230346532393731326233393731396362353637613632613836
+      32353630666136653563616132363333343139356532613935333337613234333566386335346135
+      3934613033363030336433356265626434653032313662646233
+    flags: "NOSUPERUSER"
+  - name: user_bek
+    password: !vault |
+      $ANSIBLE_VAULT;1.1;AES256
+      61353933636336373264363563346164373361306463613765626332353032313338313061323431
+      3065643437626663343536613034666232383337333966320a383862646164323632646136396630
+      32396238373134656565656233303538353436393234336434616163336665313830363130313362
+      3437613764366561320a613366396133366631633033323663333261366631356638383430313139
+      64373833356530323431303436323761393032653032396663663238353834626336326433373061
+      6464376539636366383634373264383166356338373231336534
     flags: "NOSUPERUSER"
 postgresql_databases:
-  - db: vialis_fas_prod
-    owner: vialis_fas_prod
+  - db: its_prod
+    owner: its_prod
     encoding: "UTF8"
     lc_collate: "en_US.UTF-8"
     lc_ctype: "en_US.UTF-8"
-postgresql_schemas: []
+  - db: its_metabase_prod
+    owner: its_metabase_prod
+    encoding: "UTF8"
+    lc_collate: "en_US.UTF-8"
+    lc_ctype: "en_US.UTF-8"
+  - db: tms_prod
+    owner: tms_prod
+    encoding: "UTF8"
+    lc_collate: "en_US.UTF-8"
+    lc_ctype: "en_US.UTF-8"
 postgresql_extensions: []
 postgresql_parameters:
   - {option: "max_connections", value: "500"}
@@ -127,7 +166,6 @@ postgresql_parameters:
   - {option: "auto_explain.log_triggers", value: "true"}
   - {option: "auto_explain.log_verbose", value: "true"}
   - {option: "auto_explain.log_nested_statements", value: "true"}
-  - {option: "auto_explain.sample_rate", value: "0.01"}
   - {option: "track_io_timing", value: "on"}
   - {option: "log_lock_waits", value: "on"}
   - {option: "log_temp_files", value: "0"}
@@ -140,22 +178,17 @@ postgresql_parameters:
   - {option: "log_rotation_age", value: "1d"}
   - {option: "log_rotation_size", value: "0"}
   - {option: "log_line_prefix", value: "'%t [%p-%l] %r %q%u@%d '"}
-  - {option: "log_filename", value: "postgresql-%a.log"}
+  - {option: "log_filename", value: "'postgresql-%a.log'"}
   - {option: "log_directory", value: "{{ postgresql_log_dir }}"}
   - {option: "hot_standby_feedback", value: "on"}
   - {option: "max_standby_streaming_delay", value: "30s"}
   - {option: "wal_receiver_status_interval", value: "10s"}
   - {option: "idle_in_transaction_session_timeout", value: "10min"}
   - {option: "jit", value: "off"}
-  - {option: "max_worker_processes", value: "24"}
-  - {option: "max_parallel_workers", value: "8"}
-  - {option: "max_parallel_workers_per_gather", value: "2"}
-  - {option: "max_parallel_maintenance_workers", value: "2"}
 postgresql_pg_hba:
   - {type: "local", database: "all", user: "{{ patroni_superuser_username }}", address: "", method: "trust"}
   - {type: "local", database: "all", user: "all", address: "", method: "peer"}
   - {type: "host", database: "all", user: "all", address: "127.0.0.1/32", method: "{{ postgresql_password_encryption_algorithm }}"}
-  - {type: "host", database: "all", user: "all", address: "::1/128", method: "{{ postgresql_password_encryption_algorithm }}"}
 postgresql_pg_ident: []
 pgbouncer_install: true
 pgbouncer_conf_dir: "/etc/pgbouncer"
@@ -165,11 +198,9 @@ pgbouncer_max_client_conn: 10000
 pgbouncer_max_db_connections: 1000
 pgbouncer_default_pool_size: 20
 pgbouncer_default_pool_mode: "session"
-pgbouncer_admin_users: "postgres"
-pgbouncer_stats_users: "postgres"
 pgbouncer_generate_userlist: true
 pgbouncer_auth_type: "{{ postgresql_password_encryption_algorithm }}"
-pgbouncer_ignore_startup_parameters: "extra_float_digits,geqo,search_path"
+pgbouncer_ignore_startup_parameters: "extra_float_digits,geqo"
 pgbouncer_pools:
   - {name: "postgres", dbname: "postgres", pool_parameters: ""}
 patroni_ttl: 30
@@ -220,7 +251,7 @@ pg_probackup_threads: "4"
 pg_probackup_add_keys: "--recovery-target=latest --skip-external-dirs --no-validate"
 pg_probackup_patroni_cluster_bootstrap_command: "pg_probackup-{{ pg_probackup_version }} restore -B {{ pg_probackup_dir }} --instance {{ pg_probackup_instance }} -j {{ pg_probackup_threads }} {{ pg_probackup_add_keys }}"
 wal_g_install: false
-wal_g_version: "2.0.1"
+wal_g_ver: "v0.2.19"
 wal_g_json:
   - {option: "AWS_ACCESS_KEY_ID", value: "minio"}
   - {option: "AWS_SECRET_ACCESS_KEY", value: "miniosecret"}
@@ -251,7 +282,6 @@ pgbackrest_conf:
     - {option: "recovery-option", value: "recovery_target_action=promote"}
 pgbackrest_patroni_cluster_restore_command:
   '/usr/bin/pgbackrest --stanza={{ pgbackrest_stanza }} --delta restore'
-pgbackrest_cron: []
 disable_archive_command: true
 keep_patroni_dynamic_json: true
 netdata_install: false
