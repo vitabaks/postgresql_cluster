@@ -14,7 +14,7 @@ ExecStart=/bin/bash -c "GOMAXPROCS=$(nproc) /usr/local/bin/etcd"
 Restart=on-failure
 LimitNOFILE=65536
 
-{% if ansible_virtualization_type not in ['docker', 'lxc', 'podman'] %}
+{% if ansible_virtualization_type not in ['container', 'docker', 'lxc', 'podman'] %}
 IOSchedulingClass=realtime
 IOSchedulingPriority=0
 Nice=-20
