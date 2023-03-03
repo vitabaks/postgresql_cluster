@@ -113,6 +113,7 @@ installation_method: "repo"  # (default)"repo" or "file"
 # Patroni package will be installed from the pip repository (by default).
 # You also have the option of choosing an patroni installation method using the rpm package.
 patroni_installation_method: "pip"  # (default)"pip" or "rpm"
+# if patroni_installation_method: "rpm"
 patroni_packages:
   - patroni
   - patroni-etcd
