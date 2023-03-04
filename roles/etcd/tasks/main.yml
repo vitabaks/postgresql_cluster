@@ -116,21 +116,19 @@
 
 - block:
     - name: Wait until the etcd cluster is healthy
-      command: /usr/local/bin/etcdctl cluster-health
-      environment:
-        ETCDCTL_API: 2
+      command: >
+        /usr/local/bin/etcdctl endpoint health
+        --endpoints=http://{{ inventory_hostname }}:2379
       register: etcd_health_result
-      run_once: true
-      changed_when: false
-      until: "'cluster is healthy' in etcd_health_result.stdout"
+      until: "'is healthy' in etcd_health_result.stdout"
       retries: 10
       delay: 10
+      changed_when: false
       ignore_errors: false
 
     - name: cluster health
-      run_once: true
       debug:
-        var: etcd_health_result.stdout_lines
+        msg: "{{ etcd_health_result.stdout }}"
   tags: etcd, etcd_start, etcd_status
 
 ...

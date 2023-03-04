@@ -30,11 +30,11 @@ restapi:
 #    password: password
 
 {% if not dcs_exists|bool and dcs_type == 'etcd' %}
-etcd:
+etcd3:
   hosts: {% for host in groups['etcd_cluster'] %}{{ hostvars[host]['inventory_hostname'] }}:2379{% if not loop.last %},{% endif %}{% endfor %}
 {% endif %}
 {% if dcs_exists|bool and dcs_type == 'etcd' %}
-etcd:
+etcd3:
   hosts: {% for etcd_hosts in patroni_etcd_hosts %}{{etcd_hosts.host}}:{{etcd_hosts.port}}{% if not loop.last %},{% endif %}{% endfor %}
 {% endif %}
 

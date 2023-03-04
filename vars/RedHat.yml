@@ -79,8 +79,8 @@ postgresql_packages:
 #  - pg_repack{{ postgresql_version_terse }}
 
 # Extra packages
-etcd_package_repo: "https://github.com/etcd-io/etcd/releases/download/{{ etcd_ver }}/etcd-{{ etcd_ver }}-linux-amd64.tar.gz"
-vip_manager_package_repo: "https://github.com/cybertec-postgresql/vip-manager/releases/download/v{{ vip_manager_version }}/vip-manager-{{ vip_manager_version }}-1.x86_64.rpm"
+etcd_package_repo: "https://github.com/etcd-io/etcd/releases/download/v{{ etcd_ver }}/etcd-v{{ etcd_ver }}-linux-amd64.tar.gz"
+vip_manager_package_repo: "https://github.com/cybertec-postgresql/vip-manager/releases/download/v{{ vip_manager_version }}/vip-manager_{{ vip_manager_version }}_Linux_x86_64.rpm"
 # (if with_haproxy_load_balancing: true)
 haproxy_installation_method: "rpm"  # (default)"rpm" or "src"
 haproxy_install_repo: true  # or 'false' # only for RedHat/CentOS version 7.
