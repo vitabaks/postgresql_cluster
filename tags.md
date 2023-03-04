@@ -34,6 +34,7 @@
 - - etcd_start
 - - etcd_status
 - consul
+- pgpass
 - patroni
 - - pip
 - - patroni_install

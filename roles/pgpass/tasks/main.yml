@@ -1,0 +1,20 @@
+---
+
+- name: "Configure a password file ({{ postgresql_home_dir }}/.pgpass)"
+  become: true
+  become_user: postgres
+  copy:
+    content: |
+      {% for pgpass in postgresql_pgpass %}
+      {{ pgpass }}
+      {% endfor %}
+    dest: "{{ postgresql_home_dir }}/.pgpass"
+    owner: postgres
+    group: postgres
+    mode: 0600
+  when:
+    - postgresql_pgpass is defined
+    - postgresql_pgpass | length > 0
+  tags: pgpass
+
+...
