@@ -427,9 +427,6 @@ pgbackrest_conf:
 pgbackrest_patroni_cluster_restore_command:
   '/usr/bin/pgbackrest --stanza={{ pgbackrest_stanza }} --delta restore'  # restore from latest backup
 #  '/usr/bin/pgbackrest --stanza={{ pgbackrest_stanza }} --type=time "--target=2020-06-01 11:00:00+03" --delta restore'  # Point-in-Time Recovery (example)
-pgbackrest_cron: []
-#  - { name: "Full Backup", type: "full", hour: "06", minute: "30", dow: "0" }
-#  - { name: "Diff Backup", type: "diff", hour: "06", minute: "30", dow: "1-6" }
 
 cron_jobs: []
 #  - name: "PgBackerest: Full Backup"
@@ -440,7 +437,7 @@ cron_jobs: []
 #    day: "*"
 #    month: "*"
 #    weekday: "0"
-#    job: "/usr/bin/pgbackrest --type=full --stanza={{ pgbackrest_stanza }} backup"
+#    job: "if [ "$(psql -tAXc 'select pg_is_in_recovery()')" = "f" ]; then pgbackrest --type=full --stanza={{ pgbackrest_stanza }} backup; fi"
 #  - name: "PgBackerest: Diff Backup"
 #    file: /etc/cron.d/pgbackrest
 #    user: "{{ patroni_superuser_username }}"
@@ -449,10 +446,11 @@ cron_jobs: []
 #    day: "*"
 #    month: "*"
 #    weekday: "1-6"
-#    job: "/usr/bin/pgbackrest --type=diff --stanza={{ pgbackrest_stanza }} backup"
-# Or for walg
+#    job: "if [ "$(psql -tAXc 'select pg_is_in_recovery()')" = "f" ]; then pgbackrest --type=diff --stanza={{ pgbackrest_stanza }} backup; fi"
+# Example for walg
 #  - name: "WAL-G: Create daily backup"
 #    user: "{{ patroni_superuser_username }}"
+#    file: /etc/cron.d/walg
 #    minute: "30"
 #    hour: "6"
 #    day: "*"
