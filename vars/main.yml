@@ -431,6 +431,35 @@ pgbackrest_cron: []
 #  - { name: "Full Backup", type: "full", hour: "06", minute: "30", dow: "0" }
 #  - { name: "Diff Backup", type: "diff", hour: "06", minute: "30", dow: "1-6" }
 
+cron_jobs: []
+#  - name: "PgBackerest: Full Backup"
+#    file: /etc/cron.d/pgbackrest
+#    user: "{{ patroni_superuser_username }}"
+#    minute: "30"
+#    hour: "6"
+#    day: "*"
+#    month: "*"
+#    weekday: "0"
+#    job: "/usr/bin/pgbackrest --type=full --stanza={{ pgbackrest_stanza }} backup"
+#  - name: "PgBackerest: Diff Backup"
+#    file: /etc/cron.d/pgbackrest
+#    user: "{{ patroni_superuser_username }}"
+#    minute: "30"
+#    hour: "6"
+#    day: "*"
+#    month: "*"
+#    weekday: "1-6"
+#    job: "/usr/bin/pgbackrest --type=diff --stanza={{ pgbackrest_stanza }} backup"
+# Or for walg
+#  - name: "WAL-G: Create daily backup"
+#    user: "{{ patroni_superuser_username }}"
+#    minute: "30"
+#    hour: "6"
+#    day: "*"
+#    month: "*"
+#    weekday: "*"
+#    job: "[ '200' = $(curl -s -o /dev/null -w '\\%{http_code}' http://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:8008) ] && /usr/local/bin/wal-g backup-push"
+
 # PITR mode (if patroni_cluster_bootstrap_method: "pgbackrest" or "wal-g"):
 # 1) The database cluster directory will be cleaned (for "wal-g") or overwritten (for "pgbackrest" --delta restore).
 # 2) And also the patroni cluster "{{ patroni_cluster_name }}" will be removed from the DCS (if exist) before recovery.
