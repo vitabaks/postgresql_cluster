@@ -35,5 +35,5 @@
   loop: "{{ cron_jobs }}"
   when:
     - cron_jobs is defined and cron_jobs | length > 0
-    - remove_postgres is defined and remove_postgres | bool==True
+    - remove_postgres is defined and remove_postgres | bool
   tags: uninstall
