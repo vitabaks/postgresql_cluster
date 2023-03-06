@@ -146,6 +146,8 @@
   roles:
     - role: pgpass
 
+    - role: cron
+
     - role: patroni/config
 
     - role: vip-manager

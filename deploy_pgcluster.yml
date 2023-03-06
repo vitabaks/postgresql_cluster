@@ -220,6 +220,8 @@
     - role: pg_probackup
       when: pg_probackup_install|bool
 
+    - role: cron
+
     - role: pgbouncer
       when: pgbouncer_install|bool
 
