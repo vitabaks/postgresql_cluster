@@ -14,6 +14,8 @@
         name: patroni
         state: stopped
         enabled: false
+      ignore_errors: true
+      when: remove_postgres|bool
     - name: Delete PostgreSQL database content
       file:
         path: "{{ postgresql_data_dir }}"
