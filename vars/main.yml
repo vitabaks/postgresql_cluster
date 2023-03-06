@@ -429,7 +429,7 @@ pgbackrest_patroni_cluster_restore_command:
 #  '/usr/bin/pgbackrest --stanza={{ pgbackrest_stanza }} --type=time "--target=2020-06-01 11:00:00+03" --delta restore'  # Point-in-Time Recovery (example)
 
 cron_jobs: []
-#  - name: "PgBackerest: Full Backup"
+#  - name: "pgBackRest: Full Backup"
 #    file: /etc/cron.d/pgbackrest
 #    user: "{{ patroni_superuser_username }}"
 #    minute: "30"
@@ -438,7 +438,7 @@ cron_jobs: []
 #    month: "*"
 #    weekday: "0"
 #    job: "if [ $(psql -tAXc 'select pg_is_in_recovery()') = 'f' ]; then pgbackrest --type=full --stanza={{ pgbackrest_stanza }} backup; fi"
-#  - name: "PgBackerest: Diff Backup"
+#  - name: "pgBackRest: Diff Backup"
 #    file: /etc/cron.d/pgbackrest
 #    user: "{{ patroni_superuser_username }}"
 #    minute: "30"
