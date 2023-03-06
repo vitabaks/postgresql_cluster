@@ -1,0 +1,38 @@
+---
+# tasks file for cron
+
+- name: Add cron jobs
+  cron:
+    cron_file: "{{ item.file | default('') }}"
+    user: "{{ item.user | default('postgres')  }}"
+    minute: "{{ item.minute | default('*') }}"
+    hour: "{{ item.hour | default('*') }}"
+    day: "{{ item.day | default('*') }}"
+    month: "{{ item.month | default('*') }}"
+    weekday: "{{ item.weekday | default('*') }}"
+    name: "{{ item.name }}"
+    disabled: "{{ item.disabled | default(False) }}"
+    state: "{{ item.state | default('present') }}"
+    job: "{{ item.job }}"
+  loop: "{{ cron_jobs }}"
+  when:
+    - cron_jobs is defined and cron_jobs | length > 0
+    - remove_postgres is undefined
+
+- name: Uninstall cron jobs
+  cron:
+    cron_file: "{{ item.file | default('') }}"
+    user: "{{ item.user | default('postgres')  }}"
+    minute: "{{ item.minute | default('*') }}"
+    hour: "{{ item.hour | default('*') }}"
+    day: "{{ item.day | default('*') }}"
+    month: "{{ item.month | default('*') }}"
+    weekday: "{{ item.weekday | default('*') }}"
+    name: "{{ item.name }}"
+    state: "absent"
+    job: "{{ item.job }}"
+  loop: "{{ cron_jobs }}"
+  when:
+    - cron_jobs is defined and cron_jobs | length > 0
+    - remove_postgres is defined and remove_postgres | bool
+  tags: uninstall
