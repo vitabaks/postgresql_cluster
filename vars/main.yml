@@ -456,7 +456,7 @@ cron_jobs: []
 #    day: "*"
 #    month: "*"
 #    weekday: "*"
-#    job: "[ '200' = $(curl -s -o /dev/null -w '\\%{http_code}' http://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:8008) ] && /usr/local/bin/wal-g backup-push"
+#    job: "[ '200' = $(curl -s -o /dev/null -w '\\%{http_code}' http://{{ inventory_hostname }}:8008) ] && /usr/local/bin/wal-g backup-push"
 
 # PITR mode (if patroni_cluster_bootstrap_method: "pgbackrest" or "wal-g"):
 # 1) The database cluster directory will be cleaned (for "wal-g") or overwritten (for "pgbackrest" --delta restore).
