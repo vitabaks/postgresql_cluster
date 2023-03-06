@@ -437,7 +437,7 @@ cron_jobs: []
 #    day: "*"
 #    month: "*"
 #    weekday: "0"
-#    job: "if [ "$(psql -tAXc 'select pg_is_in_recovery()')" = "f" ]; then pgbackrest --type=full --stanza={{ pgbackrest_stanza }} backup; fi"
+#    job: "if [ $(psql -tAXc 'select pg_is_in_recovery()') = 'f' ]; then pgbackrest --type=full --stanza={{ pgbackrest_stanza }} backup; fi"
 #  - name: "PgBackerest: Diff Backup"
 #    file: /etc/cron.d/pgbackrest
 #    user: "{{ patroni_superuser_username }}"
@@ -446,7 +446,7 @@ cron_jobs: []
 #    day: "*"
 #    month: "*"
 #    weekday: "1-6"
-#    job: "if [ "$(psql -tAXc 'select pg_is_in_recovery()')" = "f" ]; then pgbackrest --type=diff --stanza={{ pgbackrest_stanza }} backup; fi"
+#    job: "if [ $(psql -tAXc 'select pg_is_in_recovery()') = 'f' ]; then pgbackrest --type=diff --stanza={{ pgbackrest_stanza }} backup; fi"
 # Example for walg
 #  - name: "WAL-G: Create daily backup"
 #    user: "{{ patroni_superuser_username }}"
@@ -456,7 +456,7 @@ cron_jobs: []
 #    day: "*"
 #    month: "*"
 #    weekday: "*"
-#    job: "[ '200' = $(curl -s -o /dev/null -w '\\%{http_code}' http://{{ inventory_hostname }}:8008) ] && /usr/local/bin/wal-g backup-push"
+#    job: "[ '200' = $(curl -s -o /dev/null -w '\\%{http_code}' http://{{ inventory_hostname }}:8008) ] && wal-g backup-push"
 
 # PITR mode (if patroni_cluster_bootstrap_method: "pgbackrest" or "wal-g"):
 # 1) The database cluster directory will be cleaned (for "wal-g") or overwritten (for "pgbackrest" --delta restore).
