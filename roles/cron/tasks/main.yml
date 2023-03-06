@@ -18,6 +18,7 @@
   when:
     - cron_jobs is defined and cron_jobs | length > 0
     - remove_postgres is undefined
+  tags: cron
 
 - name: Uninstall cron jobs
   cron:
@@ -35,4 +36,4 @@
   when:
     - cron_jobs is defined and cron_jobs | length > 0
     - remove_postgres is defined and remove_postgres | bool
-  tags: uninstall
+  tags: cron, uninstall

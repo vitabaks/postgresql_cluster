@@ -98,4 +98,5 @@
 - pg_probackup
 - - pg_probackup_repo
 - - pg_probackup_install
+- cron
 - netdata
