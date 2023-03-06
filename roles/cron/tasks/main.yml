@@ -29,7 +29,6 @@
     month: "{{ item.month | default('*') }}"
     weekday: "{{ item.weekday | default('*') }}"
     name: "{{ item.name }}"
-    disabled: "{{ item.disabled | default(False) }}"
     state: "absent"
     job: "{{ item.job }}"
   loop: "{{ cron_jobs }}"
