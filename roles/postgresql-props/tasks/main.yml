@@ -1,0 +1,8 @@
+---
+
+# Configure PostgreSQL.
+- import_tasks: users.yml
+- import_tasks: databases.yml
+- import_tasks: users_props.yml
+- import_tasks: schemas.yml
+

@@ -1,19 +1,20 @@
 ---
 
-- name: Make sure the PostgreSQL users are present
+- name: Ensure PostgreSQL users are configured correctly.
   become: true
-  become_user: postgres
+  become_user: "{{ patroni_superuser_username }}"
   postgresql_user:
     name: "{{ item.name }}"
     password: "{{ item.password }}"
     encrypted: true
-    role_attr_flags: "{{ item.flags }}"
+    priv: "{{ item.priv  | default(omit) }}"
+    role_attr_flags: "{{ item.flags  | default(omit) }}"
+    db: "{{ item.db | default(omit) }}"
     login_host: "127.0.0.1"
     login_port: "{{ postgresql_port }}"
     login_user: "{{ patroni_superuser_username }}"
     login_password: "{{ patroni_superuser_password }}"
-    login_db: "postgres"
-    state: present
+    state: "{{ item.state  | default('present') }}"
   ignore_errors: true
   loop: "{{ postgresql_users | flatten(1) }}"
   loop_control:

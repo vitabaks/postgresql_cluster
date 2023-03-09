@@ -234,14 +234,8 @@
             (cluster_vip is defined and cluster_vip | length > 0)
 
     # optional
-    - role: postgresql-users
-      when: is_master == "true" and postgresql_users | length > 0
-
-    - role: postgresql-databases
-      when: is_master == "true" and postgresql_databases | length > 0
-
-    - role: postgresql-schemas
-      when: is_master == "true" and postgresql_schemas | length > 0
+    - role: postgresql-props
+      when: is_master == "true"
 
     - role: postgresql-extensions
       when: is_master == "true" and postgresql_extensions | length > 0
