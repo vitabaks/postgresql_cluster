@@ -94,7 +94,7 @@
 - - pgbackrest_install
 - - pgbackrest_conf
 - - pgbackrest_ssh_keys
-- - pgbackrest_cron
+- - pgbackrest_stanza_create
 - pg_probackup
 - - pg_probackup_repo
 - - pg_probackup_install

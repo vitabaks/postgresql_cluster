@@ -229,6 +229,9 @@
 
     - role: patroni
 
+    - role: pgbackrest/stanza-create
+      when: pgbackrest_install|bool
+
     - role: vip-manager
       when: not with_haproxy_load_balancing|bool and
             (cluster_vip is defined and cluster_vip | length > 0)

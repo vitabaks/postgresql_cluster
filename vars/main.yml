@@ -405,24 +405,32 @@ wal_g_patroni_cluster_bootstrap_command: "wal-g backup-fetch {{ postgresql_data_
 # pgBackRest
 pgbackrest_install: false  # or 'true'
 pgbackrest_install_from_pgdg_repo: true  # or 'false'
-pgbackrest_stanza: "stanza_name"  # specify your --stanza
+pgbackrest_stanza: "{{ patroni_cluster_name }}"  # specify your --stanza
 pgbackrest_repo_type: "posix"  # or "s3", "gcs", "azure"
-pgbackrest_repo_host: "10.128.64.50"  # dedicated repository host (if repo_type: "posix")
-pgbackrest_repo_user: "postgres"  # if "repo_host" is set
+pgbackrest_repo_host: ""  # dedicated repository host
+pgbackrest_repo_user: ""  # if "repo_host" is set
 pgbackrest_conf_file: "/etc/pgbackrest/pgbackrest.conf"
 # see more options https://pgbackrest.org/configuration.html
 pgbackrest_conf:
   global:  # [global] section
     - { option: "log-level-file", value: "detail" }
     - { option: "log-path", value: "/var/log/pgbackrest" }
+#    - { option: "repo1-host", value: "{{ pgbackrest_repo_host }}" }
+#    - { option: "repo1-host-user", value: "{{ pgbackrest_repo_user }}" }
     - { option: "repo1-type", value: "{{ pgbackrest_repo_type |lower }}" }
-    - { option: "repo1-host", value: "{{ pgbackrest_repo_host }}" }
-    - { option: "repo1-host-user", value: "{{ pgbackrest_repo_user }}" }
+    - { option: "repo1-path", value: "/var/lib/pgbackrest" }
+    - { option: "repo1-retention-full", value: "4" }
+    - { option: "start-fast", value: "y" }
+    - { option: "delta", value: "y" }
+    - { option: "stop-auto", value: "y" }
+    - { option: "resume", value: "n" }
+    - { option: "link-all", value: "y" }
 #    - { option: "", value: "" }
   stanza:  # [stanza_name] section
     - { option: "pg1-path", value: "{{ postgresql_data_dir }}" }
-    - { option: "process-max", value: "2" }
     - { option: "recovery-option", value: "recovery_target_action=promote" }
+    - { option: "log-level-console", value: "info" }
+    - { option: "process-max", value: "4" }
 #    - { option: "", value: "" }
 pgbackrest_patroni_cluster_restore_command:
   '/usr/bin/pgbackrest --stanza={{ pgbackrest_stanza }} --delta restore'  # restore from latest backup
