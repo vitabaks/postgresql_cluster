@@ -21,8 +21,8 @@ log:
 {% endif %}
 
 restapi:
-  listen: {{ hostvars[inventory_hostname]['inventory_hostname'] }}:8008
-  connect_address: {{ hostvars[inventory_hostname]['inventory_hostname'] }}:8008
+  listen: {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ patroni_restapi_port }}
+  connect_address: {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ patroni_restapi_port }}
 #  certfile: /etc/ssl/certs/ssl-cert-snakeoil.pem
 #  keyfile: /etc/ssl/private/ssl-cert-snakeoil.key
 #  authentication:
