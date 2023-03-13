@@ -1,0 +1,12 @@
+---
+- name: Update apt cache
+  apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install the latest version of PostgreSQL packages
+  package:
+    name: "{{ item }}"
+    state: latest
+  loop: "{{ postgresql_packages }}"
+...
