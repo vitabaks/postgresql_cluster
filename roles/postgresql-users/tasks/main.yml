@@ -2,7 +2,7 @@
 
 - name: Make sure the PostgreSQL users are present
   become: true
-  become_user: postgres
+  become_user: "{{ patroni_superuser_username }}"
   postgresql_user:
     name: "{{ item.name }}"
     password: "{{ item.password }}"
