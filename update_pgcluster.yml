@@ -42,12 +42,30 @@
       when: inventory_hostname in groups['primary']
       tags: always
 
-- name: "(1/2) UPDATE: secondary"
+- name: "(1/3) PRE-UPDATE: Perform Pre-Checks"
+  hosts: 'primary:secondary'
+  gather_facts: false
+  become: true
+  become_user: postgres
+  any_errors_fatal: true
+  vars:
+    max_replication_lag_bytes: 10485760  # 10 MiB
+    max_transaction_sec: 15  # seconds
+  tasks:
+    - name: Running Pre-Checks
+      include_role:
+        name: update
+        tasks_from: pre_checks
+  tags:
+    - update
+    - pre-checks
+
+- name: "(2/3) UPDATE: secondary"
   hosts: secondary
   serial: 1  # update replicas one by one
   gather_facts: false
   become: true
-  become_user: root
+  become_method: sudo
   any_errors_fatal: true
   environment: "{{ proxy_env | default({}) }}"
   vars_files:
@@ -109,7 +127,7 @@
     - update
     - update-secondary
 
-- name: "(2/2) UPDATE: primary"
+- name: "(3/3) UPDATE: primary"
   hosts: primary
   gather_facts: false
   become: true
