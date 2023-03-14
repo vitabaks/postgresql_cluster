@@ -2,7 +2,7 @@
 
 - name: Make sure the PostgreSQL databases are present
   become: true
-  become_user: "{{ patroni_superuser_username }}"
+  become_user: postgres
   postgresql_db:
     name: "{{ item.db }}"
     owner: "{{ item.owner }}"
