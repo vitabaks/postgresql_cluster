@@ -18,7 +18,7 @@
     enabled: true
     state: reloaded
 
-- name: Make sure that the Patroni is healthy and is a replica
+- name: Make sure replica endpoint is available
   uri:
     url: http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/replica
     status_code: 200
