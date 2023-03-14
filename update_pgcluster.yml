@@ -194,6 +194,23 @@
       include_role:
         name: update
         tasks_from: start_traffic
+
+    - name: Check the Patroni cluster state
+      become: true
+      become_user: postgres
+      command: patronictl -c /etc/patroni/patroni.yml list
+      register: patronictl_result
+      changed_when: false
+      environment:
+        PATH: "{{ ansible_env.PATH }}:/usr/bin:/usr/local/bin"
+
+    - name: List the Patroni cluster members
+      debug:
+        msg: "{{ patronictl_result.stdout_lines }}"
+
+    - name: Update completed
+      debug:
+        msg: "PostgreSQL HA cluster update completed."
   tags:
     - update
     - update-primary
