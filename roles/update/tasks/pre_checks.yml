@@ -20,7 +20,7 @@
     - inventory_hostname in groups['primary']
     - pg_replication_state.stdout | int == 0
 
-- name: '[Pre-Check] Make sure there is no high physical replication lag (more than {{ max_replication_lag_bytes | human_readable }})'
+- name: '[Pre-Check] Make sure there is no high replication lag (more than {{ max_replication_lag_bytes | human_readable }})'
   command: >-
     psql -tAXc "select pg_wal_lsn_diff(pg_current_wal_lsn(),
     replay_lsn) pg_lag_bytes from pg_stat_replication
@@ -34,7 +34,7 @@
   when:
     - inventory_hostname in groups['primary']
 
-# Stop, if physical replication lag is high
+# Stop, if replication lag is high
 - block:
     - name: "Print replication lag"
       debug:
@@ -68,7 +68,7 @@
 
 # Stop, if long-running transactions detected
 - block:
-    - name: "(SOURCE) Print long-running (>{{ max_transaction_sec }}s) transactions"
+    - name: "Print long-running (>{{ max_transaction_sec }}s) transactions"
       debug:
         msg: "{{ pg_long_transactions.stdout_lines }}"
 
