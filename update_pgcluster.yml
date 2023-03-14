@@ -24,6 +24,7 @@
       when: hostvars[item]['patroni_leader_result']['status'] == 200
       loop: "{{ groups['postgres_cluster'] }}"
       changed_when: false
+      tags: always
 
     - name: '[Prepare] Add hosts to group "secondary" (in-memory inventory)'
       add_host:
