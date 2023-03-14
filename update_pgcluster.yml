@@ -67,7 +67,7 @@
       when: ansible_os_family == 'Rocky' or ansible_os_family == 'AlmaLinux'
       tags: always
   tasks:
-    - name: Stop read-only trafic
+    - name: Stop read-only traffic
       include_role:
         name: update
         tasks_from: stop_traffic
@@ -101,7 +101,7 @@
         name: update
         tasks_from: start_services
 
-    - name: Start read-only trafic
+    - name: Start read-only traffic
       include_role:
         name: update
         tasks_from: start_traffic
@@ -138,6 +138,11 @@
         name: update
         tasks_from: switchover
 
+    - name: Stop read-only traffic
+      include_role:
+        name: update
+        tasks_from: stop_traffic
+
     - name: Stop Services
       include_role:
         name: update
@@ -166,6 +171,11 @@
       include_role:
         name: update
         tasks_from: start_services
+
+    - name: Start read-only traffic
+      include_role:
+        name: update
+        tasks_from: start_traffic
   tags:
     - update
     - update-primary
