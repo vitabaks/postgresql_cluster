@@ -228,6 +228,7 @@
         PATH: "{{ ansible_env.PATH }}:/usr/bin:/usr/local/bin"
 
     - name: Check the current PostgreSQL version
+      run_once: true
       command: psql -tAXc "select current_setting('server_version')"
       register: postgres_version
       changed_when: false
@@ -244,6 +245,7 @@
         msg: 
           - "PostgreSQL HA cluster update completed."
           - "Current version: {{ postgres_version.stdout }}"
+      when: postgres_version.stdout is defined
   tags:
     - update
     - update-extensions
