@@ -228,11 +228,13 @@
         PATH: "{{ ansible_env.PATH }}:/usr/bin:/usr/local/bin"
 
     - name: List the Patroni cluster members
+      run_once: true
       debug:
         msg: "{{ patronictl_result.stdout_lines }}"
       when: patronictl_result.stdout_lines is defined
 
     - name: Update completed
+      run_once: true
       debug:
         msg: "PostgreSQL HA cluster update completed."
   tags:
