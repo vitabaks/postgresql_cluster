@@ -242,7 +242,7 @@
     - name: Update completed
       run_once: true
       debug:
-        msg: 
+        msg:
           - "PostgreSQL HA cluster update completed."
           - "Current version: {{ postgres_version.stdout }}"
       when: postgres_version.stdout is defined
