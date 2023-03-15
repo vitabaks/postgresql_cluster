@@ -43,7 +43,7 @@
       when: inventory_hostname in groups['primary']
       tags: always
 
-- name: "(1/3) PRE-UPDATE: Perform Pre-Checks"
+- name: "(1/4) PRE-UPDATE: Perform Pre-Checks"
   hosts: 'primary:secondary'
   gather_facts: false
   become: true
@@ -61,7 +61,7 @@
     - update
     - pre-checks
 
-- name: "(2/3) UPDATE: secondary"
+- name: "(2/4) UPDATE: secondary"
   hosts: secondary
   serial: 1  # update replicas one by one
   gather_facts: false
@@ -128,7 +128,7 @@
     - update
     - update-secondary
 
-- name: "(3/3) UPDATE: primary"
+- name: "(3/4) UPDATE: primary"
   hosts: primary
   gather_facts: false
   become: true
@@ -195,8 +195,30 @@
       include_role:
         name: update
         tasks_from: start_traffic
+  tags:
+    - update
+    - update-primary
 
+- name: "(4/4) POST-UPDATE: Update extensions"
+  hosts: postgres_cluster
+  gather_facts: false
+  become: true
+  become_user: postgres
+  any_errors_fatal: true
+  vars_files:
+    - vars/main.yml
+  vars:
+    update_extensions: true  # ot 'false', to avoid updating extensions
+  tasks:
+    - name: Update extensions
+      include_role:
+        name: update
+        tasks_from: extensions
+      when: update_extensions | bool
+
+    # finish (info)
     - name: Check the Patroni cluster state
+      run_once: true
       become: true
       become_user: postgres
       command: patronictl -c /etc/patroni/patroni.yml list
@@ -208,11 +230,12 @@
     - name: List the Patroni cluster members
       debug:
         msg: "{{ patronictl_result.stdout_lines }}"
+      when: patronictl_result.stdout_lines is defined
 
     - name: Update completed
       debug:
         msg: "PostgreSQL HA cluster update completed."
   tags:
     - update
-    - update-primary
+    - update-extensions
 ...
