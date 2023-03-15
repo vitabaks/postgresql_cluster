@@ -61,7 +61,7 @@
     - update
     - pre-checks
 
-- name: "(2/4) UPDATE: secondary"
+- name: "(2/4) UPDATE: Secondary"
   hosts: secondary
   serial: 1  # update replicas one by one
   gather_facts: false
@@ -128,7 +128,7 @@
     - update
     - update-secondary
 
-- name: "(3/4) UPDATE: primary"
+- name: "(3/4) UPDATE: Primary"
   hosts: primary
   gather_facts: false
   become: true
