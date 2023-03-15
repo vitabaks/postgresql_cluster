@@ -19,4 +19,5 @@
   loop: "{{ databases_list.stdout_lines }}"
   loop_control:
     loop_var: pg_target_dbname
+  when: databases_list.stdout_lines is defined
 ...
