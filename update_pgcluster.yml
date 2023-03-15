@@ -227,6 +227,11 @@
       environment:
         PATH: "{{ ansible_env.PATH }}:/usr/bin:/usr/local/bin"
 
+    - name: Check the current PostgreSQL version
+      command: psql -tAXc "select current_setting('server_version')"
+      register: postgres_version
+      changed_when: false
+
     - name: List the Patroni cluster members
       run_once: true
       debug:
@@ -236,7 +241,9 @@
     - name: Update completed
       run_once: true
       debug:
-        msg: "PostgreSQL HA cluster update completed."
+        msg: 
+          - "PostgreSQL HA cluster update completed."
+          - "Current version: {{ postgres_version.stdout }}"
   tags:
     - update
     - update-extensions
