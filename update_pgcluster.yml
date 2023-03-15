@@ -208,7 +208,7 @@
   vars_files:
     - vars/main.yml
   vars:
-    update_extensions: true  # ot 'false', to avoid updating extensions
+    update_extensions: true  # or 'false', to avoid updating extensions
   tasks:
     - name: Update extensions
       include_role:
