@@ -33,9 +33,9 @@
 - block:
     # It will create a stanza on the dedicated repository host only when pgbackrest_repo_host is defined and has a value.
     # The delegate_to parameter is used to execute the task on a different host than the one specified in the play's hosts parameter.
-    # In this case, the task is delegated to the first host in the pgbackret group in the invetory.
+    # In this case, the task is delegated to the first host in the pgbackrest group in the invetory.
     - name: "Make sure the {{ repo1_path }} directory exists"
-      delegate_to: "{{ groups['pgbackret'][0] }}"
+      delegate_to: "{{ groups['pgbackrest'][0] }}"
       run_once: true
       file:
         path: "{{ repo1_path }}"
@@ -48,7 +48,7 @@
     - name: Create stanza "{{ pgbackrest_stanza }}"
       become: true
       become_user: "{{ pgbackrest_repo_user }}"
-      delegate_to: "{{ groups['pgbackret'][0] }}"
+      delegate_to: "{{ groups['pgbackrest'][0] }}"
       run_once: true
       command: "pgbackrest --stanza={{ pgbackrest_stanza }} stanza-create"
       register: stanza_create_result

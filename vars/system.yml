@@ -45,6 +45,7 @@ sysctl_conf:
   consul_instances: []
   master: []
   replica: []
+  pgbackrest: []
   postgres_cluster:
     - { name: "vm.overcommit_memory", value: "2" }
     - { name: "vm.swappiness", value: "1" }
@@ -130,6 +131,7 @@ firewall_enabled_at_boot: false  # or 'true' for configure firewall (iptables)
 firewall_allowed_tcp_ports_for:
   master: []
   replica: []
+  pgbackrest: []
   postgres_cluster:
     - "{{ ansible_ssh_port | default(22) }}"
     - "{{ postgresql_port }}"
