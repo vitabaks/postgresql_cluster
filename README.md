@@ -44,6 +44,8 @@ In addition to deploying new clusters, this playbook also support the deployment
     - [Create cluster with WAL-G:](#create-cluster-with-wal-g)
     - [Point-In-Time-Recovery:](#point-in-time-recovery)
 - [Maintenance](#maintenance)
+    - [Update the PostgreSQL HA Cluster](#update-the-postgresql-ha-cluster)
+    - [Using Git for cluster configuration management](#using-git-for-cluster-configuration-management-iacgitops)
 - [Disaster Recovery](#disaster-recovery)
     - [etcd](#etcd)
     - [PostgreSQL (databases)](#postgresql-databases)
@@ -460,7 +462,27 @@ I recommend that you study the following materials for further maintenance of th
 - [Patroni documentation](https://patroni.readthedocs.io/en/latest/)
 - [etcd operations guide](https://etcd.io/docs/v3.3.12/op-guide/)
 
-## Using Git for cluster configuration management (IaC/GitOps)
+#### Update the PostgreSQL HA Cluster
+
+`update_pgcluster.yml` playbook is designed to update the PostgreSQL HA Cluster, to a new minor version (for example 15.1->15.2, and etc).
+
+Usage:
+
+- Update PostgreSQL:
+
+    `ansible-playbook update_pgcluster.yml`
+
+- Update Patroni:
+
+    `ansible-playbook update_pgcluster.yml -e target=patroni`
+
+- Update all system:
+
+    `ansible-playbook update_pgcluster.yml -e target=system`
+
+More details [here](roles/update)
+
+#### Using Git for cluster configuration management (IaC/GitOps)
 
 Infrastructure as Code (IaC) is the managing and provisioning of infrastructure through code instead of through manual processes. \
 GitOps automates infrastructure updates using a Git workflow with continuous integration (CI) and continuous delivery (CI/CD). When new code is merged, the CI/CD pipeline enacts the change in the environment. Any configuration drift, such as manual changes or errors, is overwritten by GitOps automation so the environment converges on the desired state defined in Git. 
