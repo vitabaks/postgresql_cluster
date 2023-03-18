@@ -41,6 +41,10 @@ Update all system packages:
 
 ## Plan:
 
+Note: About the expected downtime of the database during the update:
+
+When using load balancing for read-only traffic (the "Type A" and "Type C" schemes), zero downtime is expected (for read traffic), provided there is more than one replica in the cluster. For write traffic (to the Primary), the expected downtime is ~5 seconds.
+
 #### 1. PRE-UPDATE: Perform Pre-Checks
 - Test PostgreSQL DB Access
 - Make sure that physical replication is active
@@ -83,7 +87,9 @@ Update all system packages:
 - Switchover Patroni leader role
   - Perform switchover of the leader for the Patroni cluster
   -  Make sure that the Patroni is healthy and is a replica
-     - Note: At this stage, the leader becomes a replica
+     - Notes:
+       - At this stage, the leader becomes a replica
+       - the database downtime is ~5 seconds (write traffic)
 - Stop read-only traffic
   - Enable `noloadbalance`, `nosync`, `nofailover` parameters in the patroni.yml
   - Reload patroni service
