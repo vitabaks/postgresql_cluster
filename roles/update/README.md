@@ -43,7 +43,7 @@ Update all system packages:
 
 Note: About the expected downtime of the database during the update:
 
-When using load balancing for read-only traffic (the "Type A" and "Type C" schemes), zero downtime is expected (for read traffic), provided there is more than one replica in the cluster. For write traffic (to the Primary), the expected downtime is ~2-5 seconds.
+When using load balancing for read-only traffic (the "Type A" and "Type C" schemes), zero downtime is expected (for read traffic), provided there is more than one replica in the cluster. For write traffic (to the Primary), the expected downtime is ~5-10 seconds.
 
 #### 1. PRE-UPDATE: Perform Pre-Checks
 - Test PostgreSQL DB Access
