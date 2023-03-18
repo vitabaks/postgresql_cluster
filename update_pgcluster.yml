@@ -1,0 +1,252 @@
+---
+- name: Update PostgreSQL HA Cluster (based on "Patroni" and "{{ dcs_type }}")
+  hosts: postgres_cluster
+  gather_facts: true
+  become: true
+  become_method: sudo
+  any_errors_fatal: true
+  vars_files:
+    - vars/main.yml
+  tasks:
+    - name: '[Prepare] Get Patroni Cluster Leader Node'
+      uri:
+        url: http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/leader
+        status_code: 200
+      register: patroni_leader_result
+      changed_when: false
+      failed_when: false
+      tags: always
+
+    - name: '[Prepare] Add host to group "primary" (in-memory inventory)'
+      add_host:
+        name: "{{ item }}"
+        groups: primary
+      when: hostvars[item]['patroni_leader_result']['status'] == 200
+      loop: "{{ groups['postgres_cluster'] }}"
+      changed_when: false
+      tags: always
+
+    - name: '[Prepare] Add hosts to group "secondary" (in-memory inventory)'
+      add_host:
+        name: "{{ item }}"
+        groups: secondary
+      when: hostvars[item]['patroni_leader_result']['status'] != 200
+      loop: "{{ groups['postgres_cluster'] }}"
+      changed_when: false
+      tags: always
+
+    - name: "Print Patroni Cluster info"
+      debug:
+        msg:
+          - "Cluster Name: {{ patroni_cluster_name }}"
+          - "Cluster Leader: {{ ansible_hostname }}"
+      when: inventory_hostname in groups['primary']
+      tags: always
+
+- name: "(1/4) PRE-UPDATE: Perform Pre-Checks"
+  hosts: 'primary:secondary'
+  gather_facts: false
+  become: true
+  become_user: postgres
+  any_errors_fatal: true
+  vars:
+    max_replication_lag_bytes: 10485760  # 10 MiB
+    max_transaction_sec: 15  # seconds
+  tasks:
+    - name: Running Pre-Checks
+      include_role:
+        name: update
+        tasks_from: pre_checks
+  tags:
+    - update
+    - pre-checks
+
+- name: "(2/4) UPDATE: Secondary"
+  hosts: secondary
+  serial: 1  # update replicas one by one
+  gather_facts: false
+  become: true
+  become_method: sudo
+  any_errors_fatal: true
+  environment: "{{ proxy_env | default({}) }}"
+  vars_files:
+    - vars/main.yml
+  vars:
+    target: postgres  # or 'patroni', 'system'
+  pre_tasks:
+    - name: Include OS-specific variables
+      include_vars: "vars/{{ ansible_os_family }}.yml"
+      when: not ansible_os_family == 'Rocky' and not ansible_os_family == 'AlmaLinux'
+      tags: always
+
+    # For compatibility with Ansible old versions
+    # (support for RockyLinux and AlmaLinux has been added to Ansible 2.11)
+    - name: Include OS-specific variables
+      include_vars: "vars/RedHat.yml"
+      when: ansible_os_family == 'Rocky' or ansible_os_family == 'AlmaLinux'
+      tags: always
+  tasks:
+    - name: Stop read-only traffic
+      include_role:
+        name: update
+        tasks_from: stop_traffic
+
+    - name: Stop Services
+      include_role:
+        name: update
+        tasks_from: stop_services
+
+    - name: Update PostgreSQL
+      include_role:
+        name: update
+        tasks_from: postgres
+      when: target | lower == 'postgres'
+
+    - name: Update Patroni
+      include_role:
+        name: update
+        tasks_from: patroni
+      when: target | lower == 'patroni' or
+            (target | lower == 'system' and patroni_installation_method == "pip")
+
+    - name: Update all system packages (includes PostgreSQL and Patroni)
+      include_role:
+        name: update
+        tasks_from: system
+      when: target | lower == 'system'
+
+    - name: Start Services
+      include_role:
+        name: update
+        tasks_from: start_services
+
+    - name: Start read-only traffic
+      include_role:
+        name: update
+        tasks_from: start_traffic
+  tags:
+    - update
+    - update-secondary
+
+- name: "(3/4) UPDATE: Primary"
+  hosts: primary
+  gather_facts: false
+  become: true
+  become_method: sudo
+  any_errors_fatal: true
+  environment: "{{ proxy_env | default({}) }}"
+  vars_files:
+    - vars/main.yml
+  vars:
+    target: postgres  # or 'patroni', 'system'
+  pre_tasks:
+    - name: Include OS-specific variables
+      include_vars: "vars/{{ ansible_os_family }}.yml"
+      when: not ansible_os_family == 'Rocky' and not ansible_os_family == 'AlmaLinux'
+      tags: always
+
+    # For compatibility with Ansible old versions
+    # (support for RockyLinux and AlmaLinux has been added to Ansible 2.11)
+    - name: Include OS-specific variables
+      include_vars: "vars/RedHat.yml"
+      when: ansible_os_family == 'Rocky' or ansible_os_family == 'AlmaLinux'
+      tags: always
+  tasks:
+    - name: "Switchover Patroni leader role"
+      include_role:
+        name: update
+        tasks_from: switchover
+
+    - name: Stop read-only traffic
+      include_role:
+        name: update
+        tasks_from: stop_traffic
+
+    - name: Stop Services
+      include_role:
+        name: update
+        tasks_from: stop_services
+
+    - name: Update PostgreSQL
+      include_role:
+        name: update
+        tasks_from: postgres
+      when: target | lower == 'postgres'
+
+    - name: Update Patroni
+      include_role:
+        name: update
+        tasks_from: patroni
+      when: target | lower == 'patroni' or
+            (target | lower == 'system' and patroni_installation_method == "pip")
+
+    - name: Update all system packages (includes PostgreSQL and Patroni)
+      include_role:
+        name: update
+        tasks_from: system
+      when: target | lower == 'system'
+
+    - name: Start Services
+      include_role:
+        name: update
+        tasks_from: start_services
+
+    - name: Start read-only traffic
+      include_role:
+        name: update
+        tasks_from: start_traffic
+  tags:
+    - update
+    - update-primary
+
+- name: "(4/4) POST-UPDATE: Update extensions"
+  hosts: postgres_cluster
+  gather_facts: false
+  become: true
+  become_user: postgres
+  any_errors_fatal: true
+  vars_files:
+    - vars/main.yml
+  vars:
+    update_extensions: true  # or 'false', to avoid updating extensions
+  tasks:
+    - name: Update extensions
+      include_role:
+        name: update
+        tasks_from: extensions
+      when: update_extensions | bool
+
+    # finish (info)
+    - name: Check the Patroni cluster state
+      run_once: true
+      become: true
+      become_user: postgres
+      command: patronictl -c /etc/patroni/patroni.yml list
+      register: patronictl_result
+      changed_when: false
+      environment:
+        PATH: "{{ ansible_env.PATH }}:/usr/bin:/usr/local/bin"
+
+    - name: Check the current PostgreSQL version
+      run_once: true
+      command: psql -tAXc "select current_setting('server_version')"
+      register: postgres_version
+      changed_when: false
+
+    - name: List the Patroni cluster members
+      run_once: true
+      debug:
+        msg: "{{ patronictl_result.stdout_lines }}"
+      when: patronictl_result.stdout_lines is defined
+
+    - name: Update completed
+      run_once: true
+      debug:
+        msg:
+          - "PostgreSQL HA cluster update completed."
+          - "Current version: {{ postgres_version.stdout }}"
+      when: postgres_version.stdout is defined
+  tags:
+    - update
+    - update-extensions
+...

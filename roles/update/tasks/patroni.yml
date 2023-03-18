@@ -1,0 +1,73 @@
+---
+# patroni_installation_method: "pip"
+- block:
+    - name: Install the latest version of Patroni
+      pip:
+        name: patroni
+        state: latest
+        executable: pip3
+        extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
+        umask: "0022"
+      environment:
+        PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
+  when: installation_method == "repo" and patroni_installation_method == "pip"
+  environment: "{{ proxy_env | default({}) }}"
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+
+# patroni_installation_method: "rpm/deb"
+- block:
+    # Debian
+    - name: Install the latest version of Patroni packages
+      package:
+        name: "{{ patroni_packages| default('patroni')}}"
+        state: latest
+      when: ansible_os_family == "Debian" and patroni_deb_package_repo | length < 1
+
+    # RedHat
+    - name: Install the latest version of Patroni packages
+      package:
+        name: "{{ patroni_packages| default('patroni')}}"
+        state: latest
+      when: ansible_os_family == "RedHat" and patroni_rpm_package_repo | length < 1
+
+    # when patroni_deb_package_repo or patroni_rpm_package_repo URL is defined
+    # Debian
+    - name: Download Patroni deb package
+      get_url:
+        url: "{{ item }}"
+        dest: /tmp/
+        timeout: 60
+        validate_certs: false
+      loop: "{{ patroni_deb_package_repo | list }}"
+      when: ansible_os_family == "Debian" and patroni_deb_package_repo | length > 0
+
+    - name: Install Patroni from deb package
+      apt:
+        force_apt_get: true
+        deb: "/tmp/{{ item }}"
+        state: present
+      loop: "{{ patroni_deb_package_repo | map('basename') | list }}"
+      when: ansible_os_family == "Debian" and patroni_deb_package_repo | length > 0
+
+    # RedHat
+    - name: Download Patroni rpm package
+      get_url:
+        url: "{{ item }}"
+        dest: /tmp/
+        timeout: 60
+        validate_certs: false
+      loop: "{{ patroni_rpm_package_repo | list }}"
+      when: ansible_os_family == "RedHat" and patroni_rpm_package_repo | length > 0
+
+    - name: Install Patroni from rpm package
+      package:
+        name: "/tmp/{{ item }}"
+        state: present
+      loop: "{{ patroni_rpm_package_repo | map('basename') | list }}"
+      when: ansible_os_family == "RedHat" and patroni_rpm_package_repo | length > 0
+  environment: "{{ proxy_env | default({}) }}"
+  when:
+    - installation_method == "repo"
+    - (patroni_installation_method == "rpm" or patroni_installation_method == "deb")
+...
