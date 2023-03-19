@@ -63,8 +63,6 @@
   until: pg_long_transactions.stdout | length < 1
   retries: 30
   delay: 2
-  when:
-    - inventory_hostname in groups['primary']
 
 # Stop, if long-running transactions detected
 - block:
