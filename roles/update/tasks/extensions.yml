@@ -8,7 +8,7 @@
   failed_when: false
 
 - name: Get a list of databases
-  command: psql -tAXc "select datname from pg_catalog.pg_database where not datistemplate"
+  command: psql -tAXc "select datname from pg_catalog.pg_database where datname <> 'template0'"
   register: databases_list
   changed_when: false
   when:
