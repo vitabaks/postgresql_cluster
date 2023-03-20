@@ -10,7 +10,7 @@ proxy_env: {}  # yamllint disable rule:braces
 cluster_vip: ""  # ip address for client access to databases in the cluster (optional)
 vip_interface: "{{ ansible_default_ipv4.interface }}"  # interface name (ex. "ens32")
 
-patroni_cluster_name: "postgres-cluster"  # specify the cluster name
+patroni_cluster_name: "postgres-cluster"  # the cluster name (must be unique for each cluster)
 patroni_install_version: "latest"  # or specific version (example 1.5.6)
 
 patroni_superuser_username: "postgres"
