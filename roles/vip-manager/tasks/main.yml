@@ -29,8 +29,8 @@
         disable_gpg_check: true
       register: package_status
       until: package_status is success
-      delay: 6
-      retries: 10
+      delay: 5
+      retries: 3
       when: ansible_os_family == "RedHat"
   when: installation_method == "repo" and vip_manager_package_repo | length > 0
   tags: vip, vip_manager, vip_manager_install
