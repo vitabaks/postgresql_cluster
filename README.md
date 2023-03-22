@@ -464,23 +464,36 @@ I recommend that you study the following materials for further maintenance of th
 
 #### Update the PostgreSQL HA Cluster
 
-`update_pgcluster.yml` playbook is designed to update the PostgreSQL HA Cluster, to a new minor version (for example 15.1->15.2, and etc).
+Use the `update_pgcluster.yml` playbook for update the PostgreSQL HA Cluster to a new minor version (for example 15.1->15.2, and etc).
 
-Usage:
+<details><summary>Update PostgreSQL</summary>
 
-- Update PostgreSQL:
+```
+ansible-playbook update_pgcluster.yml -e target=postgres
+```
 
-    `ansible-playbook update_pgcluster.yml`
+</details>
 
-- Update Patroni:
 
-    `ansible-playbook update_pgcluster.yml -e target=patroni`
+<details><summary>Update Patroni</summary>
 
-- Update all system:
+```
+ansible-playbook update_pgcluster.yml -e target=patroni
+```
 
-    `ansible-playbook update_pgcluster.yml -e target=system`
+</details>
 
-More details [here](roles/update)
+<details><summary>Update all system</summary>
+
+includes PostgreSQL and Patroni
+
+```
+ansible-playbook update_pgcluster.yml -e target=system
+```
+
+</details>
+
+More details [here](roles/update/README.md)
 
 #### Using Git for cluster configuration management (IaC/GitOps)
 
