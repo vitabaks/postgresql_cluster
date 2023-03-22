@@ -18,8 +18,8 @@
         state: present
       register: apt_status
       until: apt_status is success
-      delay: 6
-      retries: 10
+      delay: 5
+      retries: 3
       when: ansible_os_family == "Debian"
 
     - name: Install vip-manager
