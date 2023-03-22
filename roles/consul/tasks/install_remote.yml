@@ -7,8 +7,8 @@
     state: present
   register: package_status
   until: package_status is success
-  delay: 6
-  retries: 10
+  delay: 5
+  retries: 3
   tags: installation
 
 - name: Validate remote Consul directory
