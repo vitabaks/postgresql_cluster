@@ -14,6 +14,10 @@
       package:
         name: python3-pip
         state: present
+      register: package_status
+      until: package_status is success
+      delay: 5
+      retries: 3
       delegate_to: 127.0.0.1
       run_once: true
       ignore_errors: true

@@ -16,6 +16,10 @@
         force_apt_get: true
         deb: "/tmp/{{ vip_manager_package_repo | basename }}"
         state: present
+      register: apt_status
+      until: apt_status is success
+      delay: 5
+      retries: 3
       when: ansible_os_family == "Debian"
 
     - name: Install vip-manager
@@ -23,6 +27,10 @@
         name: "/tmp/{{ vip_manager_package_repo | basename }}"
         state: present
         disable_gpg_check: true
+      register: package_status
+      until: package_status is success
+      delay: 5
+      retries: 3
       when: ansible_os_family == "RedHat"
   when: installation_method == "repo" and vip_manager_package_repo | length > 0
   tags: vip, vip_manager, vip_manager_install
@@ -38,6 +46,10 @@
         force_apt_get: true
         deb: "/tmp/{{ vip_manager_package_file | basename }}"
         state: present
+      register: apt_status
+      until: apt_status is success
+      delay: 5
+      retries: 3
       when: ansible_os_family == "Debian"
 
     - name: Install vip-manager
@@ -45,6 +57,10 @@
         name: "/tmp/{{ vip_manager_package_file | basename }}"
         state: present
         disable_gpg_check: true
+      register: package_status
+      until: package_status is success
+      delay: 5
+      retries: 3
       when: ansible_os_family == "RedHat"
   when: installation_method == "file" and vip_manager_package_file | length > 0
   tags: vip, vip_manager, vip_manager_install

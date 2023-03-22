@@ -22,6 +22,10 @@
       package:
         name: "{{ patroni_packages| default('patroni')}}"
         state: latest
+      register: package_status
+      until: package_status is success
+      delay: 5
+      retries: 3
       when: ansible_os_family == "Debian" and patroni_deb_package_repo | length < 1
 
     # RedHat
@@ -29,6 +33,10 @@
       package:
         name: "{{ patroni_packages| default('patroni')}}"
         state: latest
+      register: package_status
+      until: package_status is success
+      delay: 5
+      retries: 3
       when: ansible_os_family == "RedHat" and patroni_rpm_package_repo | length < 1
 
     # when patroni_deb_package_repo or patroni_rpm_package_repo URL is defined
@@ -48,6 +56,10 @@
         deb: "/tmp/{{ item }}"
         state: present
       loop: "{{ patroni_deb_package_repo | map('basename') | list }}"
+      register: apt_status
+      until: apt_status is success
+      delay: 5
+      retries: 3
       when: ansible_os_family == "Debian" and patroni_deb_package_repo | length > 0
 
     # RedHat
@@ -65,6 +77,10 @@
         name: "/tmp/{{ item }}"
         state: present
       loop: "{{ patroni_rpm_package_repo | map('basename') | list }}"
+      register: package_status
+      until: package_status is success
+      delay: 5
+      retries: 3
       when: ansible_os_family == "RedHat" and patroni_rpm_package_repo | length > 0
   environment: "{{ proxy_env | default({}) }}"
   when:

@@ -46,6 +46,10 @@
       apt:
         update_cache: true
         cache_valid_time: 3600
+      register: apt_status
+      until: apt_status is success
+      delay: 5
+      retries: 3
       when: ansible_os_family == "Debian" and installation_method == "repo"
 
     - name: Make sure the gnupg and apt-transport-https packages are present
@@ -54,12 +58,20 @@
           - gnupg
           - apt-transport-https
         state: present
+      register: apt_status
+      until: apt_status is success
+      delay: 5
+      retries: 3
       when: ansible_os_family == "Debian" and installation_method == "repo"
 
     - name: Make sure the python3-pip package are present
       package:
         name: python3-pip
         state: present
+      register: package_status
+      until: package_status is success
+      delay: 5
+      retries: 3
 
     - name: Build a firewall_ports_dynamic_var
       set_fact:

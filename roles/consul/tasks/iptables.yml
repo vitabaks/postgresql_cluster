@@ -4,6 +4,10 @@
 - name: Install iptables
   apt:
     name: iptables
+  register: apt_status
+  until: apt_status is success
+  delay: 5
+  retries: 3
 
 - name: Redirect local DNS (1/4)
   iptables:

@@ -15,11 +15,19 @@
   apt:
     update_cache: true
     cache_valid_time: 3600
+  register: apt_status
+  until: apt_status is success
+  delay: 5
+  retries: 3
   when: ansible_os_family == "Debian"
 
 - name: Update all system packages
   package:
     name: '*'
     state: latest
+  register: package_status
+  until: package_status is success
+  delay: 5
+  retries: 3
   ignore_errors: true
 ...

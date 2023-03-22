@@ -5,6 +5,10 @@
   package:
     name: "{{ consul_os_packages }}"
     state: present
+  register: package_status
+  until: package_status is success
+  delay: 5
+  retries: 3
   tags: installation
   when: not ansible_facts['os_family'] == "VMware Photon OS" and (consul_os_packages | length > 0)
 
