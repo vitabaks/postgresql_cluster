@@ -5,6 +5,10 @@
   package:
     name: "{{ consul_os_packages }}"
     state: present
+  register: package_status
+  until: package_status is success
+  delay: 6
+  retries: 10
   tags: installation
 
 - name: Validate remote Consul directory

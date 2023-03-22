@@ -5,6 +5,10 @@
   package:
     name: "{{ dnsmasq_package }}"
     state: present
+  register: package_status
+  until: package_status is success
+  delay: 5
+  retries: 3
   become: true
   tags: dnsmasq, installation
 

@@ -5,6 +5,10 @@
   package:
     name: "{{ consul_repo_prerequisites }}"
     state: present
+  register: package_status
+  until: package_status is success
+  delay: 5
+  retries: 3
   become: true
   when: (consul_os_repo_prerequisites)
   tags: installation
@@ -77,6 +81,10 @@
   package:
     name: "consul{{ '=' if ansible_pkg_mgr == 'apt' else '-' }}{{ consul_version }}"
     state: present
+  register: package_status
+  until: package_status is success
+  delay: 5
+  retries: 3
   become: true
 
 - name: Create a directory /etc/systemd/system/consul.service.d

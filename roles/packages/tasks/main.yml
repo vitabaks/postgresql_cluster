@@ -15,6 +15,10 @@
         deb: "/tmp/{{ item }}"
         state: present
       loop: "{{ packages_from_file | map('basename') | list }}"
+      register: apt_status
+      until: apt_status is success
+      delay: 5
+      retries: 3
       when: ansible_os_family == "Debian" and copy_packages_result.changed
 
     - name: Install packages
@@ -22,6 +26,10 @@
         name: "/tmp/{{ item }}"
         state: present
       loop: "{{ packages_from_file | map('basename') | list }}"
+      register: package_status
+      until: package_status is success
+      delay: 5
+      retries: 3
       when: ansible_os_family == "RedHat" and copy_packages_result.changed
   when: packages_from_file is defined and packages_from_file | length > 0
   tags: install_packages_from_file
@@ -45,6 +53,10 @@
     name: "{{ item }}"
     state: present
   loop: "{{ system_packages }}"
+  register: package_status
+  until: package_status is success
+  delay: 5
+  retries: 3
   environment: "{{ proxy_env | default({}) }}"
   when: ansible_os_family == "RedHat" and installation_method == "repo"
   tags: install_packages
@@ -56,6 +68,10 @@
     state: present
   loop: "{{ system_packages }}"
   environment: "{{ proxy_env | default({}) }}"
+  register: apt_status
+  until: apt_status is success
+  delay: 5
+  retries: 3
   when: ansible_os_family == "Debian" and installation_method == "repo"
   tags: install_packages
 
@@ -65,6 +81,10 @@
       package:
         name: postgresql-common
         state: present
+      register: package_status
+      until: package_status is success
+      delay: 5
+      retries: 3
       environment: "{{ proxy_env | default({}) }}"
 
     - name: PostgreSQL | disable initializing of a default postgresql cluster
@@ -103,6 +123,10 @@
     name: "{{ item }}"
     state: present
   loop: "{{ postgresql_packages }}"
+  register: package_status
+  until: package_status is success
+  delay: 5
+  retries: 3
   environment: "{{ proxy_env | default({}) }}"
   when: ansible_os_family == "RedHat" and installation_method == "repo"
   tags: install_packages, install_postgres
@@ -114,6 +138,10 @@
     state: present
   loop: "{{ postgresql_packages }}"
   environment: "{{ proxy_env | default({}) }}"
+  register: apt_status
+  until: apt_status is success
+  delay: 5
+  retries: 3
   when: ansible_os_family == "Debian" and installation_method == "repo"
   tags: install_packages, install_postgres
 

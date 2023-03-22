@@ -8,6 +8,10 @@
       package:
         name: centos-release-scl-rh
         state: present
+      register: package_status
+      until: package_status is success
+      delay: 5
+      retries: 3
       when: haproxy_install_repo|bool and
             (ansible_distribution == 'CentOS' and
             ansible_distribution_major_version == '7')
@@ -39,6 +43,10 @@
       package:
         name: rh-haproxy18
         state: present
+      register: package_status
+      until: package_status is success
+      delay: 5
+      retries: 3
       when: ansible_distribution_major_version == '7'
 
     - name: create a symlink "/usr/sbin/haproxy"
@@ -61,6 +69,10 @@
       package:
         name: haproxy
         state: present
+      register: package_status
+      until: package_status is success
+      delay: 5
+      retries: 3
       when: ansible_distribution_major_version is version('8', '>=')
   environment: "{{ proxy_env | default({}) }}"
   when: ansible_os_family == "RedHat" and
@@ -122,6 +134,10 @@
         force_apt_get: true
         name: "haproxy=1.8.*"
         state: present
+      register: apt_status
+      until: apt_status is success
+      delay: 5
+      retries: 3
       when: (ansible_distribution == "Debian" and ansible_distribution_major_version is version('10', '<=')) or
             (ansible_distribution == 'Ubuntu' and ansible_distribution_major_version is version('18', '<='))
 
@@ -129,6 +145,10 @@
       apt:
         name: haproxy
         state: present
+      register: apt_status
+      until: apt_status is success
+      delay: 5
+      retries: 3
       when: (ansible_distribution == "Debian" and ansible_distribution_major_version is version('11', '>=')) or
             (ansible_distribution == 'Ubuntu' and ansible_distribution_major_version is version('20', '>='))
   environment: "{{ proxy_env | default({}) }}"
@@ -152,6 +172,10 @@
         deb: "/tmp/{{ item }}"
         state: present
       loop: "{{ haproxy_package_file | map('basename') | list }}"
+      register: apt_status
+      until: apt_status is success
+      delay: 5
+      retries: 3
       when: ansible_os_family == "Debian" and copy_packages_result.changed
 
     - name: Install packages
@@ -159,6 +183,10 @@
         name: "/tmp/{{ item }}"
         state: present
       loop: "{{ haproxy_package_file | map('basename') | list }}"
+      register: package_status
+      until: package_status is success
+      delay: 5
+      retries: 3
       when: ansible_os_family == "RedHat" and copy_packages_result.changed
   when: haproxy_package_file is defined and haproxy_package_file | length > 0
   tags: haproxy, load_balancing
@@ -229,6 +257,10 @@
   package:
     name: "{{ haproxy_compile_requirements }}"
     state: present
+  register: package_status
+  until: package_status is success
+  delay: 5
+  retries: 3
   environment: "{{ proxy_env | default({}) }}"
   when: haproxy_installation_method == "src"
   tags: haproxy, haproxy_requirements, load_balancing
@@ -432,6 +464,10 @@
         packages:
           - libsemanage-python
           - policycoreutils-python
+      register: package_status
+      until: package_status is success
+      delay: 5
+      retries: 3
       environment: "{{ proxy_env | default({}) }}"
       when:
         - ansible_os_family == "RedHat"
@@ -448,6 +484,10 @@
         packages:
           - python3-libsemanage
           - python3-policycoreutils
+      register: package_status
+      until: package_status is success
+      delay: 5
+      retries: 3
       environment: "{{ proxy_env | default({}) }}"
       when:
         - ansible_os_family == "RedHat"
