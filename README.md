@@ -36,9 +36,8 @@ In addition to deploying new clusters, this playbook also support the deployment
 - [Deployment: quick start](#deployment-quick-start)
 - [Variables](#variables)
 - [Cluster Scaling](#cluster-scaling)
-    - [Preparation:](#preparation)
-    - [Steps to add a new node:](#steps-to-add-a-new-node)
-    - [Steps to add a new banlancer node:](#steps-to-add-a-new-banlancer-node)
+    - [Steps to add a new postgres node](#steps-to-add-a-new-postgres-node)
+    - [Steps to add a new balancer node](#steps-to-add-a-new-balancer-node)
 - [Restore and Cloning](#restore-and-cloning)
     - [Create cluster with pgBackRest:](#create-cluster-with-pgbackrest)
     - [Create cluster with WAL-G:](#create-cluster-with-wal-g)
@@ -287,49 +286,48 @@ See the vars/[main.yml](./vars/main.yml), [system.yml](./vars/system.yml) and ([
 
 
 ## Cluster Scaling
-Add new postgresql node to existing cluster
-<details><summary>Click here to expand...</summary><p>
 
 After you successfully deployed your PostgreSQL HA cluster, you may need to scale it further. \
 Use the `add_pgnode.yml` playbook for this.
 
-> :grey_exclamation: This playbook does not scaling the etcd cluster and haproxy balancers.
+<details><summary>Add new postgresql node to existing cluster</summary><p>
+
+> This playbook does not scaling the etcd cluster or consul cluster.
 
 During the run this playbook, the new nodes will be prepared in the same way as when first deployment the cluster. But unlike the initial deployment, all the necessary **configuration files will be copied from the master server**.
 
-###### Preparation:
+###### Steps to add a new Postgres node:
 
-1. Add a new node (*or subnet*) to the `pg_hba.conf` file on all nodes in your cluster
-2. Apply pg_hba.conf for all PostgreSQL (see `patronictl reload --help`)
+1. Add a new node to the inventory file with the variable `new_node=true`
+2. Run `add_pgnode.yml` playbook 
 
-###### Steps to add a new node:
+In this example, we add a node with the address 10.128.64.144
 
-3. Go to the playbook directory
-4. Edit the inventory file
+```
+[master]
+10.128.64.140 hostname=pgnode01 postgresql_exists='true'
 
-Specify the ip address of one of the nodes of the cluster in the [master] group, and the new node (which you want to add) in the [replica] group.
+[replica]
+10.128.64.142 hostname=pgnode02 postgresql_exists='true'
+10.128.64.143 hostname=pgnode03 postgresql_exists='true'
+10.128.64.144 hostname=pgnode04 postgresql_exists='false' new_node=true
+```
 
-5. Edit the variable files
+Run playbook:
 
-Variables that should be the same on all cluster nodes: \
-`with_haproxy_load_balancing`,` postgresql_version`, `postgresql_data_dir`,` postgresql_conf_dir`.
-
-6. Run playbook:
-
-`ansible-playbook add_pgnode.yml`
+```
+ansible-playbook add_pgnode.yml
+```
 
 </p></details>
 
-Add new haproxy balancer node
-<details><summary>Click here to expand...</summary><p>
-
-Use the `add_balancer.yml` playbook for this.
+<details><summary>Add new haproxy balancer node</summary><p>
 
 During the run this playbook, the new balancer node will be prepared in the same way as when first deployment the cluster. But unlike the initial deployment, **all necessary configuration files will be copied from the server specified in the [master] group**.
 
 > :heavy_exclamation_mark: Please test it in your test enviroment before using in a production.
 
-###### Steps to add a new banlancer node:
+###### Steps to add a new balancer node:
 
 1. Go to the playbook directory
 
