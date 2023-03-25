@@ -3,6 +3,7 @@
 
 # "postgresql_exists='true'" if PostgreSQL is already exists and running
 # "hostname=" variable is optional (used to change the server name)
+# "new_node=true" to add a new server to an existing cluster using the add_pgnode.yml playbook
 
 # In this example, all components will be installed on PostgreSQL nodes.
 # You can deploy the haproxy balancers and the etcd or consul cluster on other dedicated servers (recomended).
@@ -34,6 +35,7 @@
 [replica]
 10.128.64.142 hostname=pgnode02 postgresql_exists='false'
 10.128.64.143 hostname=pgnode03 postgresql_exists='false'
+#10.128.64.144 hostname=pgnode04 postgresql_exists='false' new_node=true
 
 [postgres_cluster:children]
 master
