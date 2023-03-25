@@ -6,6 +6,8 @@
   become_method: sudo
   any_errors_fatal: true
   gather_facts: true
+  handlers:
+    - include: roles/patroni/handlers/main.yml
   vars_files:
     - vars/main.yml
     - vars/system.yml
@@ -50,6 +52,12 @@
       run_once: true
       debug:
         var: new_nodes
+
+    - name: Add a new node to pg_hba.conf on existing cluster nodes
+      include_role:
+        name: patroni/config
+        tasks_from: pg_hba
+      when: not new_node | default(false) | bool
 
     - name: Update apt cache
       apt:
