@@ -164,7 +164,9 @@ firewall_additional_rules_for:
   master: []
   replica: []
   postgres_cluster: []
+  pgbackrest: []
   etcd_cluster: []
+  consul_instances: []
   balancers:
     - "iptables -p vrrp -A INPUT -j ACCEPT"  # Keepalived (vrrp)
     - "iptables -p vrrp -A OUTPUT -j ACCEPT"  # Keepalived (vrrp)
