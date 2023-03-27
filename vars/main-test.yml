@@ -162,19 +162,19 @@ postgresql_parameters:
   - {option: "max_locks_per_transaction", value: "64"}
   - {option: "max_prepared_transactions", value: "0"}
   - {option: "huge_pages", value: "try"}
-  - {option: "shared_buffers", value: "512MB"}
-  - {option: "work_mem", value: "128MB"}
-  - {option: "maintenance_work_mem", value: "256MB"}
-  - {option: "effective_cache_size", value: "4GB"}
+  - {option: "shared_buffers", value: "2GB"}
+  - {option: "work_mem", value: "2097kB"}
+  - {option: "maintenance_work_mem", value: "512MB"}
+  - {option: "effective_cache_size", value: "6GB"}
   - {option: "checkpoint_timeout", value: "15min"}
   - {option: "checkpoint_completion_target", value: "0.9"}
-  - {option: "min_wal_size", value: "2GB"}
-  - {option: "max_wal_size", value: "8GB"}
-  - {option: "wal_buffers", value: "32MB"}
-  - {option: "default_statistics_target", value: "1000"}
+  - {option: "min_wal_size", value: "1GB"}
+  - {option: "max_wal_size", value: "4GB"}
+  - {option: "wal_buffers", value: "16MB"}
+  - {option: "default_statistics_target", value: "100"}
   - {option: "seq_page_cost", value: "1"}
-  - {option: "random_page_cost", value: "4"}
-  - {option: "effective_io_concurrency", value: "2"}
+  - {option: "random_page_cost", value: "1.1"}
+  - {option: "effective_io_concurrency", value: "200"}
   - {option: "synchronous_commit", value: "on"}
   - {option: "autovacuum", value: "on"}
   - {option: "autovacuum_max_workers", value: "5"}
@@ -225,6 +225,10 @@ postgresql_parameters:
   - {option: "wal_receiver_status_interval", value: "10s"}
   - {option: "idle_in_transaction_session_timeout", value: "10min"}
   - {option: "jit", value: "off"}
+  - {option: "max_worker_processes", value: "4"}
+  - {option: "max_parallel_workers_per_gather", value: "2"}
+  - {option: "max_parallel_workers", value: "4"}
+  - {option: "max_parallel_maintenance_workers", value: "2"}
 postgresql_pg_hba:
   - {type: "local", database: "all", user: "{{ patroni_superuser_username }}", address: "", method: "trust"}
   - {type: "local", database: "all", user: "all", address: "", method: "peer"}
@@ -238,6 +242,8 @@ pgbouncer_max_client_conn: 10000
 pgbouncer_max_db_connections: 1000
 pgbouncer_default_pool_size: 20
 pgbouncer_default_pool_mode: "session"
+pgbouncer_admin_users: "postgres"
+pgbouncer_stats_users: "postgres"
 pgbouncer_generate_userlist: true
 pgbouncer_auth_type: "{{ postgresql_password_encryption_algorithm }}"
 pgbouncer_ignore_startup_parameters: "extra_float_digits,geqo"
