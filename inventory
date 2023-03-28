@@ -27,6 +27,7 @@
 10.128.64.140
 10.128.64.142
 10.128.64.143
+#10.128.64.144 new_node=true
 
 # PostgreSQL nodes
 [master]

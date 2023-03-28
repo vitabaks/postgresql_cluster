@@ -51,14 +51,14 @@
   tags: keepalived_conf, keepalived
 
 - block:  # for add_balancer.yml
-    - name: Fetch keepalived.conf conf file from master
+    - name: "Fetch keepalived.conf conf file from {{ groups.balancers[0] }}"
       run_once: true
       fetch:
         src: /etc/keepalived/keepalived.conf
         dest: files/keepalived.conf
         validate_checksum: true
         flat: true
-      delegate_to: "{{ groups.master[0] }}"
+      delegate_to: "{{ groups.balancers[0] }}"
 
     - name: Copy keepalived.conf conf file to replica
       copy:
@@ -66,6 +66,13 @@
         dest: /etc/keepalived/keepalived.conf
       notify: "restart keepalived"
 
+    - name: Remove keepalived.conf file from localhost
+      run_once: true
+      file:
+        path: files/keepalived.conf
+        state: absent
+      delegate_to: localhost
+ 
     - name: Prepare keepalived.conf conf file (replace "interface")
       lineinfile:
         path: /etc/keepalived/keepalived.conf
