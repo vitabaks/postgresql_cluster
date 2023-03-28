@@ -122,6 +122,10 @@
       when:
         - new_node | default(false) | bool
 
+    - role: ssh-keys
+      when:
+        - enable_ssh_key_based_authentication | default(false) | bool
+
   tasks:
     - name: Add host to group new_replica (in-memory inventory)
       add_host:
@@ -166,7 +170,6 @@
     - role: locales
     - role: timezone
     - role: ntp
-    - role: ssh-keys
     - role: copy
 
 - hosts: pgbackrest:new_replica
