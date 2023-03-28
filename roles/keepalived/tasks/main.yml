@@ -72,7 +72,7 @@
         path: files/keepalived.conf
         state: absent
       delegate_to: localhost
- 
+
     - name: Prepare keepalived.conf conf file (replace "interface")
       lineinfile:
         path: /etc/keepalived/keepalived.conf
