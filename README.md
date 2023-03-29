@@ -325,8 +325,6 @@ ansible-playbook add_pgnode.yml
 
 During the run this playbook, the new balancer node will be prepared in the same way as when first deployment the cluster. But unlike the initial deployment, all necessary **configuration files will be copied from the first server specified in the inventory file in the "balancers" group**.
 
-> :heavy_exclamation_mark: Please test it in your test enviroment before using in a production.
-
 ###### Steps to add a new balancer node:
 
 Note: Used if the `with_haproxy_load_balancing` variable is set to `true`
