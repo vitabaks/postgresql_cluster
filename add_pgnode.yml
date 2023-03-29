@@ -40,6 +40,7 @@
         new_nodes: "{{ new_nodes | default([]) + [item] }}"
       when: hostvars[item]['new_node'] | default(false) | bool
       loop: "{{ groups['replica'] }}"
+      tags: always
 
     # Stop, if no nodes found with new_node variable
     - name: "Pre-Check error. No nodes found with new_node set to true"
@@ -52,6 +53,7 @@
       run_once: true
       debug:
         var: new_nodes
+      tags: always
 
     - name: Add a new node to pg_hba.conf on existing cluster nodes
       include_role:
@@ -133,6 +135,7 @@
         groups: new_replica
       loop: "{{ new_nodes }}"
       changed_when: false
+      tags: always
 
 - hosts: new_replica
   become: true
