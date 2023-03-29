@@ -38,6 +38,7 @@
         new_nodes: "{{ new_nodes | default([]) + [item] }}"
       when: hostvars[item]['new_node'] | default(false) | bool
       loop: "{{ groups['balancers'] }}"
+      tags: always
 
     # Stop, if no nodes found with new_node variable
     - name: "Pre-Check error. No nodes found with new_node set to true"
@@ -50,6 +51,7 @@
       run_once: true
       debug:
         var: new_nodes
+      tags: always
 
     - name: Update apt cache
       apt:
@@ -121,6 +123,7 @@
         groups: new_balancer
       loop: "{{ new_nodes }}"
       changed_when: false
+      tags: always
 
 - hosts: new_balancer
   become: true
