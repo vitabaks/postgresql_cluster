@@ -301,7 +301,7 @@ During the run this playbook, the new nodes will be prepared in the same way as 
 1. Add a new node to the inventory file with the variable `new_node=true`
 2. Run `add_pgnode.yml` playbook 
 
-In this example, we add a node with the address 10.128.64.144
+In this example, we add a node with the IP address 10.128.64.144
 
 ```
 [master]
@@ -323,29 +323,34 @@ ansible-playbook add_pgnode.yml
 
 <details><summary>Add new haproxy balancer node</summary><p>
 
-During the run this playbook, the new balancer node will be prepared in the same way as when first deployment the cluster. But unlike the initial deployment, **all necessary configuration files will be copied from the server specified in the [master] group**.
+During the run this playbook, the new balancer node will be prepared in the same way as when first deployment the cluster. But unlike the initial deployment, all necessary **configuration files will be copied from the first server specified in the inventory file in the "balancers" group**.
 
 > :heavy_exclamation_mark: Please test it in your test enviroment before using in a production.
 
 ###### Steps to add a new balancer node:
 
-1. Go to the playbook directory
+Note: Used if the `with_haproxy_load_balancing` variable is set to `true`
 
-2. Edit the inventory file
+1. Add a new node to the inventory file with the variable `new_node=true`
 
-Specify the ip address of one of the existing balancer nodes in the [master] group, and the new balancer node (which you want to add) in the [balancers] group.
+2. Run `add_balancer.yml` playbook 
 
-> :heavy_exclamation_mark: Attention! The list of Firewall ports is determined dynamically based on the group in which the host is specified. \
-If you adding a new haproxy balancer node to one of the existing nodes from the [etcd_cluster] or [master]/[replica] groups, you can rewrite the iptables rules! \
-See firewall_allowed_tcp_ports_for.balancers variable in the system.yml file.
 
-3. Edit the `main.yml` variable file
+ In this example, we add a balancer node with the IP address 10.128.64.144
 
-Specify `with_haproxy_load_balancing: true`
+```
+[balancers]
+10.128.64.140
+10.128.64.142
+10.128.64.143
+10.128.64.144 new_node=true
+```
 
-4. Run playbook:
+Run playbook:
 
-`ansible-playbook add_balancer.yml`
+```
+ansible-playbook add_balancer.yml
+```
 
 </p></details>
 
