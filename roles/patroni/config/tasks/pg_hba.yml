@@ -1,0 +1,11 @@
+---
+- name: Update pg_hba.conf
+  template:
+    src: ../templates/pg_hba.conf.j2
+    dest: "{{ postgresql_conf_dir }}/pg_hba.conf"
+    owner: postgres
+    group: postgres
+    mode: 0640
+  notify: "reload postgres"
+  tags: pg_hba, pg_hba_generate
+...

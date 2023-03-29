@@ -57,7 +57,7 @@
   tags: confd_conf, confd
 
 - block:  # for add_balancer.yml
-    - name: Fetch confd.toml, haproxy.toml, haproxy.tmpl conf files from master
+    - name: "Fetch confd.toml, haproxy.toml, haproxy.tmpl conf files from {{ groups.balancers[0] }}"
       run_once: true
       fetch:
         src: "{{ item }}"
@@ -68,7 +68,7 @@
         - /etc/confd/confd.toml
         - /etc/confd/conf.d/haproxy.toml
         - /etc/confd/templates/haproxy.tmpl
-      delegate_to: "{{ groups.master[0] }}"
+      delegate_to: "{{ groups.balancers[0] }}"
 
     - name: Copy confd.toml, haproxy.toml, haproxy.tmpl conf files to replica
       copy:
@@ -81,6 +81,17 @@
       loop_control:
         label: "{{ item.dest }}"
       notify: "restart confd"
+
+    - name: Remove confd.toml, haproxy.toml, haproxy.tmpl files from localhost
+      run_once: true
+      file:
+        path: "files/{{ item }}"
+        state: absent
+      loop:
+        - confd.toml
+        - haproxy.toml
+        - haproxy.tmpl
+      delegate_to: localhost
 
     - name: Prepare haproxy.tmpl template file (replace "bind" for stats)
       lineinfile:

@@ -400,7 +400,7 @@
   tags: haproxy, haproxy_service, load_balancing
 
 - block:  # for add_balancer.yml
-    - name: Fetch haproxy.cfg file from master
+    - name: "Fetch haproxy.cfg file from {{ groups.balancers[0] }}"
       run_once: true
       fetch:
         src: /etc/haproxy/haproxy.cfg
@@ -408,7 +408,7 @@
         validate_checksum: true
         flat: true
       notify: "restart haproxy"
-      delegate_to: "{{ groups.master[0] }}"
+      delegate_to: "{{ groups.balancers[0] }}"
 
     - name: Copy haproxy.cfg file to replica
       copy:
@@ -417,6 +417,13 @@
         owner: haproxy
         group: haproxy
       notify: "restart haproxy"
+
+    - name: Remove haproxy.cfg file from localhost
+      run_once: true
+      file:
+        path: files/haproxy.cfg
+        state: absent
+      delegate_to: localhost
 
     - name: Prepare haproxy.cfg conf file (replace "bind")
       lineinfile:

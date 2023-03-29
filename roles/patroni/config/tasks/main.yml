@@ -39,16 +39,6 @@
   notify: "reload patroni"
   tags: patroni, patroni_conf
 
-- name: Update pg_hba.conf
-  template:
-    src: ../templates/pg_hba.conf.j2
-    dest: "{{ postgresql_conf_dir }}/pg_hba.conf"
-    owner: postgres
-    group: postgres
-    mode: 0640
-  notify: "reload postgres"
-  tags: patroni, patroni_conf, pg_hba, pg_hba_generate
-
 - block:
     - name: Update postgresql parameters in DCS
       uri:
@@ -78,5 +68,9 @@
   loop: "{{ postgresql_parameters }}"
   when: item.value == "null"
   tags: patroni, patroni_conf
+
+# Update pg_hba.conf
+- import_tasks: pg_hba.yml
+  tags: patroni, patroni_conf, pg_hba, pg_hba_generate
 
 ...

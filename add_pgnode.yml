@@ -1,11 +1,13 @@
 ---
 
-- name: PostgreSQL High-Availability Cluster Scaling (add replica node)
-  hosts: replica
+- name: PostgreSQL High-Availability Cluster Scaling (add a replica node to the cluster "{{ patroni_cluster_name }}")
+  hosts: postgres_cluster
   become: true
   become_method: sudo
   any_errors_fatal: true
   gather_facts: true
+  handlers:
+    - include: roles/patroni/handlers/main.yml
   vars_files:
     - vars/main.yml
     - vars/system.yml
@@ -23,15 +25,41 @@
       when: ansible_os_family == 'Rocky' or ansible_os_family == 'AlmaLinux'
       tags: always
 
-    - name: Checking Linux distribution
+    - name: '[Pre-Check] Checking Linux distribution'
       fail:
         msg: "{{ ansible_distribution }} is not supported"
       when: ansible_distribution not in os_valid_distributions
 
-    - name: Checking version of OS Linux
+    - name: '[Pre-Check] Checking version of OS Linux'
       fail:
         msg: "{{ ansible_distribution_version }} of {{ ansible_distribution }} is not supported"
       when: ansible_distribution_version is version_compare(os_minimum_versions[ansible_distribution], '<')
+
+    - name: '[Pre-Check] Check if there is a node with new_node set to true'
+      set_fact:
+        new_nodes: "{{ new_nodes | default([]) + [item] }}"
+      when: hostvars[item]['new_node'] | default(false) | bool
+      loop: "{{ groups['replica'] }}"
+      tags: always
+
+    # Stop, if no nodes found with new_node variable
+    - name: "Pre-Check error. No nodes found with new_node set to true"
+      run_once: true
+      fail:
+        msg: "Please specify the new_node=true variable for the new server to add it to the existing cluster."
+      when: new_nodes | default([]) | length < 1
+
+    - name: Print a list of new nodes
+      run_once: true
+      debug:
+        var: new_nodes
+      tags: always
+
+    - name: Add a new node to pg_hba.conf on existing cluster nodes
+      include_role:
+        name: patroni/config
+        tasks_from: pg_hba
+      when: not new_node | default(false) | bool
 
     - name: Update apt cache
       apt:
@@ -42,7 +70,10 @@
       delay: 5
       retries: 3
       environment: "{{ proxy_env | default({}) }}"
-      when: ansible_os_family == "Debian" and installation_method == "repo"
+      when:
+        - new_node | default(false) | bool
+        - ansible_os_family == "Debian"
+        - installation_method == "repo"
 
     - name: Make sure the gnupg and apt-transport-https packages are present
       apt:
@@ -55,20 +86,27 @@
       delay: 5
       retries: 3
       environment: "{{ proxy_env | default({}) }}"
-      when: ansible_os_family == "Debian" and installation_method == "repo"
+      when:
+        - new_node | default(false) | bool
+        - ansible_os_family == "Debian"
+        - installation_method == "repo"
 
     - name: Build a firewall_ports_dynamic_var
       set_fact:
         firewall_ports_dynamic_var: "{{ firewall_ports_dynamic_var | default([]) + (firewall_allowed_tcp_ports_for[item]) }}"
       loop: "{{ hostvars[inventory_hostname].group_names }}"
-      when: firewall_enabled_at_boot|bool
+      when:
+        - new_node | default(false) | bool
+        - firewall_enabled_at_boot | bool
       tags: firewall
 
     - name: Build a firewall_rules_dynamic_var
       set_fact:
         firewall_rules_dynamic_var: "{{ firewall_rules_dynamic_var | default([]) + (firewall_additional_rules_for[item]) }}"
       loop: "{{ hostvars[inventory_hostname].group_names }}"
-      when: firewall_enabled_at_boot|bool
+      when:
+        - new_node | default(false) | bool
+        - firewall_enabled_at_boot | bool
       tags: firewall
 
   roles:
@@ -77,9 +115,51 @@
       vars:
         firewall_allowed_tcp_ports: "{{ firewall_ports_dynamic_var | unique }}"
         firewall_additional_rules: "{{ firewall_rules_dynamic_var | unique }}"
-      when: firewall_enabled_at_boot|bool
+      when:
+        - new_node | default(false) | bool
+        - firewall_enabled_at_boot | bool
       tags: firewall
 
+    - role: sysctl
+      when:
+        - new_node | default(false) | bool
+
+    - role: ssh-keys
+      when:
+        - enable_ssh_key_based_authentication | default(false) | bool
+
+  tasks:
+    - name: Add host to group new_replica (in-memory inventory)
+      add_host:
+        name: "{{ item }}"
+        groups: new_replica
+      loop: "{{ new_nodes }}"
+      changed_when: false
+      tags: always
+
+- hosts: new_replica
+  become: true
+  become_method: sudo
+  gather_facts: true
+  any_errors_fatal: true
+  vars_files:
+    - vars/main.yml
+    - vars/system.yml
+
+  pre_tasks:
+    - name: Include OS-specific variables
+      include_vars: "vars/{{ ansible_os_family }}.yml"
+      when: not ansible_os_family == 'Rocky' and not ansible_os_family == 'AlmaLinux'
+      tags: always
+
+    # For compatibility with Ansible old versions
+    # (support for RockyLinux and AlmaLinux has been added to Ansible 2.11)
+    - name: Include OS-specific variables
+      include_vars: "vars/RedHat.yml"
+      when: ansible_os_family == 'Rocky' or ansible_os_family == 'AlmaLinux'
+      tags: always
+
+  roles:
     - role: hostname
     - role: resolv_conf
     - role: etc_hosts
@@ -87,17 +167,15 @@
     - role: packages
     - role: sudo
     - role: swap
-    - role: sysctl
     - role: transparent_huge_pages
     - role: pam_limits
     - role: io-scheduler
     - role: locales
     - role: timezone
     - role: ntp
-    - role: ssh-keys
     - role: copy
 
-- hosts: pgbackrest:postgres_cluster
+- hosts: pgbackrest:new_replica
   become: true
   become_method: sudo
   gather_facts: true
@@ -124,7 +202,7 @@
   when: dcs_type == "consul"
   tags: consul
 
-- hosts: replica
+- hosts: new_replica
   become: true
   become_method: sudo
   gather_facts: true
