@@ -144,14 +144,14 @@
 
     - name: Build a firewall_ports_dynamic_var
       set_fact:
-        firewall_ports_dynamic_var: "{{ firewall_ports_dynamic_var | default([]) + (firewall_allowed_tcp_ports_for[item]) }}"
+        firewall_ports_dynamic_var: "{{ firewall_ports_dynamic_var | default([]) + (firewall_allowed_tcp_ports_for[item] | default([])) }}"
       loop: "{{ hostvars[inventory_hostname].group_names }}"
       when: firewall_enabled_at_boot|bool
       tags: firewall
 
     - name: Build a firewall_rules_dynamic_var
       set_fact:
-        firewall_rules_dynamic_var: "{{ firewall_rules_dynamic_var | default([]) + (firewall_additional_rules_for[item]) }}"
+        firewall_rules_dynamic_var: "{{ firewall_rules_dynamic_var | default([]) + (firewall_additional_rules_for[item] | default([])) }}"
       loop: "{{ hostvars[inventory_hostname].group_names }}"
       when: firewall_enabled_at_boot|bool
       tags: firewall
