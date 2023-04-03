@@ -6,7 +6,7 @@
 - block:
     - name: Build a sysctl_conf dynamic variable
       set_fact:
-        sysctl_conf_dynamic_var: "{{ sysctl_conf_dynamic_var | default([]) + (sysctl_conf[item] | flatten(1)) }}"
+        sysctl_conf_dynamic_var: "{{ sysctl_conf_dynamic_var | default([]) + (sysctl_conf[item] | default([]) | flatten(1)) }}"
       loop: "{{ hostvars[inventory_hostname].group_names }}"
 
     - name: Setting kernel parameters
@@ -16,8 +16,8 @@
         sysctl_set: true
         state: present
         reload: true
-      loop: "{{ sysctl_conf_dynamic_var | unique }}"
-      when: sysctl_conf_dynamic_var | length > 0
+      loop: "{{ sysctl_conf_dynamic_var | default([]) | unique }}"
+      when: sysctl_conf_dynamic_var | default([]) | length > 0
   ignore_errors: true
   when: sysctl_set|bool
   tags: sysctl, kernel
