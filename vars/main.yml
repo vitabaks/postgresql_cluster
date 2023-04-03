@@ -281,6 +281,7 @@ pgbouncer_listen_port: 6432
 pgbouncer_max_client_conn: 10000
 pgbouncer_max_db_connections: 1000
 pgbouncer_default_pool_size: 20
+pgbouncer_query_wait_timeout: 120
 pgbouncer_default_pool_mode: "session"
 pgbouncer_admin_users: "postgres"  # comma-separated list of users, who are allowed to change settings
 pgbouncer_stats_users: "postgres"  # comma-separated list of users who are just allowed to use SHOW command
