@@ -25,6 +25,7 @@ pool_mode = {{ pgbouncer_default_pool_mode }}
 server_reset_query = DISCARD ALL
 max_client_conn = {{ pgbouncer_max_client_conn }}
 default_pool_size = {{ pgbouncer_default_pool_size }}
+query_wait_timeout = {{ pgbouncer_query_wait_timeout }}
 reserve_pool_size = 1
 reserve_pool_timeout = 1
 max_db_connections = {{ pgbouncer_max_db_connections }}
