@@ -1,0 +1,29 @@
+---
+# Variables for the upgrade_postgres.yml playbook
+
+pg_old_version: ""  # specify the old version of PostgreSQL
+pg_old_bindir: "/usr/lib/postgresql/{{ pg_old_version }}/bin"
+pg_old_datadir: "{{ postgresql_data_dir | regex_replace(postgresql_version, pg_old_version) }}"
+pg_old_confdir: "{{ postgresql_conf_dir | regex_replace(postgresql_version, pg_old_version) }}"
+
+pg_new_version: ""  # specify the new version of PostgreSQL
+pg_new_bindir: "/usr/lib/postgresql/{{ pg_new_version }}/bin"
+pg_new_datadir: "{{ postgresql_data_dir | regex_replace(postgresql_version, pg_new_version) }}"
+pg_new_confdir: "{{ postgresql_conf_dir | regex_replace(postgresql_version, pg_new_version) }}"
+# pg_upper_datadir - defines the top-level directory
+# (example: /var/lib/postgresql, /var/lib/pgsql, /pgdata)
+pg_upper_datadir: "{{ pg_new_datadir | dirname | dirname }}"
+# custom WAL dir path (symlink will be created) [optional]
+pg_new_wal_dir: "{{ postgresql_wal_dir | regex_replace(postgresql_version, pg_new_version) }}"
+
+pg_start_stop_timeout: 1800  # 30 minutes
+patroni_config_file: /etc/patroni/patroni.yml
+
+schema_compatibility_check: true  # if 'true', before the upgrade, check the compatibility of the database schema with the new PostgreSQL
+schema_compatibility_check_timeout: 3600  # seconds. The maximum check duration is 1 hour (pg_dumpall --schema-only)
+update_extensions: true  # if 'true', try to update extensions automatically
+
+max_replication_lag_bytes: 10485760  # 10 MiB
+max_transaction_sec: 15  # seconds
+
+...

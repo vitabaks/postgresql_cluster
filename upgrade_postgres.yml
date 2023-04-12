@@ -1,0 +1,365 @@
+---
+# TODO:
+# - enable_ssh_key_based_authentication
+# - delete_old_cluster dir
+
+- name: "Upgrade PostgreSQL {{ pg_old_version }} to version {{ pg_new_version }} (on the cluster {{ patroni_cluster_name }})"
+  hosts: postgres_cluster
+  gather_facts: true
+  become: true
+  become_user: postgres
+  any_errors_fatal: true
+  vars_files:
+    - vars/main.yml
+  pre_tasks:
+    # Stop, if pg_old_version, pg_new_version are not defined
+    - name: Make sure that the required variables are specified
+      fail:
+        msg:
+          - "One or more required variables have empty values."
+          - "Please specify a value for the variables: pg_old_version, pg_new_version"
+      when: pg_old_version | length < 1 or pg_new_version | length < 1
+    # Stop, if the directories of the old and new versions are the same
+    - name: "Ensure pg_old and pg_new data and config dirs are not the same"
+      fail:
+        msg:
+          - "pg_old_datadir and pg_new_datadir, pg_old_confdir and pg_new_confdir must not be the same."
+          - "Please check your configuration (vars/upgrade.yml)"
+      when: (pg_old_datadir == pg_new_datadir) or (pg_old_confdir == pg_new_confdir)
+  tasks:
+    - name: '[Prepare] Get Patroni Cluster Name'
+      uri:
+        url: http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/patroni
+      register: patroni_result
+      changed_when: false
+      tags: always
+
+    - name: '[Prepare] Set the variable: patroni_cluster_name'
+      set_fact:
+        patroni_cluster_name: "{{ patroni_result.json.patroni.scope }}"
+      tags: always
+
+    - name: '[Prepare] Get Patroni Cluster Leader Node'
+      uri:
+        url: http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/leader
+        status_code: 200
+      register: patroni_leader_result
+      changed_when: false
+      failed_when: false
+      tags: always
+
+    - name: '[Prepare] Add host to group "primary" (in-memory inventory)'
+      add_host:
+        name: "{{ item }}"
+        groups: primary
+      when: hostvars[item]['patroni_leader_result']['status'] == 200
+      loop: "{{ groups['postgres_cluster'] }}"
+      changed_when: false
+      tags: always
+
+    - name: '[Prepare] Add hosts to group "secondary" (in-memory inventory)'
+      add_host:
+        name: "{{ item }}"
+        groups: secondary
+      when: hostvars[item]['patroni_leader_result']['status'] != 200
+      loop: "{{ groups['postgres_cluster'] }}"
+      changed_when: false
+      tags: always
+
+    - name: "Print Patroni Cluster info"
+      debug:
+        msg:
+          - "Cluster Name: {{ patroni_cluster_name }}"
+          - "Cluster Leader: {{ ansible_hostname }}"
+      when: inventory_hostname in groups['primary']
+      tags: always
+
+- name: "(1/7) PRE-UPGRADE: Perform Pre-Checks"
+  hosts: 'primary:secondary'
+  gather_facts: false
+  become: true
+  become_user: postgres
+  any_errors_fatal: true
+  environment: "{{ proxy_env | default({}) }}"
+  vars_files:
+    - vars/main.yml
+  pre_tasks:
+    - name: Include OS-specific variables
+      include_vars: "vars/{{ ansible_os_family }}.yml"
+      when: not ansible_os_family == 'Rocky' and not ansible_os_family == 'AlmaLinux'
+      tags: always
+    # For compatibility with Ansible old versions
+    # (support for RockyLinux and AlmaLinux has been added to Ansible 2.11)
+    - name: Include OS-specific variables
+      include_vars: "vars/RedHat.yml"
+      when: ansible_os_family == 'Rocky' or ansible_os_family == 'AlmaLinux'
+      tags: always
+    - name: Include upgrade variables
+      include_vars: "vars/upgrade.yml"
+      tags: always
+  tasks:
+    - name: Running Pre-Checks
+      include_role:
+        name: upgrade
+        tasks_from: pre_checks
+  tags:
+    - upgrade
+    - pre-checks
+
+- name: "(2/7) PRE-UPGRADE: Install new PostgreSQL packages"
+  hosts: 'primary:secondary'
+  gather_facts: false
+  become: true
+  become_user: root
+  any_errors_fatal: true
+  environment: "{{ proxy_env | default({}) }}"
+  vars_files:
+    - vars/main.yml
+  pre_tasks:
+    - name: Include OS-specific variables
+      include_vars: "vars/{{ ansible_os_family }}.yml"
+      when: not ansible_os_family == 'Rocky' and not ansible_os_family == 'AlmaLinux'
+      tags: always
+    # For compatibility with Ansible old versions
+    # (support for RockyLinux and AlmaLinux has been added to Ansible 2.11)
+    - name: Include OS-specific variables
+      include_vars: "vars/RedHat.yml"
+      when: ansible_os_family == 'Rocky' or ansible_os_family == 'AlmaLinux'
+      tags: always
+    - name: Include upgrade variables
+      include_vars: "vars/upgrade.yml"
+      tags: always
+  tasks:
+    - name: Install packages
+      include_role:
+        name: upgrade
+        tasks_from: packages
+  tags:
+    - upgrade
+    - packages
+
+- name: "(3/7) PRE-UPGRADE: Initialize new db, schema compatibility check, and pg_upgrade --check"
+  hosts: 'primary:secondary'
+  gather_facts: false
+  become: true
+  become_user: postgres
+  any_errors_fatal: true
+  vars_files:
+    - vars/main.yml
+  pre_tasks:
+    - name: Include OS-specific variables
+      include_vars: "vars/{{ ansible_os_family }}.yml"
+      when: not ansible_os_family == 'Rocky' and not ansible_os_family == 'AlmaLinux'
+      tags: always
+    # For compatibility with Ansible old versions
+    # (support for RockyLinux and AlmaLinux has been added to Ansible 2.11)
+    - name: Include OS-specific variables
+      include_vars: "vars/RedHat.yml"
+      when: ansible_os_family == 'Rocky' or ansible_os_family == 'AlmaLinux'
+      tags: always
+    - name: Include upgrade variables
+      include_vars: "vars/upgrade.yml"
+      tags: always
+  tasks:
+    - name: Create Data directory and initdb
+      include_role:
+        name: upgrade
+        tasks_from: initdb
+
+    - name: Check Schema Compatibility
+      import_role:
+        name: upgrade
+        tasks_from: schema_compatibility
+      when: schema_compatibility_check | bool
+
+    - name: Check pg_upgrade
+      import_role:
+        name: upgrade
+        tasks_from: upgrade_check
+  tags:
+    - upgrade
+    - upgrade-check
+    - schema-compatibility-check
+
+- name: "(4/7) PRE-UPGRADE: Prepare the Patroni configuration"
+  hosts: 'primary:secondary'
+  gather_facts: false
+  become: true
+  become_user: postgres
+  any_errors_fatal: true
+  vars_files:
+    - vars/main.yml
+  pre_tasks:
+    - name: Include OS-specific variables
+      include_vars: "vars/{{ ansible_os_family }}.yml"
+      when: not ansible_os_family == 'Rocky' and not ansible_os_family == 'AlmaLinux'
+      tags: always
+    # For compatibility with Ansible old versions
+    # (support for RockyLinux and AlmaLinux has been added to Ansible 2.11)
+    - name: Include OS-specific variables
+      include_vars: "vars/RedHat.yml"
+      when: ansible_os_family == 'Rocky' or ansible_os_family == 'AlmaLinux'
+      tags: always
+    - name: Include upgrade variables
+      include_vars: "vars/upgrade.yml"
+      tags: always
+  tasks:
+    - name: Patroni config - Target Cluster
+      include_role:
+        name: upgrade
+        tasks_from: update_config
+  tags:
+    - upgrade
+    - update-config
+
+- name: "(5/7) UPGRADE: Upgrade PostgreSQL"
+  hosts: 'primary:secondary'
+  gather_facts: false
+  become: true
+  become_user: postgres
+  any_errors_fatal: true
+  vars_files:
+    - vars/main.yml
+  pre_tasks:
+    - name: Include OS-specific variables
+      include_vars: "vars/{{ ansible_os_family }}.yml"
+      when: not ansible_os_family == 'Rocky' and not ansible_os_family == 'AlmaLinux'
+      tags: always
+    # For compatibility with Ansible old versions
+    # (support for RockyLinux and AlmaLinux has been added to Ansible 2.11)
+    - name: Include OS-specific variables
+      include_vars: "vars/RedHat.yml"
+      when: ansible_os_family == 'Rocky' or ansible_os_family == 'AlmaLinux'
+      tags: always
+    - name: Include upgrade variables
+      include_vars: "vars/upgrade.yml"
+      tags: always
+  tasks:
+    - name: Stop Services
+      include_role:
+        name: upgrade
+        tasks_from: stop_services
+
+    - name: Upgrade Primary
+      include_role:
+        name: upgrade
+        tasks_from: upgrade_primary
+
+    - name: Upgrade Secondary
+      include_role:
+        name: upgrade
+        tasks_from: upgrade_secondary
+
+    - name: Remove old cluster from DCS
+      include_role:
+        name: upgrade
+        tasks_from: dcs_remove_cluster
+
+    - name: Start Services
+      include_role:
+        name: upgrade
+        tasks_from: start_services
+  tags:
+    - upgrade
+
+- name: "(6/7) POST-UPGRADE: Perform Post-Checks and Update extensions"
+  hosts: 'primary:secondary'
+  gather_facts: false
+  become: true
+  become_user: postgres
+  any_errors_fatal: true
+  vars_files:
+    - vars/main.yml
+  pre_tasks:
+    - name: Include OS-specific variables
+      include_vars: "vars/{{ ansible_os_family }}.yml"
+      when: not ansible_os_family == 'Rocky' and not ansible_os_family == 'AlmaLinux'
+      tags: always
+    # For compatibility with Ansible old versions
+    # (support for RockyLinux and AlmaLinux has been added to Ansible 2.11)
+    - name: Include OS-specific variables
+      include_vars: "vars/RedHat.yml"
+      when: ansible_os_family == 'Rocky' or ansible_os_family == 'AlmaLinux'
+      tags: always
+    - name: Include upgrade variables
+      include_vars: "vars/upgrade.yml"
+      tags: always
+  tasks:
+    - name: Running Post-Checks
+      include_role:
+        name: upgrade
+        tasks_from: post_checks
+
+    - name: Update extensions
+      include_role:
+        name: upgrade
+        tasks_from: update_extensions
+      when: update_extensions | bool
+  tags:
+    - upgrade
+    - post-checks
+    - update-extensions
+
+- name: "(7/7) POST-UPGRADE: Analyze a PostgreSQL database (update optimizer statistics)"
+  hosts: 'primary'
+  gather_facts: false
+  become: true
+  become_user: postgres
+  any_errors_fatal: true
+  vars_files:
+    - vars/main.yml
+  pre_tasks:
+    - name: Include OS-specific variables
+      include_vars: "vars/{{ ansible_os_family }}.yml"
+      when: not ansible_os_family == 'Rocky' and not ansible_os_family == 'AlmaLinux'
+      tags: always
+    # For compatibility with Ansible old versions
+    # (support for RockyLinux and AlmaLinux has been added to Ansible 2.11)
+    - name: Include OS-specific variables
+      include_vars: "vars/RedHat.yml"
+      when: ansible_os_family == 'Rocky' or ansible_os_family == 'AlmaLinux'
+      tags: always
+    - name: Include upgrade variables
+      include_vars: "vars/upgrade.yml"
+      tags: always
+  tasks:
+    - name: Analyze database
+      include_role:
+        name: upgrade
+        tasks_from: statistics
+
+    # finish (info)
+    - name: Check the Patroni cluster state
+      run_once: true
+      become: true
+      become_user: postgres
+      command: patronictl -c /etc/patroni/patroni.yml list
+      register: patronictl_result
+      changed_when: false
+      environment:
+        PATH: "{{ ansible_env.PATH }}:/usr/bin:/usr/local/bin"
+
+    - name: Check the current PostgreSQL version
+      run_once: true
+      command: psql -tAXc "select current_setting('server_version')"
+      register: postgres_version
+      changed_when: false
+
+    - name: List the Patroni cluster members
+      run_once: true
+      debug:
+        msg: "{{ patronictl_result.stdout_lines }}"
+      when: patronictl_result.stdout_lines is defined
+
+    - name: Update completed
+      run_once: true
+      debug:
+        msg:
+          - "PostgreSQL upgrade completed."
+          - "Current version: {{ postgres_version.stdout }}"
+      when: postgres_version.stdout is defined
+  tags:
+    - update
+    - update-extensions
+
+...

@@ -1,0 +1,41 @@
+---
+# Upgrade with pg_upgrade (hard-links)
+
+- name: "Upgrade the PostgreSQL to version {{ pg_new_version }} on the Primary (using pg_upgrade --link)"
+  command: >
+    {{ pg_new_bindir }}/pg_upgrade
+    --old-bindir {{ pg_old_bindir }}
+    --new-bindir {{ pg_new_bindir }}
+    --old-datadir {{ pg_old_datadir }}
+    --new-datadir {{ pg_new_datadir }}
+    --old-options "-c config_file={{ pg_old_confdir }}/postgresql.conf"
+    --new-options "-c config_file={{ pg_new_confdir }}/postgresql.conf -c shared_preload_libraries='{{ pg_shared_preload_libraries_value }}'"
+    --jobs={{ ansible_processor_vcpus }}
+    --link
+  register: pg_upgrade_result
+  when:
+    - inventory_hostname in groups['primary']
+
+# If the length of the pg_upgrade_result.stdout_lines is greater than 100 lines,
+# the upgrade_output variable will include the first 70 lines, an ellipsis (...),
+# and the last 30 lines of the pg_upgrade_result.stdout_lines.
+- name: Print the result of the pg_upgrade
+  debug:
+    msg:
+      - "{{ pg_upgrade_result.stdout_lines[:70] }}"
+      - "    ...    "
+      - "{{ pg_upgrade_result.stdout_lines[-30:] }}"
+  when:
+    - inventory_hostname in groups['primary']
+    - pg_upgrade_result.stdout_lines | length > 100
+
+# Otherwise, it will include all lines of the pg_upgrade_result.stdout_lines.
+- name: Print the result of the pg_upgrade
+  debug:
+    msg:
+      - "{{ pg_upgrade_result.stdout_lines }}"
+  when:
+    - inventory_hostname in groups['primary']
+    - pg_upgrade_result.stdout_lines | length <= 100
+
+...

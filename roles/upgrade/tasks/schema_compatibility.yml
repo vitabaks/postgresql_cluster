@@ -1,0 +1,109 @@
+---
+
+- name: Get the current shared_preload_libraries settings
+  command: psql -tAXc "show shared_preload_libraries"
+  changed_when: false
+  register: pg_shared_preload_libraries
+  when:
+    - inventory_hostname in groups['primary']
+
+- name: Check if PostgreSQL is running
+  command: "{{ pg_new_bindir }}/pg_isready -p {{ (postgresql_port | int) + 1 }}"
+  register: pg_ctl_status_result
+  failed_when: false
+  changed_when: false
+  when:
+    - inventory_hostname in groups['primary']
+
+- name: "Start new PostgreSQL on port {{ (postgresql_port | int) + 1 }} to check the schema compatibility"
+  command: >
+    {{ pg_new_bindir }}/pg_ctl -D {{ pg_new_datadir }}
+    -o "-p {{ (postgresql_port | int) + 1 }}
+    -c unix_socket_directories='/tmp'
+    -c shared_preload_libraries='{{ pg_shared_preload_libraries.stdout }}'"
+    start -w -t {{ pg_start_stop_timeout }} -l /tmp/pg_tmp_start.log
+  register: pg_ctl_start_result
+  until: pg_ctl_start_result is success
+  retries: "{{ (pg_start_stop_timeout | int) // 10 }}"
+  delay: 10
+  when:
+    - inventory_hostname in groups['primary']
+    - pg_ctl_status_result.rc != 0
+
+- name: "Check the compatibility of the database schema with the PostgreSQL {{ pg_new_version }}"
+  shell: |
+    set -o pipefail;
+    {{ pg_new_bindir }}/pg_dumpall \
+    -h localhost \
+    -p {{ postgresql_port }} \
+    -U gitlab-superuser \
+    --schema-only | {{ pg_new_bindir }}/psql \
+    -d postgres \
+    -h /tmp \
+    -p {{ (postgresql_port | int) + 1 }} \
+    > /tmp/pg_schema_compatibility_check.log 2>&1
+  args:
+    executable: /bin/bash
+  async: "{{ schema_compatibility_check_timeout }}"  # run the command asynchronously
+  poll: 0
+  register: pg_dumpall_result
+  when:
+    - inventory_hostname in groups['primary']
+
+- name: Wait for the schema compatibility check to complete.
+  async_status:
+    jid: "{{ pg_dumpall_result.ansible_job_id }}"
+  register: pg_dumpall_job_result
+  until: pg_dumpall_job_result.finished
+  retries: "{{ (schema_compatibility_check_timeout | int) // 10 }}"  # the maximum duration
+  delay: 10
+  when:
+    - inventory_hostname in groups['primary']
+
+- name: Checking the result of the schema compatibility
+  shell: >
+    set -o pipefail;
+    grep ERROR /tmp/pg_schema_compatibility_check.log | grep -v "already exists"
+  args:
+    executable: /bin/bash
+  register: pg_schema_compatibility_check_result
+  changed_when: false
+  failed_when: false
+  when:
+    - inventory_hostname in groups['primary']
+
+- name: "Result of checking the compatibility of the scheme - success"
+  debug:
+    msg: "The database schema are compatible with PostgreSQL {{ pg_new_version }}"
+  when:
+    - inventory_hostname in groups['primary']
+    - pg_schema_compatibility_check_result.stdout | length < 1
+
+# Stop, if the scheme is not compatible (there are errors)
+- name: "Result of checking the compatibility of the scheme - error"
+  debug:
+    msg:
+      - "{{ pg_schema_compatibility_check_result.stdout_lines }}"
+      - "The database schema is not compatible with PostgreSQL {{ pg_new_version }}"
+      - "Please check the /tmp/pg_schema_compatibility_check.log on the Primary"
+  failed_when: true
+  when:
+    - inventory_hostname in groups['primary']
+    - pg_schema_compatibility_check_result.stdout | length > 0
+
+- name: Stop PostgreSQL to re-initdb
+  command: >
+    {{ pg_new_bindir }}/pg_ctl -D {{ pg_new_datadir }} stop -w -t {{ pg_start_stop_timeout }}
+  register: pg_ctl_stop_result
+  until: pg_ctl_stop_result.rc == 0
+  retries: "{{ (pg_start_stop_timeout | int) // 10 }}"
+  delay: 10
+  when:
+    - inventory_hostname in groups['primary']
+
+- name: Reinitialize the database after checking schema compatibility
+  include_tasks: "{{ role_path }}/tasks/initdb.yml"
+  when:
+    - inventory_hostname in groups['primary']
+
+...

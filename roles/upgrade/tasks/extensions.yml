@@ -1,0 +1,23 @@
+---
+- name: 'Get the current Patroni Cluster Leader Node'
+  uri:
+    url: http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/leader
+    status_code: 200
+  register: patroni_leader_result
+  changed_when: false
+  failed_when: false
+
+- name: Get a list of databases
+  command: psql -tAXc "select datname from pg_catalog.pg_database where datname <> 'template0'"
+  register: databases_list
+  changed_when: false
+  when:
+    - patroni_leader_result.status == 200
+
+- name: Update extensions in each database
+  include_tasks: update_extensions.yml
+  loop: "{{ databases_list.stdout_lines }}"
+  loop_control:
+    loop_var: pg_target_dbname
+  when: databases_list.stdout_lines is defined
+...

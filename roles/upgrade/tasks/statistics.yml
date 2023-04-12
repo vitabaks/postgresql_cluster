@@ -1,0 +1,22 @@
+---
+# ANALYZE: Update optimizer statistics
+
+- name: "Run vacuumdb to analyze the PostgreSQL databases"
+  command: >
+    {{ pg_new_bindir }}/vacuumdb -p {{ postgresql_port }}
+    --all --analyze-in-stages --jobs={{ ansible_processor_vcpus }}
+  async: 3600  # run the command asynchronously with a maximum duration of 1 hour
+  poll: 0
+  register: vacuumdb_analyze
+  ignore_errors: true  # ignore errors if the task runs for over an hour.
+
+- name: Collecting statistics in progress. Wait for the analyze to complete.
+  async_status:
+    jid: "{{ vacuumdb_analyze.ansible_job_id }}"
+  register: vacuumdb_analyze_job_result
+  until: vacuumdb_analyze_job_result.finished
+  retries: 120
+  delay: 30
+  ignore_errors: true  # ignore errors if the task runs for over an hour.
+
+...

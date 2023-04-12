@@ -1,0 +1,68 @@
+---
+
+- name: "Execute CHECKPOINT before stopping PostgreSQL"
+  command: psql -tAXc "CHECKPOINT"
+  async: "{{ pg_start_stop_timeout | int }}"  # run the command asynchronously
+  poll: 0
+  register: checkpoint_result
+
+- name: Wait for the CHECKPOINT to complete
+  async_status:
+    jid: "{{ checkpoint_result.ansible_job_id }}"
+  register: checkpoint_job_result
+  until: checkpoint_job_result.finished
+  retries: "{{ (pg_start_stop_timeout | int) // 10 }}"
+  delay: 10
+
+- name: Stop Patroni service on the Cluster Replica
+  become: true
+  become_user: root
+  service:
+    name: patroni
+    state: stopped
+  when: inventory_hostname in groups['secondary']
+
+- name: Stop Patroni service on the Cluster Leader
+  become: true
+  become_user: root
+  service:
+    name: patroni
+    state: stopped
+  when: inventory_hostname in groups['primary']
+
+# additional checks using pg_ctl
+- name: "Check if PostgreSQL {{ pg_old_version }} is stopped"
+  command: "{{ pg_old_bindir }}/pg_ctl status -D {{ pg_old_datadir }}"
+  register: pg_ctl_status_old_result
+  failed_when: false
+  changed_when: false
+
+- name: "Check if PostgreSQL {{ pg_new_version }} is stopped"
+  command: "{{ pg_new_bindir }}/pg_ctl status -D {{ pg_new_datadir }}"
+  register: pg_ctl_status_new_result
+  failed_when: false
+  changed_when: false
+
+- name: "Stop PostgreSQL {{ pg_old_version }}"
+  command: >
+    {{ pg_old_bindir }}/pg_ctl -D {{ pg_old_datadir }} stop -w -t {{ pg_start_stop_timeout }}
+  register: pg_ctl_stop_old_result
+  until: pg_ctl_stop_old_result.rc == 0
+  retries: "{{ (pg_start_stop_timeout | int) // 10 }}"
+  delay: 10
+  when:
+    - pg_ctl_status_old_result is defined
+    - pg_ctl_status_old_result.rc == 0
+
+- name: "Stop PostgreSQL {{ pg_new_version }}"
+  command: >
+    {{ pg_new_bindir }}/pg_ctl -D {{ pg_new_datadir }} stop -w -t {{ pg_start_stop_timeout }}
+  register: pg_ctl_stop_new_result
+  until: pg_ctl_stop_new_result.rc == 0
+  retries: "{{ (pg_start_stop_timeout | int) // 10 }}"
+  delay: 10
+  when:
+    - pg_ctl_status_new_result is defined
+    - pg_ctl_status_new_result.rc == 0
+
+...
