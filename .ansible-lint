@@ -20,6 +20,8 @@ skip_list:
   - command-instead-of-module  # Using command rather than module where necessary
   - fqcn[action]
   - no-relative-paths
+  - key-order[task]  # TODO
+  - no-free-form
 
 exclude_paths:
   - roles/consul/ # TODO - https://github.com/ansible-community/ansible-consul/pull/520
