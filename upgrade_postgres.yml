@@ -293,7 +293,7 @@
     - name: Update extensions
       include_role:
         name: upgrade
-        tasks_from: update_extensions
+        tasks_from: extensions
       when: update_extensions | bool
   tags:
     - upgrade
