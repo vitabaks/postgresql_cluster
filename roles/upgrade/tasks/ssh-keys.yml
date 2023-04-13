@@ -10,6 +10,7 @@
 - name: Get public SSH keys from remote servers
   slurp:
     src: "~{{ ssh_key_user }}/.ssh/id_rsa.pub"
+  loop: "{{ groups['postgres_cluster'] }}"
   register: ssh_pubkeys
   changed_when: false
 
@@ -17,9 +18,9 @@
   authorized_key:
     user: "{{ ssh_key_user }}"
     state: present
-    key: "{{ hostvars[item].ssh_pubkeys['content'] | b64decode }}"
-  loop: "{{ groups['postgres_cluster'] }}"
-  when: item != inventory_hostname
+    key: "{{ item['content'] | b64decode }}"
+  loop: "{{ ssh_pubkeys.results }}"
+  no_log: true  # don't show public keys
 
 # known_hosts
 - name: known_hosts | for each host, scan for its ssh public key
@@ -35,7 +36,7 @@
     name: "{{ item.item }}"
     key: "{{ item.stdout }}"
     path: "~{{ ssh_key_user }}/.ssh/known_hosts"
-  no_log: true
   loop: "{{ ssh_known_host_results.results }}"
+  no_log: true  # don't show public keys
 
 ...

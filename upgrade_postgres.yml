@@ -1,6 +1,5 @@
 ---
 # TODO:
-# - enable_ssh_key_based_authentication
 # - delete_old_cluster dir
 # - custom WAL dir symlink (pg_new_wal_dir)
 - name: "Upgrade PostgreSQL {{ pg_old_version }} to version {{ pg_new_version }} (on the cluster {{ patroni_cluster_name }})"
