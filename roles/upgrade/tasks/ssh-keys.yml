@@ -8,6 +8,7 @@
     ssh_key_file: .ssh/id_rsa
 
 - name: Get public SSH keys from remote servers
+  run_once: true
   slurp:
     src: "~{{ ssh_key_user }}/.ssh/id_rsa.pub"
   loop: "{{ groups['postgres_cluster'] }}"
