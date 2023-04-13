@@ -15,8 +15,8 @@
     jid: "{{ vacuumdb_analyze.ansible_job_id }}"
   register: vacuumdb_analyze_job_result
   until: vacuumdb_analyze_job_result.finished
-  retries: 120
-  delay: 30
+  retries: 360  # max wait time: 1 hour
+  delay: 10
   ignore_errors: true  # ignore errors if the task runs for over an hour.
 
 ...
