@@ -122,6 +122,13 @@
     - pg_long_transactions.stdout is defined
     - pg_long_transactions.stdout | length > 0
 
+# SSH Keys (required for upgrade replicas with rsync)
+- name: '[Pre-Check] Make sure that SSH key-based authentication is configured between cluster nodes'
+  include_tasks:
+    name: ssh-keys
+  vars:
+    ssh_key_user: postgres
+
 # Rsync Checks
 - name: '[Pre-Check] Make sure that the rsync package are installed'
   package:

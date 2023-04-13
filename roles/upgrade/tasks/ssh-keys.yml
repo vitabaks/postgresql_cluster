@@ -1,0 +1,41 @@
+---
+# Configure SSH Key-Based Authentication between cluster nodes
+
+- name: Make sure the SSH key for user "{{ ssh_key_user }}" exists
+  user:
+    name: "{{ ssh_key_user }}"
+    generate_ssh_key: true
+    ssh_key_file: .ssh/id_rsa
+
+- name: Get public SSH keys from remote servers
+  slurp:
+    src: "~{{ ssh_key_user }}/.ssh/id_rsa.pub"
+  register: ssh_pubkeys
+  changed_when: false
+
+- name: Add public SSH keys to authorized_keys
+  authorized_key:
+    user: "{{ ssh_key_user }}"
+    state: present
+    key: "{{ hostvars[item].ssh_pubkeys['content'] | b64decode }}"
+  loop: "{{ groups['postgres_cluster'] }}"
+  when: item != inventory_hostname
+
+# known_hosts
+- name: known_hosts | for each host, scan for its ssh public key
+  command: "ssh-keyscan -trsa -p {{ ansible_ssh_port | default(22) }} {{ item }}"
+  loop: "{{ groups['postgres_cluster'] }}"
+  register: ssh_known_host_results
+  changed_when: false
+
+- name: known_hosts | for each host, add/update the public key in the "~{{ ssh_key_user }}/.ssh/known_hosts"
+  become: true
+  become_user: "{{ ssh_key_user }}"
+  known_hosts:
+    name: "{{ item.item }}"
+    key: "{{ item.stdout }}"
+    path: "~{{ ssh_key_user }}/.ssh/known_hosts"
+  no_log: true
+  loop: "{{ ssh_known_host_results.results }}"
+
+...
