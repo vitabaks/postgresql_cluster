@@ -351,7 +351,7 @@
         msg: "{{ patronictl_result.stdout_lines }}"
       when: patronictl_result.stdout_lines is defined
 
-    - name: Update completed
+    - name: Upgrade completed
       run_once: true
       debug:
         msg:
