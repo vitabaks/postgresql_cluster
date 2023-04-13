@@ -155,7 +155,7 @@
   copy:
     src: "{{ pg_old_confdir }}/pg_hba.conf"
     dest: "{{ pg_new_confdir }}"
-    owner: "{{ os_pg_user }}"
+    owner: postgres
     mode: '0600'
     force: true
     remote_src: true
