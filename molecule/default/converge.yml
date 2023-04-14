@@ -16,6 +16,28 @@
         consul_bootstrap_expect: true  # if dcs_type: "consul"
         cacheable: true
 
+    - name: Clean yum cache (molecule containers)
+      command: yum clean all
+      when:
+        - ansible_os_family == "RedHat"
+        - ansible_distribution_major_version == '7'
+
+    - name: Clean dnf cache (molecule containers)
+      command: dnf clean all
+      when:
+        - ansible_os_family == "RedHat"
+        - ansible_distribution_major_version is version('8', '>=')
+
+    - name: Update apt cache (molecule containers)
+      apt:
+        update_cache: true
+        cache_valid_time: 3600
+      register: apt_status
+      until: apt_status is success
+      delay: 5
+      retries: 3
+      when: ansible_os_family == "Debian"
+
     - name: Install openssh-server package (molecule containers)
       become: true
       package:
