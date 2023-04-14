@@ -124,8 +124,7 @@
 
 # SSH Keys (required for upgrade replicas with rsync)
 - name: '[Pre-Check] Make sure that SSH key-based authentication is configured between cluster nodes'
-  include_tasks:
-    name: ssh-keys
+  include_tasks: ssh-keys.yml
   vars:
     ssh_key_user: postgres
 
