@@ -24,17 +24,21 @@
       tags: always
     # Stop, if pg_old_version, pg_new_version are not defined
     - name: Make sure that the required variables are specified
-      fail:
+      run_once: true
+      debug:
         msg:
           - "One or more required variables have empty values."
           - "Please specify a value for the variables: pg_old_version, pg_new_version"
+      failed_when: pg_old_version | length < 1 or pg_new_version | length < 1
       when: pg_old_version | length < 1 or pg_new_version | length < 1
     # Stop, if the directories of the old and new versions are the same
     - name: "Ensure pg_old and pg_new data and config dirs are not the same"
-      fail:
+      run_once: true
+      debug:
         msg:
           - "pg_old_datadir and pg_new_datadir, pg_old_confdir and pg_new_confdir must not be the same."
           - "Please check your configuration (vars/upgrade.yml)"
+      failed_when: (pg_old_datadir == pg_new_datadir) or (pg_old_confdir == pg_new_confdir)
       when: (pg_old_datadir == pg_new_datadir) or (pg_old_confdir == pg_new_confdir)
   tasks:
     - name: '[Prepare] Get Patroni Cluster Leader Node'
