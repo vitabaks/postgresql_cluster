@@ -26,6 +26,7 @@
     --link
     --check
   changed_when: false
+  failed_when: false
   register: pg_upgrade_check_result
   when:
     - inventory_hostname in groups['primary']
