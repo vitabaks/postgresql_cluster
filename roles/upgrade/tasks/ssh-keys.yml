@@ -3,6 +3,7 @@
 
 - name: Make sure that the openssh-client package is installed
   become: true
+  become_user: root
   package:
     name: openssh-client
     state: present
@@ -10,6 +11,7 @@
 
 - name: Make sure that the openssh-clients package is installed
   become: true
+  become_user: root
   package:
     name: openssh-clients
     state: present
