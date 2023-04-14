@@ -10,7 +10,18 @@
   any_errors_fatal: true
   vars_files:
     - vars/main.yml
+    - vars/upgrade.yml
   pre_tasks:
+    - name: Include OS-specific variables
+      include_vars: "vars/{{ ansible_os_family }}.yml"
+      when: not ansible_os_family == 'Rocky' and not ansible_os_family == 'AlmaLinux'
+      tags: always
+    # For compatibility with Ansible old versions
+    # (support for RockyLinux and AlmaLinux has been added to Ansible 2.11)
+    - name: Include OS-specific variables
+      include_vars: "vars/RedHat.yml"
+      when: ansible_os_family == 'Rocky' or ansible_os_family == 'AlmaLinux'
+      tags: always
     # Stop, if pg_old_version, pg_new_version are not defined
     - name: Make sure that the required variables are specified
       fail:
@@ -26,18 +37,6 @@
           - "Please check your configuration (vars/upgrade.yml)"
       when: (pg_old_datadir == pg_new_datadir) or (pg_old_confdir == pg_new_confdir)
   tasks:
-    - name: '[Prepare] Get Patroni Cluster Name'
-      uri:
-        url: http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/patroni
-      register: patroni_result
-      changed_when: false
-      tags: always
-
-    - name: '[Prepare] Set the variable: patroni_cluster_name'
-      set_fact:
-        patroni_cluster_name: "{{ patroni_result.json.patroni.scope }}"
-      tags: always
-
     - name: '[Prepare] Get Patroni Cluster Leader Node'
       uri:
         url: http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/leader
