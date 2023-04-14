@@ -36,7 +36,7 @@
     {{ pg_new_bindir }}/pg_dumpall \
     -h localhost \
     -p {{ postgresql_port }} \
-    -U gitlab-superuser \
+    -U postgres \
     --schema-only | {{ pg_new_bindir }}/psql \
     -d postgres \
     -h /tmp \
