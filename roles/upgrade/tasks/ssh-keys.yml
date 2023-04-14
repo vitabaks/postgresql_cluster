@@ -1,6 +1,20 @@
 ---
 # Configure SSH Key-Based Authentication between cluster nodes
 
+- name: Make sure that the openssh-client package is installed
+  become: true
+  package:
+    name: openssh-client
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Make sure that the openssh-clients package is installed
+  become: true
+  package:
+    name: openssh-clients
+    state: present
+  when: ansible_os_family == "RedHat"
+
 - name: Make sure the SSH key for user "{{ ssh_key_user }}" exists
   user:
     name: "{{ ssh_key_user }}"
