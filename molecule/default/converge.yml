@@ -47,7 +47,7 @@
     - name: Start ssh service (molecule containers)
       become: true
       systemd:
-        name: ssh
+        name: "{{ 'ssh' if ansible_os_family == 'Debian' else 'sshd' }}"
         state: started
         enabled: true
 
