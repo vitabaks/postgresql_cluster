@@ -23,21 +23,30 @@
     generate_ssh_key: true
     ssh_key_file: .ssh/id_rsa
 
-- name: Get public SSH keys from remote servers
-  run_once: true
-  slurp:
+- name: Fetch public SSH keys from database servers
+  fetch:
     src: "~{{ ssh_key_user }}/.ssh/id_rsa.pub"
-  loop: "{{ groups['postgres_cluster'] }}"
-  register: ssh_pubkeys
+    dest: "files/{{ inventory_hostname }}-id_rsa.pub"
+    flat: true
   changed_when: false
 
 - name: Add public SSH keys to authorized_keys
   authorized_key:
     user: "{{ ssh_key_user }}"
     state: present
-    key: "{{ item['content'] | b64decode }}"
-  loop: "{{ ssh_pubkeys.results }}"
-  no_log: true  # don't show public keys
+    key: "{{ lookup('pipe','cat files/*id_rsa.pub') }}"
+    exclusive: false
+
+- name: Remove public SSH keys from localhost
+  run_once: true
+  become: true
+  become_user: "{{ lookup('env', 'USER') }}"
+  file:
+    path: files/{{ item }}-id_rsa.pub
+    state: absent
+  loop: "{{ groups['postgres_cluster'] }}"
+  delegate_to: localhost
+  changed_when: false
 
 # known_hosts
 - name: known_hosts | for each host, scan for its ssh public key
