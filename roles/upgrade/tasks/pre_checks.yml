@@ -130,6 +130,8 @@
 
 # Rsync Checks
 - name: '[Pre-Check] Make sure that the rsync package are installed'
+  become: true
+  become_user: root
   package:
     name: rsync
     state: present
