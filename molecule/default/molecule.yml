@@ -18,6 +18,7 @@ platforms:
       - name: test_docker_network
         ipv4_address: 10.172.0.20
     exposed_ports:
+      - 22/tcp
       - 2379/tcp  # if dcs_type: "etcd"
       - 2380/tcp  # if dcs_type: "etcd"
       - 8300/tcp  # if dcs_type: "consul"
@@ -48,6 +49,7 @@ platforms:
       - name: test_docker_network
         ipv4_address: 10.172.0.21
     exposed_ports:
+      - 22/tcp
       - 2379/tcp
       - 2380/tcp
       - 8300/tcp
@@ -78,6 +80,7 @@ platforms:
       - name: test_docker_network
         ipv4_address: 10.172.0.22
     exposed_ports:
+      - 22/tcp
       - 2379/tcp
       - 2380/tcp
       - 8300/tcp

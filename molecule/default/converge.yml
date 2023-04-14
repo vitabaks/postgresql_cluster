@@ -16,6 +16,19 @@
         consul_bootstrap_expect: true  # if dcs_type: "consul"
         cacheable: true
 
+    - name: Install openssh-server package (molecule containers)
+      become: true
+      package:
+        name: openssh-server
+        state: present
+
+    - name: Start ssh service (molecule containers)
+      become: true
+      systemd:
+        name: ssh
+        state: started
+        enabled: true
+
 - import_playbook: ../../deploy_pgcluster.yml
 
 ...
