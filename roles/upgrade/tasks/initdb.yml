@@ -47,22 +47,21 @@
 # Note: Patroni failure is possible if the default postgresql config files are missing in the /etc/postgresql/...
 # Note: pre-execute the pg_dropcluster command to be able to re-init
 - name: Initialize a new PostgreSQL data directory with default postgresql config files
-  command: >
-    /usr/bin/pg_dropcluster --stop {{ pg_new_version }} {{ postgresql_cluster_name }} ;
+  shell: >
+    /usr/bin/pg_dropcluster --stop {{ pg_new_version }} {{ postgresql_cluster_name }};
     /usr/bin/pg_createcluster {{ pg_new_version }} {{ postgresql_cluster_name }}
-    -d {{ pg_new_datadir }}
-    -e {{ pg_settings.results[0].stdout }}
-    --start-conf manual
-    --
-      --lc-collate={{ pg_settings.results[1].stdout }}
-      --lc-ctype={{ pg_settings.results[2].stdout }}
-      --lc-messages={{ pg_settings.results[3].stdout }}
-      --lc-monetary={{ pg_settings.results[4].stdout }}
-      --lc-numeric={{ pg_settings.results[5].stdout }}
-      --lc-time={{ pg_settings.results[6].stdout }}
-      {% if pg_settings.results[7].stdout == 'on' %}
-      --data-checksums
-      {% endif %}
+    --datadir={{ pg_new_datadir }}
+    --encoding={{ pg_settings.results[0].stdout }}
+    --lc-collate={{ pg_settings.results[1].stdout }}
+    --lc-ctype={{ pg_settings.results[2].stdout }}
+    --lc-messages={{ pg_settings.results[3].stdout }}
+    --lc-monetary={{ pg_settings.results[4].stdout }}
+    --lc-numeric={{ pg_settings.results[5].stdout }}
+    --lc-time={{ pg_settings.results[6].stdout }}
+    --start-conf=manual
+    {% if pg_settings.results[7].stdout == 'on' %}
+    -- --data-checksums
+    {% endif %}
   when:
     - ansible_os_family == "Debian"
     - pg_new_confdir != pg_new_datadir
