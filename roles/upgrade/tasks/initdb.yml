@@ -1,16 +1,5 @@
 ---
 
-- name: Ensure "{{ pg_new_datadir }}" exists and is empty for new PostgreSQL
-  file:
-    path: "{{ pg_new_datadir }}"
-    state: "{{ item }}"
-    mode: 0700
-    group: postgres
-    owner: postgres
-  loop:
-    - absent
-    - directory
-
 - name: Get the current encodig and data_checksums settings
   command: psql -tAXc "show {{ item }}"
   changed_when: false
@@ -24,6 +13,47 @@
     - lc_numeric
     - lc_time
     - data_checksums
+
+- name: Ensure "{{ pg_new_datadir }}" exists and is empty for new PostgreSQL
+  file:
+    path: "{{ pg_new_datadir }}"
+    state: "{{ item }}"
+    mode: 0700
+    group: postgres
+    owner: postgres
+  loop:
+    - absent
+    - directory
+
+# Debian based
+- name: Drop a new PostgreSQL data directory (if exists)
+  command: >
+    /usr/bin/pg_dropcluster --stop {{ pg_new_version }} {{ postgresql_cluster_name }}
+  failed_when: false
+  when:
+    - pg_new_confdir != pg_new_datadir
+    - ansible_os_family == "Debian"
+
+# Use pg_createcluster, if the PostgreSQL configuration is not located in the data directory.
+# Note: Patroni failure is possible if the default postgresql config files are missing in the /etc/postgresql/...
+- name: Initialize a new PostgreSQL data directory with default postgresql config files
+  command: >
+    /usr/bin/pg_createcluster {{ pg_new_version }} {{ postgresql_cluster_name }}
+    --datadir={{ pg_new_datadir }}
+    --encoding={{ pg_settings.results[0].stdout }}
+    --lc-collate={{ pg_settings.results[1].stdout }}
+    --lc-ctype={{ pg_settings.results[2].stdout }}
+    --lc-messages={{ pg_settings.results[3].stdout }}
+    --lc-monetary={{ pg_settings.results[4].stdout }}
+    --lc-numeric={{ pg_settings.results[5].stdout }}
+    --lc-time={{ pg_settings.results[6].stdout }}
+    --start-conf=manual
+    {% if pg_settings.results[7].stdout == 'on' %}
+    -- --data-checksums
+    {% endif %}
+  when:
+    - ansible_os_family == "Debian"
+    - pg_new_confdir != pg_new_datadir
 
 # Use initdb, if the PostgreSQL configuration is located in the data directory.
 - name: Initialize a new PostgreSQL data directory
@@ -42,28 +72,5 @@
     {% endif %}
   when:
     - pg_new_confdir == pg_new_datadir
-
-# Use pg_createcluster, if the PostgreSQL configuration is not located in the data directory.
-# Note: Patroni failure is possible if the default postgresql config files are missing in the /etc/postgresql/...
-# Note: pre-execute the pg_dropcluster command to be able to re-init
-- name: Initialize a new PostgreSQL data directory with default postgresql config files
-  shell: >
-    /usr/bin/pg_dropcluster --stop {{ pg_new_version }} {{ postgresql_cluster_name }};
-    /usr/bin/pg_createcluster {{ pg_new_version }} {{ postgresql_cluster_name }}
-    --datadir={{ pg_new_datadir }}
-    --encoding={{ pg_settings.results[0].stdout }}
-    --lc-collate={{ pg_settings.results[1].stdout }}
-    --lc-ctype={{ pg_settings.results[2].stdout }}
-    --lc-messages={{ pg_settings.results[3].stdout }}
-    --lc-monetary={{ pg_settings.results[4].stdout }}
-    --lc-numeric={{ pg_settings.results[5].stdout }}
-    --lc-time={{ pg_settings.results[6].stdout }}
-    --start-conf=manual
-    {% if pg_settings.results[7].stdout == 'on' %}
-    -- --data-checksums
-    {% endif %}
-  when:
-    - ansible_os_family == "Debian"
-    - pg_new_confdir != pg_new_datadir
 
 ...
