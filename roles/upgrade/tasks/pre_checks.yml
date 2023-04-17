@@ -137,7 +137,8 @@
     state: present
 
 - name: '[Pre-Check] Rsync Checks: create testrsync file on Primary'
-  become: false
+  become: true
+  become_user: postgres
   file:
     path: /tmp/testrsync
     state: touch
@@ -145,7 +146,8 @@
     - inventory_hostname in groups['primary']
 
 - name: '[Pre-Check] Rsync Checks: test rsync and ssh key access'
-  become: false
+  become: true
+  become_user: postgres
   shell: >
     rsync -e "ssh -o StrictHostKeyChecking=no" --archive --delete --hard-links --size-only --no-inc-recursive --omit-dir-times
     /tmp/testrsync {{ item }}:/tmp/
@@ -156,7 +158,8 @@
     - inventory_hostname in groups['primary']
 
 - name: "(TARGET) Cleanup testrsync file"
-  become: false
+  become: true
+  become_user: postgres
   file:
     path: /tmp/testrsync
     state: absent
