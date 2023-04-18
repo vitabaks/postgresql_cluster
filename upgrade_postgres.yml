@@ -2,7 +2,7 @@
 # TODO:
 # - delete_old_cluster dir
 # - custom WAL dir symlink (pg_new_wal_dir)
-- name: "Upgrade PostgreSQL {{ pg_old_version }} to version {{ pg_new_version }} (cluster: {{ patroni_cluster_name }})"
+- name: "Upgrade PostgreSQL {{ pg_old_version }} to version {{ pg_new_version }} (PostgreSQL HA Cluster: {{ patroni_cluster_name }})"
   hosts: postgres_cluster
   gather_facts: true
   become: true
