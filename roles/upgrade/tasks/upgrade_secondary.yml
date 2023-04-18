@@ -1,6 +1,19 @@
 ---
 # Upgrade with rsync (hard-links)
 
+- name: Make sure that the new data directory "{{ pg_new_datadir }}" are empty on the Replica
+  file:
+    path: "{{ pg_new_datadir }}"
+    state: "{{ item }}"
+    mode: 0700
+    group: postgres
+    owner: postgres
+  loop:
+    - absent
+    - directory
+  when:
+    - inventory_hostname in groups['secondary']
+
 # If the source and target directories are inside versioned directories
 # (example: /pgdata/<pg_old_version>/main -> /pgdata/<pg_new_version>/main)
 - name: "Upgrade the PostgreSQL on the Replica (using rsync --hard-links)"
