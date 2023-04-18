@@ -30,7 +30,6 @@
         replace: '  initdb:'
       when: standby_cluster_output.stdout | length > 0
   when:
-    - inventory_hostname in groups['target_cluster']
     - patroni_standby_cluster.host is defined
     - patroni_standby_cluster.host | length > 0
 
@@ -160,7 +159,6 @@
     force: true
     remote_src: true
   when:
-    - inventory_hostname in groups['target_cluster']
-    - patroni_cluster_leader
+    - inventory_hostname in groups['primary']
 
 ...
