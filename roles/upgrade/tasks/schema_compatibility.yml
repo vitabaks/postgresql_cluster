@@ -15,6 +15,35 @@
   when:
     - inventory_hostname in groups['primary']
 
+# for Debian based use pg_ctlcluster, if the PostgreSQL configuration is not located in the data directory.
+- name: "Start new PostgreSQL on port {{ (postgresql_port | int) + 1 }} to check the schema compatibility"
+  command: >
+    /usr/bin/pg_ctlcluster {{ postgresql_version }} {{ postgresql_cluster_name }} start
+    -o "-p {{ (postgresql_port | int) + 1 }}
+    -c unix_socket_directories='/tmp'
+    -c shared_preload_libraries='{{ pg_shared_preload_libraries.stdout }}'"
+    -- -w -t {{ pg_start_stop_timeout }} -l /tmp/pg_tmp_start.log
+  async: "{{ pg_start_stop_timeout }}"  # run the command asynchronously
+  poll: 0
+  register: pg_ctlcluster_start_result
+  when:
+    - inventory_hostname in groups['primary']
+    - pg_ctl_status_result.rc != 0
+    - pg_new_confdir != pg_new_datadir
+    - ansible_os_family == "Debian"
+
+- name: Wait for PostgreSQL to start
+  async_status:
+    jid: "{{ pg_ctlcluster_start_result.ansible_job_id }}"
+  register: pg_ctlcluster_start_job_result
+  until: pg_ctlcluster_start_job_result.finished
+  retries: "{{ (pg_start_stop_timeout | int) // 10 }}"
+  delay: 10
+  when:
+    - pg_ctlcluster_start_result.ansible_job_id is defined
+    - inventory_hostname in groups['primary']
+
+# Use pg_ctl, if the PostgreSQL configuration is located in the data directory.
 - name: "Start new PostgreSQL on port {{ (postgresql_port | int) + 1 }} to check the schema compatibility"
   command: >
     {{ pg_new_bindir }}/pg_ctl -D {{ pg_new_datadir }}
@@ -22,13 +51,24 @@
     -c unix_socket_directories='/tmp'
     -c shared_preload_libraries='{{ pg_shared_preload_libraries.stdout }}'"
     start -w -t {{ pg_start_stop_timeout }} -l /tmp/pg_tmp_start.log
+  async: "{{ pg_start_stop_timeout }}"  # run the command asynchronously
+  poll: 0
   register: pg_ctl_start_result
-  until: pg_ctl_start_result is success
-  retries: "{{ (pg_start_stop_timeout | int) // 10 }}"
-  delay: 10
   when:
     - inventory_hostname in groups['primary']
     - pg_ctl_status_result.rc != 0
+    - pg_new_confdir == pg_new_datadir
+
+- name: Wait for PostgreSQL to start
+  async_status:
+    jid: "{{ pg_ctl_start_result.ansible_job_id }}"
+  register: pg_ctl_start_job_result
+  until: pg_ctl_start_job_result.finished
+  retries: "{{ (pg_start_stop_timeout | int) // 10 }}"
+  delay: 10
+  when:
+    - pg_ctl_start_result.ansible_job_id is defined
+    - inventory_hostname in groups['primary']
 
 - name: "Check the compatibility of the database schema with the PostgreSQL {{ pg_new_version }}"
   shell: |
@@ -55,7 +95,7 @@
     jid: "{{ pg_dumpall_result.ansible_job_id }}"
   register: pg_dumpall_job_result
   until: pg_dumpall_job_result.finished
-  retries: "{{ (schema_compatibility_check_timeout | int) // 10 }}"  # the maximum duration
+  retries: "{{ (schema_compatibility_check_timeout | int) // 10 }}"
   delay: 10
   when:
     - inventory_hostname in groups['primary']
@@ -91,7 +131,7 @@
     - inventory_hostname in groups['primary']
     - pg_schema_compatibility_check_result.stdout | length > 0
 
-- name: Stop PostgreSQL to re-initdb
+- name: Stop new PostgreSQL to re-initdb
   command: >
     {{ pg_new_bindir }}/pg_ctl -D {{ pg_new_datadir }} stop -w -t {{ pg_start_stop_timeout }}
   register: pg_ctl_stop_result
@@ -100,6 +140,17 @@
   delay: 10
   when:
     - inventory_hostname in groups['primary']
+    - pg_new_confdir == pg_new_datadir
+
+# for Debian based, drop the cluster to perform re-init
+- name: Drop new PostgreSQL to re-initdb
+  command: >
+    /usr/bin/pg_dropcluster --stop {{ pg_new_version }} {{ postgresql_cluster_name }}
+  failed_when: false
+  when:
+    - inventory_hostname in groups['primary']
+    - pg_new_confdir != pg_new_datadir
+    - ansible_os_family == "Debian"
 
 - name: Reinitialize the database after checking schema compatibility
   include_tasks: "{{ role_path }}/tasks/initdb.yml"
