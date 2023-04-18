@@ -17,7 +17,8 @@
 # If the source and target directories are inside versioned directories
 # (example: /pgdata/<pg_old_version>/main -> /pgdata/<pg_new_version>/main)
 - name: "Upgrade the PostgreSQL on the Replica (using rsync --hard-links)"
-  become: false
+  become: true
+  become_user: postgres
   shell: >
     rsync -e "ssh -o StrictHostKeyChecking=no" --archive --delete --hard-links --size-only --no-inc-recursive --verbose
     {{ pg_upper_datadir }}/{{ pg_old_version }} {{ pg_upper_datadir }}/{{ pg_new_version }} {{ item }}:{{ pg_upper_datadir }}
@@ -33,7 +34,8 @@
 # If the source and target directories are non-versioned directories
 # (example: /pgdata/main -> /pgdata/main<pg_new_version>)
 - name: "Upgrade the PostgreSQL on the Replica (using rsync --hard-links)"
-  become: false
+  become: true
+  become_user: postgres
   shell: >
     rsync -e "ssh -o StrictHostKeyChecking=no" --archive --delete --hard-links --size-only --no-inc-recursive --verbose
     {{ pg_old_datadir }} {{ pg_new_datadir }} {{ item }}:{{ pg_upper_datadir }}
