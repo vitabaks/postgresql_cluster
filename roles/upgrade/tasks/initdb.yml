@@ -14,29 +14,46 @@
     - lc_time
     - data_checksums
 
-- name: Ensure "{{ pg_new_datadir }}" exists and is empty for new PostgreSQL
+- name: Make sure new PostgreSQL data directory "{{ pg_new_datadir }}" exists
   file:
     path: "{{ pg_new_datadir }}"
-    state: "{{ item }}"
+    state: directory
     mode: 0700
     group: postgres
     owner: postgres
-  loop:
-    - absent
-    - directory
 
-# Debian based
-- name: Drop a new PostgreSQL data directory (if exists)
-  command: >
-    /usr/bin/pg_dropcluster --stop {{ pg_new_version }} {{ postgresql_cluster_name }}
-  failed_when: false
+- name: Make sure new PostgreSQL data directory "{{ pg_new_datadir }}" is not initialized
+  stat:
+    path: "{{ pg_new_datadir }}/PG_VERSION"
+  register: pgdata_initialized
+
+- block:  # if already initialized
+    - name: Clear the new PostgreSQL data directory "{{ pg_new_datadir }}"
+      file:
+        path: "{{ pg_new_datadir }}"
+        state: "{{ item }}"
+        mode: 0700
+        group: postgres
+        owner: postgres
+      loop:
+        - absent
+        - directory
+
+    # for Debian based, drop the cluster
+    - name: Perform pg_dropcluster
+      command: >
+        /usr/bin/pg_dropcluster --stop {{ pg_new_version }} {{ postgresql_cluster_name }}
+      failed_when: false
+      when:
+        - ansible_os_family == "Debian"
+        - pg_new_confdir != pg_new_datadir
   when:
-    - pg_new_confdir != pg_new_datadir
-    - ansible_os_family == "Debian"
+    - pgdata_initialized.stat.exists is defined
+    - pgdata_initialized.stat.exists
 
-# Use pg_createcluster, if the PostgreSQL configuration is not located in the data directory.
+# for Debian based use pg_createcluster, if the PostgreSQL configuration is not located in the data directory.
 # Note: Patroni failure is possible if the default postgresql config files are missing in the /etc/postgresql/...
-- name: Initialize a new PostgreSQL data directory with default postgresql config files
+- name: Initialize new PostgreSQL data directory with default postgresql config files
   command: >
     /usr/bin/pg_createcluster {{ pg_new_version }} {{ postgresql_cluster_name }}
     --datadir={{ pg_new_datadir }}
@@ -56,7 +73,7 @@
     - pg_new_confdir != pg_new_datadir
 
 # Use initdb, if the PostgreSQL configuration is located in the data directory.
-- name: Initialize a new PostgreSQL data directory
+- name: Initialize new PostgreSQL data directory
   command: >
     {{ pg_new_bindir }}/initdb
     --pgdata={{ pg_new_datadir }}
