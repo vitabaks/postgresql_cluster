@@ -1,19 +1,5 @@
 ---
 
-- name: Get the current encodig and data_checksums settings
-  command: psql -tAXc "show {{ item }}"
-  changed_when: false
-  register: pg_settings
-  loop:
-    - server_encoding
-    - lc_collate
-    - lc_ctype
-    - lc_messages
-    - lc_monetary
-    - lc_numeric
-    - lc_time
-    - data_checksums
-
 - name: Make sure new PostgreSQL data directory "{{ pg_new_datadir }}" exists
   file:
     path: "{{ pg_new_datadir }}"
@@ -51,9 +37,23 @@
     - pgdata_initialized.stat.exists is defined
     - pgdata_initialized.stat.exists
 
+- name: Get the current encodig and data_checksums settings
+  command: psql -tAXc "show {{ item }}"
+  changed_when: false
+  register: pg_settings
+  loop:
+    - server_encoding
+    - lc_collate
+    - lc_ctype
+    - lc_messages
+    - lc_monetary
+    - lc_numeric
+    - lc_time
+    - data_checksums
+
 # for Debian based use pg_createcluster, if the PostgreSQL configuration is not located in the data directory.
 # Note: Patroni failure is possible if the default postgresql config files are missing in the /etc/postgresql/...
-- name: Initialize new PostgreSQL data directory with default postgresql config files
+- name: Initialize new PostgreSQL data directory with default config files
   command: >
     /usr/bin/pg_createcluster {{ pg_new_version }} {{ postgresql_cluster_name }}
     --datadir={{ pg_new_datadir }}
@@ -73,7 +73,7 @@
     - pg_new_confdir != pg_new_datadir
 
 # Use initdb, if the PostgreSQL configuration is located in the data directory.
-- name: Initialize new PostgreSQL data directory
+- name: Initialize new PostgreSQL data directory on the Primary
   command: >
     {{ pg_new_bindir }}/initdb
     --pgdata={{ pg_new_datadir }}
@@ -88,6 +88,7 @@
     --data-checksums
     {% endif %}
   when:
+    - inventory_hostname in groups['primary']
     - pg_new_confdir == pg_new_datadir
 
 ...
