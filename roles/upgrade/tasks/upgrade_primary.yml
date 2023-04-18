@@ -12,6 +12,8 @@
     --new-options "-c config_file={{ pg_new_confdir }}/postgresql.conf -c shared_preload_libraries='{{ pg_shared_preload_libraries_value }}'"
     --jobs={{ ansible_processor_vcpus }}
     --link
+  args:
+    chdir: "{{ pg_upper_datadir }}"
   register: pg_upgrade_result
   when:
     - inventory_hostname in groups['primary']

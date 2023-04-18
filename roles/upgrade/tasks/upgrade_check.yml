@@ -25,6 +25,8 @@
     --jobs={{ ansible_processor_vcpus }}
     --link
     --check
+  args:
+    chdir: "{{ pg_upper_datadir }}"
   changed_when: false
   failed_when: false
   register: pg_upgrade_check_result
