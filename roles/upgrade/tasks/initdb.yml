@@ -50,6 +50,8 @@
     - lc_numeric
     - lc_time
     - data_checksums
+  when:
+    - inventory_hostname in groups['primary']
 
 # for Debian based use pg_createcluster, if the PostgreSQL configuration is not located in the data directory.
 # Note: Patroni failure is possible if the default postgresql config files are missing in the /etc/postgresql/...
@@ -57,15 +59,15 @@
   command: >
     /usr/bin/pg_createcluster {{ pg_new_version }} {{ postgresql_cluster_name }}
     --datadir={{ pg_new_datadir }}
-    --encoding={{ pg_settings.results[0].stdout }}
-    --lc-collate={{ pg_settings.results[1].stdout }}
-    --lc-ctype={{ pg_settings.results[2].stdout }}
-    --lc-messages={{ pg_settings.results[3].stdout }}
-    --lc-monetary={{ pg_settings.results[4].stdout }}
-    --lc-numeric={{ pg_settings.results[5].stdout }}
-    --lc-time={{ pg_settings.results[6].stdout }}
+    --encoding={{ hostvars[groups['primary'][0]].pg_settings.results[0].stdout }}
+    --lc-collate={{ hostvars[groups['primary'][0]].pg_settings.results[1].stdout }}
+    --lc-ctype={{ hostvars[groups['primary'][0]].pg_settings.results[2].stdout }}
+    --lc-messages={{ hostvars[groups['primary'][0]].pg_settings.results[3].stdout }}
+    --lc-monetary={{ hostvars[groups['primary'][0]].pg_settings.results[4].stdout }}
+    --lc-numeric={{ hostvars[groups['primary'][0]].pg_settings.results[5].stdout }}
+    --lc-time={{ hostvars[groups['primary'][0]].pg_settings.results[6].stdout }}
     --start-conf=manual
-    {% if pg_settings.results[7].stdout == 'on' %}
+    {% if hostvars[groups['primary'][0]].pg_settings.results[7].stdout == 'on' %}
     -- --data-checksums
     {% endif %}
   when:
