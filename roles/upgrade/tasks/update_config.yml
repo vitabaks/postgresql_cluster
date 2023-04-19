@@ -7,9 +7,9 @@
     regexp: "{{ item.regexp }}"
     replace: "{{ item.replace }}"
   loop:
-    - { regexp: 'data_dir: "{{ pg_old_datadir }}"', replace: 'data_dir: "{{ pg_new_datadir }}"' }
-    - { regexp: 'bin_dir: "{{ pg_old_bindir }}"', replace: 'bin_dir: "{{ pg_new_bindir }}"' }
-    - { regexp: 'config_dir: "{{ pg_old_confdir }}"', replace: 'config_dir: "{{ pg_new_confdir }}"' }
+    - { regexp: 'data_dir: {{ pg_old_datadir }}', replace: 'data_dir: {{ pg_new_datadir }}' }
+    - { regexp: 'bin_dir: {{ pg_old_bindir }}', replace: 'bin_dir: {{ pg_new_bindir }}' }
+    - { regexp: 'config_dir: {{ pg_old_confdir }}', replace: 'config_dir: {{ pg_new_confdir }}' }
   loop_control:
     label: '{{ item.replace }}'
 
