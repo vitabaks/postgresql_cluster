@@ -114,7 +114,7 @@
     - pg_new_confdir == pg_new_datadir
 
 # for Debian based, drop the cluster to perform re-init
-- name: Drop new PostgreSQL to re-initdb
+- name: Drop new PostgreSQL to re-initdb (perform pg_dropcluster)
   command: >
     /usr/bin/pg_dropcluster --stop {{ pg_new_version }} {{ postgresql_cluster_name }}
   failed_when: false
