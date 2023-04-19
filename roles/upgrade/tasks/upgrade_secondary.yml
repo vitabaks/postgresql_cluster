@@ -48,10 +48,4 @@
     - pg_old_datadir|dirname != pg_upper_datadir + '/' + pg_old_version
     - pg_new_datadir|dirname != pg_upper_datadir + '/' + pg_new_version
 
-- name: Print the result of the rsync
-  debug:
-    var: rsync_result
-  when:
-    - inventory_hostname in groups['primary']
-
 ...
