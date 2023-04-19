@@ -45,11 +45,10 @@
     - inventory_hostname in groups['secondary']
 
 - name: Print the result of checking the number of records
-  run_once: true
   debug:
     msg:
+      - "The PostgreSQL Replication is OK for replica {{ inventory_hostname }}"
       - "The number of records in the test_replication table the same as the Primary ({{ count_test.stdout }} rows)"
-      - "The PostgreSQL Replication is Ok."
   when:
     - inventory_hostname in groups['secondary']
     - count_test.stdout | int == 10000
@@ -58,6 +57,7 @@
 - name: "Post-Check error. The number of records does not match"
   debug:
     msg:
+      - "The PostgreSQL Replication is NOT OK for replica {{ inventory_hostname }}"
       - "The number of records in the test_replication table does not match the Primary ({{ count_test.stdout }} rows)."
       - "Please check the replication status and PostgreSQL logs."
   failed_when: count_test.stdout | int != 10000
