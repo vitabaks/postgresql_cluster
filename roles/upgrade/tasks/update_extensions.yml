@@ -17,7 +17,9 @@
     msg:
       - "The extension versions are up-to-date for the database {{ pg_target_dbname }}"
       - "No update is required."
-  when: pg_old_extensions.stdout_lines | length < 1
+  when:
+    - inventory_hostname in groups['primary']
+    - pg_old_extensions.stdout_lines | length < 1
 
 # excluding: 'pg_repack' (is exists), as it requires re-creation to update
 - name: Update old PostgreSQL extensions
