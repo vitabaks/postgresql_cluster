@@ -23,6 +23,7 @@
   ignore_errors: true  # show the error and continue the playbook execution
   when:
     - inventory_hostname in groups['primary']
+    - pg_replication_state.stdout | int == 0
 
 - name: Create a table "test_replication" with 10000 rows on the Primary
   command: >-
@@ -63,6 +64,7 @@
   ignore_errors: true  # show the error and continue the playbook execution
   when:
     - inventory_hostname in groups['secondary']
+    - count_test.stdout | int != 10000
 
 - name: Drop a table "test_replication"
   command: >-
