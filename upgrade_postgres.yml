@@ -2,6 +2,8 @@
 # TODO:
 # - delete_old_cluster dir
 # - custom WAL dir symlink (pg_new_wal_dir)
+# - patroni cluster state pre-check
+# - pause pgbouncer pools
 - name: "Upgrade PostgreSQL {{ pg_old_version }} to version {{ pg_new_version }} (PostgreSQL HA Cluster: {{ patroni_cluster_name }})"
   hosts: postgres_cluster
   gather_facts: true
@@ -335,7 +337,7 @@
       run_once: true
       become: true
       become_user: postgres
-      command: patronictl -c /etc/patroni/patroni.yml list
+      command: "patronictl -c {{ patroni_config_file }} list"
       register: patronictl_result
       changed_when: false
       environment:
