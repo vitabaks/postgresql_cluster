@@ -6,6 +6,7 @@
 .ONESHELL:
 .SILENT:
 MAKEFLAGS += "-j$(NUM_CORES) -l$(NUM_CORES)"
+MAKEFLAGS += --silent
 SHELL:=/bin/bash
 
 # Makefile colors config
@@ -36,7 +37,6 @@ python_launcher := python3.10
 
 -include .config/make/help.mak
 -include .config/make/python.mak
--include .config/make/yaml.mak
 -include .config/make/molecule.mak
 
 ## —— Bootstrap collection ———————————————————————————————————————————————————————————————————————
@@ -44,8 +44,6 @@ python_launcher := python3.10
 bootstrap: ## Bootstrap Ansible collection
 	$(MAKE) python-bootstrap
 	$(MAKE) python-bootstrap-dev
-	$(MAKE) molecule-bootstrap
-	$(MAKE) yaml-bootstrap
 
 ## —— Virtualenv ————————————————————————————————————————————————————————————————————————————————
 .PHONY: reinitialization
@@ -53,7 +51,7 @@ reinitialization: ## Return to an initial state of Bootstrap Ansible collection
 	rm -rf .venv/
 	rm -rf vendor/
 	rm -f *.mak
-	$(MAKE)
+	$(MAKE) bootstrap
 
 .PHONY: clean
 clean: ## Clean collection

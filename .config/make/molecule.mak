@@ -1,9 +1,4 @@
 ## —— Molecule ———————————————————————————————————————————————————————————————————————————————————
-.PHONY: molecule-bootstrap
-molecule-bootstrap: ## Bootstrap Molecule
-	source .venv/bin/activate
-	pip install molecule-docker molecule[docker,lint]
-
 .PHONY: molecule-test
 molecule-test: ## Run test sequence for default scenario
 	source .venv/bin/activate

@@ -1,6 +1,6 @@
 # Python default launcher
 python_launcher ?= python3.10
-python_requirements_file ?= files/equirements.txt
+python_requirements_file ?= files/requirements.txt
 python_requirements_dev_file ?= files/requirements.dev.txt
 
 ## —— Python —————————————————————————————————————————————————————————————————————————————————————
