@@ -38,3 +38,29 @@ python_launcher := python3.10
 -include .config/make/python.mak
 -include .config/make/yaml.mak
 -include .config/make/molecule.mak
+
+## —— Bootstrap collection ———————————————————————————————————————————————————————————————————————
+.PHONY: bootstrap
+bootstrap: ## Bootstrap Ansible collection
+	$(MAKE) python-bootstrap
+	$(MAKE) python-bootstrap-dev
+	$(MAKE) molecule-bootstrap
+	$(MAKE) yaml-bootstrap
+
+## —— Virtualenv ————————————————————————————————————————————————————————————————————————————————
+.PHONY: reinitialization
+reinitialization: ## Return to an initial state of Bootstrap Ansible collection
+	rm -rf .venv/
+	rm -rf vendor/
+	rm -f *.mak
+	$(MAKE)
+
+.PHONY: clean
+clean: ## Clean collection
+	rm -rf .venv/
+	rm -rf .pytest_cache/
+	rm -rf scripts/.pytest_cache/
+	rm -rf scripts/tests/__pycache__/
+	rm -rf scripts/modules/__pycache__/
+	rm -rf scripts/modules/services/__pycache__/
+	rm -rf scripts/modules/utils/__pycache__/
