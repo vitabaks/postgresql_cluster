@@ -32,6 +32,7 @@ How to use me:
 endef
 export HEADER
 
-python_launcher := python3.9
+python_launcher := python3.10
 
 -include .config/make/help.mak
+-include .config/make/python.mak
