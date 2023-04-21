@@ -33,3 +33,5 @@ endef
 export HEADER
 
 python_launcher := python3.9
+
+-include .config/make/help.mak
