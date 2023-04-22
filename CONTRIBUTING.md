@@ -3,7 +3,7 @@
 You can really make a difference by:
 
 - [Making an issue](https://help.github.com/articles/creating-an-issue/). A well-described issue helps a lot. (Check the [known issues](https://github.com/search?q=user%3Avitabaks+is%3Aissue+state%3Aopen) first.)
-- [Making a pull request](https://services.github.com/on-demand/github-cli/open-pull-request-github) when you find an error in the code.
+- [Making a pull request](https://docs.github.com/fr/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request) when you find an error in the code.
 
 I will try to help and take every contribution seriously.
 
