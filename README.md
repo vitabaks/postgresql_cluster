@@ -461,7 +461,7 @@ I recommend that you study the following materials for further maintenance of th
 
 - [Tutorial: Management of High-Availability PostgreSQL clusters with Patroni](https://pgconf.ru/en/2018/108567)
 - [Patroni documentation](https://patroni.readthedocs.io/en/latest/)
-- [etcd operations guide](https://etcd.io/docs/v3.3.12/op-guide/)
+- [etcd operations guide](https://etcd.io/docs/v3.5/op-guide/)
 
 #### Update the PostgreSQL HA Cluster
 
@@ -556,7 +556,7 @@ vitabaks@gmail.com
 
 Support our work through [GitHub Sponsors](https://github.com/sponsors/vitabaks)
 
-![GitHub Sponsors](https://img.shields.io/github/sponsors/vitabaks?style=for-the-badge)
+[![GitHub Sponsors](https://img.shields.io/github/sponsors/vitabaks?style=for-the-badge)](https://github.com/sponsors/vitabaks)
 
 Support our work through [Patreon](https://www.patreon.com/vitabaks)
 
