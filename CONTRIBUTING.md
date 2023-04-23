@@ -37,6 +37,52 @@ Now you can start editing on your laptop.
 
 ### [4. Test your changes](#4-optionally-test-your-changes)
 
+
+#### 4.1 Contributing with Gitpod
+
+Gitpod is a cloud-based development environment platform that allows you to contribute to projects without setting up a local environment. You can use Gitpod to work on the `postgresql_cluster` project by following these steps:
+
+1. **Sign up for Gitpod**: If you don't have a Gitpod account, sign up at https://gitpod.io using your GitHub account.
+
+2. **Create a new fork**: If you haven't already, fork the `postgresql_cluster` repository by clicking the "Fork" button on the top-right corner of the repository's GitHub page (https://github.com/vitabaks/postgresql_cluster).
+
+3. **Open your fork in Gitpod**: Replace the `username` in the following URL with your GitHub username and open it in a new browser tab: `https://gitpod.io/#https://github.com/username/postgresql_cluster`. This will launch a new Gitpod workspace with the `postgresql_cluster` project.
+
+4. **Create a new branch**: In the Gitpod terminal, create a new branch for your changes:
+
+   ```
+   git checkout -b my-feature-branch
+   ```
+
+   Replace `my-feature-branch` with a descriptive name for your branch.
+
+5. **Make your changes**: Modify the code, add new features, or fix existing issues in the project. Make sure to follow the project's coding guidelines and style.
+
+6. **Commit your changes**: Once you've made your changes, stage and commit them using the following commands:
+
+   ```
+   git add .
+   git commit -m "Add a brief description of your changes"
+   ```
+
+   Replace the commit message with a clear and concise description of your changes.
+
+7. **Push your changes**: Push your changes to your fork on GitHub:
+
+   ```
+   git push origin my-feature-branch
+   ```
+
+   Replace `my-feature-branch` with the name of the branch you created in step 4.
+
+8. **Create a pull request**: Go to your forked repository on GitHub and click on the "Pull requests" tab. Click on the "New pull request" button, select your branch from the "compare" dropdown, and follow the instructions to create a pull request.
+
+9. **Wait for a review**: Your pull request will be reviewed by the project maintainers. They may request changes or provide feedback before merging your changes.
+
+Remember to keep your Gitpod workspace up-to-date with the main repository by regularly syncing your fork and merging or rebasing the changes.
+
+#### 4.2 Contributing on your desktop
+
 Install [make](https://www.gnu.org/software/make/) and [Python3.10](https://www.python.org/) with [venv](https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/) :
 
 ```
