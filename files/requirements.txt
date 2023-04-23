@@ -13,4 +13,3 @@ psutil>=2.0.0
 ydiff>=1.2.0
 pexpect>=4.8.0
 ruamel.yaml>=0.16.10
-ansible>=2.7
