@@ -124,4 +124,4 @@ Now I'll get a message that you've added some code. Thank you, really.
 
 CI starts to test your changes. You can follow the progress on GitHub.
 
-Please consider [sponsoring me](https://patreon.com/vitabaks).
+Please consider sponsoring me via [github](https://github.com/sponsors/vitabaks) or [patreon](https://patreon.com/vitabaks).
