@@ -40,6 +40,7 @@ Now you can start editing on your laptop.
 Install [make](https://www.gnu.org/software/make/) and [Python3.10](https://www.python.org/) with [venv](https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/) :
 
 ```
+sudo apt update
 sudo apt install -y make python3.10 python3.10-venv
 python3 -m pip install --upgrade pip
 python3 -m pip install virtualenv
