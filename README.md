@@ -554,7 +554,11 @@ vitabaks@gmail.com
 
 ## Sponsor this project
 
-Support our work through [Patreon](https://www.patreon.com/vitabaks):
+Support our work through [GitHub Sponsors](https://github.com/sponsors/vitabaks)
+
+![GitHub Sponsors](https://img.shields.io/github/sponsors/vitabaks?style=for-the-badge)
+
+Support our work through [Patreon](https://www.patreon.com/vitabaks)
 
 [![Support me on Patreon](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fshieldsio-patreon.vercel.app%2Fapi%3Fusername%3Dvitabaks%26type%3Dpatrons&style=for-the-badge)](https://patreon.com/vitabaks)
 
