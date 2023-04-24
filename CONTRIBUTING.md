@@ -67,7 +67,26 @@ Gitpod is a cloud-based development environment platform that allows you to cont
 
    Replace the commit message with a clear and concise description of your changes.
 
-7. **Push your changes**: Push your changes to your fork on GitHub:
+7. **Test your changes with Molecule**: Before committing your changes, ensure that they work correctly by running tests with Molecule. You can do this using either `make molecule-test` or `make molecule-converge`.
+
+   If you want to test a specific distribution, set `distro`, optionally `tag`, and `namespace`:
+
+   ```
+   IMAGE_NAMESPACE=geerlingguy IMAGE_DISTRO=debian10 make molecule-converge
+   IMAGE_NAMESPACE=geerlingguy IMAGE_DISTRO=debian11 make molecule-converge
+   IMAGE_NAMESPACE=geerlingguy IMAGE_DISTRO=ubuntu2004 make molecule-converge
+   IMAGE_NAMESPACE=geerlingguy IMAGE_DISTRO=ubuntu2204 make molecule-converge
+   IMAGE_NAMESPACE=geerlingguy IMAGE_DISTRO=rockylinux8 make molecule-converge
+   IMAGE_NAMESPACE=geerlingguy IMAGE_DISTRO=rockylinux9 make molecule-converge
+   IMAGE_NAMESPACE=glillico IMAGE_DISTRO=almalinux8 make molecule-converge
+   IMAGE_NAMESPACE=glillico IMAGE_DISTRO=almalinux9 make molecule-converge
+   IMAGE_NAMESPACE=glillico IMAGE_DISTRO=oraclelinux8 make molecule-converge
+   IMAGE_NAMESPACE=glillico IMAGE_DISTRO=oraclelinux9 make molecule-converge
+   IMAGE_NAMESPACE=glillico IMAGE_DISTRO=centosstream8 make molecule-converge
+   IMAGE_NAMESPACE=glillico IMAGE_DISTRO=centosstream9 make molecule-converge
+   ```
+
+8. **Push your changes**: Push your changes to your fork on GitHub:
 
    ```
    git push origin my-feature-branch
@@ -75,9 +94,9 @@ Gitpod is a cloud-based development environment platform that allows you to cont
 
    Replace `my-feature-branch` with the name of the branch you created in step 4.
 
-8. **Create a pull request**: Go to your forked repository on GitHub and click on the "Pull requests" tab. Click on the "New pull request" button, select your branch from the "compare" dropdown, and follow the instructions to create a pull request.
+9. **Create a pull request**: Go to your forked repository on GitHub and click on the "Pull requests" tab. Click on the "New pull request" button, select your branch from the "compare" dropdown, and follow the instructions to create a pull request.
 
-9. **Wait for a review**: Your pull request will be reviewed by the project maintainers. They may request changes or provide feedback before merging your changes.
+10. **Wait for a review**: Your pull request will be reviewed by the project maintainers. They may request changes or provide feedback before merging your changes.
 
 Remember to keep your Gitpod workspace up-to-date with the main repository by regularly syncing your fork and merging or rebasing the changes.
 
@@ -107,9 +126,19 @@ Then, run the test with `make molecule-test` or `make molecule-converge` for onl
 If you want to test a specific distribution, set `distro`, optionally `tag`, and `namespace` :
 
 ```
-IMAGE_DISTRO=rockylinux9 IMAGE_TAG=latest IMAGE_NAMESPACE=geerlingguy make molecule-converge
+IMAGE_NAMESPACE=geerlingguy IMAGE_DISTRO=debian10 make molecule-converge
+IMAGE_NAMESPACE=geerlingguy IMAGE_DISTRO=debian11 make molecule-converge
+IMAGE_NAMESPACE=geerlingguy IMAGE_DISTRO=ubuntu2004 make molecule-converge
+IMAGE_NAMESPACE=geerlingguy IMAGE_DISTRO=ubuntu2204 make molecule-converge
+IMAGE_NAMESPACE=geerlingguy IMAGE_DISTRO=rockylinux8 make molecule-converge
+IMAGE_NAMESPACE=geerlingguy IMAGE_DISTRO=rockylinux9 make molecule-converge
+IMAGE_NAMESPACE=glillico IMAGE_DISTRO=almalinux8 make molecule-converge
+IMAGE_NAMESPACE=glillico IMAGE_DISTRO=almalinux9 make molecule-converge
+IMAGE_NAMESPACE=glillico IMAGE_DISTRO=oraclelinux8 make molecule-converge
+IMAGE_NAMESPACE=glillico IMAGE_DISTRO=oraclelinux9 make molecule-converge
+IMAGE_NAMESPACE=glillico IMAGE_DISTRO=centosstream8 make molecule-converge
+IMAGE_NAMESPACE=glillico IMAGE_DISTRO=centosstream9 make molecule-converge
 ```
-
 Once it starts to work, you can push your code.
 
 ### [5. Make a pull request](#5-make-a-pull-request)
