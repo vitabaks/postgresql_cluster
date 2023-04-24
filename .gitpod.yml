@@ -1,3 +1,6 @@
 ---
-image: vitabaks/ansible-molecule-ubuntu:22.04
-...
+image:
+  file: .gitpod.Dockerfile
+
+tasks:
+  - init: make boostrap

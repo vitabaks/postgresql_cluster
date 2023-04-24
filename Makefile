@@ -37,6 +37,7 @@ python_launcher := python3.10
 
 -include .config/make/help.mak
 -include .config/make/python.mak
+-include .config/make/docker.mak
 -include .config/make/molecule.mak
 
 ## —— Bootstrap collection ———————————————————————————————————————————————————————————————————————
