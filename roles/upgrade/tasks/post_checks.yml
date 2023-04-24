@@ -44,6 +44,12 @@
   when:
     - inventory_hostname in groups['secondary']
 
+- name: Drop a table "test_replication"
+  command: >-
+    psql -tAXc "drop table IF EXISTS test_replication"
+  when:
+    - inventory_hostname in groups['primary']
+
 - name: Print the result of checking the number of records
   debug:
     msg:
@@ -65,11 +71,5 @@
   when:
     - inventory_hostname in groups['secondary']
     - count_test.stdout | int != 10000
-
-- name: Drop a table "test_replication"
-  command: >-
-    psql -tAXc "drop table IF EXISTS test_replication"
-  when:
-    - inventory_hostname in groups['primary']
 
 ...
