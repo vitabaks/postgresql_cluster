@@ -15,7 +15,7 @@ RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /
     && apt install -y docker-ce docker-ce-cli containerd.io
 
 # install molecule and ansible
-RUN pip3 install molecule[docker] ansible ansible-lint yamllint
+RUN pip3 install 'molecule[docker]<5.0.0' ansible ansible-lint yamllint
 
 # clean
 RUN apt clean && rm -rf /var/lib/apt/lists/* /tmp/*
