@@ -39,7 +39,7 @@
 
 - name: Remove public SSH keys from localhost
   run_once: true
-  become: true
+  become: false
   become_user: "{{ lookup('env', 'USER') }}"
   file:
     path: files/{{ item }}-id_rsa.pub
