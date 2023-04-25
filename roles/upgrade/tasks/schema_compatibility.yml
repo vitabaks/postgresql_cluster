@@ -45,7 +45,7 @@
   shell: |
     set -o pipefail;
     {{ pg_new_bindir }}/pg_dumpall \
-    -h localhost \
+    -h {{ postgresql_unix_socket_dir }} \
     -p {{ postgresql_port }} \
     -U postgres \
     --schema-only | {{ pg_new_bindir }}/psql \
