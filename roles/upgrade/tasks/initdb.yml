@@ -14,6 +14,14 @@
   register: pgdata_initialized
 
 - block:  # if already initialized
+    - name: Perform pg_dropcluster
+      command: >
+        /usr/bin/pg_dropcluster --stop {{ pg_new_version }} {{ postgresql_cluster_name }}
+      failed_when: false
+      when:
+        - ansible_os_family == "Debian"
+        - pg_new_confdir != pg_new_datadir
+
     - name: Clear the new PostgreSQL data directory "{{ pg_new_datadir }}"
       file:
         path: "{{ pg_new_datadir }}"
@@ -24,15 +32,6 @@
       loop:
         - absent
         - directory
-
-    # for Debian based, drop the cluster
-    - name: Perform pg_dropcluster
-      command: >
-        /usr/bin/pg_dropcluster --stop {{ pg_new_version }} {{ postgresql_cluster_name }}
-      failed_when: false
-      when:
-        - ansible_os_family == "Debian"
-        - pg_new_confdir != pg_new_datadir
   when:
     - pgdata_initialized.stat.exists is defined
     - pgdata_initialized.stat.exists
