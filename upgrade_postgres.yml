@@ -3,6 +3,7 @@
 # - delete_old_cluster dir
 # - custom WAL dir symlink (pg_new_wal_dir)
 # - patroni cluster state pre-check
+# - current_patroni_cluster_name
 # - pause pgbouncer pools
 - name: "Upgrade PostgreSQL {{ pg_old_version }} to version {{ pg_new_version }} (PostgreSQL HA Cluster: {{ patroni_cluster_name }})"
   hosts: postgres_cluster
