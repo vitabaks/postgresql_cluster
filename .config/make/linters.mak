@@ -21,3 +21,6 @@ linter-ansible-lint: ## Lint Ansible files using ansible-lint
 linter-flake8: ## Lint Python files using flake8
 	$(ACTIVATE_VENV) && \
 	flake8 --config $(FLAKE8_CONFIG)
+
+.PHONY: lint
+lint: linter-yamllint linter-ansible-lint linter-flake8 ## Run all linters
