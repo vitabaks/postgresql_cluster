@@ -1,5 +1,4 @@
 ---
-
 dependency:
   name: galaxy
   enabled: false
@@ -10,21 +9,21 @@ platforms:
     hostname: pgnode01
     image: "${IMAGE_NAMESPACE:-geerlingguy}/docker-${IMAGE_DISTRO:-ubuntu2204}-ansible:${IMAGE_TAG:-latest}"
     # docker_networks:  # TODO github.com/ansible-community/molecule/pull/2696
-      # - name: test_docker_network
-        # ipam_config:
-          # - subnet: 10.172.0.0/24
-            # gateway: 10.172.0.1
+    # - name: test_docker_network
+    # ipam_config:
+    # - subnet: 10.172.0.0/24
+    # gateway: 10.172.0.1
     networks:
       - name: test_docker_network
         ipv4_address: 10.172.0.20
     exposed_ports:
-      - 2379/tcp  # if dcs_type: "etcd"
-      - 2380/tcp  # if dcs_type: "etcd"
-      - 8300/tcp  # if dcs_type: "consul"
-      - 8301/tcp  # if dcs_type: "consul"
-      - 8302/tcp  # if dcs_type: "consul"
-      - 8500/tcp  # if dcs_type: "consul"
-      - 8600/tcp  # if dcs_type: "consul"
+      - 2379/tcp # if dcs_type: "etcd"
+      - 2380/tcp # if dcs_type: "etcd"
+      - 8300/tcp # if dcs_type: "consul"
+      - 8301/tcp # if dcs_type: "consul"
+      - 8302/tcp # if dcs_type: "consul"
+      - 8500/tcp # if dcs_type: "consul"
+      - 8600/tcp # if dcs_type: "consul"
       - 8008/tcp
       - 5432/tcp
       - 6432/tcp
@@ -35,8 +34,8 @@ platforms:
     privileged: true
     pre_build_image: true
     groups:
-      - etcd_cluster  # if dcs_type: "etcd"
-      - consul_instances  # if dcs_type: "consul"
+      - etcd_cluster # if dcs_type: "etcd"
+      - consul_instances # if dcs_type: "consul"
       - master
       - postgres_cluster
       - balancers
@@ -133,13 +132,11 @@ scenario:
     - prepare
     - create
     - converge
-#    - idempotence  # >> role:patroni,task:"data directory check result"
+    #    - idempotence  # >> role:patroni,task:"data directory check result"
     - verify
     - cleanup
     - destroy
 
 verifier:
   name: ansible
-  enabled: false  # TODO
-
-...
+  enabled: false # TODO
