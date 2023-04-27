@@ -5,7 +5,7 @@ ACTIVATE_VENV = source .venv/bin/activate
 
 # Configuration files
 YAMLLINT_CONFIG = .yamllint
-FLAKE8_CONFIG = .flake8
+FLAKE8_CONFIG = .config/.flake8
 
 .PHONY: linter-yamllint
 linter-yamllint: ## Lint YAML files using yamllint
