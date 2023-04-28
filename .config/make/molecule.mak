@@ -54,8 +54,3 @@ molecule-dependency: ## Run dependency sequence
 molecule-verify: ## Run verify sequence
 	source .venv/bin/activate
 	molecule verify
-
-.PHONY: molecule-lint
-molecule-lint: ## Run lint sequence
-	source .venv/bin/activate
-	molecule lint
