@@ -39,6 +39,7 @@ python_launcher := python3.10
 -include .config/make/python.mak
 -include .config/make/docker.mak
 -include .config/make/molecule.mak
+-include .config/make/linters.mak
 
 ## —— Bootstrap collection ———————————————————————————————————————————————————————————————————————
 .PHONY: bootstrap

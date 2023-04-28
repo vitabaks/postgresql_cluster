@@ -21,7 +21,7 @@ Report problems or suggest improvements by [creating an issue](https://github.co
 
 Clone your fork locally and make the necessary changes:
 
-```
+```bash
 git clone git@github.com:YOURNAMESPACE/postgresql_cluster.git
 ```
 
@@ -37,9 +37,10 @@ Use Gitpod for a cloud-based development environment:
 4. Create a new branch: `git checkout -b my-feature-branch`
 5. Make your changes and commit: `git add .` and `git commit -m "Description of changes"`
 6. Test with Molecule: `make molecule-test` or `make molecule-converge`
-7. Push your changes: `git push origin my-feature-branch`
-8. Create a pull request on GitHub
-9. Wait for a review
+7. Test with linters(otpional): `make lint`
+8. Push your changes: `git push origin my-feature-branch`
+9. Create a pull request on GitHub
+10. Wait for a review
 
 Keep your Gitpod workspace synced with the main repository.
 
@@ -51,7 +52,9 @@ Run `make` for Makefile help. Initialize virtualenv and install dependencies wit
 
 To test a specific distribution, set `distro`, `tag`, and `namespace`:
 
-```
+You can lint with `make lint`
+
+```bash
 IMAGE_NAMESPACE=geerlingguy IMAGE_DISTRO=debian10 make molecule-converge
 ```
 

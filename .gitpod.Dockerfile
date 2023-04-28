@@ -6,22 +6,23 @@ USER root
 RUN apt-get update \
     && apt-get upgrade -y \
     && apt-get install -y --no-install-recommends \
+        bash-completion \
         ca-certificates \
-        gnupg \
-        lsb-release \
+        curl \
         git \
         git-lfs \
-        sudo \
+        gnupg \
+        htop \
+        iproute2 \
+        lsb-release \
         make \
+        nano \
+        python3-pip \
         python3.10 \
         python3.10-venv \
-        python3-pip \
+        sudo \
         vim \
-        nano \
-        iproute2 \
         wget \
-        curl \
-        htop \
     && python3 -m pip install --no-cache-dir --upgrade pip \
     && python3 -m pip install --no-cache-dir virtualenv \
     # Install Docker
