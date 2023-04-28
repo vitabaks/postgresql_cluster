@@ -26,6 +26,6 @@
         - ansible_distribution_major_version is version('8', '>=')
 
     - name: Include postgrespro vars
-      ansible.builtin.include_vars: vars/postgrespro_vars.yml
+      include_vars: vars/postgrespro_vars.yml
 
 - import_playbook: ../../deploy_pgcluster.yml
