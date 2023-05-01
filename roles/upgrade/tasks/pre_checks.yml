@@ -32,6 +32,9 @@
     - server_version_num.stdout is defined
     - server_version_num.stdout|int >= pg_new_version|int
 
+# This check is necessary to avoid the risk of deleting the current data directory
+# the current directory must not be equal to the path specified in the pg_new_datadir variable
+# which will later be cleaned up before executing initdb for a new version of PostgreSQL
 - name: '[Pre-Check] Ensure new data directory is different from the current one'
   command: psql -tAXc "show data_directory"
   changed_when: false
