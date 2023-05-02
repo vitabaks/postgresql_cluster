@@ -5,7 +5,7 @@
   command: >
     {{ pg_new_bindir }}/vacuumdb -p {{ postgresql_port }}
     --all --analyze-in-stages --jobs={{ ansible_processor_vcpus }}
-  async: 3600  # run the command asynchronously with a maximum duration of 1 hour
+  async: "{{ vacuumdb_analyze_timeout }}"  # run the command asynchronously with a maximum duration
   poll: 0
   register: vacuumdb_analyze
   ignore_errors: true  # ignore errors if the task runs for over an hour.
@@ -15,8 +15,8 @@
     jid: "{{ vacuumdb_analyze.ansible_job_id }}"
   register: vacuumdb_analyze_job_result
   until: vacuumdb_analyze_job_result.finished
-  retries: 360  # max wait time: 1 hour
+  retries: "{{ (vacuumdb_analyze_timeout | int) // 10 }}"  # max wait time
   delay: 10
-  ignore_errors: true  # ignore errors if the task runs for over an hour.
+  ignore_errors: true  # ignore errors if the task runs for over an vacuumdb_analyze_timeout
 
 ...

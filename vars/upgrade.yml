@@ -26,7 +26,8 @@ pg_start_stop_timeout: 1800  # 30 minutes
 patroni_config_file: /etc/patroni/patroni.yml
 
 schema_compatibility_check: true  # if 'true', before the upgrade, check the compatibility of the database schema with the new PostgreSQL
-schema_compatibility_check_timeout: 3600  # seconds. The maximum check duration is 1 hour (pg_dumpall --schema-only)
+schema_compatibility_check_timeout: 3600  # seconds. The maximum check duration (pg_dumpall --schema-only)
+vacuumdb_analyze_timeout: 3600  # seconds. The maximum duration of analyze command (soft limit, exceeding won't halt playbook)
 update_extensions: true  # if 'true', try to update extensions automatically
 
 # Do not perform an upgrade if
