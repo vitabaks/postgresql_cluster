@@ -698,6 +698,13 @@
           delay: 30
           when: item.ansible_job_id is defined
 
+        - name: Remove patroni.dynamic.json file
+          file:
+            path: "{{ postgresql_data_dir }}/patroni.dynamic.json"
+            state: absent
+          failed_when: false
+          when: not keep_patroni_dynamic_json|bool
+
         - name: Start PostgreSQL for Recovery  # Debian
           command: "/usr/bin/pg_ctlcluster {{ postgresql_version }} {{ postgresql_cluster_name }} start -o '-c hot_standby=off'"
           when: ansible_os_family == "Debian" and
@@ -754,7 +761,8 @@
       file:
         path: "{{ postgresql_data_dir }}/patroni.dynamic.json"
         state: absent
-      when: not keep_patroni_dynamic_json|bool
+      when: patroni_dynamic_json.stat.exists and
+            not keep_patroni_dynamic_json|bool
 
     - name: Edit patroni.dynamic.json | disable archive_command (if enabled)
       yedit:

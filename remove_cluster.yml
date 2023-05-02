@@ -37,6 +37,7 @@
         name: consul
         state: stopped
         enabled: false
+      when: remove_consul|bool
     - name: Delete Consul content
       file:
         path: "{{ consul_data_path }}"
