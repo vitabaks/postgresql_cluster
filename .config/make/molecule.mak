@@ -61,6 +61,6 @@ molecule-login: ## Log in to one instance using custom host IP (example: make mo
 	molecule login --host $(MOLECULE_HOST)
 
 .PHONY: molecule-login-scenario
-molecule-login-scenario: ## Log in to one instance using custom host IP and scenario name (example: make molecule-login MOLECULE_HOST="10.172.1.20" MOLECULE_SCENARIO="postgrespro")
+molecule-login-scenario: ## Log in to one instance using custom host IP and scenario name (example: make molecule-login-scenario MOLECULE_HOST="10.172.1.20" MOLECULE_SCENARIO="postgrespro")
 	source .venv/bin/activate
 	molecule login --host $(MOLECULE_HOST) --scenario-name $(MOLECULE_SCENARIO)
