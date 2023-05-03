@@ -136,7 +136,8 @@
       changed_when: false
       tags: always
 
-- hosts: new_replica
+- name: Add new PostgreSQL node to the cluster
+  hosts: new_replica
   become: true
   become_method: sudo
   gather_facts: true
@@ -174,7 +175,8 @@
     - role: ntp
     - role: copy
 
-- hosts: pgbackrest:new_replica
+- name: Add new PostgreSQL node with pgBackRest to the cluster
+  hosts: pgbackrest:new_replica
   become: true
   become_method: sudo
   gather_facts: true
@@ -197,11 +199,13 @@
     - role: pgbackrest
       when: pgbackrest_install|bool
 
-- import_playbook: consul.yml
+- name: Import Consul playbook
+  import_playbook: consul.yml
   when: dcs_type == "consul"
   tags: consul
 
-- hosts: new_replica
+- name: Configure new replica and additional roles
+  hosts: new_replica
   become: true
   become_method: sudo
   gather_facts: true
