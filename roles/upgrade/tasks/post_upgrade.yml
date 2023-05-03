@@ -18,7 +18,7 @@
 
 # Return the pg_hba.conf file to its original state (if it has been changed)
 - block:
-    - name: Remove temporary local access rule for the "postgres" user 
+    - name: Remove temporary local access rule for the "postgres" user
       blockinfile:
         path: "{{ pg_new_confdir }}/pg_hba.conf"
         marker: "# {mark} ANSIBLE TEMPORARY pg_upgrade RULE"
