@@ -124,7 +124,8 @@
       changed_when: false
       tags: always
 
-- hosts: new_balancer
+- name: Add load balancer
+  hosts: new_balancer
   become: true
   become_method: sudo
   gather_facts: true
