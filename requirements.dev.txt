@@ -3,3 +3,4 @@ yamllint==1.31.0
 molecule==5.0.0
 molecule-plugins[docker]==23.4.0
 docker==6.0.1
+ansible-compat==3.0.1
