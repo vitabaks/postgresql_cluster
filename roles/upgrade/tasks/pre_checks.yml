@@ -175,7 +175,7 @@
   when:
     - inventory_hostname in groups['primary']
 
-- name: "(TARGET) Cleanup testrsync file"
+- name: "[Pre-Check] Cleanup testrsync file"
   become: true
   become_user: postgres
   file:
