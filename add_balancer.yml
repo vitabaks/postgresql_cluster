@@ -1,5 +1,5 @@
 ---
-- name: Add haproxy balancer node (to the cluster "{{ patroni_cluster_name }}")
+- name: add_balancer.yml | Add haproxy balancer node (to the cluster "{{ patroni_cluster_name }}")
   hosts: balancers
   become: true
   become_method: sudo
@@ -124,7 +124,7 @@
       changed_when: false
       tags: always
 
-- name: Add load balancer
+- name: add_balancer.yml | Add load balancer
   hosts: new_balancer
   become: true
   become_method: sudo
