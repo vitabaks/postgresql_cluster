@@ -1,5 +1,5 @@
 ---
-- name: PostgreSQL High-Availability Cluster Scaling (add a replica node to the cluster "{{ patroni_cluster_name }}")
+- name: add_pgnode.yml | PostgreSQL High-Availability Cluster Scaling (add a replica node to the cluster "{{ patroni_cluster_name }}")
   hosts: postgres_cluster
   become: true
   become_method: sudo
@@ -136,7 +136,7 @@
       changed_when: false
       tags: always
 
-- name: Add new PostgreSQL node to the cluster
+- name: add_pgnode.yml | Add new PostgreSQL node to the cluster
   hosts: new_replica
   become: true
   become_method: sudo
@@ -175,7 +175,7 @@
     - role: ntp
     - role: copy
 
-- name: Add new PostgreSQL node with pgBackRest to the cluster
+- name: add_pgnode.yml | Add new PostgreSQL node with pgBackRest to the cluster
   hosts: pgbackrest:new_replica
   become: true
   become_method: sudo
@@ -199,12 +199,12 @@
     - role: pgbackrest
       when: pgbackrest_install|bool
 
-- name: Import Consul playbook
+- name: add_pgnode.yml | Import Consul playbook
   import_playbook: consul.yml
   when: dcs_type == "consul"
   tags: consul
 
-- name: Configure new replica and additional roles
+- name: add_pgnode.yml | Configure new replica and additional roles
   hosts: new_replica
   become: true
   become_method: sudo
