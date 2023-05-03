@@ -1,5 +1,4 @@
 ---
-
 - name: Add haproxy balancer node (to the cluster "{{ patroni_cluster_name }}")
   hosts: balancers
   become: true
@@ -23,17 +22,17 @@
       when: ansible_os_family == 'Rocky' or ansible_os_family == 'AlmaLinux'
       tags: always
 
-    - name: '[Pre-Check] Checking Linux distribution'
+    - name: "[Pre-Check] Checking Linux distribution"
       fail:
         msg: "{{ ansible_distribution }} is not supported"
       when: ansible_distribution not in os_valid_distributions
 
-    - name: '[Pre-Check] Checking version of OS Linux'
+    - name: "[Pre-Check] Checking version of OS Linux"
       fail:
         msg: "{{ ansible_distribution_version }} of {{ ansible_distribution }} is not supported"
       when: ansible_distribution_version is version_compare(os_minimum_versions[ansible_distribution], '<')
 
-    - name: '[Pre-Check] Check if there is a node with new_node set to true'
+    - name: "[Pre-Check] Check if there is a node with new_node set to true"
       set_fact:
         new_nodes: "{{ new_nodes | default([]) + [item] }}"
       when: hostvars[item]['new_node'] | default(false) | bool
@@ -158,10 +157,8 @@
 
     - role: confd
       when: dcs_type == "etcd" and
-            with_haproxy_load_balancing|bool
+        with_haproxy_load_balancing|bool
 
     - role: keepalived
       when: cluster_vip is defined and cluster_vip | length > 0 and
-            with_haproxy_load_balancing|bool
-
-...
+        with_haproxy_load_balancing|bool

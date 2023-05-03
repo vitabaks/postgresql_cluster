@@ -1,5 +1,4 @@
 ---
-
 - name: PostgreSQL High-Availability Cluster Scaling (add a replica node to the cluster "{{ patroni_cluster_name }}")
   hosts: postgres_cluster
   become: true
@@ -25,17 +24,17 @@
       when: ansible_os_family == 'Rocky' or ansible_os_family == 'AlmaLinux'
       tags: always
 
-    - name: '[Pre-Check] Checking Linux distribution'
+    - name: "[Pre-Check] Checking Linux distribution"
       fail:
         msg: "{{ ansible_distribution }} is not supported"
       when: ansible_distribution not in os_valid_distributions
 
-    - name: '[Pre-Check] Checking version of OS Linux'
+    - name: "[Pre-Check] Checking version of OS Linux"
       fail:
         msg: "{{ ansible_distribution_version }} of {{ ansible_distribution }} is not supported"
       when: ansible_distribution_version is version_compare(os_minimum_versions[ansible_distribution], '<')
 
-    - name: '[Pre-Check] Check if there is a node with new_node set to true'
+    - name: "[Pre-Check] Check if there is a node with new_node set to true"
       set_fact:
         new_nodes: "{{ new_nodes | default([]) + [item] }}"
       when: hostvars[item]['new_node'] | default(false) | bool
@@ -244,12 +243,10 @@
 
     - role: vip-manager
       when: not with_haproxy_load_balancing|bool and
-            (cluster_vip is defined and cluster_vip | length > 0)
+        (cluster_vip is defined and cluster_vip | length > 0)
 
     - role: netdata
       when: netdata_install is defined and netdata_install|bool
 
     # finish (info)
     - role: deploy-finish
-
-...
