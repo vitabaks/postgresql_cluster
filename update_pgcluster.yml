@@ -218,7 +218,7 @@
 
     # finish (info)
     - name: Check the Patroni cluster state
-      run_once: true
+      run_once: true # noqa run-once
       become: true
       become_user: postgres
       command: patronictl -c /etc/patroni/patroni.yml list
@@ -228,19 +228,19 @@
         PATH: "{{ ansible_env.PATH }}:/usr/bin:/usr/local/bin"
 
     - name: Check the current PostgreSQL version
-      run_once: true
+      run_once: true # noqa run-once
       command: psql -tAXc "select current_setting('server_version')"
       register: postgres_version
       changed_when: false
 
     - name: List the Patroni cluster members
-      run_once: true
+      run_once: true # noqa run-once
       debug:
         msg: "{{ patronictl_result.stdout_lines }}"
       when: patronictl_result.stdout_lines is defined
 
     - name: Update completed
-      run_once: true
+      run_once: true # noqa run-once
       debug:
         msg:
           - "PostgreSQL HA cluster update completed."

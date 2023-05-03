@@ -41,13 +41,13 @@
 
     # Stop, if no nodes found with new_node variable
     - name: "Pre-Check error. No nodes found with new_node set to true"
-      run_once: true
+      run_once: true # noqa run-once
       fail:
         msg: "Please specify the new_node=true variable for the new balancer server to add it to the existing cluster."
       when: new_nodes | default([]) | length < 1
 
     - name: Print a list of new balancer nodes
-      run_once: true
+      run_once: true # noqa run-once
       debug:
         var: new_nodes
       tags: always
