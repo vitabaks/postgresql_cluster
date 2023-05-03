@@ -15,9 +15,29 @@
   vars:
     ansible_python_interpreter: /usr/bin/python3
 
-- name: '[Pre-Check] Test PostgreSQL DB Access'
+- name: '[Pre-Check] Test PostgreSQL database access using a unix socket'
   command: psql -tAXc 'select 1'
+  register: socket_access_result
   changed_when: false
+  failed_when: "socket_access_result.rc != 0 and 'no pg_hba.conf entry' not in socket_access_result.stderr"
+
+# if 'no pg_hba.conf entry'
+- block:
+    # Add a temporary local access rule for pg_upgrade to allow the upgrade process to proceed without authentication issues.
+    # The rule grants the specified PostgreSQL user ("postgres") peer-based access to all databases locally.
+    # This is necessary to ensure a smooth upgrade process and will be removed after the upgrade is complete.
+    - name: Add temporary local access rule for the "postgres" user (during the upgrade)
+      blockinfile:
+        path: "{{ pg_old_confdir }}/pg_hba.conf"
+        marker: "# {mark} ANSIBLE TEMPORARY pg_upgrade RULE"
+        insertbefore: BOF
+        content: "local all postgres peer"
+
+    - name: Update the PostgreSQL configuration
+      command: "{{ pg_old_bindir }}/pg_ctl reload -D {{ pg_old_datadir }}"
+  when:
+    - socket_access_result.stderr is defined
+    - "'no pg_hba.conf entry' in socket_access_result.stderr"
 
 - name: '[Pre-Check] Check the current version of PostgreSQL'
   command: psql -tAXc "select setting::integer/10000 from pg_settings where name = 'server_version_num'"
