@@ -1,6 +1,6 @@
 ---
 image:
-  file: .gitpod.Dockerfile
+  file: .config/gitpod/Dockerfile
 
 tasks:
   - init: make bootstrap
