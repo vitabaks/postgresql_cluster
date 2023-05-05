@@ -1,5 +1,5 @@
 ---
-- name: Configuration PostgreSQL HA Cluster (based on "Patroni" and "{{ dcs_type }}")
+- name: config_pgcluster.yml | Configuration PostgreSQL HA Cluster (based on "Patroni" and "{{ dcs_type }}")
   hosts: localhost
   gather_facts: false
   vars_files:
@@ -12,7 +12,7 @@
         msg: "Ansible version must be {{ minimal_ansible_version }} or higher"
       when: ansible_version.full is version(minimal_ansible_version, '<')
 
-- name: Set maintenance variable
+- name: config_pgcluster.yml | Set maintenance variable
   hosts: all
   tasks:
     - name: Set variable
@@ -20,7 +20,7 @@
         postgresql_cluster_maintenance: true
   tags: always
 
-- name: Gathering facts from all servers
+- name: config_pgcluster.yml | Gathering facts from all servers
   hosts: all
   gather_facts: true
   tags: always
