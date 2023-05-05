@@ -134,8 +134,8 @@
   gather_facts: true
   any_errors_fatal: true
   handlers:
-    - include: roles/patroni/handlers/main.yml
-    - include: roles/pgbouncer/handlers/main.yml
+    - include_tasks: roles/patroni/handlers/main.yml
+    - include_tasks: roles/pgbouncer/handlers/main.yml
   vars_files:
     - vars/main.yml
     - vars/system.yml
