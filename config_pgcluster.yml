@@ -25,7 +25,8 @@
   gather_facts: true
   tags: always
 
-- hosts: postgres_cluster
+- name: config_pgcluster.yml | Configure Postgres Cluster
+  hosts: postgres_cluster
   become: true
   become_method: sudo
   gather_facts: true
@@ -121,11 +122,13 @@
     - role: ssh-keys
     - role: copy
 
-- import_playbook: balancers.yml
+- name: config_pgcluster.yml | Configure HAProxy Load Balancing
+  import_playbook: balancers.yml
   when: with_haproxy_load_balancing|bool
   tags: config_balancers,load_balancing, haproxy
 
-- hosts: postgres_cluster
+- name: config_pgcluster.yml | Deploy Postgres Cluster
+  hosts: postgres_cluster
   become: true
   become_method: sudo
   gather_facts: true
