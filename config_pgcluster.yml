@@ -1,5 +1,4 @@
 ---
-
 - name: Configuration PostgreSQL HA Cluster (based on "Patroni" and "{{ dcs_type }}")
   hosts: localhost
   gather_facts: false
@@ -160,7 +159,7 @@
 
     - role: vip-manager
       when: not with_haproxy_load_balancing|bool and
-            (cluster_vip is defined and cluster_vip | length > 0)
+        (cluster_vip is defined and cluster_vip | length > 0)
 
     # optional
     - role: postgresql-users
@@ -177,5 +176,3 @@
 
     - role: pgbouncer/config
       when: pgbouncer_install|bool and pgbouncer_generate_userlist|bool
-
-...
