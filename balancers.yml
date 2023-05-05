@@ -1,5 +1,6 @@
 ---
-- hosts: balancers
+- name: Configure load balancers
+  hosts: balancers
   become: true
   become_method: sudo
   any_errors_fatal: true
