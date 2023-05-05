@@ -1,5 +1,5 @@
 ---
-- name: Configure load balancers
+- name: balancer.yml | Configure load balancers
   hosts: balancers
   become: true
   become_method: sudo
