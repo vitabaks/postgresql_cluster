@@ -1,5 +1,4 @@
 ---
-
 - hosts: balancers
   become: true
   become_method: sudo
@@ -9,7 +8,7 @@
     - vars/main.yml
     - vars/system.yml
   vars:
-    vip_manager_disable: false  # or 'true' for disable vip-manager service (if installed)
+    vip_manager_disable: false # or 'true' for disable vip-manager service (if installed)
 
   pre_tasks:
     - name: Include OS-specific variables
@@ -95,5 +94,3 @@
 
     - role: keepalived
       when: cluster_vip is defined and cluster_vip | length > 0
-
-...
