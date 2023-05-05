@@ -14,14 +14,6 @@
 10.128.64.142
 10.128.64.143
 
-# if dcs_exists: false and dcs_type: "consul"
-[consul_instances]  # recommendation: 3 or 5-7 nodes
-10.128.64.140 consul_node_role=server consul_bootstrap_expect=true consul_datacenter=dc1
-10.128.64.142 consul_node_role=server consul_bootstrap_expect=true consul_datacenter=dc1
-10.128.64.143 consul_node_role=server consul_bootstrap_expect=true consul_datacenter=dc1
-#10.128.64.144 consul_node_role=client consul_datacenter=dc1
-#10.128.64.145 consul_node_role=client consul_datacenter=dc2
-
 # if with_haproxy_load_balancing: true
 [balancers]
 10.128.64.140
@@ -41,21 +33,4 @@
 [postgres_cluster:children]
 master
 replica
-
-# if pgbackrest_install: true and "repo_host" is set
-[pgbackrest]  # optional (Dedicated Repository Host)
-
-
-# Connection settings
-[all:vars]
-ansible_connection='ssh'
-ansible_ssh_port='22'
-ansible_user='root'
-ansible_ssh_pass='secretpassword'  # "sshpass" package is required for use "ansible_ssh_pass"
-#ansible_ssh_private_key_file=
-#ansible_python_interpreter='/usr/bin/python3'  # is required for use python3
-
-[pgbackrest:vars]
-ansible_user='postgres'
-ansible_ssh_pass='secretpassword'
 
