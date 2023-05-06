@@ -1,5 +1,5 @@
 ---
-- name: Consul Playbook
+- name: consul.yml | Consul Playbook
   hosts: localhost
   any_errors_fatal: true
   gather_facts: false
@@ -20,7 +20,7 @@
       when:
         - ansible_utils_result.stderr is search("unable to find")
 
-- name: Configure Consul instances
+- name: consul.yml | Configure Consul instances
   hosts: consul_instances
   become: true
   become_method: sudo
