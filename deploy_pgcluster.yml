@@ -1,5 +1,5 @@
 ---
-- name: Deploy PostgreSQL HA Cluster (based on "Patroni" and "{{ dcs_type }}")
+- name: deploy_pgcluster.yml | Deploy PostgreSQL HA Cluster (based on "Patroni" and "{{ dcs_type }}")
   hosts: localhost
   gather_facts: false
   vars_files:
@@ -12,7 +12,7 @@
         msg: "Ansible version must be {{ minimal_ansible_version }} or higher"
       when: ansible_version.full is version(minimal_ansible_version, '<')
 
-- name: Gathering facts from all servers and preparing the system
+- name: deploy_pgcluster.yml | Gathering facts from all servers and preparing the system
   hosts: all
   become: true
   become_method: sudo
@@ -101,17 +101,17 @@
       retries: 3
       when: ansible_os_family == "Debian"
 
-- name: Deploy etcd cluster
+- name: deploy_pgcluster.yml | Deploy etcd cluster
   import_playbook: etcd_cluster.yml
   when: not dcs_exists|bool and dcs_type == "etcd"
   tags: etcd
 
-- name: Deploy Consul
+- name: deploy_pgcluster.yml | Deploy Consul
   import_playbook: consul.yml
   when: dcs_type == "consul"
   tags: consul
 
-- name: Postgres Cluster Configuration
+- name: deploy_pgcluster.yml | Postgres Cluster Configuration
   hosts: postgres_cluster
   become: true
   become_method: sudo
@@ -180,12 +180,12 @@
     - role: ssh-keys
     - role: copy
 
-- name: Deploy balancers
+- name: deploy_pgcluster.yml | Deploy balancers
   import_playbook: balancers.yml
   when: with_haproxy_load_balancing|bool
   tags: load_balancing, haproxy
 
-- name: Install and configure pgBackRest
+- name: deploy_pgcluster.yml | Install and configure pgBackRest
   hosts: pgbackrest:postgres_cluster
   become: true
   become_method: sudo
@@ -209,7 +209,7 @@
     - role: pgbackrest
       when: pgbackrest_install|bool
 
-- name: PostgreSQL Cluster Deployment
+- name: deploy_pgcluster.yml | PostgreSQL Cluster Deployment
   hosts: postgres_cluster
   become: true
   become_method: sudo
