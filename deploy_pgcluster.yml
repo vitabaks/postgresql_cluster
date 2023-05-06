@@ -111,7 +111,8 @@
   when: dcs_type == "consul"
   tags: consul
 
-- hosts: postgres_cluster
+- name: Postgres Cluster Configuration
+  hosts: postgres_cluster
   become: true
   become_method: sudo
   gather_facts: true
@@ -184,7 +185,8 @@
   when: with_haproxy_load_balancing|bool
   tags: load_balancing, haproxy
 
-- hosts: pgbackrest:postgres_cluster
+- name: Install and configure pgBackRest
+  hosts: pgbackrest:postgres_cluster
   become: true
   become_method: sudo
   gather_facts: true
@@ -207,13 +209,14 @@
     - role: pgbackrest
       when: pgbackrest_install|bool
 
-- hosts: postgres_cluster
+- name: PostgreSQL Cluster Deployment
+  hosts: postgres_cluster
   become: true
   become_method: sudo
   gather_facts: true
   any_errors_fatal: true
   handlers:
-    - include: roles/pgbouncer/handlers/main.yml
+    - include_tasks: roles/pgbouncer/handlers/main.yml
   vars_files:
     - vars/main.yml
     - vars/system.yml
