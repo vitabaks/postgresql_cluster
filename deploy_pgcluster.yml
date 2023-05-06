@@ -101,11 +101,13 @@
       retries: 3
       when: ansible_os_family == "Debian"
 
-- import_playbook: etcd_cluster.yml
+- name: Deploy etcd cluster
+  import_playbook: etcd_cluster.yml
   when: not dcs_exists|bool and dcs_type == "etcd"
   tags: etcd
 
-- import_playbook: consul.yml
+- name: Deploy Consul
+  import_playbook: consul.yml
   when: dcs_type == "consul"
   tags: consul
 
@@ -177,7 +179,8 @@
     - role: ssh-keys
     - role: copy
 
-- import_playbook: balancers.yml
+- name: Deploy balancers
+  import_playbook: balancers.yml
   when: with_haproxy_load_balancing|bool
   tags: load_balancing, haproxy
 
