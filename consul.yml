@@ -1,5 +1,6 @@
 ---
-- hosts: localhost
+- name: Consul Playbook
+  hosts: localhost
   any_errors_fatal: true
   gather_facts: false
   vars_files:
@@ -19,7 +20,8 @@
       when:
         - ansible_utils_result.stderr is search("unable to find")
 
-- hosts: consul_instances
+- name: Configure Consul instances
+  hosts: consul_instances
   become: true
   become_method: sudo
   any_errors_fatal: true
