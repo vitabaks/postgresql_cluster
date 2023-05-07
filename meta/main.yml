@@ -26,7 +26,6 @@ galaxy_info:
 
   galaxy_tags:
     - postgresql
-    - high-availability
     - cluster
     - patroni
     - etcd
