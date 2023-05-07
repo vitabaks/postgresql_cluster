@@ -1,5 +1,6 @@
 ---
-- hosts: etcd_cluster
+- name: Configure etcd Cluster and System Settings
+  hosts: etcd_cluster
   become: true
   become_method: sudo
   any_errors_fatal: true
