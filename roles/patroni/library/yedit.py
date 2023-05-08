@@ -392,8 +392,7 @@ class Yedit(object):
         for arr_ind, dict_key in key_indexes:
             if dict_key and isinstance(data, dict):
                 data = data.get(dict_key)
-            elif (arr_ind and isinstance(data, list) and
-                  int(arr_ind) <= len(data) - 1):
+            elif (arr_ind and isinstance(data, list) and int(arr_ind) <= len(data) - 1):
                 data = data[int(arr_ind)]
             else:
                 return None
