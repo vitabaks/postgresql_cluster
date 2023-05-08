@@ -1,9 +1,8 @@
 ---
-
 - hosts: postgres_cluster
   vars:
-    remove_postgres: false  # or 'true' to remove the database
-    remove_consul: false  # or 'true' to remove the consul data
+    remove_postgres: false # or 'true' to remove the database
+    remove_consul: false # or 'true' to remove the consul data
   become: true
   vars_files:
     - vars/main.yml
@@ -46,7 +45,7 @@
 
 - hosts: etcd_cluster
   vars:
-    remove_etcd: false  # or 'true' to remove the database
+    remove_etcd: false # or 'true' to remove the database
   become: true
   vars_files:
     - vars/main.yml
@@ -61,5 +60,3 @@
         path: "{{ etcd_data_dir }}/member"
         state: absent
       when: remove_etcd|bool
-
-...
