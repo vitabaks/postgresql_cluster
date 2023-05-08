@@ -1,7 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+# GNU General Public License v3.0+
+# (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 # pylint: disable=wrong-import-order,wrong-import-position,unused-import
 
@@ -67,7 +68,7 @@ options:
     aliases: []
   edits:
     description:
-    - A list of edits to perform.  These follow the same format as a single edit
+    - A list of edits to perform. These follow the same format as a single edit
     required: false
     aliases: []
   value_type:
