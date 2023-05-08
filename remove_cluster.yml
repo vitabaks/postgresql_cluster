@@ -1,5 +1,6 @@
 ---
-- hosts: postgres_cluster
+- name: PostgreSQL Cluster Play
+  hosts: postgres_cluster
   vars:
     remove_postgres: false # or 'true' to remove the database
     remove_consul: false # or 'true' to remove the consul data
@@ -43,7 +44,8 @@
         state: absent
       when: remove_consul|bool
 
-- hosts: etcd_cluster
+- name: Etcd Cluster Play
+  hosts: etcd_cluster
   vars:
     remove_etcd: false # or 'true' to remove the database
   become: true
