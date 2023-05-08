@@ -630,8 +630,7 @@ class Yedit(object):
             # AUDIT:maybe-no-member makes sense due to fuzzy types
             # pylint: disable=maybe-no-member
             if not isinstance(value, dict):
-                raise YeditException('Cannot replace key, value entry in dict with non-dict type. '
-                                    +'value=[{0}] type=[{1}]'.format(value, type(value)))
+                raise YeditException('Cannot replace key, value entry in dict with non-dict type. ' + 'value=[{0}] type=[{1}]'.format(value, type(value)))
 
             entry.update(value)
             return (True, self.yaml_dict)
