@@ -1,5 +1,5 @@
 ---
-- name: PostgreSQL Cluster Play
+- name: remove_cluster.yml | PostgreSQL Cluster Play
   hosts: postgres_cluster
   vars:
     remove_postgres: false # or 'true' to remove the database
@@ -44,7 +44,7 @@
         state: absent
       when: remove_consul|bool
 
-- name: Etcd Cluster Play
+- name: remove_cluster.yml | Etcd Cluster Play
   hosts: etcd_cluster
   vars:
     remove_etcd: false # or 'true' to remove the database
