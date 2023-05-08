@@ -772,8 +772,7 @@ class Yedit(object):
             try:
                 inc_value = yaml.safe_load(inc_value)
             except Exception:
-                raise YeditException('Could not determine type of incoming value. '
-                                    +'value=[{0}] vtype=[{1}]'.format(type(inc_value), vtype))
+                raise YeditException('Could not determine type of incoming value. ' + 'value=[{0}] vtype=[{1}]'.format(type(inc_value), vtype))
 
         return inc_value
 
