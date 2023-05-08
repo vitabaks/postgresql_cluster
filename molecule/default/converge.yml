@@ -16,4 +16,5 @@
         consul_bootstrap_expect: true # if dcs_type: "consul"
         cacheable: true
 
-- import_playbook: ../../deploy_pgcluster.yml
+- name: Deploy PostgreSQL Cluster
+  import_playbook: ../../deploy_pgcluster.yml
