@@ -822,8 +822,8 @@ class Yedit(object):
 
             if yamlfile.yaml_dict is None and state != 'present':
                 return {'failed': True,
-                        'msg': 'Error opening file [{0}].  Verify that the '.format(params['src']) +
-                               'file exists, that it is has correct permissions, and is valid yaml.'}
+                        'msg': 'Error opening file [{0}].  Verify that the '.format(params['src'])
+                        + 'file exists, that it is has correct permissions, and is valid yaml.'}
 
         if state == 'list':
             if params['content']:
@@ -906,10 +906,12 @@ class Yedit(object):
             return {'changed': False, 'result': yamlfile.yaml_dict, 'state': state}
         return {'failed': True, 'msg': 'Unkown state passed'}
 
+
 def json_roundtrip_clean(js):
     ''' Clean-up any non-string keys from a Python object, to ensure it can be serialized as JSON '''
     cleaned_json = json.dumps(js, skipkeys=True)
     return json.loads(cleaned_json)
+
 
 # pylint: disable=too-many-branches
 def main():
