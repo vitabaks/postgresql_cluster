@@ -299,8 +299,7 @@ class Yedit(object):
         for arr_ind, dict_key in key_indexes[:-1]:
             if dict_key and isinstance(data, dict):
                 data = data.get(dict_key)
-            elif (arr_ind and isinstance(data, list) and
-                  int(arr_ind) <= len(data) - 1):
+            elif (arr_ind and isinstance(data, list) and int(arr_ind) <= len(data) - 1):
                 data = data[int(arr_ind)]
             else:
                 return None
@@ -327,8 +326,7 @@ class Yedit(object):
         '''
         if key == '':
             pass
-        elif (not (key and Yedit.valid_key(key, sep)) and
-              isinstance(data, (list, dict))):
+        elif (not (key and Yedit.valid_key(key, sep)) and isinstance(data, (list, dict))):
             return None
 
         key_indexes = Yedit.parse_key(key, sep)
@@ -339,14 +337,12 @@ class Yedit(object):
                     continue
 
                 elif data and not isinstance(data, dict):
-                    raise YeditException("Unexpected item type found while going through key " +
-                                         "path: {0} (at key: {1})".format(key, dict_key))
+                    raise YeditException("Unexpected item type found while going through key " + "path: {0} (at key: {1})".format(key, dict_key))
 
                 data[dict_key] = {}
                 data = data[dict_key]
 
-            elif (arr_ind and isinstance(data, list) and
-                  int(arr_ind) <= len(data) - 1):
+            elif (arr_ind and isinstance(data, list) and int(arr_ind) <= len(data) - 1):
                 data = data[int(arr_ind)]
             else:
                 raise YeditException("Unexpected item type found while going through key path: {0}".format(key))
