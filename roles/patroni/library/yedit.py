@@ -448,8 +448,7 @@ class Yedit(object):
         elif self.content_type == 'json':
             Yedit._write(self.filename, json.dumps(self.yaml_dict, indent=4, sort_keys=True))
         else:
-            raise YeditException('Unsupported content_type: {0}.'.format(self.content_type) +
-                                 'Please specify a content_type of yaml or json.')
+            raise YeditException('Unsupported content_type: {0}.'.format(self.content_type) + 'Please specify a content_type of yaml or json.')
 
         return (True, self.yaml_dict)
 
