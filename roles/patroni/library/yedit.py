@@ -384,8 +384,7 @@ class Yedit(object):
         '''
         if key == '':
             pass
-        elif (not (key and Yedit.valid_key(key, sep)) and
-              isinstance(data, (list, dict))):
+        elif (not (key and Yedit.valid_key(key, sep)) and isinstance(data, (list, dict))):
             return None
 
         key_indexes = Yedit.parse_key(key, sep)
