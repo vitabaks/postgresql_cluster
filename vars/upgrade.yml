@@ -7,12 +7,12 @@
 # https://www.postgresql.org/docs/current/pgupgrade.html
 
 pg_old_version: ""  # specify the old version of PostgreSQL
-pg_old_bindir: "/usr/lib/postgresql/{{ pg_old_version }}/bin"
+pg_old_bindir: "{{ postgresql_bin_dir | regex_replace(postgresql_version, pg_old_version) }}"
 pg_old_datadir: "{{ postgresql_data_dir | regex_replace(postgresql_version, pg_old_version) }}"
 pg_old_confdir: "{{ postgresql_conf_dir | regex_replace(postgresql_version, pg_old_version) }}"
 
 pg_new_version: ""  # specify the new version of PostgreSQL
-pg_new_bindir: "/usr/lib/postgresql/{{ pg_new_version }}/bin"
+pg_new_bindir: "{{ postgresql_bin_dir | regex_replace(postgresql_version, pg_new_version) }}"
 pg_new_datadir: "{{ postgresql_data_dir | regex_replace(postgresql_version, pg_new_version) }}"
 pg_new_confdir: "{{ postgresql_conf_dir | regex_replace(postgresql_version, pg_new_version) }}"
 # custom WAL dir path (symlink will be created) [optional]
