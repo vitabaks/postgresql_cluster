@@ -18,6 +18,19 @@ pg_new_confdir: "{{ postgresql_conf_dir | regex_replace(postgresql_version, pg_n
 # custom WAL dir path (symlink will be created) [optional]
 pg_new_wal_dir: "{{ postgresql_wal_dir | regex_replace(postgresql_version, pg_new_version) }}"
 
+# Automatically update the package versions in the postgresql_packages variable
+pg_new_packages: "{{ postgresql_packages | regex_replace(postgresql_version, pg_new_version) }}"
+
+# Alternatively, you can explicitly specify the list of new packages to install. 
+# This gives you more control and should be used if the automatic update does not meet your needs. 
+# Uncomment and modify the following lines according to your requirements. Example:
+#pg_new_packages:
+#  - postgresql-{{ pg_new_version }}
+#  - postgresql-client-{{ pg_new_version }}
+#  - postgresql-server-dev-{{ pg_new_version }}
+#  - postgresql-contrib-{{ pg_new_version }}
+#  - postgresql-{{ pg_new_version }}-repack"
+
 # pg_upper_datadir - defines the top-level directory
 # (example: /var/lib/postgresql, /var/lib/pgsql, /pgdata)
 pg_upper_datadir: "{{ pg_new_datadir | dirname | dirname }}"  # change this if the data directory is located on a path other than the default

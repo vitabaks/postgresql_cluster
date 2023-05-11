@@ -14,8 +14,6 @@ postgresql_home_dir: "/var/lib/pgsql"
 postgresql_stats_temp_directory_path: "/var/lib/pgsql_stats_tmp"  # or 'none'
 postgresql_stats_temp_directory_size: "1024m"
 
-postgresql_version_terse: "{{ postgresql_version | replace('.', '') }}"
-
 # Repository
 yum_repository: []
 #  - name: "repo name"
@@ -72,11 +70,11 @@ glibc_langpack:
 #  - "glibc-langpack-de"
 
 postgresql_packages:
-  - postgresql{{ postgresql_version_terse }}
-  - postgresql{{ postgresql_version_terse }}-server
-  - postgresql{{ postgresql_version_terse }}-contrib
-  - postgresql{{ postgresql_version_terse }}-devel
-#  - pg_repack{{ postgresql_version_terse }}
+  - postgresql{{ postgresql_version | replace('.', '')  }}
+  - postgresql{{ postgresql_version | replace('.', '')  }}-server
+  - postgresql{{ postgresql_version | replace('.', '')  }}-contrib
+  - postgresql{{ postgresql_version | replace('.', '')  }}-devel
+#  - pg_repack{{ postgresql_version | replace('.', '')  }}
 
 # Extra packages
 etcd_package_repo: "https://github.com/etcd-io/etcd/releases/download/v{{ etcd_version }}/etcd-v{{ etcd_version }}-linux-amd64.tar.gz"

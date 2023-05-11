@@ -35,9 +35,7 @@
   package:
     name: "{{ item }}"
     state: present
-  loop: "{{ postgresql_packages }}"
-  vars:
-    postgresql_version: "{{ pg_new_version }}"
+  loop: "{{ pg_new_packages }}"
   register: package_status
   until: package_status is success
   delay: 5
