@@ -57,6 +57,12 @@
         state: started
         enabled: true
 
+    - name: Delete "/run/nologin" file (if exists)
+      become: true
+      file:
+        path: /run/nologin
+        state: absent
+
 - name: Deploy PostgreSQL HA Cluster
   import_playbook: ../../deploy_pgcluster.yml
 
