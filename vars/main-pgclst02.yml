@@ -1,0 +1,284 @@
+---
+proxy_env: {}
+cluster_vip: "10.20.6.116"
+vip_interface: "{{ ansible_default_ipv4.interface }}"
+patroni_cluster_name: "pgclst02"
+patroni_install_version: "latest"
+patroni_superuser_username: "postgres"
+patroni_superuser_password: !vault |
+  $ANSIBLE_VAULT;1.1;AES256
+  61653531386262636132323264613539613866383637663166376664356434313336623336656239
+  6539643830333831323064303435653766623235323439350a396166613437306265643861346538
+  61643036396564356566623033353837303864646432376165613766666234623062643766393633
+  6533366466613538340a326564333363303331633736356138336432396437616231636165663062
+  62393933623939396465323231343065623235313033626437666230393735656561323130303934
+  3232373465656333316333626261643466376333353233623965
+patroni_replication_username: "replicator"
+patroni_replication_password: !vault |
+  $ANSIBLE_VAULT;1.1;AES256
+  66373034336666333366386338343066643631623331356436366166323066303230633235336263
+  6365666465666237323935626338663031326333366463630a653937666665356136656364623931
+  63613364353234663863343563316631363861656364373465393361666438636366646138613464
+  3336396465383536370a383365353530353333303030383836653239656466386430343362633831
+  33396232653436663366346234303365303861626562393536636165643034626363333532306538
+  3131323339343564326661373338613531356539323666633230
+synchronous_mode: false
+synchronous_mode_strict: false
+synchronous_node_count: 1
+with_haproxy_load_balancing: false
+haproxy_listen_port:
+  master: 5000
+  replicas: 5001
+  replicas_sync: 5002
+  replicas_async: 5003
+  stats: 7000
+haproxy_maxconn:
+  global: 100000
+  master: 10000
+  replica: 10000
+haproxy_timeout:
+  client: "60m"
+  server: "60m"
+vip_manager_version: "1.0.2"
+vip_manager_conf: "/etc/patroni/vip-manager.yml"
+vip_manager_interval: "1000"
+vip_manager_iface: "{{ vip_interface }}"
+vip_manager_ip: "{{ cluster_vip }}"
+vip_manager_mask: "28"
+dcs_exists: false
+dcs_type: "etcd"
+etcd_ver: "v3.3.27"
+etcd_data_dir: "/var/lib/etcd"
+etcd_cluster_name: "etcd-{{ patroni_cluster_name }}"
+patroni_etcd_hosts: []
+postgresql_version: "14"
+postgresql_port: "5432"
+postgresql_encoding: "UTF8"
+postgresql_locale: "en_US.UTF-8"
+postgresql_data_checksums: true
+postgresql_password_encryption_algorithm: "scram-sha-256"
+postgresql_users:
+  - name: supeoflex_dsb_test
+    password: !vault |
+      $ANSIBLE_VAULT;1.1;AES256
+      62323465633564613633383666616665386337633932633666363530663935363732353163306432
+      3631666463393036303365643632383736653932326638660a646639643432663633323233343364
+      66336638303763346535633961316132653037386137393364303462386661343636316535373135
+      3331363365323164350a346132646535656436363865663834633734663561386430656161386163
+      31383332323933323264363637323837353838363661663438353961383362363830393939313862
+      6265663532343531643635363233656539663538373261336531
+    flags: "NOSUPERUSER"
+postgresql_databases:
+  - db: supeoflex_dsb_test
+    owner: supeoflex_dsb_test
+    encoding: "UTF8"
+    lc_collate: "en_US.UTF-8"
+    lc_ctype: "en_US.UTF-8"
+postgresql_schemas: []
+postgresql_extensions: []
+postgresql_parameters:
+  - {option: "max_connections", value: "500"}
+  - {option: "superuser_reserved_connections", value: "5"}
+  - {option: "password_encryption", value: "{{ postgresql_password_encryption_algorithm }}"}
+  - {option: "max_locks_per_transaction", value: "64"}
+  - {option: "max_prepared_transactions", value: "0"}
+  - {option: "huge_pages", value: "try"}
+  - {option: "shared_buffers", value: "512MB"}
+  - {option: "work_mem", value: "128MB"}
+  - {option: "maintenance_work_mem", value: "256MB"}
+  - {option: "effective_cache_size", value: "4GB"}
+  - {option: "checkpoint_timeout", value: "15min"}
+  - {option: "checkpoint_completion_target", value: "0.9"}
+  - {option: "min_wal_size", value: "2GB"}
+  - {option: "max_wal_size", value: "8GB"}
+  - {option: "wal_buffers", value: "32MB"}
+  - {option: "default_statistics_target", value: "1000"}
+  - {option: "seq_page_cost", value: "1"}
+  - {option: "random_page_cost", value: "4"}
+  - {option: "effective_io_concurrency", value: "2"}
+  - {option: "synchronous_commit", value: "on"}
+  - {option: "autovacuum", value: "on"}
+  - {option: "autovacuum_max_workers", value: "5"}
+  - {option: "autovacuum_vacuum_scale_factor", value: "0.01"}
+  - {option: "autovacuum_analyze_scale_factor", value: "0.01"}
+  - {option: "autovacuum_vacuum_cost_limit", value: "500"}
+  - {option: "autovacuum_vacuum_cost_delay", value: "2"}
+  - {option: "autovacuum_naptime", value: "1s"}
+  - {option: "max_files_per_process", value: "4096"}
+  - {option: "archive_mode", value: "on"}
+  - {option: "archive_timeout", value: "300s"}
+  - {option: "archive_command", value: "/usr/bin/pgbackrest --stanza={{ pgbackrest_stanza }} archive-push %p"}
+  - {option: "wal_level", value: "replica"}
+  - {option: "wal_keep_size", value: "2GB"}
+  - {option: "max_wal_senders", value: "10"}
+  - {option: "max_replication_slots", value: "10"}
+  - {option: "hot_standby", value: "on"}
+  - {option: "wal_log_hints", value: "on"}
+  - {option: "wal_compression", value: "on"}
+  - {option: "shared_preload_libraries", value: "pg_stat_statements,auto_explain"}
+  - {option: "pg_stat_statements.max", value: "10000"}
+  - {option: "pg_stat_statements.track", value: "all"}
+  - {option: "pg_stat_statements.track_utility", value: "false"}
+  - {option: "pg_stat_statements.save", value: "true"}
+  - {option: "auto_explain.log_min_duration", value: "10s"}
+  - {option: "auto_explain.log_analyze", value: "true"}
+  - {option: "auto_explain.log_buffers", value: "true"}
+  - {option: "auto_explain.log_timing", value: "false"}
+  - {option: "auto_explain.log_triggers", value: "true"}
+  - {option: "auto_explain.log_verbose", value: "true"}
+  - {option: "auto_explain.log_nested_statements", value: "true"}
+  - {option: "auto_explain.sample_rate", value: "0.01"}
+  - {option: "track_io_timing", value: "on"}
+  - {option: "log_lock_waits", value: "on"}
+  - {option: "log_temp_files", value: "0"}
+  - {option: "track_activities", value: "on"}
+  - {option: "track_counts", value: "on"}
+  - {option: "track_functions", value: "all"}
+  - {option: "log_checkpoints", value: "on"}
+  - {option: "logging_collector", value: "on"}
+  - {option: "log_truncate_on_rotation", value: "on"}
+  - {option: "log_rotation_age", value: "1d"}
+  - {option: "log_rotation_size", value: "0"}
+  - {option: "log_line_prefix", value: "'%t [%p-%l] %r %q%u@%d '"}
+  - {option: "log_filename", value: "postgresql-%a.log"}
+  - {option: "log_directory", value: "{{ postgresql_log_dir }}"}
+  - {option: "hot_standby_feedback", value: "on"}
+  - {option: "max_standby_streaming_delay", value: "30s"}
+  - {option: "wal_receiver_status_interval", value: "10s"}
+  - {option: "idle_in_transaction_session_timeout", value: "10min"}
+  - {option: "jit", value: "off"}
+  - {option: "max_worker_processes", value: "24"}
+  - {option: "max_parallel_workers", value: "8"}
+  - {option: "max_parallel_workers_per_gather", value: "2"}
+  - {option: "max_parallel_maintenance_workers", value: "2"}
+postgresql_pg_hba:
+  - {type: "local", database: "all", user: "{{ patroni_superuser_username }}", address: "", method: "trust"}
+  - {type: "local", database: "all", user: "all", address: "", method: "peer"}
+  - {type: "host", database: "all", user: "all", address: "127.0.0.1/32", method: "{{ postgresql_password_encryption_algorithm }}"}
+  - {type: "host", database: "all", user: "all", address: "::1/128", method: "{{ postgresql_password_encryption_algorithm }}"}
+postgresql_pg_ident: []
+pgbouncer_install: true
+pgbouncer_conf_dir: "/etc/pgbouncer"
+pgbouncer_log_dir: "/var/log/pgbouncer"
+pgbouncer_listen_port: 6432
+pgbouncer_max_client_conn: 10000
+pgbouncer_max_db_connections: 1000
+pgbouncer_default_pool_size: 20
+pgbouncer_default_pool_mode: "session"
+pgbouncer_admin_users: "postgres"
+pgbouncer_stats_users: "postgres"
+pgbouncer_generate_userlist: true
+pgbouncer_auth_type: "{{ postgresql_password_encryption_algorithm }}"
+pgbouncer_ignore_startup_parameters: "extra_float_digits,geqo,search_path"
+pgbouncer_pools:
+  - {name: "postgres", dbname: "postgres", pool_parameters: ""}
+patroni_ttl: 30
+patroni_loop_wait: 10
+patroni_retry_timeout: 10
+patroni_maximum_lag_on_failover: 1048576
+patroni_master_start_timeout: 300
+patroni_standby_cluster:
+  host: ""
+  port: "5432"
+patroni_log_destination: stderr
+patroni_log_dir: /var/log/patroni
+patroni_log_level: info
+patroni_log_traceback_level: error
+patroni_log_format: "%(asctime)s %(levelname)s: %(message)s"
+patroni_log_dateformat: ""
+patroni_log_max_queue_size: 1000
+patroni_log_file_num: 4
+patroni_log_file_size: 25000000
+patroni_log_loggers_patroni_postmaster: warning
+patroni_log_loggers_urllib3: warning
+patroni_postgresql_use_pg_rewind: true
+patroni_remove_data_directory_on_rewind_failure: false
+patroni_remove_data_directory_on_diverged_timelines: false
+patroni_cluster_bootstrap_method: "initdb"
+patroni_create_replica_methods:
+  - basebackup
+pgbackrest:
+  - {option: "command", value: "/usr/bin/pgbackrest --stanza={{ pgbackrest_stanza }} --delta restore"}
+  - {option: "keep_data", value: "True"}
+  - {option: "no_params", value: "True"}
+wal_g:
+  - {option: "command", value: "wal-g backup-fetch {{ postgresql_data_dir }} LATEST"}
+  - {option: "no_params", value: "True"}
+basebackup:
+  - {option: "max-rate", value: "100M"}
+  - {option: "checkpoint", value: "fast"}
+pg_probackup:
+  - {option: "command", value: "pg_probackup-{{ pg_probackup_version }} restore -B {{ pg_probackup_dir }} --instance {{ pg_probackup_instance }} -j {{ pg_probackup_threads }} {{ pg_probackup_add_keys }}"}
+  - {option: "no_params", value: "true"}
+postgresql_restore_command: ""
+pg_probackup_install: false
+pg_probackup_install_from_postgrespro_repo: true
+pg_probackup_version: "{{ postgresql_version }}"
+pg_probackup_instance: "pg_probackup_instance_name"
+pg_probackup_dir: "/mnt/backup_dir"
+pg_probackup_threads: "4"
+pg_probackup_add_keys: "--recovery-target=latest --skip-external-dirs --no-validate"
+pg_probackup_patroni_cluster_bootstrap_command: "pg_probackup-{{ pg_probackup_version }} restore -B {{ pg_probackup_dir }} --instance {{ pg_probackup_instance }} -j {{ pg_probackup_threads }} {{ pg_probackup_add_keys }}"
+wal_g_install: false
+wal_g_version: "2.0.1"
+wal_g_json:
+  - {option: "AWS_ACCESS_KEY_ID", value: "minio"}
+  - {option: "AWS_SECRET_ACCESS_KEY", value: "miniosecret"}
+  - {option: "AWS_ENDPOINT", value: "http://172.26.9.200:9000"}
+  - {option: "WALG_S3_PREFIX", value: "s3://bucket"}
+  - {option: "AWS_S3_FORCE_PATH_STYLE", value: "true"}
+  - {option: "WALG_COMPRESSION_METHOD", value: "brotli"}
+  - {option: "PGDATA", value: "{{ postgresql_data_dir }}"}
+  - {option: "PGHOST", value: "{{ postgresql_unix_socket_dir }}"}
+wal_g_patroni_cluster_bootstrap_command: "wal-g backup-fetch {{ postgresql_data_dir }} LATEST"
+pgbackrest_install: true
+pgbackrest_install_from_pgdg_repo: true
+pgbackrest_stanza: "pgclst02"
+pgbackrest_repo_type: "s3"
+pgbackrest_conf_file: "/etc/pgbackrest/pgbackrest.conf"
+s3_key: !vault |
+  $ANSIBLE_VAULT;1.1;AES256
+  36313465383533376332373061366331326537306561306435363663323334376535643161313834
+  3437613530643632653836356665626634383863373036350a383036643062613732663832313465
+  33343738353765656261373266373733636564366439313066353162343631386134653966643334
+  3533323031373532620a376635336330663231346336386530313232363635363033303235316561
+  66393966363434636462613738373661393935613261376162386562343738313838
+s3_secret_key: !vault |
+  $ANSIBLE_VAULT;1.1;AES256
+  30383066386166306532666266316563336531323634343562646636346638633234666432646239
+  6536623461343831343465303564656536633636363137660a643366633464613230623963346236
+  66646661636334383633376634356464343032653262656130356238316336373930303439373264
+  3538616535336631650a363838376236306135333765333936336133303266353633643830313762
+  30356533653831373734616362666461663036386465613765366531646533303366383963653765
+  6538393863386431373136396263633034666333383734336166
+pgbackrest_conf:
+  global:
+    - {option: "log-level-file", value: "detail"}
+    - {option: "log-path", value: "/var/log/pgbackrest"}
+    - {option: "repo1-type", value: "s3"}
+    - {option: "repo1-s3-endpoint", value: "s3-offsite.supeo.net"}
+    - {option: "repo1-storage-port", value: "443"}
+    - {option: "repo1-s3-uri-style", value: "path"}
+    - {option: "repo1-path", value: "/"}
+    - {option: "repo1-s3-key", value: "{{ s3_key }}"}
+    - {option: "repo1-s3-key-secret", value: "{{ s3_secret_key }}"}
+    - {option: "repo1-s3-bucket", value: "pgclst02"}
+    - {option: "repo1-s3-region", value: "eu-west-1"}
+    - {option: "repo1-s3-verify-ssl", value: "n"}
+    - {option: "repo1-retention-full", value: "7"}
+    - {option: "repo1-retention-full-type", value: "time"}
+  stanza:
+    - {option: "pg1-path", value: "{{ postgresql_data_dir }}"}
+    - {option: "process-max", value: "2"}
+    - {option: "recovery-option", value: "recovery_target_action=promote"}
+pgbackrest_patroni_cluster_restore_command: "pgbackrest --stanza={{ pgbackrest_stanza }} --delta restore"
+pgbackrest_cron: []
+disable_archive_command: false
+keep_patroni_dynamic_json: true
+netdata_install: false
+netdata_install_options: "--stable-channel --disable-telemetry --dont-wait"
+netdata_conf:
+  web_bind_to: "*"
+  memory_mode: "dbengine"
+  page_cache_size: 64
+  dbengine_disk_space: 1024
