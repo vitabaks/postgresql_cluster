@@ -9,11 +9,11 @@
 10.20.6.115
 
 [master]
-10.20.6.113 hostname=pgclst02-01 postgresql_exists='false'
+10.20.6.113 hostname=pgclst02-01.supeo.net postgresql_exists='false'
 
 [replica]
-10.20.6.114 hostname=pgclst02-02 postgresql_exists='false'
-10.20.6.115 hostname=pgclst02-03 postgresql_exists='false'
+10.20.6.114 hostname=pgclst02-02.supeo.net postgresql_exists='false'
+10.20.6.115 hostname=pgclst02-03.supeo.net postgresql_exists='false'
 
 [postgres_cluster:children]
 master
