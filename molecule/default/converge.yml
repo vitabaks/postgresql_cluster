@@ -14,8 +14,12 @@
         with_haproxy_load_balancing: true
         consul_node_role: server  # if dcs_type: "consul"
         consul_bootstrap_expect: true  # if dcs_type: "consul"
-        enable_timescale: true  # TimescaleDB cluster deployment test
         cacheable: true
+
+    - name: Set variables for TimescaleDB cluster deployment test
+      set_fact:
+        enable_timescale: true
+      when: not (ansible_distribution == 'Ubuntu' and ansible_distribution_version == '18.04')
 
 - import_playbook: ../../deploy_pgcluster.yml
 
