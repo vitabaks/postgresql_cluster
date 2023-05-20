@@ -19,7 +19,7 @@
     - name: Set variables for TimescaleDB cluster deployment test
       set_fact:
         enable_timescale: true
-      when: not (ansible_distribution == 'Ubuntu' and ansible_distribution_version == '18.04')
+      when: not (ansible_distribution == 'Ubuntu' and ansible_distribution_version is version('20.04', '<'))
 
 - import_playbook: ../../deploy_pgcluster.yml
 
