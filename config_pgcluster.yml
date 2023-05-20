@@ -17,8 +17,8 @@
     - name: Checking PostgreSQL version
       fail:
         msg:
-         - "The current PostgreSQL version ({{ postgresql_version }}) is not supported by the TimescaleDB."
-         - "PostgreSQL version must be {{ timescale_minimal_pg_version }} or higher."
+          - "The current PostgreSQL version ({{ postgresql_version }}) is not supported by the TimescaleDB."
+          - "PostgreSQL version must be {{ timescale_minimal_pg_version }} or higher."
       when:
        - enable_timescale is defined
        - enable_timescale | bool
