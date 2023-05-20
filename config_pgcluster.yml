@@ -7,11 +7,22 @@
     - vars/main.yml
   vars:
     minimal_ansible_version: 2.7.0
+    timescale_minimal_pg_version: 12  # if enable_timescale is defined
   tasks:
     - name: Checking ansible version
       fail:
         msg: "Ansible version must be {{ minimal_ansible_version }} or higher"
       when: ansible_version.full is version(minimal_ansible_version, '<')
+
+    - name: Checking PostgreSQL version
+      fail:
+        msg:
+         - "The current PostgreSQL version ({{ postgresql_version }}) is not supported by the TimescaleDB."
+         - "PostgreSQL version must be {{ timescale_minimal_pg_version }} or higher."
+      when:
+       - enable_timescale is defined
+       - enable_timescale | bool
+       - postgresql_version|string is version(timescale_minimal_pg_version|string, '<')
 
 - name: Set maintenance variable
   hosts: all
@@ -149,6 +160,36 @@
     - name: Include OS-specific variables
       include_vars: "vars/RedHat.yml"
       when: ansible_os_family == 'Rocky' or ansible_os_family == 'AlmaLinux'
+      tags: always
+
+    # timescaledb (if enable_timescale is defined)
+    - block:
+        - name: Ensure 'timescaledb' is in 'shared_preload_libraries'
+          set_fact:
+            # This complex line does several things:
+            # 1. It takes the current list of PostgreSQL parameters,
+            # 2. Removes any item where the option is 'shared_preload_libraries',
+            # 3. Then appends a new 'shared_preload_libraries' item at the end.
+            # The new value of this item is based on whether 'timescaledb' is already present in the old value.
+            # If it is not present, it appends ',timescaledb' to the old value. Otherwise, it leaves the value unchanged.
+            postgresql_parameters: >-
+              {{ postgresql_parameters | rejectattr('option', 'equalto', 'shared_preload_libraries') | list
+              + [{ 'option': 'shared_preload_libraries', 'value': new_value }] }}
+          vars:
+            # Find the last item in postgresql_parameters where the option is 'shared_preload_libraries'
+            shared_preload_libraries_item:
+              "{{ postgresql_parameters | selectattr('option', 'equalto', 'shared_preload_libraries') | list | last | default({ 'value': '' }) }}"
+            # Determine the new value based on whether 'timescaledb' is already present
+            new_value: >-
+              {{
+                (shared_preload_libraries_item.value ~ (',' if shared_preload_libraries_item.value else '')
+                if 'timescaledb' not in shared_preload_libraries_item.value.split(',') else shared_preload_libraries_item.value)
+                ~ ('timescaledb' if 'timescaledb' not in shared_preload_libraries_item.value.split(',') else '')
+              }}
+      when:
+        - installation_method == "repo"
+        - enable_timescale is defined
+        - enable_timescale | bool
       tags: always
 
   roles:
