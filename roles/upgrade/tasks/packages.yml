@@ -41,4 +41,19 @@
   delay: 5
   retries: 3
 
+# timescaledb (if enable_timescale is defined)
+- name: Install TimescaleDB package for PostgreSQL {{ pg_new_version }}
+  package:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - timescaledb-2-postgresql-{{ pg_new_version }}
+  register: package_status
+  until: package_status is success
+  delay: 5
+  retries: 3
+  when:
+    - enable_timescale is defined
+    - enable_timescale | bool
+
 ...
