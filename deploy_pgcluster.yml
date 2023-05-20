@@ -20,9 +20,9 @@
           - "The current PostgreSQL version ({{ postgresql_version }}) is not supported by the TimescaleDB."
           - "PostgreSQL version must be {{ timescale_minimal_pg_version }} or higher."
       when:
-       - enable_timescale is defined
-       - enable_timescale | bool
-       - postgresql_version|string is version(timescale_minimal_pg_version|string, '<')
+        - enable_timescale is defined
+        - enable_timescale | bool
+        - postgresql_version|string is version(timescale_minimal_pg_version|string, '<')
 
 - name: Gathering facts from all servers and preparing the system
   hosts: all
