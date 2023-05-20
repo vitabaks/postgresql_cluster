@@ -14,6 +14,7 @@
         with_haproxy_load_balancing: true
         consul_node_role: server  # if dcs_type: "consul"
         consul_bootstrap_expect: true  # if dcs_type: "consul"
+        enable_timescale: true  # TimescaleDB cluster deployment test
         cacheable: true
 
 - import_playbook: ../../deploy_pgcluster.yml
