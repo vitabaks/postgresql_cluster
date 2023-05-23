@@ -22,6 +22,7 @@ skip_list:
   - no-relative-paths
   - key-order[task] # TODO
   - no-free-form
+  - var-naming[no-role-prefix]
 
 exclude_paths:
   - roles/consul/ # TODO - https://github.com/ansible-community/ansible-consul/pull/520
