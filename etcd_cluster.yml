@@ -1,6 +1,6 @@
 ---
-
-- hosts: etcd_cluster
+- name: Configure etcd Cluster and System Settings
+  hosts: etcd_cluster
   become: true
   become_method: sudo
   any_errors_fatal: true
@@ -64,8 +64,8 @@
     - role: ansible-role-firewall
       environment: "{{ proxy_env | default({}) }}"
       vars:
-        firewall_allowed_tcp_ports: "{{ firewall_ports_dynamic_var | unique }}"
-        firewall_additional_rules: "{{ firewall_rules_dynamic_var | unique }}"
+        firewall_allowed_tcp_ports: "{{ firewall_ports_dynamic_var | default([]) | unique }}"
+        firewall_additional_rules: "{{ firewall_rules_dynamic_var | default([]) | unique }}"
       when: firewall_enabled_at_boot|bool
       tags: firewall
 
@@ -76,5 +76,3 @@
     - role: ntp
 
     - role: etcd
-
-...

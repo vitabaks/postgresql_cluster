@@ -1,7 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+# GNU General Public License v3.0+
+# (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 # pylint: disable=wrong-import-order,wrong-import-position,unused-import
 
@@ -67,7 +68,7 @@ options:
     aliases: []
   edits:
     description:
-    - A list of edits to perform.  These follow the same format as a single edit
+    - A list of edits to perform. These follow the same format as a single edit
     required: false
     aliases: []
   value_type:
@@ -298,8 +299,7 @@ class Yedit(object):
         for arr_ind, dict_key in key_indexes[:-1]:
             if dict_key and isinstance(data, dict):
                 data = data.get(dict_key)
-            elif (arr_ind and isinstance(data, list) and
-                  int(arr_ind) <= len(data) - 1):
+            elif (arr_ind and isinstance(data, list) and int(arr_ind) <= len(data) - 1):
                 data = data[int(arr_ind)]
             else:
                 return None
@@ -326,8 +326,7 @@ class Yedit(object):
         '''
         if key == '':
             pass
-        elif (not (key and Yedit.valid_key(key, sep)) and
-              isinstance(data, (list, dict))):
+        elif (not (key and Yedit.valid_key(key, sep)) and isinstance(data, (list, dict))):
             return None
 
         key_indexes = Yedit.parse_key(key, sep)
@@ -338,14 +337,12 @@ class Yedit(object):
                     continue
 
                 elif data and not isinstance(data, dict):
-                    raise YeditException("Unexpected item type found while going through key " +
-                                         "path: {0} (at key: {1})".format(key, dict_key))
+                    raise YeditException("Unexpected item type found while going through key " + "path: {0} (at key: {1})".format(key, dict_key))
 
                 data[dict_key] = {}
                 data = data[dict_key]
 
-            elif (arr_ind and isinstance(data, list) and
-                  int(arr_ind) <= len(data) - 1):
+            elif (arr_ind and isinstance(data, list) and int(arr_ind) <= len(data) - 1):
                 data = data[int(arr_ind)]
             else:
                 raise YeditException("Unexpected item type found while going through key path: {0}".format(key))
@@ -357,7 +354,7 @@ class Yedit(object):
         # expected list entry
         elif key_indexes[-1][0] and isinstance(data, list) and int(key_indexes[-1][0]) <= len(data):  # noqa: E501
             # key is next element in array so append
-            if int(key_indexes[-1][0]) > len(data)-1:
+            if int(key_indexes[-1][0]) > len(data) - 1:
                 data.append(item)
             else:
                 data[int(key_indexes[-1][0])] = item
@@ -383,16 +380,14 @@ class Yedit(object):
         '''
         if key == '':
             pass
-        elif (not (key and Yedit.valid_key(key, sep)) and
-              isinstance(data, (list, dict))):
+        elif (not (key and Yedit.valid_key(key, sep)) and isinstance(data, (list, dict))):
             return None
 
         key_indexes = Yedit.parse_key(key, sep)
         for arr_ind, dict_key in key_indexes:
             if dict_key and isinstance(data, dict):
                 data = data.get(dict_key)
-            elif (arr_ind and isinstance(data, list) and
-                  int(arr_ind) <= len(data) - 1):
+            elif (arr_ind and isinstance(data, list) and int(arr_ind) <= len(data) - 1):
                 data = data[int(arr_ind)]
             else:
                 return None
@@ -447,8 +442,7 @@ class Yedit(object):
         elif self.content_type == 'json':
             Yedit._write(self.filename, json.dumps(self.yaml_dict, indent=4, sort_keys=True))
         else:
-            raise YeditException('Unsupported content_type: {0}.'.format(self.content_type) +
-                                 'Please specify a content_type of yaml or json.')
+            raise YeditException('Unsupported content_type: {0}.'.format(self.content_type) + 'Please specify a content_type of yaml or json.')
 
         return (True, self.yaml_dict)
 
@@ -629,8 +623,7 @@ class Yedit(object):
             # AUDIT:maybe-no-member makes sense due to fuzzy types
             # pylint: disable=maybe-no-member
             if not isinstance(value, dict):
-                raise YeditException('Cannot replace key, value entry in dict with non-dict type. ' +
-                                     'value=[{0}] type=[{1}]'.format(value, type(value)))
+                raise YeditException('Cannot replace key, value entry in dict with non-dict type. ' + 'value=[{0}] type=[{1}]'.format(value, type(value)))
 
             entry.update(value)
             return (True, self.yaml_dict)
@@ -771,8 +764,7 @@ class Yedit(object):
             try:
                 inc_value = yaml.safe_load(inc_value)
             except Exception:
-                raise YeditException('Could not determine type of incoming value. ' +
-                                     'value=[{0}] vtype=[{1}]'.format(type(inc_value), vtype))
+                raise YeditException('Could not determine type of incoming value. ' + 'value=[{0}] vtype=[{1}]'.format(type(inc_value), vtype))
 
         return inc_value
 
@@ -821,8 +813,8 @@ class Yedit(object):
 
             if yamlfile.yaml_dict is None and state != 'present':
                 return {'failed': True,
-                        'msg': 'Error opening file [{0}].  Verify that the '.format(params['src']) +
-                               'file exists, that it is has correct permissions, and is valid yaml.'}
+                        'msg': 'Error opening file [{0}].  Verify that the '.format(params['src'])
+                        + 'file exists, that it is has correct permissions, and is valid yaml.'}
 
         if state == 'list':
             if params['content']:
@@ -905,10 +897,12 @@ class Yedit(object):
             return {'changed': False, 'result': yamlfile.yaml_dict, 'state': state}
         return {'failed': True, 'msg': 'Unkown state passed'}
 
+
 def json_roundtrip_clean(js):
     ''' Clean-up any non-string keys from a Python object, to ensure it can be serialized as JSON '''
     cleaned_json = json.dumps(js, skipkeys=True)
     return json.loads(cleaned_json)
+
 
 # pylint: disable=too-many-branches
 def main():

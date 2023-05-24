@@ -1,5 +1,6 @@
 ---
-- hosts: localhost
+- name: consul.yml | Consul Playbook
+  hosts: localhost
   any_errors_fatal: true
   gather_facts: false
   vars_files:
@@ -19,7 +20,8 @@
       when:
         - ansible_utils_result.stderr is search("unable to find")
 
-- hosts: consul_instances
+- name: consul.yml | Configure Consul instances
+  hosts: consul_instances
   become: true
   become_method: sudo
   any_errors_fatal: true
@@ -90,20 +92,18 @@
   roles:
     - role: ansible-role-firewall
       vars:
-        firewall_allowed_tcp_ports: "{{ firewall_ports_dynamic_var | unique }}"
-        firewall_additional_rules: "{{ firewall_rules_dynamic_var | unique }}"
+        firewall_allowed_tcp_ports: "{{ firewall_ports_dynamic_var | default([]) | unique }}"
+        firewall_additional_rules: "{{ firewall_rules_dynamic_var | default([]) | unique }}"
       when: firewall_enabled_at_boot|bool
       tags: firewall
 
     - role: hostname
     - role: resolv_conf
       vars:
-        nameservers: [127.0.0.1]  # add a nameserver entry poining to localhost for dnsmasq.
+        nameservers: [127.0.0.1] # add a nameserver entry poining to localhost for dnsmasq.
     - role: etc_hosts
     - role: sysctl
     - role: timezone
     - role: ntp
 
     - role: consul
-
-...

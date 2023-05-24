@@ -1,5 +1,4 @@
 ---
-
 - name: Deploy PostgreSQL HA Cluster (based on "Patroni" and "{{ dcs_type }}")
   hosts: localhost
   gather_facts: false
@@ -7,7 +6,7 @@
     - vars/main.yml
   vars:
     minimal_ansible_version: 2.7.0
-    timescale_minimal_pg_version: 12  # if enable_timescale is defined
+    timescale_minimal_pg_version: 12 # if enable_timescale is defined
   tasks:
     - name: Checking ansible version
       fail:
@@ -24,7 +23,7 @@
         - enable_timescale | bool
         - postgresql_version|string is version(timescale_minimal_pg_version|string, '<')
 
-- name: Gathering facts from all servers and preparing the system
+- name: deploy_pgcluster.yml | Gathering facts from all servers and preparing the system
   hosts: all
   become: true
   become_method: sudo
@@ -113,15 +112,18 @@
       retries: 3
       when: ansible_os_family == "Debian"
 
-- import_playbook: etcd_cluster.yml
+- name: deploy_pgcluster.yml | Deploy etcd cluster
+  import_playbook: etcd_cluster.yml
   when: not dcs_exists|bool and dcs_type == "etcd"
   tags: etcd
 
-- import_playbook: consul.yml
+- name: deploy_pgcluster.yml | Deploy Consul
+  import_playbook: consul.yml
   when: dcs_type == "consul"
   tags: consul
 
-- hosts: postgres_cluster
+- name: deploy_pgcluster.yml | Postgres Cluster Configuration
+  hosts: postgres_cluster
   become: true
   become_method: sudo
   gather_facts: true
@@ -171,8 +173,8 @@
     - role: ansible-role-firewall
       environment: "{{ proxy_env | default({}) }}"
       vars:
-        firewall_allowed_tcp_ports: "{{ firewall_ports_dynamic_var | unique }}"
-        firewall_additional_rules: "{{ firewall_rules_dynamic_var | unique }}"
+        firewall_allowed_tcp_ports: "{{ firewall_ports_dynamic_var | default([]) | unique }}"
+        firewall_additional_rules: "{{ firewall_rules_dynamic_var | default([]) | unique }}"
       when: firewall_enabled_at_boot|bool
       tags: firewall
 
@@ -189,11 +191,13 @@
     - role: ssh-keys
     - role: copy
 
-- import_playbook: balancers.yml
+- name: deploy_pgcluster.yml | Deploy balancers
+  import_playbook: balancers.yml
   when: with_haproxy_load_balancing|bool
   tags: load_balancing, haproxy
 
-- hosts: pgbackrest:postgres_cluster
+- name: deploy_pgcluster.yml | Install and configure pgBackRest
+  hosts: pgbackrest:postgres_cluster
   become: true
   become_method: sudo
   gather_facts: true
@@ -216,13 +220,14 @@
     - role: pgbackrest
       when: pgbackrest_install|bool
 
-- hosts: postgres_cluster
+- name: deploy_pgcluster.yml | PostgreSQL Cluster Deployment
+  hosts: postgres_cluster
   become: true
   become_method: sudo
   gather_facts: true
   any_errors_fatal: true
   handlers:
-    - include: roles/pgbouncer/handlers/main.yml
+    - include_tasks: roles/pgbouncer/handlers/main.yml
   vars_files:
     - vars/main.yml
     - vars/system.yml
@@ -255,8 +260,7 @@
               + [{ 'option': 'shared_preload_libraries', 'value': new_value }] }}
           vars:
             # Find the last item in postgresql_parameters where the option is 'shared_preload_libraries'
-            shared_preload_libraries_item:
-              "{{ postgresql_parameters | selectattr('option', 'equalto', 'shared_preload_libraries') | list | last | default({ 'value': '' }) }}"
+            shared_preload_libraries_item: "{{ postgresql_parameters | selectattr('option', 'equalto', 'shared_preload_libraries') | list | last | default({ 'value': '' }) }}"
             # Determine the new value based on whether 'timescaledb' is already present
             new_value: >-
               {{
@@ -291,7 +295,7 @@
 
     - role: vip-manager
       when: not with_haproxy_load_balancing|bool and
-            (cluster_vip is defined and cluster_vip | length > 0)
+        (cluster_vip is defined and cluster_vip | length > 0)
 
     # optional
     - role: postgresql-users
@@ -314,5 +318,3 @@
 
     # finish (info)
     - role: deploy-finish
-
-...

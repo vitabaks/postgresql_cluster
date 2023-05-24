@@ -1,6 +1,6 @@
 ---
-
-- hosts: balancers
+- name: balancers.yml | Configure load balancers
+  hosts: balancers
   become: true
   become_method: sudo
   any_errors_fatal: true
@@ -9,7 +9,7 @@
     - vars/main.yml
     - vars/system.yml
   vars:
-    vip_manager_disable: false  # or 'true' for disable vip-manager service (if installed)
+    vip_manager_disable: false # or 'true' for disable vip-manager service (if installed)
 
   pre_tasks:
     - name: Include OS-specific variables
@@ -76,8 +76,8 @@
     - role: ansible-role-firewall
       environment: "{{ proxy_env | default({}) }}"
       vars:
-        firewall_allowed_tcp_ports: "{{ firewall_ports_dynamic_var | unique }}"
-        firewall_additional_rules: "{{ firewall_rules_dynamic_var | unique }}"
+        firewall_allowed_tcp_ports: "{{ firewall_ports_dynamic_var | default([]) | unique }}"
+        firewall_additional_rules: "{{ firewall_rules_dynamic_var | default([]) | unique }}"
       when: firewall_enabled_at_boot|bool
       tags: firewall
 
@@ -95,5 +95,3 @@
 
     - role: keepalived
       when: cluster_vip is defined and cluster_vip | length > 0
-
-...

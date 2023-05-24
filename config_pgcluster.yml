@@ -1,13 +1,12 @@
 ---
-
-- name: Configuration PostgreSQL HA Cluster (based on "Patroni" and "{{ dcs_type }}")
+- name: config_pgcluster.yml | Configuration PostgreSQL HA Cluster (based on "Patroni" and "{{ dcs_type }}")
   hosts: localhost
   gather_facts: false
   vars_files:
     - vars/main.yml
   vars:
     minimal_ansible_version: 2.7.0
-    timescale_minimal_pg_version: 12  # if enable_timescale is defined
+    timescale_minimal_pg_version: 12 # if enable_timescale is defined
   tasks:
     - name: Checking ansible version
       fail:
@@ -24,7 +23,7 @@
         - enable_timescale | bool
         - postgresql_version|string is version(timescale_minimal_pg_version|string, '<')
 
-- name: Set maintenance variable
+- name: config_pgcluster.yml | Set maintenance variable
   hosts: all
   tasks:
     - name: Set variable
@@ -32,12 +31,13 @@
         postgresql_cluster_maintenance: true
   tags: always
 
-- name: Gathering facts from all servers
+- name: config_pgcluster.yml | Gathering facts from all servers
   hosts: all
   gather_facts: true
   tags: always
 
-- hosts: postgres_cluster
+- name: config_pgcluster.yml | Configure Postgres Cluster
+  hosts: postgres_cluster
   become: true
   become_method: sudo
   gather_facts: true
@@ -113,8 +113,8 @@
     - role: ansible-role-firewall
       environment: "{{ proxy_env | default({}) }}"
       vars:
-        firewall_allowed_tcp_ports: "{{ firewall_ports_dynamic_var | unique }}"
-        firewall_additional_rules: "{{ firewall_rules_dynamic_var | unique }}"
+        firewall_allowed_tcp_ports: "{{ firewall_ports_dynamic_var | default([]) | unique }}"
+        firewall_additional_rules: "{{ firewall_rules_dynamic_var | default([]) | unique }}"
       when: firewall_enabled_at_boot|bool
       tags: firewall
 
@@ -133,18 +133,20 @@
     - role: ssh-keys
     - role: copy
 
-- import_playbook: balancers.yml
+- name: config_pgcluster.yml | Configure HAProxy Load Balancing
+  import_playbook: balancers.yml
   when: with_haproxy_load_balancing|bool
   tags: config_balancers,load_balancing, haproxy
 
-- hosts: postgres_cluster
+- name: config_pgcluster.yml | Configure Postgres Cluster
+  hosts: postgres_cluster
   become: true
   become_method: sudo
   gather_facts: true
   any_errors_fatal: true
   handlers:
-    - include: roles/patroni/handlers/main.yml
-    - include: roles/pgbouncer/handlers/main.yml
+    - include_tasks: roles/patroni/handlers/main.yml
+    - include_tasks: roles/pgbouncer/handlers/main.yml
   vars_files:
     - vars/main.yml
     - vars/system.yml
@@ -177,8 +179,7 @@
               + [{ 'option': 'shared_preload_libraries', 'value': new_value }] }}
           vars:
             # Find the last item in postgresql_parameters where the option is 'shared_preload_libraries'
-            shared_preload_libraries_item:
-              "{{ postgresql_parameters | selectattr('option', 'equalto', 'shared_preload_libraries') | list | last | default({ 'value': '' }) }}"
+            shared_preload_libraries_item: "{{ postgresql_parameters | selectattr('option', 'equalto', 'shared_preload_libraries') | list | last | default({ 'value': '' }) }}"
             # Determine the new value based on whether 'timescaledb' is already present
             new_value: >-
               {{
@@ -201,7 +202,7 @@
 
     - role: vip-manager
       when: not with_haproxy_load_balancing|bool and
-            (cluster_vip is defined and cluster_vip | length > 0)
+        (cluster_vip is defined and cluster_vip | length > 0)
 
     # optional
     - role: postgresql-users
@@ -218,5 +219,3 @@
 
     - role: pgbouncer/config
       when: pgbouncer_install|bool and pgbouncer_generate_userlist|bool
-
-...

@@ -28,4 +28,5 @@
     - name: Include postgrespro vars
       include_vars: vars/postgrespro_vars.yml
 
-- import_playbook: ../../deploy_pgcluster.yml
+- name: Deploy PostgreSQL Cluster
+  import_playbook: ../../deploy_pgcluster.yml
