@@ -236,25 +236,35 @@ To minimize the risk of losing data on autofailover, you can configure settings 
 ## Deployment: quick start
 0. [Install Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) on one control node (which could easily be a laptop)
 
-`sudo apt update && sudo apt install -y ansible sshpass git`
+```
+sudo apt update && sudo apt install -y ansible sshpass git
+```
 
 1. Download or clone this repository
 
-`git clone https://github.com/vitabaks/postgresql_cluster.git`
+```
+git clone https://github.com/vitabaks/postgresql_cluster.git
+```
 
 2. Go to the playbook directory
 
-`cd postgresql_cluster/`
+```
+cd postgresql_cluster/
+```
 
 3. Edit the inventory file
 
 ###### Specify (non-public) IP addresses and connection settings (`ansible_user`, `ansible_ssh_pass` or `ansible_ssh_private_key_file` for your environment
 
-`vim inventory`
+```
+nano inventory
+```
 
 4. Edit the variable file vars/[main.yml](./vars/main.yml)
 
-`vim vars/main.yml`
+```
+nano vars/main.yml
+```
 
 ###### Minimum set of variables: 
 - `proxy_env` # if required (*for download packages*)
@@ -267,15 +277,30 @@ To minimize the risk of losing data on autofailover, you can configure settings 
 
 if dcs_type: "consul", please install consul role requirements on the control node:
 
-`ansible-galaxy install -r roles/consul/requirements.yml`
+```
+ansible-galaxy install -r roles/consul/requirements.yml
+```
 
 5. Try to connect to hosts
 
-`ansible all -m ping`
+```
+ansible all -m ping
+```
 
 6. Run playbook:
 
-`ansible-playbook deploy_pgcluster.yml`
+```
+ansible-playbook deploy_pgcluster.yml
+```
+
+### Deploy Cluster with TimescaleDB
+
+To deploy a PostgreSQL High-Availability Cluster with the TimescaleDB extension, you just need to add the `enable_timescale` variable.
+
+Example:
+```
+ansible-playbook deploy_pgcluster.yml -e "enable_timescale=true"
+```
 
 [![asciicast](https://asciinema.org/a/251019.svg)](https://asciinema.org/a/251019?speed=5)
 
