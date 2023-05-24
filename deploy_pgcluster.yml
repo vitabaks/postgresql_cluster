@@ -1,5 +1,5 @@
 ---
-- name: deploy_pgcluster.yml | Deploy PostgreSQL HA Cluster (based on "Patroni" and "{{ dcs_type }}")
+- name: Deploy PostgreSQL HA Cluster (based on "Patroni" and "{{ dcs_type }}")
   hosts: localhost
   gather_facts: false
   vars_files:
