@@ -1,23 +1,25 @@
 ---
-
 name: scheduled PostgreSQL (CentOS Stream 9)
 
 on:
   schedule:
-    - cron: '0 0 * * *'
+    - cron: "0 0 * * *"
 
 jobs:
   test:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Set TERM environment variable
+        run: echo "TERM=xterm" >> $GITHUB_ENV
+
       - name: Checkout
         uses: actions/checkout@v3
 
       - name: Set up Python 3.10
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: "3.10"
 
       - name: Install dependencies
         run: make bootstrap
@@ -25,9 +27,7 @@ jobs:
       - name: Run Molecule tests
         run: make molecule-test
         env:
-          PY_COLORS: '1'
-          ANSIBLE_FORCE_COLOR: '1'
+          PY_COLORS: "1"
+          ANSIBLE_FORCE_COLOR: "1"
           IMAGE_DISTRO: centosstream9
           IMAGE_NAMESPACE: glillico
-
-...

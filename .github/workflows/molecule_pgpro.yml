@@ -1,10 +1,9 @@
 ---
-
 name: Molecule PostgresPro
 
 on:
   schedule:
-    - cron: '0 0 * * 0'
+    - cron: "0 0 * * 0"
 
 jobs:
   test:
@@ -21,13 +20,16 @@ jobs:
           - ubuntu2204
 
     steps:
+      - name: Set TERM environment variable
+        run: echo "TERM=xterm" >> $GITHUB_ENV
+
       - name: Checkout
         uses: actions/checkout@v3
 
       - name: Set up Python 3.10
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: "3.10"
 
       - name: Install dependencies
         run: make bootstrap
@@ -35,9 +37,7 @@ jobs:
       - name: Run Molecule tests for PostgresPro
         run: make molecule-test-scenario
         env:
-          PY_COLORS: '1'
-          ANSIBLE_FORCE_COLOR: '1'
+          PY_COLORS: "1"
+          ANSIBLE_FORCE_COLOR: "1"
           IMAGE_DISTRO: ${{ matrix.distro }}
-          MOLECULE_SCENARIO: 'postgrespro'
-
-...
+          MOLECULE_SCENARIO: "postgrespro"
