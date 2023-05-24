@@ -138,7 +138,7 @@
   when: with_haproxy_load_balancing|bool
   tags: config_balancers,load_balancing, haproxy
 
-- name: config_pgcluster.yml | Deploy Postgres Cluster
+- name: config_pgcluster.yml | Configure Postgres Cluster
   hosts: postgres_cluster
   become: true
   become_method: sudo
