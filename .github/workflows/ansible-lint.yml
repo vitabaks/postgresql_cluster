@@ -1,5 +1,4 @@
 ---
-
 name: Ansible-lint
 
 on:
@@ -15,6 +14,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Set TERM environment variable
+        run: echo "TERM=xterm" >> $GITHUB_ENV
+
       - name: Git clone repo postgresql_cluster
         uses: actions/checkout@v2
 
@@ -22,5 +24,3 @@ jobs:
         uses: ansible/ansible-lint-action@v6
         with:
           path: "roles/"
-
-...
