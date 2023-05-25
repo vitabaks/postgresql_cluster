@@ -1,15 +1,23 @@
 ---
 # Upgrade with pg_upgrade (hard-links)
 
+# In the --new-options argument, an inline if condition checks if 'timescaledb' is present in the pg_shared_preload_libraries_value.
+# If it is, it appends '-c timescaledb.restoring='on'' to the --new-options argument.
 - name: "Upgrade the PostgreSQL to version {{ pg_new_version }} on the Primary (using pg_upgrade --link)"
-  command: >
+  command: >-
     {{ pg_new_bindir }}/pg_upgrade
     --old-bindir {{ pg_old_bindir }}
     --new-bindir {{ pg_new_bindir }}
     --old-datadir {{ pg_old_datadir }}
     --new-datadir {{ pg_new_datadir }}
-    --old-options "-c config_file={{ pg_old_confdir }}/postgresql.conf"
-    --new-options "-c config_file={{ pg_new_confdir }}/postgresql.conf -c shared_preload_libraries='{{ pg_shared_preload_libraries_value }}'"
+    --old-options "
+      -c config_file={{ pg_old_confdir }}/postgresql.conf"
+    --new-options "
+      -c config_file={{ pg_new_confdir }}/postgresql.conf
+      -c shared_preload_libraries='{{ pg_shared_preload_libraries_value }}'
+      {% if 'timescaledb' in pg_shared_preload_libraries_value %}
+      -c timescaledb.restoring='on'
+      {% endif %}" 
     --jobs={{ ansible_processor_vcpus }}
     --link
   args:
