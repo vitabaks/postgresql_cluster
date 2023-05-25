@@ -23,7 +23,7 @@
     --old-datadir {{ pg_old_datadir }}
     --new-datadir {{ pg_new_datadir }}
     --old-options "-c config_file={{ pg_old_confdir }}/postgresql.conf"
-    --new-options "-c config_file={{ pg_new_confdir }}/postgresql.conf -c shared_preload_libraries='{{ pg_shared_preload_libraries_value }}' {% if 'timescaledb' in pg_shared_preload_libraries_value %} -c timescaledb.restoring='on' {% endif %}" 
+    --new-options "-c config_file={{ pg_new_confdir }}/postgresql.conf -c shared_preload_libraries='{{ pg_shared_preload_libraries_value }}' {% if 'timescaledb' in pg_shared_preload_libraries_value %} -c timescaledb.restoring='on' {% endif %}"
     --jobs={{ ansible_processor_vcpus }}
     --link
     --check
