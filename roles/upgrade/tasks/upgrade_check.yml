@@ -29,7 +29,7 @@
       -c shared_preload_libraries='{{ pg_shared_preload_libraries_value }}'
       {% if 'timescaledb' in pg_shared_preload_libraries_value %}
       -c timescaledb.restoring='on'
-      {% endif %}" 
+      {% endif %}"
     --jobs={{ ansible_processor_vcpus }}
     --link
     --check
