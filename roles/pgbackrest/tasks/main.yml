@@ -110,6 +110,8 @@
       file:
         path: "{{ pgbackrest_conf_file | dirname }}"
         state: directory
+        owner: postgres
+        group: postgres
 
     - name: "Generate conf file {{ pgbackrest_conf_file }}"
       template:
