@@ -2,8 +2,13 @@ FROM ubuntu:jammy
 
 USER root
 
+# Copy Python version config file
+COPY .config/python_version.config /tmp/
+
 # Update system and install packages, including Docker
-RUN apt-get update \
+# Replace "python3.10" with "$(cat /tmp/python_version.txt)" in the apt-get install command
+RUN PYTHON_VERSION=$(cat /tmp/python_version.config | cut -d '=' -f 2) && \
+    apt-get update \
     && apt-get upgrade -y \
     && apt-get install -y --no-install-recommends \
         bash-completion \
@@ -18,8 +23,8 @@ RUN apt-get update \
         make \
         nano \
         python3-pip \
-        python3.10 \
-        python3.10-venv \
+        python${PYTHON_VERSION} \
+        python${PYTHON_VERSION}-venv \
         sudo \
         vim \
         wget \
