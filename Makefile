@@ -8,6 +8,7 @@
 MAKEFLAGS += "-j$(NUM_CORES) -l$(NUM_CORES)"
 MAKEFLAGS += --silent
 SHELL:=/bin/bash
+.SHELLFLAGS = -eu -o pipefail -c
 
 # Makefile colors config
 bold=$(shell tput bold)
