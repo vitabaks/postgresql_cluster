@@ -34,7 +34,7 @@ How to use me:
 endef
 export HEADER
 
-python_launcher := python3.10
+python_launcher := python$(shell cat .config/python_version.config | cut -d '=' -f 2)
 
 -include .config/make/help.mak
 -include .config/make/python.mak
