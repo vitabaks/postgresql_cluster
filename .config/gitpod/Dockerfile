@@ -39,6 +39,12 @@ RUN PYTHON_VERSION=$(cut -d '=' -f 2 /tmp/python_version.config) && \
     $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null \
     && apt-get update \
     && apt-get install -y --no-install-recommends docker-ce docker-ce-cli containerd.io \
+    ## Install npm
+    && curl -fsSL https://deb.nodesource.com/setup_20.x |bash - \
+    && apt-get install  -y --no-install-recommends nodejs \
+    && npm install -g npm@9.6.7 \
+    && npm install -g \
+        ungit@1.5.23 \
     # Clean
     && apt-get clean && rm -rf /var/lib/apt/lists/* tmp/*
 
