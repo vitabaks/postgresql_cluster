@@ -36,11 +36,7 @@ export HEADER
 
 python_launcher := python$(shell cat .config/python_version.config | cut -d '=' -f 2)
 
--include .config/make/help.mak
--include .config/make/python.mak
--include .config/make/docker.mak
--include .config/make/molecule.mak
--include .config/make/linters.mak
+-include $(addsuffix /*.mak, $(shell find .config/make -type d))
 
 ## —— Bootstrap collection ———————————————————————————————————————————————————————————————————————
 .PHONY: bootstrap
