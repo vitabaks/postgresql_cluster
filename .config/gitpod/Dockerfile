@@ -2,11 +2,14 @@ FROM ubuntu:jammy
 
 USER root
 
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 # Copy Python version config file
 COPY .config/python_version.config /tmp/
 
 # Update system and install packages, including Docker
 # Replace "python3.10" with "$(cat /tmp/python_version.txt)" in the apt-get install command
+# hadolint ignore=DL3008,DL3013
 RUN PYTHON_VERSION=$(cat /tmp/python_version.config | cut -d '=' -f 2) && \
     apt-get update \
     && apt-get upgrade -y \
@@ -23,8 +26,8 @@ RUN PYTHON_VERSION=$(cat /tmp/python_version.config | cut -d '=' -f 2) && \
         make \
         nano \
         python3-pip \
-        python${PYTHON_VERSION} \
-        python${PYTHON_VERSION}-venv \
+        "python${PYTHON_VERSION}" \
+        "python${PYTHON_VERSION}-venv" \
         sudo \
         vim \
         wget \
