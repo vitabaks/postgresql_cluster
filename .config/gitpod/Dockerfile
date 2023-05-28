@@ -29,6 +29,7 @@ RUN PYTHON_VERSION=$(cut -d '=' -f 2 /tmp/python_version.config) && \
         "python${PYTHON_VERSION}" \
         "python${PYTHON_VERSION}-venv" \
         sudo \
+        tree \
         vim \
         wget \
     && python3 -m pip install --no-cache-dir --upgrade pip \
