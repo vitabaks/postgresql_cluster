@@ -2,12 +2,20 @@ FROM ubuntu:jammy
 
 USER root
 
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 # Copy Python version config file
 COPY .config/python_version.config /tmp/
 
+# Set a variable for the npm version
+ARG NPM_VERSION=9.6.7
+# Set a variable for the ungit version
+ARG UNGIT_VERSION=1.5.23
+
 # Update system and install packages, including Docker
-# Replace "python3.10" with "$(cat /tmp/python_version.txt)" in the apt-get install command
-RUN PYTHON_VERSION=$(cat /tmp/python_version.config | cut -d '=' -f 2) && \
+# Replace "python3.10" with "$(cut -d '=' -f 2 /tmp/python_version.config)" in the apt-get install command
+# hadolint ignore=DL3008,DL3013
+RUN PYTHON_VERSION=$(cut -d '=' -f 2 /tmp/python_version.config) && \
     apt-get update \
     && apt-get upgrade -y \
     && apt-get install -y --no-install-recommends \
@@ -23,9 +31,10 @@ RUN PYTHON_VERSION=$(cat /tmp/python_version.config | cut -d '=' -f 2) && \
         make \
         nano \
         python3-pip \
-        python${PYTHON_VERSION} \
-        python${PYTHON_VERSION}-venv \
+        "python${PYTHON_VERSION}" \
+        "python${PYTHON_VERSION}-venv" \
         sudo \
+        tree \
         vim \
         wget \
     && python3 -m pip install --no-cache-dir --upgrade pip \
@@ -36,6 +45,12 @@ RUN PYTHON_VERSION=$(cat /tmp/python_version.config | cut -d '=' -f 2) && \
     $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null \
     && apt-get update \
     && apt-get install -y --no-install-recommends docker-ce docker-ce-cli containerd.io \
+    # Install npm and ungit using the versions specified in the variables
+    && curl -fsSL https://deb.nodesource.com/setup_20.x |bash - \
+    && apt-get install  -y --no-install-recommends nodejs \
+    && npm install -g npm@${NPM_VERSION} \
+    && npm install -g \
+        ungit@${UNGIT_VERSION} \
     # Clean
     && apt-get clean && rm -rf /var/lib/apt/lists/* tmp/*
 
