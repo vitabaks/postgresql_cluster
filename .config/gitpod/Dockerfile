@@ -8,9 +8,9 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 COPY .config/python_version.config /tmp/
 
 # Update system and install packages, including Docker
-# Replace "python3.10" with "$(cat /tmp/python_version.txt)" in the apt-get install command
+# Replace "python3.10" with "$(cut -d '=' -f 2 /tmp/python_version.config)" in the apt-get install command
 # hadolint ignore=DL3008,DL3013
-RUN PYTHON_VERSION=$(cat /tmp/python_version.config | cut -d '=' -f 2) && \
+RUN PYTHON_VERSION=$(cut -d '=' -f 2 /tmp/python_version.config) && \
     apt-get update \
     && apt-get upgrade -y \
     && apt-get install -y --no-install-recommends \
