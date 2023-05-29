@@ -6,3 +6,8 @@ docker-build: ## Run docker build image in local
 .PHONY: docker-lint
 docker-lint: ## Run hadolint command to lint Dokerfile
 	docker run --rm -i hadolint/hadolint < .config/gitpod/Dockerfile
+
+.PHONY: docker-tests
+docker-tests: ## Run tests for docker
+	$(MAKE) docker-build
+	$(MAKE) docker-lint

@@ -3,4 +3,4 @@ image:
   file: .config/gitpod/Dockerfile
 
 tasks:
-  - init: make bootstrap
+  - init: make bootstrap-dev
