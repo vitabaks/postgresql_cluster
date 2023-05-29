@@ -251,8 +251,10 @@ postgresql_parameters:
 #  - { option: "", value: "" }
 #  - { option: "", value: "" }
 
-#set this variable to TRUE if you want automatic restart cluster after changing postgresql_variable that need restart in config_pgcluster.yml playbook
-pending_restart: False
+# Set this variable to 'true' if you want the cluster to be automatically restarted
+# after changing the 'postgresql_parameters' variable that requires a restart in the 'config_pgcluster.yml' playbook.
+# By default, the cluster will not be automatically restarted.
+pending_restart: false
 
 # specify additional hosts that will be added to the pg_hba.conf
 postgresql_pg_hba:

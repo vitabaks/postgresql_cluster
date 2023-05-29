@@ -271,19 +271,19 @@
         port: '{{ postgresql_port }}'
         db: postgres
         query: select count(*) as cnt from pg_settings where pending_restart is true
-      register: x
+      register: pending_restart_result
       run_once: true
       tags: patroni_conf
 
     - name: "Set pg_pending_restart_count variable"
       set_fact:
-        pg_pending_restart_count: "{{x.query_result[0].cnt}}"
+        pg_pending_restart_count: "{{ pending_restart_result.query_result[0].cnt }}"
       tags: patroni_conf
 
     - name: "Print pg_pending_restart_count"
-      debug: var=pg_pending_restart_count
-      tags:
-        - patroni_conf
+      debug:
+        var: pg_pending_restart_count
+      tags: patroni_conf
 
 - name: config_pgcluster.yml | Restart patroni on secondary after config settings if need
   hosts: secondary
@@ -292,7 +292,6 @@
   become: true
   become_method: sudo
   any_errors_fatal: true
-  environment: "{{ proxy_env | default({}) }}"
   vars_files:
     - vars/main.yml
   pre_tasks:
@@ -364,7 +363,7 @@
       when: ansible_os_family == 'Rocky' or ansible_os_family == 'AlmaLinux'
       tags: always
   tasks:
-    - name: "Switchover Patroni leader role"
+    - name: Switchover Patroni leader role
       include_role:
         name: update
         tasks_from: switchover
