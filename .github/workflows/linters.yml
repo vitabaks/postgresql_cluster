@@ -1,12 +1,16 @@
 ---
-name: scheduled PostgreSQL (CentOS Stream 8)
+name: "Linters"
 
 on:
-  schedule:
-    - cron: "0 0 * * *"
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -24,10 +28,5 @@ jobs:
       - name: Install dependencies
         run: make bootstrap-dev
 
-      - name: Run Molecule tests
-        run: make molecule-test
-        env:
-          PY_COLORS: "1"
-          ANSIBLE_FORCE_COLOR: "1"
-          IMAGE_DISTRO: centosstream8
-          IMAGE_NAMESPACE: glillico
+      - name: Run all linters
+        run: make lint
