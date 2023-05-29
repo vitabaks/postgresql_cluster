@@ -292,7 +292,6 @@
   become: true
   become_method: sudo
   any_errors_fatal: true
-  environment: "{{ proxy_env | default({}) }}"
   vars_files:
     - vars/main.yml
   pre_tasks:
