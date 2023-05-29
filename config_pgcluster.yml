@@ -283,8 +283,7 @@
     - name: "Print pg_pending_restart_count"
       debug:
         var: pg_pending_restart_count
-      tags:
-        - patroni_conf
+      tags: patroni_conf
 
 - name: config_pgcluster.yml | Restart patroni on secondary after config settings if need
   hosts: secondary
