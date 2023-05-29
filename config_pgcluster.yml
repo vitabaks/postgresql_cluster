@@ -281,7 +281,8 @@
       tags: patroni_conf
 
     - name: "Print pg_pending_restart_count"
-      debug: var=pg_pending_restart_count
+      debug:
+        var: pg_pending_restart_count
       tags:
         - patroni_conf
 
