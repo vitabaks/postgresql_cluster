@@ -271,7 +271,7 @@
         port: '{{ postgresql_port }}'
         db: postgres
         query: select count(*) as cnt from pg_settings where pending_restart is true
-      register: x
+      register: pending_restart_result
       run_once: true
       tags: patroni_conf
 
