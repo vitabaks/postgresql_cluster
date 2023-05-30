@@ -23,46 +23,37 @@ In addition to deploying new clusters, this playbook also support the deployment
 
 
 ## Index
-- [PostgreSQL High-Availability Cluster :elephant: :sparkling\_heart:](#postgresql-high-availability-cluster-elephant-sparkling_heart)
-    - [Deploy a Production Ready PostgreSQL High-Availability Cluster (based on "Patroni" and DCS "etcd" or "consul"). Automating with Ansible.](#deploy-a-production-ready-postgresql-high-availability-cluster-based-on-patroni-and-dcs-etcd-or-consul-automating-with-ansible)
-  - [Index](#index)
-  - [Cluster types](#cluster-types)
-    - [\[Type A\] PostgreSQL High-Availability with HAProxy Load Balancing](#type-a-postgresql-high-availability-with-haproxy-load-balancing)
-          - [if variable "synchronous\_mode" is 'true' (vars/main.yml):](#if-variable-synchronous_mode-is-true-varsmainyml)
-        - [Components of high availability:](#components-of-high-availability)
-        - [Components of load balancing:](#components-of-load-balancing)
-    - [\[Type B\] PostgreSQL High-Availability only](#type-b-postgresql-high-availability-only)
-    - [\[Type C\] PostgreSQL High-Availability with Consul Service Discovery (DNS)](#type-c-postgresql-high-availability-with-consul-service-discovery-dns)
-  - [Compatibility](#compatibility)
-          - [Supported Linux Distributions:](#supported-linux-distributions)
-          - [PostgreSQL versions:](#postgresql-versions)
-          - [Ansible version](#ansible-version)
-  - [Requirements](#requirements)
-  - [Port requirements](#port-requirements)
-  - [Recommenations](#recommenations)
-  - [Deployment: quick start](#deployment-quick-start)
-          - [Specify (non-public) IP addresses and connection settings (`ansible_user`, `ansible_ssh_pass` or `ansible_ssh_private_key_file` for your environment](#specify-non-public-ip-addresses-and-connection-settings-ansible_user-ansible_ssh_pass-or-ansible_ssh_private_key_file-for-your-environment)
-          - [Minimum set of variables:](#minimum-set-of-variables)
-    - [Deploy Cluster with TimescaleDB](#deploy-cluster-with-timescaledb)
-  - [Variables](#variables)
-  - [Cluster Scaling](#cluster-scaling)
-          - [Steps to add a new Postgres node:](#steps-to-add-a-new-postgres-node)
-          - [Steps to add a new balancer node:](#steps-to-add-a-new-balancer-node)
-  - [Restore and Cloning](#restore-and-cloning)
-        - [Create cluster with pgBackRest:](#create-cluster-with-pgbackrest)
-        - [Create cluster with WAL-G:](#create-cluster-with-wal-g)
-        - [Point-In-Time-Recovery:](#point-in-time-recovery)
-  - [Maintenance](#maintenance)
-      - [Update the PostgreSQL HA Cluster](#update-the-postgresql-ha-cluster)
-      - [Using Git for cluster configuration management (IaC/GitOps)](#using-git-for-cluster-configuration-management-iacgitops)
-  - [Disaster Recovery](#disaster-recovery)
-        - [etcd](#etcd)
-        - [PostgreSQL (databases)](#postgresql-databases)
-  - [How to start from scratch](#how-to-start-from-scratch)
-  - [License](#license)
-  - [Author](#author)
-  - [Sponsor this project](#sponsor-this-project)
-  - [Feedback, bug-reports, requests, ...](#feedback-bug-reports-requests-)
+- [Cluster types](#cluster-types)
+    - [[Type A] PostgreSQL High-Availability with HAProxy Load Balancing](#type-a-postgresql-high-availability-with-haproxy-load-balancing)
+    - [[Type B] PostgreSQL High-Availability only](#type-b-postgresql-high-availability-only)
+    - [[Type C] PostgreSQL High-Availability with Consul Service Discovery (DNS)](#type-c-postgresql-high-availability-with-consul-service-discovery-dns)
+- [Compatibility](#compatibility)
+    - [Supported Linux Distributions:](#supported-linux-distributions)
+    - [PostgreSQL versions:](#postgresql-versions)
+    - [Ansible version](#ansible-version)
+- [Requirements](#requirements)
+- [Port requirements](#port-requirements)
+- [Recommendations](#recommenations)
+- [Deployment: quick start](#deployment-quick-start)
+- [Variables](#variables)
+- [Cluster Scaling](#cluster-scaling)
+    - [Steps to add a new postgres node](#steps-to-add-a-new-postgres-node)
+    - [Steps to add a new balancer node](#steps-to-add-a-new-balancer-node)
+- [Restore and Cloning](#restore-and-cloning)
+    - [Create cluster with pgBackRest:](#create-cluster-with-pgbackrest)
+    - [Create cluster with WAL-G:](#create-cluster-with-wal-g)
+    - [Point-In-Time-Recovery:](#point-in-time-recovery)
+- [Maintenance](#maintenance)
+    - [Update the PostgreSQL HA Cluster](#update-the-postgresql-ha-cluster)
+    - [Using Git for cluster configuration management](#using-git-for-cluster-configuration-management-iacgitops)
+- [Disaster Recovery](#disaster-recovery)
+    - [etcd](#etcd)
+    - [PostgreSQL (databases)](#postgresql-databases)
+- [How to start from scratch](#how-to-start-from-scratch)
+- [License](#license)
+- [Author](#author)
+- [Sponsor this project](#sponsor-this-project)
+- [Feedback, bug-reports, requests, ...](#feedback-bug-reports-requests-)
 
 ## Cluster types
 
@@ -151,22 +142,22 @@ all supported PostgreSQL versions
 :white_check_mark: tested, works fine: PostgreSQL 10, 11, 12, 13, 14, 15
 
 _Table of results of daily automated testing of cluster deployment:_
-| Distribution | Test result |
-|--------------|:----------:|
-| Debian 10    | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/postgresql_cluster/schedule_pg_debian10.yml?branch=master)](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_debian10.yml) |
-| Debian 11    | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/postgresql_cluster/schedule_pg_debian11.yml?branch=master)](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_debian11.yml) |
-| Ubuntu 18.04 | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/postgresql_cluster/schedule_pg_ubuntu1804.yml?branch=master)](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_ubuntu1804.yml) |
-| Ubuntu 20.04 | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/postgresql_cluster/schedule_pg_ubuntu2004.yml?branch=master)](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_ubuntu2004.yml) |
-| Ubuntu 22.04 | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/postgresql_cluster/schedule_pg_ubuntu2204.yml?branch=master)](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_ubuntu2204.yml) |
-| CentOS 8     | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/postgresql_cluster/schedule_pg_centos8.yml?branch=master)](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_centos8.yml) |
+| Distribution    |                                                                                                                        Test result                                                                                                                         |
+| --------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| Debian 10       |      [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/postgresql_cluster/schedule_pg_debian10.yml?branch=master)](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_debian10.yml)      |
+| Debian 11       |      [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/postgresql_cluster/schedule_pg_debian11.yml?branch=master)](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_debian11.yml)      |
+| Ubuntu 18.04    |    [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/postgresql_cluster/schedule_pg_ubuntu1804.yml?branch=master)](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_ubuntu1804.yml)    |
+| Ubuntu 20.04    |    [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/postgresql_cluster/schedule_pg_ubuntu2004.yml?branch=master)](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_ubuntu2004.yml)    |
+| Ubuntu 22.04    |    [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/postgresql_cluster/schedule_pg_ubuntu2204.yml?branch=master)](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_ubuntu2204.yml)    |
+| CentOS 8        |       [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/postgresql_cluster/schedule_pg_centos8.yml?branch=master)](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_centos8.yml)       |
 | CentOS Stream 8 | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/postgresql_cluster/schedule_pg_centosstream8.yml?branch=master)](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_centosstream8.yml) |
 | CentOS Stream 9 | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/postgresql_cluster/schedule_pg_centosstream9.yml?branch=master)](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_centosstream9.yml) |
-| Oracle Linux 8 | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/postgresql_cluster/schedule_pg_oracle_linux8.yml?branch=master)](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_oracle_linux8.yml) |
-| Oracle Linux 9 | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/postgresql_cluster/schedule_pg_oracle_linux9.yml?branch=master)](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_oracle_linux9.yml) |
-| Rocky Linux 8 | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/postgresql_cluster/schedule_pg_rockylinux8.yml?branch=master)](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_rockylinux8.yml) |
-| Rocky Linux 9 | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/postgresql_cluster/schedule_pg_rockylinux9.yml?branch=master)](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_rockylinux9.yml) |
-| AlmaLinux 8 | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/postgresql_cluster/schedule_pg_almalinux8.yml?branch=master)](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_almalinux8.yml) |
-| AlmaLinux 9 | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/postgresql_cluster/schedule_pg_almalinux9.yml?branch=master)](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_almalinux9.yml) |
+| Oracle Linux 8  | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/postgresql_cluster/schedule_pg_oracle_linux8.yml?branch=master)](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_oracle_linux8.yml) |
+| Oracle Linux 9  | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/postgresql_cluster/schedule_pg_oracle_linux9.yml?branch=master)](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_oracle_linux9.yml) |
+| Rocky Linux 8   |   [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/postgresql_cluster/schedule_pg_rockylinux8.yml?branch=master)](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_rockylinux8.yml)   |
+| Rocky Linux 9   |   [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/postgresql_cluster/schedule_pg_rockylinux9.yml?branch=master)](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_rockylinux9.yml)   |
+| AlmaLinux 8     |    [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/postgresql_cluster/schedule_pg_almalinux8.yml?branch=master)](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_almalinux8.yml)    |
+| AlmaLinux 9     |    [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/postgresql_cluster/schedule_pg_almalinux9.yml?branch=master)](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_almalinux9.yml)    |
 
 
 ###### Ansible version 
