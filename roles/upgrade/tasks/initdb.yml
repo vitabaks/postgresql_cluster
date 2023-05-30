@@ -1,6 +1,8 @@
 ---
 
 - name: Make sure new PostgreSQL data directory "{{ pg_new_datadir }}" exists
+  become: true
+  become_user: root
   file:
     path: "{{ pg_new_datadir }}"
     state: directory
