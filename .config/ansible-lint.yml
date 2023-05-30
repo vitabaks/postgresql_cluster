@@ -1,3 +1,4 @@
+---
 skip_list:
   - yaml
   - role-name
@@ -25,7 +26,7 @@ skip_list:
   - var-naming[no-role-prefix]
 
 exclude_paths:
-  - roles/consul/ # TODO - https://github.com/ansible-community/ansible-consul/pull/520
-  - .venv
+  - ../roles/consul/ # TODO - https://github.com/ansible-community/ansible-consul/pull/520
+  - ../.venv
 # https://ansible-lint.readthedocs.io/configuring/
 # https://ansible-lint.readthedocs.io/rules/

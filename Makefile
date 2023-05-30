@@ -1,4 +1,4 @@
-.PHONY: all test SHELL
+.PHONY: all SHELL
 
 # Makefile global config
 .DEFAULT_GOAL:=help
@@ -38,23 +38,44 @@ python_launcher := python$(shell cat .config/python_version.config | cut -d '=' 
 
 -include $(addsuffix /*.mak, $(shell find .config/make -type d))
 
+## —— Tests collection ———————————————————————————————————————————————————————————————————————
+.PHONY: tests
+tests: ## tests Ansible collection
+	$(MAKE) docker-tests
+	$(MAKE) lint
+	$(MAKE) molecule-test-all
+
+.PHONY: tests-fast
+tests-fast: ## tests Ansible collection quickly
+	$(MAKE) lint
+	$(MAKE) molecule-converge
+
 ## —— Bootstrap collection ———————————————————————————————————————————————————————————————————————
 .PHONY: bootstrap
 bootstrap: ## Bootstrap Ansible collection
 	$(MAKE) python-bootstrap
+
+.PHONY: bootstrap-dev
+bootstrap-dev: ## Bootstrap Ansible collection for development
+	$(MAKE) bootstrap
 	$(MAKE) python-bootstrap-dev
 
 ## —— Virtualenv ————————————————————————————————————————————————————————————————————————————————
 .PHONY: reinitialization
 reinitialization: ## Return to an initial state of Bootstrap Ansible collection
-	rm -rf .venv/
-	rm -rf vendor/
-	rm -f *.mak
+	$(MAKE) clean
 	$(MAKE) bootstrap
+
+.PHONY: reinitialization-dev
+reinitialization-dev: ## Return to an initial state of Bootstrap Ansible collection for development
+	$(MAKE) reinitialization
+	$(MAKE) bootstrap-dev
 
 .PHONY: clean
 clean: ## Clean collection
 	rm -rf .venv/
+	rm -rf vendor/
+	rm -f *.mak
 	rm -rf .pytest_cache/
 	rm -rf scripts/.pytest_cache/
 	rm -rf scripts/tests/__pycache__/

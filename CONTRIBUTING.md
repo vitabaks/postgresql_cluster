@@ -36,8 +36,8 @@ Use Gitpod for a cloud-based development environment:
 3. Open your fork in Gitpod: `https://gitpod.io/#https://github.com/username/postgresql_cluster`
 4. Create a new branch: `git checkout -b my-feature-branch`
 5. Make your changes and commit: `git add .` and `git commit -m "Description of changes"`
-6. Test with Molecule: `make molecule-test` or `make molecule-converge`
-7. Test with linters(otpional): `make lint`
+6. Test with Molecule: `make tests` or `make tests-fast`
+7. Test with linters: `make lint`
 8. Push your changes: `git push origin my-feature-branch`
 9. Create a pull request on GitHub
 10. Wait for a review
@@ -48,7 +48,7 @@ Keep your Gitpod workspace synced with the main repository.
 
 Install [make](https://www.gnu.org/software/make/), [Python3.10](https://www.python.org/), [venv](https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/), and [docker](https://docs.docker.com/engine/install/ubuntu/).
 
-Run `make` for Makefile help. Initialize virtualenv and install dependencies with `make reinitialization` or `make bootstrap`. Test your changes with `make molecule-test` or `make molecule-converge`.
+Run `make` for Makefile help. Initialize virtualenv and install dependencies with `make reinitialization-dev` or `make bootstrap-dev`. Test your changes with `make tests` or `make molecule-converge`.
 
 To test a specific distribution, set `distro`, `tag`, and `namespace`:
 
