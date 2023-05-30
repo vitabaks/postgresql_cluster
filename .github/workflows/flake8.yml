@@ -1,5 +1,5 @@
 ---
-name: "Linters"
+name: "Flake8"
 
 on:
   push:
@@ -28,5 +28,5 @@ jobs:
       - name: Install dependencies
         run: make bootstrap-dev
 
-      - name: Run all linters
-        run: make lint
+      - name: Run Flake8
+        run: make linter-flake8
