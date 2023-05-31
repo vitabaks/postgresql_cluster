@@ -1,0 +1,25 @@
+[etcd_cluster]
+10.20.6.49
+10.20.6.50
+10.20.6.51
+
+[balancers]
+10.20.6.49
+10.20.6.50
+10.20.6.51
+
+[master]
+10.20.6.49 hostname=pgclst03-01.supeo.net postgresql_exists='false'
+
+[replica]
+10.20.6.50 hostname=pgclst03-02.supeo.net postgresql_exists='false'
+10.20.6.51 hostname=pgclst03-03.supeo.net postgresql_exists='false'
+
+[postgres_cluster:children]
+master
+replica
+
+[all:vars]
+ansible_connection='ssh'
+ansible_ssh_port='22'
+environment='pgclst03'
