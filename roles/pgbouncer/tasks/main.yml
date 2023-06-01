@@ -112,7 +112,7 @@
 - name: Show the total pool size
   run_once: true
   debug:
-   var: total_pool_size
+    var: total_pool_size
   tags: pgbouncer_conf, pgbouncer
 
 # This task sets the value for max_connections from the provided variables, defaulting to 100 if not explicitly set.
