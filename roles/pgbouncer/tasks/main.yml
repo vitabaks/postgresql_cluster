@@ -85,7 +85,7 @@
   tags: pgbouncer_logrotate, pgbouncer
 
 # This task calculates the defined_pool_size for each defined pgbouncer pool.
-# The pool size for each pool is extracted from its 'pool_parameters' string using a regular expression. 
+# The pool size for each pool is extracted from its 'pool_parameters' string using a regular expression.
 # If 'pool_size' is defined in 'pool_parameters', it takes that value.
 # If 'pool_size' is not defined, it uses pgbouncer_default_pool_size if available, otherwise 0.
 # The calculated pool size is then added to the total 'defined_pool_size'.
@@ -118,7 +118,7 @@
   loop: "{{ postgresql_parameters|default([]) }}"
   tags: pgbouncer_conf, pgbouncer
 
-# This task fails the playbook execution if the total pool size is greater than max_connections. 
+# This task fails the playbook execution if the total pool size is greater than max_connections.
 # It checks if 'pgbouncer_pools' is defined and has length > 0 and whether the total pool size is greater than max_connections.
 # If both conditions are met, the execution is stopped with a message indicating that the settings need to be changed.
 - name: Failed when total_pool_size > max_connections
