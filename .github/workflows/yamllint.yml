@@ -1,6 +1,5 @@
 ---
-
-name: 'Yamllint'
+name: "Yamllint"
 
 on:
   push:
@@ -15,16 +14,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 'Checkout'
-        uses: actions/checkout@v2
+      - name: Set TERM environment variable
+        run: echo "TERM=xterm" >> $GITHUB_ENV
 
-      - name: 'Run yamllint'
-        uses: karancode/yamllint-github-action@master
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
         with:
-          yamllint_file_or_dir: '.'
-          yamllint_strict: true
-          yamllint_comment: true
-        env:
-          GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          python-version: "3.10"
 
-...
+      - name: Install dependencies
+        run: make bootstrap-dev
+
+      - name: Run Yamllint
+        run: make linter-yamllint

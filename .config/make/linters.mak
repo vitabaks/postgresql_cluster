@@ -4,7 +4,7 @@
 ACTIVATE_VENV = source .venv/bin/activate
 
 # Configuration files
-YAMLLINT_CONFIG = .yamllint
+YAMLLINT_CONFIG = .config/.yamllint
 FLAKE8_CONFIG = .config/.flake8
 
 .PHONY: linter-yamllint
@@ -17,7 +17,7 @@ linter-yamllint: ## Lint YAML files using yamllint
 linter-ansible-lint: ## Lint Ansible files using ansible-lint
 	echo "ansible-lint #########################################################"
 	$(ACTIVATE_VENV) && \
-	ansible-lint --force-color --offline --parseable
+	ansible-lint --force-color --parseable
 
 .PHONY: linter-flake8
 linter-flake8: ## Lint Python files using flake8
