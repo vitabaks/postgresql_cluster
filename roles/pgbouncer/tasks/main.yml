@@ -96,20 +96,23 @@
   tags: pgbouncer_conf, pgbouncer
 
 # This task calculates the total pool size across all databases.
-# It adds the 'defined_pool_size' to the product of the default pool size and the number of databases not already defined in 'pgbouncer_pools'.
-# This calculation assumes that if 'postgresql_databases' is not defined or is an empty list, the total pool size will be equal to the 'defined_pool_size'.
-# Otherwise, it calculates the total pool size by adding the 'defined_pool_size' to the product of the number of databases not in 'pgbouncer_pools' and the 'pgbouncer_default_pool_size'.
+# If 'postgresql_databases' is not defined or is an empty list, the total pool size will be equal to the 'defined_pool_size'.
+# Otherwise, it adds the 'defined_pool_size' to the product of the default pool size (or 0 if not defined) and the number of databases not already defined in 'pgbouncer_pools'.
+# This means it checks the 'postgresql_databases' against 'pgbouncer_pools' and for each database that does not have a corresponding pool, it adds the 'pgbouncer_default_pool_size' (or 0 if not defined) to the 'defined_pool_size'.
 - name: Calculate total_pool_size
   set_fact:
     total_pool_size: >-
       {{
-        defined_pool_size|default(0)|int
+        (defined_pool_size|int)
         if (postgresql_databases is not defined or postgresql_databases|default([]) == [])
-        else (defined_pool_size|default(0)|int + (postgresql_databases|default([])|length|int - pgbouncer_pools|default([])|length|int) * pgbouncer_default_pool_size|int)
+        else
+        ((defined_pool_size|int)
+        +
+        (postgresql_databases|default([]) | rejectattr('db', 'in', pgbouncer_pools|map(attribute='dbname')|list)|length) * (pgbouncer_default_pool_size|default(0)|int))
       }}
   tags: pgbouncer_conf, pgbouncer
 
-- name: Show the total pool size
+- name: Show total pool size
   run_once: true
   debug:
     var: total_pool_size
