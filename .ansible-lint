@@ -23,6 +23,7 @@ skip_list:
   - key-order[task] # TODO
   - no-free-form
   - var-naming[no-role-prefix]
+  - run-once[task]
 
 exclude_paths:
   - roles/consul/ # TODO - https://github.com/ansible-community/ansible-consul/pull/520
