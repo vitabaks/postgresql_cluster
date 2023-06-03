@@ -272,7 +272,7 @@
         login_user: "{{ patroni_superuser_username }}"
         login_password: "{{ patroni_superuser_password }}"
         login_db: "postgres"
-        query: "select name, setting from pg_settings where pending_restart is true"
+        query: "select name from pg_settings where pending_restart is true"
       register: pending_restart_result
       tags: patroni_conf
 
@@ -285,7 +285,7 @@
       debug:
         msg:
           - "Parameters changed that require PostgreSQL to restart:"
-          - "{{ pg_pending_restart_settings }}"
+          - "{{ pg_pending_restart_settings | map(attribute='name') | list }}"
       when: pg_pending_restart_settings | length > 0
       tags: patroni_conf
 
