@@ -236,7 +236,6 @@
       register: patroni_leader_result
       changed_when: false
       failed_when: false
-      tags: patroni_conf
 
     - name: '[Prepare] Add host to group "primary" (in-memory inventory)'
       add_host:
@@ -245,7 +244,6 @@
       when: hostvars[item]['patroni_leader_result']['status'] == 200
       loop: "{{ groups['postgres_cluster'] }}"
       changed_when: false
-      tags: patroni_conf
 
     - name: '[Prepare] Add hosts to group "secondary" (in-memory inventory)'
       add_host:
@@ -254,7 +252,6 @@
       when: hostvars[item]['patroni_leader_result']['status'] != 200
       loop: "{{ groups['postgres_cluster'] }}"
       changed_when: false
-      tags: patroni_conf
 
     - name: "Print Patroni Cluster info"
       debug:
@@ -262,7 +259,6 @@
           - "Cluster Name: {{ patroni_cluster_name }}"
           - "Cluster Leader: {{ ansible_hostname }}"
       when: inventory_hostname in groups['primary']
-      tags: patroni_conf
 
     - name: "Check if there are any changed parameters that require a restart"
       become_user: postgres
@@ -274,12 +270,10 @@
         login_db: "postgres"
         query: "select name from pg_settings where pending_restart is true"
       register: pending_restart_result
-      tags: patroni_conf
 
     - name: "Set pg_pending_restart_settings variable"
       set_fact:
         pg_pending_restart_settings: "{{ pending_restart_result.query_result }}"
-      tags: patroni_conf
 
     - name: "Display parameters requiring PostgreSQL restart"
       debug:
@@ -287,7 +281,8 @@
           - "On server {{ ansible_hostname }}, the following parameters have changed and require PostgreSQL to restart:"
           - "{{ pg_pending_restart_settings | map(attribute='name') | list }}"
       when: pg_pending_restart_settings | length > 0
-      tags: patroni_conf
+  tags:
+    - patroni_conf
 
 - name: config_pgcluster.yml | Restart patroni on secondary after config settings if need
   hosts: secondary
