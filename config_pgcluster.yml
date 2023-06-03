@@ -284,7 +284,7 @@
     - name: "Display parameters requiring PostgreSQL restart"
       debug:
         msg:
-          - "Parameters changed that require PostgreSQL to restart:"
+          - "On server {{ ansible_hostname }}, the following parameters have changed and require PostgreSQL to restart:"
           - "{{ pg_pending_restart_settings | map(attribute='name') | list }}"
       when: pg_pending_restart_settings | length > 0
       tags: patroni_conf
