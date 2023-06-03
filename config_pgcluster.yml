@@ -264,7 +264,7 @@
       when: inventory_hostname in groups['primary']
       tags: patroni_conf
 
-    - name: "Get count pg settings needed restart"
+    - name: "Check if there are any changed parameters that require a restart"
       become_user: postgres
       postgresql_query:
         login_host: "127.0.0.1"
@@ -272,18 +272,21 @@
         login_user: "{{ patroni_superuser_username }}"
         login_password: "{{ patroni_superuser_password }}"
         login_db: "postgres"
-        query: select count(*) as cnt from pg_settings where pending_restart is true
+        query: "select name, setting from pg_settings where pending_restart is true"
       register: pending_restart_result
       tags: patroni_conf
 
-    - name: "Set pg_pending_restart_count variable"
+    - name: "Set pg_pending_restart_settings variable"
       set_fact:
-        pg_pending_restart_count: "{{ pending_restart_result.query_result[0].cnt }}"
+        pg_pending_restart_settings: "{{ pending_restart_result.query_result }}"
       tags: patroni_conf
 
-    - name: "Print pg_pending_restart_count"
+    - name: "Display parameters requiring PostgreSQL restart"
       debug:
-        var: pg_pending_restart_count
+        msg:
+          - "Parameters changed that require PostgreSQL to restart:"
+          - "{{ pg_pending_restart_settings }}"
+      when: pg_pending_restart_settings | length > 0
       tags: patroni_conf
 
 - name: config_pgcluster.yml | Restart patroni on secondary after config settings if need
@@ -314,7 +317,7 @@
         tasks_from: stop_traffic
       when:
         - pending_restart | bool
-        - pg_pending_restart_count | int > 0
+        - pg_pending_restart_settings | length > 0
 
     - name: Stop Services
       include_role:
@@ -322,7 +325,7 @@
         tasks_from: stop_services
       when:
         - pending_restart | bool
-        - pg_pending_restart_count | int > 0
+        - pg_pending_restart_settings | length > 0
 
     - name: Start Services
       include_role:
@@ -330,7 +333,7 @@
         tasks_from: start_services
       when:
         - pending_restart | bool
-        - pg_pending_restart_count | int > 0
+        - pg_pending_restart_settings | length > 0
 
     - name: Start read-only traffic
       include_role:
@@ -338,7 +341,7 @@
         tasks_from: start_traffic
       when:
         - pending_restart | bool
-        - pg_pending_restart_count | int > 0
+        - pg_pending_restart_settings | length > 0
   tags:
     - patroni_conf
 
@@ -370,7 +373,7 @@
         tasks_from: switchover
       when:
         - pending_restart | bool
-        - pg_pending_restart_count | int > 0
+        - pg_pending_restart_settings | length > 0
 
     - name: Stop read-only traffic
       include_role:
@@ -378,7 +381,7 @@
         tasks_from: stop_traffic
       when:
         - pending_restart | bool
-        - pg_pending_restart_count | int > 0
+        - pg_pending_restart_settings | length > 0
 
     - name: Stop Services
       include_role:
@@ -386,7 +389,7 @@
         tasks_from: stop_services
       when:
         - pending_restart | bool
-        - pg_pending_restart_count | int > 0
+        - pg_pending_restart_settings | length > 0
 
     - name: Start Services
       include_role:
@@ -394,7 +397,7 @@
         tasks_from: start_services
       when:
         - pending_restart | bool
-        - pg_pending_restart_count | int > 0
+        - pg_pending_restart_settings | length > 0
 
     - name: Start read-only traffic
       include_role:
@@ -402,6 +405,6 @@
         tasks_from: start_traffic
       when:
         - pending_restart | bool
-        - pg_pending_restart_count | int > 0
+        - pg_pending_restart_settings | length > 0
   tags:
     - patroni_conf
