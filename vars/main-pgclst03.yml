@@ -233,7 +233,7 @@ wal_g_json:
 wal_g_patroni_cluster_bootstrap_command: "wal-g backup-fetch {{ postgresql_data_dir }} LATEST"
 pgbackrest_install: true
 pgbackrest_install_from_pgdg_repo: true
-pgbackrest_stanza: "pgclst02"
+pgbackrest_stanza: "pgclst03"
 pgbackrest_repo_type: "s3"
 pgbackrest_conf_file: "/etc/pgbackrest/pgbackrest.conf"
 s3_key: !vault |
