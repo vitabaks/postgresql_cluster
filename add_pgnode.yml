@@ -6,7 +6,7 @@
   any_errors_fatal: true
   gather_facts: true
   handlers:
-    - include_tasks: roles/patroni/handlers/main.yml
+    - import_tasks: roles/patroni/handlers/main.yml
   vars_files:
     - vars/main.yml
     - vars/system.yml
