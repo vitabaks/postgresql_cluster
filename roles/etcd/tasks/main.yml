@@ -1,5 +1,4 @@
 ---
-
 - name: Make sure handlers are flushed immediately
   meta: flush_handlers
 
@@ -16,7 +15,7 @@
   environment: "{{ proxy_env | default({}) }}"
   tags: etcd, etcd_install
 
-- block:  # install etcd package from repo
+- block: # install etcd package from repo
     - name: Download "etcd" package
       get_url:
         url: "{{ item }}"
@@ -29,7 +28,7 @@
 
     - name: Extract "etcd" into /tmp
       unarchive:
-        src: "/tmp/{{ etcd_package_repo | basename }}"
+        src: /tmp/{{ etcd_package_repo | basename }}
         dest: /tmp/
         extra_opts:
           - --no-same-owner
@@ -37,7 +36,7 @@
 
     - name: Copy "etcd" and "etcdctl" binary files to /usr/local/bin/
       copy:
-        src: "/tmp/{{ etcd_package_repo.split('.tar.gz')[0] | basename }}/{{ item }}"
+        src: /tmp/{{ etcd_package_repo.split('.tar.gz')[0] | basename }}/{{ item }}
         dest: /usr/local/bin/
         mode: u+x,g+x,o+x
         remote_src: true
@@ -47,7 +46,7 @@
   when: installation_method == "repo" and etcd_package_repo | length > 0
   tags: etcd, etcd_install
 
-- block:  # install etcd package from file
+- block: # install etcd package from file
     - name: Extract "etcd" into /tmp
       unarchive:
         src: "{{ etcd_package_file }}"
@@ -57,7 +56,7 @@
 
     - name: Copy "etcd" and "etcdctl" binary files to /usr/local/bin/
       copy:
-        src: "/tmp/{{ etcd_package_file.split('.tar.gz')[0] | basename }}/{{ item }}"
+        src: /tmp/{{ etcd_package_file.split('.tar.gz')[0] | basename }}/{{ item }}
         dest: /usr/local/bin/
         mode: u+x,g+x,o+x
         remote_src: true
@@ -85,7 +84,7 @@
     path: "{{ etcd_data_dir }}"
     state: directory
     owner: etcd
-    mode: 0700
+    mode: "0700"
   tags: etcd, etcd_conf
 
 - name: Generate conf file "/etc/etcd/etcd.conf"
@@ -134,5 +133,3 @@
       debug:
         msg: "{{ etcd_health_result.stdout }}"
   tags: etcd, etcd_start, etcd_status
-
-...

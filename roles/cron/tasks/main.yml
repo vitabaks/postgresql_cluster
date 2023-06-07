@@ -30,7 +30,7 @@
     month: "{{ item.month | default('*') }}"
     weekday: "{{ item.weekday | default('*') }}"
     name: "{{ item.name }}"
-    state: "absent"
+    state: absent
     job: "{{ item.job }}"
   loop: "{{ cron_jobs }}"
   when:

@@ -1,5 +1,4 @@
 ---
-
 # Install HAProxy from rpm/deb packages
 # from repo
 - block:
@@ -12,9 +11,7 @@
       until: package_status is success
       delay: 5
       retries: 3
-      when: haproxy_install_repo|bool and
-            (ansible_distribution == 'CentOS' and
-            ansible_distribution_major_version == '7')
+      when: haproxy_install_repo|bool and (ansible_distribution == 'CentOS' and ansible_distribution_major_version == '7')
       tags: haproxy_scl_repo
 
     - name: Install Software Collections (SCL) repository for OracleLinux 7
@@ -25,18 +22,14 @@
         gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-oracle
         gpgcheck: true
         enabled: true
-      when: haproxy_install_repo|bool and
-            (ansible_distribution == "OracleLinux" and
-            ansible_distribution_major_version == '7')
+      when: haproxy_install_repo|bool and (ansible_distribution == "OracleLinux" and ansible_distribution_major_version == '7')
       tags: haproxy_scl_repo
 
     - name: Enable Software Collections (SCL) repository for RedHat 7
       become: true
       become_user: root
       command: subscription-manager repos --enable rhel-server-rhscl-7-rpms
-      when: haproxy_install_repo|bool and
-            (ansible_distribution == 'RedHat' and
-            ansible_distribution_major_version == '7')
+      when: haproxy_install_repo|bool and (ansible_distribution == 'RedHat' and ansible_distribution_major_version == '7')
       tags: haproxy_scl_repo
 
     - name: Install HAProxy v1.8 (rh-haproxy18 package)
@@ -58,9 +51,7 @@
         state: link
       when: ansible_distribution_major_version == '7'
   environment: "{{ proxy_env | default({}) }}"
-  when: ansible_os_family == "RedHat" and
-        installation_method == "repo" and
-        haproxy_installation_method == "rpm"
+  when: ansible_os_family == "RedHat" and installation_method == "repo" and haproxy_installation_method == "rpm"
   tags: haproxy, load_balancing
 
 - block:
@@ -75,9 +66,7 @@
       retries: 3
       when: ansible_distribution_major_version is version('8', '>=')
   environment: "{{ proxy_env | default({}) }}"
-  when: ansible_os_family == "RedHat" and
-        installation_method == "repo" and
-        haproxy_installation_method == "rpm"
+  when: ansible_os_family == "RedHat" and installation_method == "repo" and haproxy_installation_method == "rpm"
   tags: haproxy, load_balancing
 
 - block:
@@ -86,22 +75,18 @@
       apt_key:
         url: https://haproxy.debian.net/bernat.debian.org.gpg
         state: present
-      when: haproxy_install_repo|bool and
-            (ansible_distribution == "Debian" and
-            ansible_distribution_major_version is version('10', '<='))
+      when: haproxy_install_repo|bool and (ansible_distribution == "Debian" and ansible_distribution_major_version is version('10', '<='))
 
     - name: Add haproxy.debian.net repository
       apt_repository:
-        repo: "deb https://haproxy.debian.net {{ ansible_distribution_release }}-backports-1.8 main"
+        repo: deb https://haproxy.debian.net {{ ansible_distribution_release }}-backports-1.8 main
         state: present
         update_cache: true
-      when: haproxy_install_repo|bool and
-            (ansible_distribution == "Debian" and
-            ansible_distribution_major_version is version('10', '<='))
+      when: haproxy_install_repo|bool and (ansible_distribution == "Debian" and ansible_distribution_major_version is version('10', '<='))
 
     # Ubuntu
     - name: Add ppa:vbernat/haproxy-1.8 repository apt-key
-      apt_key:  # https://github.com/ansible/ansible/issues/31691
+      apt_key: # https://github.com/ansible/ansible/issues/31691
         data: |
           -----BEGIN PGP PUBLIC KEY BLOCK-----
 
@@ -116,30 +101,26 @@
           =ZiOf
           -----END PGP PUBLIC KEY BLOCK-----
         state: present
-      when: haproxy_install_repo|bool and
-            (ansible_distribution == 'Ubuntu' and
-            ansible_distribution_major_version is version('18', '<='))
+      when: haproxy_install_repo|bool and (ansible_distribution == 'Ubuntu' and ansible_distribution_major_version is version('18', '<='))
 
     - name: Add ppa:vbernat/haproxy-1.8 repository
       apt_repository:
-        repo: "deb http://ppa.launchpad.net/vbernat/haproxy-1.8/ubuntu {{ ansible_distribution_release }} main"
+        repo: deb http://ppa.launchpad.net/vbernat/haproxy-1.8/ubuntu {{ ansible_distribution_release }} main
         state: present
         update_cache: true
-      when: haproxy_install_repo|bool and
-            (ansible_distribution == 'Ubuntu' and
-            ansible_distribution_major_version is version('18', '<='))
+      when: haproxy_install_repo|bool and (ansible_distribution == 'Ubuntu' and ansible_distribution_major_version is version('18', '<='))
 
     - name: Install HAProxy v1.8 package
       apt:
         force_apt_get: true
-        name: "haproxy=1.8.*"
+        name: haproxy=1.8.*
         state: present
       register: apt_status
       until: apt_status is success
       delay: 5
       retries: 3
-      when: (ansible_distribution == "Debian" and ansible_distribution_major_version is version('10', '<=')) or
-            (ansible_distribution == 'Ubuntu' and ansible_distribution_major_version is version('18', '<='))
+      when: (ansible_distribution == "Debian" and ansible_distribution_major_version is version('10', '<=')) or (ansible_distribution == 'Ubuntu' and ansible_distribution_major_version
+        is version('18', '<='))
 
     - name: Install HAProxy package
       apt:
@@ -149,12 +130,10 @@
       until: apt_status is success
       delay: 5
       retries: 3
-      when: (ansible_distribution == "Debian" and ansible_distribution_major_version is version('11', '>=')) or
-            (ansible_distribution == 'Ubuntu' and ansible_distribution_major_version is version('20', '>='))
+      when: (ansible_distribution == "Debian" and ansible_distribution_major_version is version('11', '>=')) or (ansible_distribution == 'Ubuntu' and ansible_distribution_major_version
+        is version('20', '>='))
   environment: "{{ proxy_env | default({}) }}"
-  when: ansible_os_family == "Debian" and
-        installation_method == "repo" and
-        haproxy_installation_method == "deb"
+  when: ansible_os_family == "Debian" and installation_method == "repo" and haproxy_installation_method == "deb"
   tags: haproxy, load_balancing
 
 # from file (rpm/deb packages)
@@ -169,7 +148,7 @@
     - name: Install packages
       apt:
         force_apt_get: true
-        deb: "/tmp/{{ item }}"
+        deb: /tmp/{{ item }}
         state: present
       loop: "{{ haproxy_package_file | map('basename') | list }}"
       register: apt_status
@@ -180,7 +159,7 @@
 
     - name: Install packages
       package:
-        name: "/tmp/{{ item }}"
+        name: /tmp/{{ item }}
         state: present
       loop: "{{ haproxy_package_file | map('basename') | list }}"
       register: package_status
@@ -200,7 +179,7 @@
 
 # from repo
 - block:
-    - name: "Download HAProxy and lua source files"
+    - name: Download HAProxy and lua source files
       get_url:
         url: "{{ item }}"
         dest: /tmp/
@@ -211,18 +190,18 @@
         - "{{ lua_src_repo }}"
       environment: "{{ proxy_env | default({}) }}"
 
-    - name: "Extract HAProxy source files into /tmp"
+    - name: Extract HAProxy source files into /tmp
       unarchive:
-        src: "/tmp/{{ haproxy_src_repo | basename }}"
+        src: /tmp/{{ haproxy_src_repo | basename }}
         dest: /tmp/
         extra_opts:
           - --no-same-owner
         remote_src: true
       when: haproxy_src_repo | length > 0
 
-    - name: "Extract lua source files into /tmp"
+    - name: Extract lua source files into /tmp
       unarchive:
-        src: "/tmp/{{ lua_src_repo | basename }}"
+        src: /tmp/{{ lua_src_repo | basename }}
         dest: /tmp/
         extra_opts:
           - --no-same-owner
@@ -234,7 +213,7 @@
 
 # from file
 - block:
-    - name: "Extract HAProxy source files into /tmp"
+    - name: Extract HAProxy source files into /tmp
       unarchive:
         src: "{{ haproxy_src_file }}"
         dest: /tmp/
@@ -242,7 +221,7 @@
           - --no-same-owner
       when: haproxy_src_file | length > 0
 
-    - name: "Extract lua source files into /tmp"
+    - name: Extract lua source files into /tmp
       unarchive:
         src: "{{ lua_src_file }}"
         dest: /tmp/
@@ -269,16 +248,16 @@
     - name: Build and install lua (required for haproxy)
       become: true
       become_user: root
-      shell: "make INSTALL_TOP=/opt/{{ lua_src_repo.split('.tar.gz')[0] | basename }} linux install"
+      shell: make INSTALL_TOP=/opt/{{ lua_src_repo.split('.tar.gz')[0] | basename }} linux install
       args:
-        chdir: "/tmp/{{ lua_src_repo.split('.tar.gz')[0] | basename }}"
+        chdir: /tmp/{{ lua_src_repo.split('.tar.gz')[0] | basename }}
       tags: lua
 
     - name: Build HAProxy
       become: true
       become_user: root
       make:
-        chdir: "/tmp/{{ haproxy_src_repo.split('.tar.gz')[0] | basename }}"
+        chdir: /tmp/{{ haproxy_src_repo.split('.tar.gz')[0] | basename }}
         params:
           TARGET: "{{ target_linux }}"
           USE_GETADDRINFO: 1
@@ -291,14 +270,14 @@
           USE_NS: 1
           USE_TFO: 1
           USE_LUA: 1
-          LUA_INC: "/opt/{{ lua_src_repo.split('.tar.gz')[0] | basename }}/include"
-          LUA_LIB: "/opt/{{ lua_src_repo.split('.tar.gz')[0] | basename }}/lib"
+          LUA_INC: /opt/{{ lua_src_repo.split('.tar.gz')[0] | basename }}/include
+          LUA_LIB: /opt/{{ lua_src_repo.split('.tar.gz')[0] | basename }}/lib
 
     - name: Install HAProxy
       become: true
       become_user: root
       make:
-        chdir: "/tmp/{{ haproxy_src_repo.split('.tar.gz')[0] | basename }}"
+        chdir: /tmp/{{ haproxy_src_repo.split('.tar.gz')[0] | basename }}
         target: install
   when: installation_method == "repo" and haproxy_installation_method == "src"
   tags: haproxy, load_balancing
@@ -308,16 +287,16 @@
     - name: Build and install lua (required for haproxy)
       become: true
       become_user: root
-      shell: "make INSTALL_TOP=/opt/{{ lua_src_file.split('.tar.gz')[0] | basename }} linux install"
+      shell: make INSTALL_TOP=/opt/{{ lua_src_file.split('.tar.gz')[0] | basename }} linux install
       args:
-        chdir: "/tmp/{{ lua_src_file.split('.tar.gz')[0] | basename }}"
+        chdir: /tmp/{{ lua_src_file.split('.tar.gz')[0] | basename }}
       tags: lua
 
     - name: Build HAProxy
       become: true
       become_user: root
       make:
-        chdir: "/tmp/{{ haproxy_src_file.split('.tar.gz')[0] | basename }}"
+        chdir: /tmp/{{ haproxy_src_file.split('.tar.gz')[0] | basename }}
         params:
           TARGET: "{{ target_linux }}"
           USE_GETADDRINFO: 1
@@ -330,14 +309,14 @@
           USE_NS: 1
           USE_TFO: 1
           USE_LUA: 1
-          LUA_INC: "/opt/{{ lua_src_file.split('.tar.gz')[0] | basename }}/include"
-          LUA_LIB: "/opt/{{ lua_src_file.split('.tar.gz')[0] | basename }}/lib"
+          LUA_INC: /opt/{{ lua_src_file.split('.tar.gz')[0] | basename }}/include
+          LUA_LIB: /opt/{{ lua_src_file.split('.tar.gz')[0] | basename }}/lib
 
     - name: Install HAProxy
       become: true
       become_user: root
       make:
-        chdir: "/tmp/{{ haproxy_src_file.split('.tar.gz')[0] | basename }}"
+        chdir: /tmp/{{ haproxy_src_file.split('.tar.gz')[0] | basename }}
         target: install
   when: installation_method == "file" and haproxy_installation_method == "src"
   tags: haproxy, load_balancing
@@ -345,12 +324,12 @@
 # Configure
 - name: Make sure the kernel parameter "net.ipv4.ip_nonlocal_bind" are enabled
   sysctl:
-    name: "net.ipv4.ip_nonlocal_bind"
+    name: net.ipv4.ip_nonlocal_bind
     value: "1"
     sysctl_set: true
     state: present
     reload: true
-  ignore_errors: true  # to prevent test failures in CI
+  ignore_errors: true # to prevent test failures in CI
   tags: haproxy, load_balancing
 
 - name: Add haproxy group
@@ -362,7 +341,7 @@
 - name: Add haproxy user
   user:
     name: haproxy
-    comment: "HAProxy user"
+    comment: HAProxy user
     group: haproxy
     shell: /usr/sbin/nologin
   tags: haproxy, load_balancing
@@ -385,9 +364,8 @@
     dest: /etc/haproxy/haproxy.cfg
     owner: haproxy
     group: haproxy
-  notify: "restart haproxy"
-  when: (add_balancer is not defined or not add_balancer|bool) and
-        (postgresql_cluster_maintenance is not defined or not postgresql_cluster_maintenance|bool)
+  notify: restart haproxy
+  when: (add_balancer is not defined or not add_balancer|bool) and (postgresql_cluster_maintenance is not defined or not postgresql_cluster_maintenance|bool)
   tags: haproxy, haproxy_conf, load_balancing
 
 - name: Generate systemd service file "/etc/systemd/system/haproxy.service"
@@ -396,18 +374,18 @@
     dest: /etc/systemd/system/haproxy.service
     owner: haproxy
     group: haproxy
-  notify: "restart haproxy"
+  notify: restart haproxy
   tags: haproxy, haproxy_service, load_balancing
 
-- block:  # for add_balancer.yml
-    - name: "Fetch haproxy.cfg file from {{ groups.balancers[0] }}"
+- block: # for add_balancer.yml
+    - name: Fetch haproxy.cfg file from {{ groups.balancers[0] }}
       run_once: true
       fetch:
         src: /etc/haproxy/haproxy.cfg
         dest: files/haproxy.cfg
         validate_checksum: true
         flat: true
-      notify: "restart haproxy"
+      notify: restart haproxy
       delegate_to: "{{ groups.balancers[0] }}"
 
     - name: Copy haproxy.cfg file to replica
@@ -416,7 +394,7 @@
         dest: /etc/haproxy/haproxy.cfg
         owner: haproxy
         group: haproxy
-      notify: "restart haproxy"
+      notify: restart haproxy
 
     - name: Remove haproxy.cfg file from localhost
       run_once: true
@@ -432,14 +410,19 @@
         line: "{{ item.line }}"
         backrefs: true
       loop:
-        - { regexp: '^.*bind.*:{{ haproxy_listen_port.stats }}$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:{{ haproxy_listen_port.stats }}' }
-        - { regexp: '^.*bind.*:{{ haproxy_listen_port.master }}$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:{{ haproxy_listen_port.master }}' }
-        - { regexp: '^.*bind.*:{{ haproxy_listen_port.replicas }}$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:{{ haproxy_listen_port.replicas }}' }
-        - { regexp: '^.*bind.*:{{ haproxy_listen_port.replicas_sync }}$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:{{ haproxy_listen_port.replicas_sync }}' }
-        - { regexp: '^.*bind.*:{{ haproxy_listen_port.replicas_async }}$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:{{ haproxy_listen_port.replicas_async }}' }
+        - regexp: ^.*bind.*:{{ haproxy_listen_port.stats }}$
+          line: "    bind {{ hostvars[inventory_hostname].inventory_hostname }}:{{ haproxy_listen_port.stats }}"
+        - regexp: ^.*bind.*:{{ haproxy_listen_port.master }}$
+          line: "    bind {{ hostvars[inventory_hostname].inventory_hostname }}:{{ haproxy_listen_port.master }}"
+        - regexp: ^.*bind.*:{{ haproxy_listen_port.replicas }}$
+          line: "    bind {{ hostvars[inventory_hostname].inventory_hostname }}:{{ haproxy_listen_port.replicas }}"
+        - regexp: ^.*bind.*:{{ haproxy_listen_port.replicas_sync }}$
+          line: "    bind {{ hostvars[inventory_hostname].inventory_hostname }}:{{ haproxy_listen_port.replicas_sync }}"
+        - regexp: ^.*bind.*:{{ haproxy_listen_port.replicas_async }}$
+          line: "    bind {{ hostvars[inventory_hostname].inventory_hostname }}:{{ haproxy_listen_port.replicas_async }}"
       loop_control:
         label: "{{ item.line }}"
-      notify: "restart haproxy"
+      notify: restart haproxy
       when: cluster_vip is not defined or cluster_vip | length < 1
 
     - name: Prepare haproxy.cfg conf file (replace "bind" for stats)
@@ -449,14 +432,15 @@
         line: "{{ item.line }}"
         backrefs: true
       loop:
-        - { regexp: '^.*bind.*:{{ haproxy_listen_port.stats }}$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:{{ haproxy_listen_port.stats }}' }
-        - { regexp: '^.*bind.*:{{ haproxy_listen_port.master }}$', line: '    bind {{ cluster_vip }}:{{ haproxy_listen_port.master }}' }
-        - { regexp: '^.*bind.*:{{ haproxy_listen_port.replicas }}$', line: '    bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas }}' }
-        - { regexp: '^.*bind.*:{{ haproxy_listen_port.replicas_sync }}$', line: '    bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas_sync }}' }
-        - { regexp: '^.*bind.*:{{ haproxy_listen_port.replicas_async }}$', line: '    bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas_async }}' }
+        - regexp: ^.*bind.*:{{ haproxy_listen_port.stats }}$
+          line: "    bind {{ hostvars[inventory_hostname].inventory_hostname }}:{{ haproxy_listen_port.stats }}"
+        - { regexp: "^.*bind.*:{{ haproxy_listen_port.master }}$", line: "    bind {{ cluster_vip }}:{{ haproxy_listen_port.master }}" }
+        - { regexp: "^.*bind.*:{{ haproxy_listen_port.replicas }}$", line: "    bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas }}" }
+        - { regexp: "^.*bind.*:{{ haproxy_listen_port.replicas_sync }}$", line: "    bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas_sync }}" }
+        - { regexp: "^.*bind.*:{{ haproxy_listen_port.replicas_async }}$", line: "    bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas_async }}" }
       loop_control:
         label: "{{ item.line }}"
-      notify: "restart haproxy"
+      notify: restart haproxy
       when: cluster_vip is defined and cluster_vip | length > 0
   when: add_balancer is defined and add_balancer|bool
   tags: haproxy, haproxy_conf, load_balancing
@@ -515,5 +499,3 @@
   when: ansible_selinux.status is defined and ansible_selinux.status == 'enabled'
   ignore_errors: true
   tags: haproxy, load_balancing, haproxy_selinux
-
-...

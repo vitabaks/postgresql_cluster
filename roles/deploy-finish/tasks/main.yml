@@ -1,5 +1,4 @@
 ---
-
 - name: Make sure handlers are flushed immediately
   meta: flush_handlers
 
@@ -59,7 +58,7 @@
   ignore_errors: true
   tags: databases, db_list, cluster_info, cluster_status, point_in_time_recovery
 
-- block:  # if cluster_vip is defined
+- block: # if cluster_vip is defined
     - name: PostgreSQL Cluster connection info
       run_once: true
       debug:
@@ -113,9 +112,7 @@
 
     - name: Virtual IP Address (VIP) info
       debug:
-        msg:
-          "Cluster ip address (VIP) {{ cluster_vip }}
-           is running on server {{ ansible_hostname }}"
+        msg: Cluster ip address (VIP) {{ cluster_vip }} is running on server {{ ansible_hostname }}
       when: man_ip is defined and man_ip == cluster_vip
   when:
     - (cluster_vip is defined and cluster_vip | length > 0)
@@ -123,13 +120,13 @@
   ignore_errors: true
   tags: vip_owner, vip_status, cluster_info, cluster_status
 
-
-- block:  # if cluster_vip is not defined
+- block: # if cluster_vip is not defined
     - name: Create list of nodes
       run_once: true
       set_fact:
         haproxy_nodes: "{% for host in groups['balancers'] %}{{ hostvars[host]['inventory_hostname'] }}{% if not loop.last %},{% endif %}{% endfor %}"
-        postgres_cluster_nodes: "{% for host in groups['postgres_cluster'] %}{{ hostvars[host]['inventory_hostname'] }}{% if not loop.last %},{% endif %}{% endfor %}"
+        postgres_cluster_nodes: "{% for host in groups['postgres_cluster'] %}{{ hostvars[host]['inventory_hostname'] }}{% if not loop.last %},{% endif %}{% endfor
+          %}"
 
     - name: PostgreSQL Cluster connection info
       run_once: true
@@ -175,8 +172,7 @@
     - dcs_type == "etcd"
   tags: conn_info, cluster_info, cluster_status
 
-
-- block:  # if dcs_type: "consul"
+- block: # if dcs_type: "consul"
     - name: PostgreSQL Cluster connection info
       run_once: true
       debug:
@@ -203,5 +199,3 @@
           - +------------------------------------------------+
       when: synchronous_mode | bool
   when: dcs_type == "consul"
-
-...

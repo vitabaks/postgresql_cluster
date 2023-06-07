@@ -1,5 +1,4 @@
 ---
-
 - name: Ensure iptables is present.
   package:
     name: iptables
@@ -20,7 +19,7 @@
     dest: /etc/firewall.bash
     owner: root
     group: root
-    mode: 0744
+    mode: "0744"
   notify: restart firewall
 
 - name: Copy firewall init script into place.
@@ -29,8 +28,8 @@
     dest: /etc/init.d/firewall
     owner: root
     group: root
-    mode: 0755
-  when: "ansible_service_mgr != 'systemd'"
+    mode: "0755"
+  when: ansible_service_mgr != 'systemd'
 
 - name: Copy firewall systemd unit file into place (for systemd systems).
   template:
@@ -38,8 +37,8 @@
     dest: /etc/systemd/system/firewall.service
     owner: root
     group: root
-    mode: 0644
-  when: "ansible_service_mgr == 'systemd'"
+    mode: "0644"
+  when: ansible_service_mgr == 'systemd'
 
 # prevents firewall initialization from severing the SSH connection
 - block:
@@ -47,15 +46,13 @@
       modprobe:
         name: nf_conntrack_ipv4
         state: present
-      when: ansible_kernel is version('4.19', '<') and
-            not (ansible_os_family == "RedHat" and ansible_distribution_version is version('8.3', '>='))
+      when: ansible_kernel is version('4.19', '<') and not (ansible_os_family == "RedHat" and ansible_distribution_version is version('8.3', '>='))
 
     - name: Load the nf_conntrack module
       modprobe:
         name: nf_conntrack
         state: present
-      when: ansible_kernel is version('4.19', '>=') or
-            (ansible_os_family == "RedHat" and ansible_distribution_version is version('8.3', '>='))
+      when: ansible_kernel is version('4.19', '>=') or (ansible_os_family == "RedHat" and ansible_distribution_version is version('8.3', '>='))
 
     - name: sysctl | keep connections alive when enabling the firewall
       sysctl:
@@ -64,7 +61,7 @@
         state: present
         sysctl_set: true
         reload: true
-      failed_when: false  # to prevent failures in CI
+      failed_when: false # to prevent failures in CI
   ignore_errors: true
 
 - name: Configure the firewall service.
@@ -75,5 +72,3 @@
 
 - import_tasks: disable-other-firewalls.yml
   when: firewall_disable_firewalld|bool or firewall_disable_ufw|bool
-
-...
