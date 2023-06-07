@@ -1,11 +1,9 @@
 ---
-
 # for OracleLinux 7
 - name: Reinstall glibc-common to avoid problem when generating locales
   command: yum reinstall glibc-common -y
   environment: "{{ proxy_env | default({}) }}"
-  when: (ansible_distribution == "OracleLinux" and
-         ansible_distribution_major_version == '7')
+  when: (ansible_distribution == "OracleLinux" and ansible_distribution_major_version == '7')
 
 - block:
     - name: Generate locales
@@ -24,32 +22,30 @@
         -f {{ item.encoding }} {{ item.language_country }}.{{ item.encoding }}
       changed_when: false
       loop: "{{ locale_gen | flatten(1) }}"
-      when: ansible_os_family == "RedHat" and
-            ansible_distribution_major_version == '7'
+      when: ansible_os_family == "RedHat" and ansible_distribution_major_version == '7'
 
     - name: Install glibc-langpack
       dnf:
         name: "{{ item }}"
       loop: "{{ glibc_langpack }}"
       environment: "{{ proxy_env | default({}) }}"
-      when: ansible_os_family == "RedHat" and
-            ansible_distribution_major_version >= '8'
+      when: ansible_os_family == "RedHat" and ansible_distribution_major_version >= '8'
   when: locale_gen is defined and locale_gen | length > 0
   tags: locales, locale_gen
 
 - block:
     - name: Set locale "{{ locale }}" into /etc/default/locale
       lineinfile:
-        dest: "/etc/default/locale"
+        dest: /etc/default/locale
         regexp: "{{ item.regexp }}"
         line: "{{ item.line }}"
         owner: root
         group: root
-        mode: '0644'
+        mode: "0644"
       loop:
-        - { regexp: '^LANG=', line: 'LANG={{ locale }}' }
-        - { regexp: '^LANGUAGE=', line: 'LANGUAGE={{ locale }}' }
-        - { regexp: '^LC_ALL=', line: 'LC_ALL={{ locale }}' }
+        - { regexp: ^LANG=, line: "LANG={{ locale }}" }
+        - { regexp: ^LANGUAGE=, line: "LANGUAGE={{ locale }}" }
+        - { regexp: ^LC_ALL=, line: "LC_ALL={{ locale }}" }
       loop_control:
         label: "{{ item.line }}"
       when: ansible_os_family == "Debian"
@@ -62,35 +58,33 @@
 
     - name: Set locale "{{ locale }}" into /etc/locale.conf
       lineinfile:
-        dest: "/etc/locale.conf"
+        dest: /etc/locale.conf
         regexp: "{{ item.regexp }}"
         line: "{{ item.line }}"
         owner: root
         group: root
-        mode: '0644'
+        mode: "0644"
       loop:
-        - { regexp: '^LANG=', line: 'LANG={{ locale }}' }
-        - { regexp: '^LC_ALL=', line: 'LC_ALL={{ locale }}' }
+        - { regexp: ^LANG=, line: "LANG={{ locale }}" }
+        - { regexp: ^LC_ALL=, line: "LC_ALL={{ locale }}" }
       loop_control:
         label: "{{ item.line }}"
       when: ansible_os_family == "RedHat" and locale_conf.stat.exists
 
     - name: Set locale "{{ locale }}" into /etc/environment
       lineinfile:
-        dest: "/etc/environment"
+        dest: /etc/environment
         regexp: "{{ item.regexp }}"
         line: "{{ item.line }}"
         owner: root
         group: root
-        mode: '0644'
+        mode: "0644"
       loop:
-        - { regexp: 'LANG=', line: 'export LANG={{ locale }}' }
-        - { regexp: 'LC_ALL=', line: 'export LC_ALL={{ locale }}' }
+        - { regexp: LANG=, line: "export LANG={{ locale }}" }
+        - { regexp: LC_ALL=, line: "export LC_ALL={{ locale }}" }
       loop_control:
         label: "{{ item.line }}"
       when: ansible_os_family == "RedHat"
   ignore_errors: true
   when: locale is defined and locale | length > 0
   tags: locales, locale_env
-
-...

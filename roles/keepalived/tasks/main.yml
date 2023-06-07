@@ -1,5 +1,4 @@
 ---
-
 - name: Install keepalived packages
   package:
     name: keepalived
@@ -18,8 +17,8 @@
     state: present
     reload: true
   loop:
-    - "net.ipv4.ip_nonlocal_bind"
-    - "net.ipv4.ip_forward"
+    - net.ipv4.ip_nonlocal_bind
+    - net.ipv4.ip_forward
   tags: keepalived_conf, keepalived
 
 - name: Make sure the "/usr/libexec/keepalived" directory exists
@@ -38,20 +37,20 @@
     dest: /usr/libexec/keepalived/haproxy_check.sh
     owner: root
     group: root
-    mode: 0700
-  notify: "restart keepalived"
+    mode: "0700"
+  notify: restart keepalived
   tags: keepalived_conf, keepalived
 
 - name: Generate conf file "/etc/keepalived/keepalived.conf"
   template:
     src: templates/keepalived.conf.j2
     dest: /etc/keepalived/keepalived.conf
-  notify: "restart keepalived"
+  notify: restart keepalived
   when: add_balancer is not defined or not add_balancer|bool
   tags: keepalived_conf, keepalived
 
-- block:  # for add_balancer.yml
-    - name: "Fetch keepalived.conf conf file from {{ groups.balancers[0] }}"
+- block: # for add_balancer.yml
+    - name: Fetch keepalived.conf conf file from {{ groups.balancers[0] }}
       run_once: true
       fetch:
         src: /etc/keepalived/keepalived.conf
@@ -64,7 +63,7 @@
       copy:
         src: files/keepalived.conf
         dest: /etc/keepalived/keepalived.conf
-      notify: "restart keepalived"
+      notify: restart keepalived
 
     - name: Remove keepalived.conf file from localhost
       run_once: true
@@ -80,10 +79,10 @@
         line: "{{ item.line }}"
         backrefs: true
       loop:
-        - { regexp: '^.*interface', line: '   interface {{ vip_interface }}' }
+        - { regexp: ^.*interface, line: "   interface {{ vip_interface }}" }
       loop_control:
         label: "{{ item.line }}"
-      notify: "restart keepalived"
+      notify: restart keepalived
   when: add_balancer is defined and add_balancer|bool
   tags: keepalived_conf, keepalived
 
@@ -91,9 +90,6 @@
   selinux_permissive:
     name: keepalived_t
     permissive: true
-  when: ansible_selinux.status is defined and
-        ansible_selinux.status == 'enabled'
+  when: ansible_selinux.status is defined and ansible_selinux.status == 'enabled'
   ignore_errors: true
   tags: keepalived, keepalived_selinux
-
-...

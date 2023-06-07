@@ -1,5 +1,4 @@
 ---
-
 # Install packages from files
 - block:
     - name: Copy packages into /tmp
@@ -12,7 +11,7 @@
     - name: Install packages
       apt:
         force_apt_get: true
-        deb: "/tmp/{{ item }}"
+        deb: /tmp/{{ item }}
         state: present
       loop: "{{ packages_from_file | map('basename') | list }}"
       register: apt_status
@@ -23,7 +22,7 @@
 
     - name: Install packages
       package:
-        name: "/tmp/{{ item }}"
+        name: /tmp/{{ item }}
         state: present
       loop: "{{ packages_from_file | map('basename') | list }}"
       register: package_status
@@ -34,7 +33,7 @@
   when: packages_from_file is defined and packages_from_file | length > 0
   tags: install_packages_from_file
 
-- block:  # RedHat (update cache)
+- block: # RedHat (update cache)
     - name: Clean yum cache
       command: yum clean all
       when: ansible_distribution_major_version == '7'
@@ -103,16 +102,14 @@
 # PostgreSQL prepare for install (for RHEL 8)
 - block:
     - name: PostgreSQL | check if appstream module is enabled
-      command: 'dnf -y -C module list postgresql'
+      command: dnf -y -C module list postgresql
       register: postgresql_module_result
       changed_when: false
 
     - name: PostgreSQL | disable appstream module
-      command: 'dnf -y -C module disable postgresql'
+      command: dnf -y -C module disable postgresql
       when: "'[x] ' not in postgresql_module_result.stdout"
-  when: installation_method == "repo" and
-        ansible_os_family == "RedHat" and
-        ansible_distribution_major_version >= '8'
+  when: installation_method == "repo" and ansible_os_family == "RedHat" and ansible_distribution_major_version >= '8'
   ignore_errors: true
   tags: install_postgres
 
@@ -162,5 +159,3 @@
     - enable_timescale is defined
     - enable_timescale | bool
   tags: install_packages, install_postgres, install_timescaledb
-
-...

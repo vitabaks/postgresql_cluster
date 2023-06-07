@@ -1,7 +1,5 @@
 ---
-
 - block:
-
     - name: Download the installation script "kickstart.sh"
       get_url:
         url: https://my-netdata.io/kickstart.sh
@@ -26,5 +24,3 @@
 
   environment: "{{ proxy_env | default({}) }}"
   tags: netdata
-
-...
