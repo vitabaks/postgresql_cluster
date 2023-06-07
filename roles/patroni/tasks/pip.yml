@@ -5,7 +5,7 @@
 # Installing latest version pip3 for python3
 
 # install pip package from repo (installation_method: "repo")
-- block:  # with get-pip.py
+- block: # with get-pip.py
     - name: pip | get-pip.py
       get_url:
         url: "{{ pip_package_repo }}"
@@ -17,7 +17,7 @@
 
     - name: pip | get-pip.py
       get_url:
-        url: "https://bootstrap.pypa.io/pip/3.6/get-pip.py"
+        url: https://bootstrap.pypa.io/pip/3.6/get-pip.py
         dest: /tmp/
         timeout: 60
         validate_certs: false
@@ -36,12 +36,10 @@
         chdir: /tmp/
       when: get_pip_result.changed
   environment: "{{ proxy_env | default({}) }}"
-  when: installation_method == "repo" and
-        patroni_installation_method == "pip" and
-        pip_package_repo is search("get-pip.py")
+  when: installation_method == "repo" and patroni_installation_method == "pip" and pip_package_repo is search("get-pip.py")
   tags: pip_install, pip
 
-- block:  # with tar.gz
+- block: # with tar.gz
     - name: pip | download pip package
       get_url:
         url: "{{ item }}"
@@ -54,19 +52,18 @@
 
     - name: pip | extract pip package into /tmp
       unarchive:
-        src: "/tmp/{{ pip_package_repo | basename }}"
+        src: /tmp/{{ pip_package_repo | basename }}
         dest: /tmp/
         extra_opts:
           - --no-same-owner
         remote_src: true
 
     - name: pip | install pip
-      command: "python3 setup.py install"
+      command: python3 setup.py install
       args:
-        chdir: "/tmp/{{ pip_package_repo.split('.tar.gz')[0] | basename }}"
+        chdir: /tmp/{{ pip_package_repo.split('.tar.gz')[0] | basename }}
       when: pip_package_result.changed
-  when: installation_method == "repo" and
-        pip_package_repo is search("tar.gz")
+  when: installation_method == "repo" and pip_package_repo is search("tar.gz")
   tags: pip_install, pip
 
 # install pip package from file (installation_method: "file")
@@ -82,10 +79,7 @@
     - name: pip | install pip
       command: python3 setup.py install
       args:
-        chdir: "/tmp/{{ pip_package_file.split('.tar.gz')[0] | basename }}"
+        chdir: /tmp/{{ pip_package_file.split('.tar.gz')[0] | basename }}
       when: pip_package_result.changed
-  when: installation_method == "file" and
-        pip_package_file | length > 0
+  when: installation_method == "file" and pip_package_file | length > 0
   tags: pip_install, pip
-
-...

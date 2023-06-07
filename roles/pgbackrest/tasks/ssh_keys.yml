@@ -1,5 +1,4 @@
 ---
-
 - name: ssh_keys | Ensure ssh key are created for "{{ pgbackrest_repo_user }}" user on pgbackrest server
   user:
     name: "{{ pgbackrest_repo_user }}"
@@ -10,7 +9,7 @@
 
 - name: ssh_keys | Ensure ssh key are created for "postgres" user on database servers
   user:
-    name: "postgres"
+    name: postgres
     generate_ssh_key: true
     ssh_key_bits: 2048
     ssh_key_file: .ssh/id_rsa
@@ -18,14 +17,14 @@
 
 - name: ssh_keys | Get public ssh key from pgbackrest server
   slurp:
-    src: "~{{ pgbackrest_repo_user }}/.ssh/id_rsa.pub"
+    src: ~{{ pgbackrest_repo_user }}/.ssh/id_rsa.pub
   register: pgbackrest_sshkey
   changed_when: false
   when: "'pgbackrest' in group_names"
 
 - name: ssh_keys | Get public ssh key from database servers
   slurp:
-    src: "~postgres/.ssh/id_rsa.pub"
+    src: ~postgres/.ssh/id_rsa.pub
   register: postgres_cluster_sshkey
   changed_when: false
   when: "'postgres_cluster' in group_names"
@@ -47,7 +46,7 @@
   when: "'pgbackrest' in group_names"
 
 - name: known_hosts | Get public ssh keys of hosts (ssh-keyscan)
-  command: "ssh-keyscan -trsa -p {{ ansible_ssh_port | default(22) }} {{ item }}"
+  command: ssh-keyscan -trsa -p {{ ansible_ssh_port | default(22) }} {{ item }}
   loop: "{{ groups['all'] }}"
   register: ssh_known_host_keyscan
   changed_when: false
@@ -58,7 +57,7 @@
   known_hosts:
     host: "{{ item.item }}"
     key: "{{ item.stdout }}"
-    path: "~postgres/.ssh/known_hosts"
+    path: ~postgres/.ssh/known_hosts
   no_log: true
   loop: "{{ ssh_known_host_keyscan.results }}"
   when: "'postgres_cluster' in group_names"
@@ -69,9 +68,7 @@
   known_hosts:
     host: "{{ item.item }}"
     key: "{{ item.stdout }}"
-    path: "~{{ pgbackrest_repo_user }}/.ssh/known_hosts"
+    path: ~{{ pgbackrest_repo_user }}/.ssh/known_hosts
   no_log: true
   loop: "{{ ssh_known_host_keyscan.results }}"
   when: "'pgbackrest' in group_names"
-
-...

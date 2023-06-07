@@ -1,6 +1,5 @@
 ---
-
-- block:  # Debian family
+- block: # Debian family
     - name: Make sure the gnupg and apt-transport-https packages are present
       apt:
         pkg:
@@ -19,7 +18,7 @@
 
     - name: Make sure pgdg repository is installed
       apt_repository:
-        repo: "deb [arch=amd64] http://repo.postgrespro.ru/pg_probackup/deb/ {{ ansible_distribution_release }} main-{{ ansible_distribution_release }}"
+        repo: deb [arch=amd64] http://repo.postgrespro.ru/pg_probackup/deb/ {{ ansible_distribution_release }} main-{{ ansible_distribution_release }}
 
     - name: Update apt cache
       apt:
@@ -46,28 +45,28 @@
     - pg_probackup_install_from_postgrespro_repo|bool
   tags: pg_probackup, pg_probackup_repo, pg_probackup_install
 
-- block:  # RedHat family
+- block: # RedHat family
     # RPM Centos Packages
     - name: Get pg_probackup-repo-centos.noarch.rpm
       get_url:
-        url: "https://repo.postgrespro.ru/pg_probackup/keys/pg_probackup-repo-centos.noarch.rpm"
-        dest: "/tmp/pg_probackup-repo.rpm"
+        url: https://repo.postgrespro.ru/pg_probackup/keys/pg_probackup-repo-centos.noarch.rpm
+        dest: /tmp/pg_probackup-repo.rpm
         timeout: 30
         validate_certs: false
       when: ansible_distribution == 'CentOS'
     # RPM Oracle Linux Packages
     - name: Get pg_probackup-repo-oraclelinux.noarch.rpm
       get_url:
-        url: "https://repo.postgrespro.ru/pg_probackup/keys/pg_probackup-repo-oraclelinux.noarch.rpm"
-        dest: "/tmp/pg_probackup-repo.rpm"
+        url: https://repo.postgrespro.ru/pg_probackup/keys/pg_probackup-repo-oraclelinux.noarch.rpm
+        dest: /tmp/pg_probackup-repo.rpm
         timeout: 30
         validate_certs: false
       when: ansible_distribution == 'OracleLinux'
     # RPM RHEL Packages
     - name: Get pg_probackup-repo-rhel.noarch.rpm
       get_url:
-        url: "https://repo.postgrespro.ru/pg_probackup/keys/pg_probackup-repo-rhel.noarch.rpm"
-        dest: "/tmp/pg_probackup-repo.rpm"
+        url: https://repo.postgrespro.ru/pg_probackup/keys/pg_probackup-repo-rhel.noarch.rpm
+        dest: /tmp/pg_probackup-repo.rpm
         timeout: 30
         validate_certs: false
       when:
@@ -107,5 +106,3 @@
     - ansible_os_family == "RedHat"
     - pg_probackup_install_from_postgrespro_repo|bool
   tags: pg_probackup, pg_probackup_repo, pg_probackup_install
-
-...

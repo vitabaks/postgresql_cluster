@@ -1,11 +1,10 @@
 ---
-
-- name: "Make sure {{ postgresql_data_dir }}/{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }} is symlink"
+- name: Make sure {{ postgresql_data_dir }}/{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }} is symlink
   stat:
     path: "{{ postgresql_data_dir }}/{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }}"
   register: sym
 
-- block:  # synchronize WAL`s if wal dir exist (and is not symlink)
+- block: # synchronize WAL`s if wal dir exist (and is not symlink)
     - name: Make sure rsync is installed (for synchronize wal dir)
       package:
         name:
@@ -35,7 +34,7 @@
       retries: 100
       delay: 6
 
-    - name: "Synchronize {{ postgresql_data_dir }}/{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }} to {{ postgresql_wal_dir }}"
+    - name: Synchronize {{ postgresql_data_dir }}/{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }} to {{ postgresql_wal_dir }}
       become: true
       become_user: postgres
       synchronize:
@@ -43,12 +42,14 @@
         dest: "{{ postgresql_wal_dir }}/"
       delegate_to: "{{ inventory_hostname }}"
 
-    - name: "Rename {{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }} to {{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }}_old"
-      command: mv {{ postgresql_data_dir }}/{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }} {{ postgresql_data_dir }}/{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }}_old
+    - name: Rename {{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }} to {{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog'
+        }}_old
+      command: mv {{ postgresql_data_dir }}/{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }} {{ postgresql_data_dir }}/{{ 'pg_wal' if postgresql_version
+        is version('10', '>=') else 'pg_xlog' }}_old
       register: mv_result
   when: sym.stat.exists and not sym.stat.islnk|bool
 
-- name: "Create symlink {{ postgresql_data_dir }}/{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }} -> {{ postgresql_wal_dir }}"
+- name: Create symlink {{ postgresql_data_dir }}/{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }} -> {{ postgresql_wal_dir }}
   become: true
   become_user: postgres
   file:
@@ -57,13 +58,13 @@
     state: link
   when: sym.stat.islnk is not defined or not sym.stat.islnk|bool
 
-- block:  # start patroni
+- block: # start patroni
     - name: Start patroni service
       systemd:
         name: patroni
         state: started
 
-    - name: "Wait for port {{ patroni_restapi_port }} to become open on the host"
+    - name: Wait for port {{ patroni_restapi_port }} to become open on the host
       wait_for:
         port: "{{ patroni_restapi_port }}"
         host: "{{ hostvars[inventory_hostname]['inventory_hostname'] }}"
@@ -74,7 +75,7 @@
 
     - name: Check that the patroni is healthy
       uri:
-        url: "http://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ patroni_restapi_port }}/health"
+        url: http://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ patroni_restapi_port }}/health
         status_code: 200
       register: replica_result
       until: replica_result.status == 200
@@ -82,12 +83,10 @@
       delay: 10
   when: patroni_stop_result is changed
 
-- name: "Remove {{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }}_old directory"
+- name: Remove {{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }}_old directory
   file:
     path: "{{ postgresql_data_dir }}/{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }}_old"
     state: absent
   when:
     - replica_result.status is defined
     - replica_result.status == 200
-
-...

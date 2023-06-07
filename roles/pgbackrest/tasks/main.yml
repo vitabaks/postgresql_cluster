@@ -1,6 +1,5 @@
 ---
-
-- block:  # Debian pgdg repo
+- block: # Debian pgdg repo
     - name: Make sure the gnupg and apt-transport-https packages are present
       apt:
         pkg:
@@ -19,7 +18,7 @@
 
     - name: Make sure pgdg repository is installed
       apt_repository:
-        repo: "deb https://apt.postgresql.org/pub/repos/apt/ {{ ansible_distribution_release }}-pgdg main"
+        repo: deb https://apt.postgresql.org/pub/repos/apt/ {{ ansible_distribution_release }}-pgdg main
 
     - name: Update apt cache
       apt:
@@ -35,10 +34,10 @@
     - pgbackrest_install_from_pgdg_repo|bool
   tags: pgbackrest, pgbackrest_repo, pgbackrest_install
 
-- block:  # RedHat pgdg repo
+- block: # RedHat pgdg repo
     - name: Get pgdg-redhat-repo-latest.noarch.rpm
       get_url:
-        url: "https://download.postgresql.org/pub/repos/yum/reporpms/EL-{{ ansible_distribution_major_version }}-x86_64/pgdg-redhat-repo-latest.noarch.rpm"
+        url: https://download.postgresql.org/pub/repos/yum/reporpms/EL-{{ ansible_distribution_major_version }}-x86_64/pgdg-redhat-repo-latest.noarch.rpm
         dest: /tmp/
         timeout: 30
         validate_certs: false
@@ -113,13 +112,13 @@
         owner: postgres
         group: postgres
 
-    - name: "Generate conf file {{ pgbackrest_conf_file }}"
+    - name: Generate conf file {{ pgbackrest_conf_file }}
       template:
         src: pgbackrest.conf.j2
         dest: "{{ pgbackrest_conf_file }}"
         owner: postgres
         group: postgres
-        mode: 0644
+        mode: "0644"
   when: "'postgres_cluster' in group_names"
   tags: pgbackrest, pgbackrest_conf
 
@@ -137,6 +136,3 @@
 #    - patroni_cluster_bootstrap_method == "pgbackrest"
 #    - "'postgres_cluster' in group_names"
 #  tags: pgbackrest, pgbackrest_bootstrap_script
-
-
-...
