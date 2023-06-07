@@ -35,7 +35,7 @@
       changed_when: false
       tags: always
 
-    - name: "Print Patroni Cluster info"
+    - name: Print Patroni Cluster info
       debug:
         msg:
           - "Cluster Name: {{ patroni_cluster_name }}"
@@ -44,7 +44,7 @@
       tags: always
 
 - name: "(1/4) PRE-UPDATE: Perform Pre-Checks"
-  hosts: "primary:secondary"
+  hosts: primary:secondary
   gather_facts: false
   become: true
   become_user: postgres
@@ -75,14 +75,14 @@
     target: postgres # or 'patroni', 'system'
   pre_tasks:
     - name: Include OS-specific variables
-      include_vars: "vars/{{ ansible_os_family }}.yml"
+      include_vars: vars/{{ ansible_os_family }}.yml
       when: not ansible_os_family == 'Rocky' and not ansible_os_family == 'AlmaLinux'
       tags: always
 
     # For compatibility with Ansible old versions
     # (support for RockyLinux and AlmaLinux has been added to Ansible 2.11)
     - name: Include OS-specific variables
-      include_vars: "vars/RedHat.yml"
+      include_vars: vars/RedHat.yml
       when: ansible_os_family == 'Rocky' or ansible_os_family == 'AlmaLinux'
       tags: always
   tasks:
@@ -106,8 +106,7 @@
       include_role:
         name: update
         tasks_from: patroni
-      when: target | lower == 'patroni' or
-        (target | lower == 'system' and patroni_installation_method == "pip")
+      when: target | lower == 'patroni' or (target | lower == 'system' and patroni_installation_method == "pip")
 
     - name: Update all system packages (includes PostgreSQL and Patroni)
       include_role:
@@ -141,18 +140,18 @@
     target: postgres # or 'patroni', 'system'
   pre_tasks:
     - name: Include OS-specific variables
-      include_vars: "vars/{{ ansible_os_family }}.yml"
+      include_vars: vars/{{ ansible_os_family }}.yml
       when: not ansible_os_family == 'Rocky' and not ansible_os_family == 'AlmaLinux'
       tags: always
 
     # For compatibility with Ansible old versions
     # (support for RockyLinux and AlmaLinux has been added to Ansible 2.11)
     - name: Include OS-specific variables
-      include_vars: "vars/RedHat.yml"
+      include_vars: vars/RedHat.yml
       when: ansible_os_family == 'Rocky' or ansible_os_family == 'AlmaLinux'
       tags: always
   tasks:
-    - name: "Switchover Patroni leader role"
+    - name: Switchover Patroni leader role
       include_role:
         name: update
         tasks_from: switchover
@@ -177,8 +176,7 @@
       include_role:
         name: update
         tasks_from: patroni
-      when: target | lower == 'patroni' or
-        (target | lower == 'system' and patroni_installation_method == "pip")
+      when: target | lower == 'patroni' or (target | lower == 'system' and patroni_installation_method == "pip")
 
     - name: Update all system packages (includes PostgreSQL and Patroni)
       include_role:
@@ -243,7 +241,7 @@
       run_once: true # noqa run-once
       debug:
         msg:
-          - "PostgreSQL HA cluster update completed."
+          - PostgreSQL HA cluster update completed.
           - "Current version: {{ postgres_version.stdout }}"
       when: postgres_version.stdout is defined
   tags:
