@@ -1,5 +1,5 @@
 ---
-name: "Gitpod"
+name: "Docker"
 
 on:
   push:
