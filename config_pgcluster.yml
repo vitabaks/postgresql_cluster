@@ -10,14 +10,14 @@
   tasks:
     - name: Checking ansible version
       fail:
-        msg: "Ansible version must be {{ minimal_ansible_version }} or higher"
+        msg: Ansible version must be {{ minimal_ansible_version }} or higher
       when: ansible_version.full is version(minimal_ansible_version, '<')
 
     - name: Checking PostgreSQL version
       fail:
         msg:
-          - "The current PostgreSQL version ({{ postgresql_version }}) is not supported by the TimescaleDB."
-          - "PostgreSQL version must be {{ timescale_minimal_pg_version }} or higher."
+          - The current PostgreSQL version ({{ postgresql_version }}) is not supported by the TimescaleDB.
+          - PostgreSQL version must be {{ timescale_minimal_pg_version }} or higher.
       when:
         - enable_timescale is defined
         - enable_timescale | bool
@@ -48,14 +48,14 @@
 
   pre_tasks:
     - name: Include OS-specific variables
-      include_vars: "vars/{{ ansible_os_family }}.yml"
+      include_vars: vars/{{ ansible_os_family }}.yml
       when: not ansible_os_family == 'Rocky' and not ansible_os_family == 'AlmaLinux'
       tags: always
 
     # For compatibility with Ansible old versions
     # (support for RockyLinux and AlmaLinux has been added to Ansible 2.11)
     - name: Include OS-specific variables
-      include_vars: "vars/RedHat.yml"
+      include_vars: vars/RedHat.yml
       when: ansible_os_family == 'Rocky' or ansible_os_family == 'AlmaLinux'
       tags: always
 
@@ -153,14 +153,14 @@
 
   pre_tasks:
     - name: Include OS-specific variables
-      include_vars: "vars/{{ ansible_os_family }}.yml"
+      include_vars: vars/{{ ansible_os_family }}.yml
       when: not ansible_os_family == 'Rocky' and not ansible_os_family == 'AlmaLinux'
       tags: always
 
     # For compatibility with Ansible old versions
     # (support for RockyLinux and AlmaLinux has been added to Ansible 2.11)
     - name: Include OS-specific variables
-      include_vars: "vars/RedHat.yml"
+      include_vars: vars/RedHat.yml
       when: ansible_os_family == 'Rocky' or ansible_os_family == 'AlmaLinux'
       tags: always
 
@@ -179,7 +179,8 @@
               + [{ 'option': 'shared_preload_libraries', 'value': new_value }] }}
           vars:
             # Find the last item in postgresql_parameters where the option is 'shared_preload_libraries'
-            shared_preload_libraries_item: "{{ postgresql_parameters | selectattr('option', 'equalto', 'shared_preload_libraries') | list | last | default({ 'value': '' }) }}"
+            shared_preload_libraries_item: "{{ postgresql_parameters | selectattr('option', 'equalto', 'shared_preload_libraries') | list | last | default({ 'value':
+              '' }) }}"
             # Determine the new value based on whether 'timescaledb' is already present
             new_value: >-
               {{
@@ -201,8 +202,7 @@
     - role: patroni/config
 
     - role: vip-manager
-      when: not with_haproxy_load_balancing|bool and
-        (cluster_vip is defined and cluster_vip | length > 0)
+      when: not with_haproxy_load_balancing|bool and (cluster_vip is defined and cluster_vip | length > 0)
 
     # optional
     - role: postgresql-users
@@ -253,29 +253,29 @@
       loop: "{{ groups['postgres_cluster'] }}"
       changed_when: false
 
-    - name: "Print Patroni Cluster info"
+    - name: Print Patroni Cluster info
       debug:
         msg:
           - "Cluster Name: {{ patroni_cluster_name }}"
           - "Cluster Leader: {{ ansible_hostname }}"
       when: inventory_hostname in groups['primary']
 
-    - name: "Check if there are any changed parameters that require a restart"
+    - name: Check if there are any changed parameters that require a restart
       become_user: postgres
       postgresql_query:
-        login_host: "127.0.0.1"
+        login_host: 127.0.0.1
         login_port: "{{ postgresql_port }}"
         login_user: "{{ patroni_superuser_username }}"
         login_password: "{{ patroni_superuser_password }}"
-        login_db: "postgres"
-        query: "select name from pg_settings where pending_restart is true"
+        login_db: postgres
+        query: select name from pg_settings where pending_restart is true
       register: pending_restart_result
 
-    - name: "Set pg_pending_restart_settings variable"
+    - name: Set pg_pending_restart_settings variable
       set_fact:
         pg_pending_restart_settings: "{{ pending_restart_result.query_result }}"
 
-    - name: "Display parameters requiring PostgreSQL restart"
+    - name: Display parameters requiring PostgreSQL restart
       debug:
         msg:
           - "On server {{ ansible_hostname }}, the following parameters have changed and require PostgreSQL to restart:"
@@ -295,14 +295,14 @@
     - vars/main.yml
   pre_tasks:
     - name: Include OS-specific variables
-      include_vars: "vars/{{ ansible_os_family }}.yml"
+      include_vars: vars/{{ ansible_os_family }}.yml
       when: not ansible_os_family == 'Rocky' and not ansible_os_family == 'AlmaLinux'
       tags: always
 
     # For compatibility with Ansible old versions
     # (support for RockyLinux and AlmaLinux has been added to Ansible 2.11)
     - name: Include OS-specific variables
-      include_vars: "vars/RedHat.yml"
+      include_vars: vars/RedHat.yml
       when: ansible_os_family == 'Rocky' or ansible_os_family == 'AlmaLinux'
       tags: always
   tasks:
@@ -351,14 +351,14 @@
     - vars/main.yml
   pre_tasks:
     - name: Include OS-specific variables
-      include_vars: "vars/{{ ansible_os_family }}.yml"
+      include_vars: vars/{{ ansible_os_family }}.yml
       when: not ansible_os_family == 'Rocky' and not ansible_os_family == 'AlmaLinux'
       tags: always
 
     # For compatibility with Ansible old versions
     # (support for RockyLinux and AlmaLinux has been added to Ansible 2.11)
     - name: Include OS-specific variables
-      include_vars: "vars/RedHat.yml"
+      include_vars: vars/RedHat.yml
       when: ansible_os_family == 'Rocky' or ansible_os_family == 'AlmaLinux'
       tags: always
   tasks:
