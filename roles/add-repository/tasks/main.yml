@@ -1,6 +1,5 @@
 ---
-
-- block:  # Debian/Ubuntu
+- block: # Debian/Ubuntu
     - name: Add repository apt-key
       apt_key:
         url: "{{ item.key }}"
@@ -19,7 +18,7 @@
   when: installation_method == "repo" and ansible_os_family == "Debian"
   tags: add_repo
 
-- block:  # RedHat/CentOS
+- block: # RedHat/CentOS
     - name: Add repository
       yum_repository:
         name: "{{ item.name }}"
@@ -44,7 +43,7 @@
 
     - name: Get epel-release-latest rpm package
       get_url:
-        url: "https://dl.fedoraproject.org/pub/epel/epel-release-latest-{{ ansible_distribution_major_version }}.noarch.rpm"
+        url: https://dl.fedoraproject.org/pub/epel/epel-release-latest-{{ ansible_distribution_major_version }}.noarch.rpm
         dest: /tmp/
         timeout: 30
         validate_certs: false
@@ -53,7 +52,7 @@
 
     - name: Install EPEL repository
       package:
-        name: "/tmp/epel-release-latest-{{ ansible_distribution_major_version }}.noarch.rpm"
+        name: /tmp/epel-release-latest-{{ ansible_distribution_major_version }}.noarch.rpm
         state: present
         disable_gpg_check: true
       register: package_status
@@ -72,9 +71,7 @@
       until: package_status is success
       delay: 5
       retries: 3
-      when: install_scl_repo|bool and
-            (ansible_distribution == 'CentOS' and
-            ansible_distribution_major_version == '7')
+      when: install_scl_repo|bool and (ansible_distribution == 'CentOS' and ansible_distribution_major_version == '7')
       tags: install_scl_repo
 
     - name: Add Software Collections (SCL) repository for OracleLinux 7
@@ -85,12 +82,10 @@
         gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-oracle
         gpgcheck: true
         enabled: true
-      when: install_scl_repo|bool and
-            (ansible_distribution == "OracleLinux" and
-            ansible_distribution_major_version == '7')
+      when: install_scl_repo|bool and (ansible_distribution == "OracleLinux" and ansible_distribution_major_version == '7')
       tags: install_scl_repo
 
-      # Development repository (for llvm-toolset-7-clang)
+    # Development repository (for llvm-toolset-7-clang)
     - name: Add Development repository for OracleLinux 7
       yum_repository:
         name: ol7_developer
@@ -99,10 +94,9 @@
         gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-oracle
         gpgcheck: true
         enabled: true
-      when: (ansible_distribution == "OracleLinux" and
-            ansible_distribution_major_version == '7')
+      when: (ansible_distribution == "OracleLinux" and ansible_distribution_major_version == '7')
 
-      # Optional Development repository (for libedit-devel)
+    # Optional Development repository (for libedit-devel)
     - name: Add Optional Development repository for OracleLinux 7
       yum_repository:
         name: ol7_optional_developer
@@ -111,16 +105,13 @@
         gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-oracle
         gpgcheck: true
         enabled: true
-      when: (ansible_distribution == "OracleLinux" and
-            ansible_distribution_major_version == '7')
+      when: (ansible_distribution == "OracleLinux" and ansible_distribution_major_version == '7')
 
     - name: Enable Software Collections (SCL) repository for RedHat 7
       become: true
       become_user: root
       command: subscription-manager repos --enable rhel-server-rhscl-7-rpms
-      when: install_scl_repo|bool and
-            (ansible_distribution == 'RedHat' and
-            ansible_distribution_major_version == '7')
+      when: install_scl_repo|bool and (ansible_distribution == 'RedHat' and ansible_distribution_major_version == '7')
       tags: install_scl_repo
 
     # PowerTools repository (to install dependencies for postgresql<version>-devel package)
@@ -147,7 +138,7 @@
     # Install PostgreSQL Repository
     - name: Get pgdg-redhat-repo-latest.noarch.rpm
       get_url:
-        url: "https://download.postgresql.org/pub/repos/yum/reporpms/EL-{{ ansible_distribution_major_version }}-x86_64/pgdg-redhat-repo-latest.noarch.rpm"
+        url: https://download.postgresql.org/pub/repos/yum/reporpms/EL-{{ ansible_distribution_major_version }}-x86_64/pgdg-redhat-repo-latest.noarch.rpm
         dest: /tmp/
         timeout: 30
         validate_certs: false
@@ -174,13 +165,13 @@
     # Debian based
     - name: Add TimescaleDB repository apt-key
       apt_key:
-        url: "https://packagecloud.io/timescale/timescaledb/gpgkey"
+        url: https://packagecloud.io/timescale/timescaledb/gpgkey
         state: present
       when: ansible_os_family == "Debian"
 
     - name: Add TimescaleDB repository
       apt_repository:
-        repo: "deb https://packagecloud.io/timescale/timescaledb/{{ ansible_distribution | lower }}/ {{ ansible_distribution_release }} main"
+        repo: deb https://packagecloud.io/timescale/timescaledb/{{ ansible_distribution | lower }}/ {{ ansible_distribution_release }} main
         state: present
         update_cache: true
       when: ansible_os_family == "Debian"
@@ -188,10 +179,10 @@
     # RedHat based
     - name: Add TimescaleDB repository
       yum_repository:
-        name: "timescale_timescaledb"
-        description: "timescaledb repo"
-        baseurl: "https://packagecloud.io/timescale/timescaledb/el/{{ ansible_distribution_major_version }}/x86_64"
-        gpgkey: "https://packagecloud.io/timescale/timescaledb/gpgkey"
+        name: timescale_timescaledb
+        description: timescaledb repo
+        baseurl: https://packagecloud.io/timescale/timescaledb/el/{{ ansible_distribution_major_version }}/x86_64
+        gpgkey: https://packagecloud.io/timescale/timescaledb/gpgkey
         gpgcheck: "no"
       when: ansible_os_family == "RedHat"
   environment: "{{ proxy_env | default({}) }}"
@@ -200,5 +191,3 @@
     - enable_timescale is defined
     - enable_timescale | bool
   tags: add_repo
-
-...
