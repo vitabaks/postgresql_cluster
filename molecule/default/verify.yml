@@ -1,0 +1,20 @@
+---
+- name: Molecule | Verify | All
+  hosts: all
+
+  tasks:
+    - name: Molecule | Verify | Include all tests
+      ansible.builtin.include_tasks: "{{ item }}"
+      with_fileglob:
+        - ../tests/postgres/postgres.yml
+        - ../tests/patroni/*.yml
+        - ../tests/etcd/*.yml
+
+- name: Molecule | Verify | Replica
+  hosts: replica
+
+  tasks:
+    - name: Molecule | Verify | Include replica tests
+      ansible.builtin.include_tasks: "{{ item }}"
+      with_fileglob:
+        - ../tests/postgres/replication.yml

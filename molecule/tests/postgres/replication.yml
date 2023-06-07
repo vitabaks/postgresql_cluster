@@ -1,0 +1,9 @@
+---
+- name: Check PostgreSQL replication status
+  postgresql_query:
+    db: "{{ postgres_db_name }}"
+    login_user: "{{ postgres_user }}"
+    login_password: "{{ postgres_password }}"
+    query: "SELECT * FROM pg_stat_wal_receiver;"
+  register: pg_replication_status
+  failed_when: "pg_replication_status.rowcount == 0"
