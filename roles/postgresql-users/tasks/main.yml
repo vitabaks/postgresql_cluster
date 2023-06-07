@@ -1,5 +1,4 @@
 ---
-
 - name: Make sure the PostgreSQL users are present
   become: true
   become_user: postgres
@@ -8,11 +7,11 @@
     password: "{{ item.password }}"
     encrypted: true
     role_attr_flags: "{{ item.flags }}"
-    login_host: "127.0.0.1"
+    login_host: 127.0.0.1
     login_port: "{{ postgresql_port }}"
     login_user: "{{ patroni_superuser_username }}"
     login_password: "{{ patroni_superuser_password }}"
-    login_db: "postgres"
+    login_db: postgres
     state: present
   ignore_errors: true
   loop: "{{ postgresql_users | flatten(1) }}"
@@ -20,5 +19,3 @@
     label: "{{ item.name }}"
   when: postgresql_users is defined and postgresql_users | length > 0
   tags: postgresql_users
-
-...

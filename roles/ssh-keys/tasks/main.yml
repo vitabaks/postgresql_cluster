@@ -17,8 +17,8 @@
 
     - name: Fetch key files from remote servers to ansible server
       fetch:
-        src: "~{{ ssh_key_user }}/.ssh/id_rsa.pub"
-        dest: "files/{{ ansible_hostname }}-id_rsa.pub"
+        src: ~{{ ssh_key_user }}/.ssh/id_rsa.pub
+        dest: files/{{ ansible_hostname }}-id_rsa.pub
         flat: true
       changed_when: false
 
@@ -31,7 +31,7 @@
 
     # known_hosts
     - name: known_hosts | for each host, scan for its ssh public key
-      command: "ssh-keyscan -trsa -p {{ ansible_ssh_port | default(22) }} {{ item }}"
+      command: ssh-keyscan -trsa -p {{ ansible_ssh_port | default(22) }} {{ item }}
       loop: "{{ ssh_known_hosts }}"
       register: ssh_known_host_results
       changed_when: false
@@ -42,12 +42,9 @@
       known_hosts:
         name: "{{ item.item }}"
         key: "{{ item.stdout }}"
-        path: "~{{ ssh_key_user }}/.ssh/known_hosts"
+        path: ~{{ ssh_key_user }}/.ssh/known_hosts
       no_log: true
       loop: "{{ ssh_known_host_results.results }}"
   ignore_errors: true
-  when: enable_ssh_key_based_authentication is defined and
-        enable_ssh_key_based_authentication|bool
+  when: enable_ssh_key_based_authentication is defined and enable_ssh_key_based_authentication|bool
   tags: ssh_keys
-
-...

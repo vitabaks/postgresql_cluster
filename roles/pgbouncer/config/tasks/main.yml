@@ -5,7 +5,7 @@
     state: directory
     owner: postgres
     group: postgres
-    mode: 0750
+    mode: "0750"
   tags: pgbouncer, pgbouncer_conf
 
 # This task calculates the defined_pool_size for each defined pgbouncer pool.
@@ -15,7 +15,8 @@
 # The calculated pool size is then added to the total 'defined_pool_size'.
 - name: Calculate pool_size
   set_fact:
-    defined_pool_size: "{{ defined_pool_size|default(0)|int + (item.pool_parameters|regex_search('pool_size=(\\d+)', multiline=False)|regex_replace('[^0-9]', '')|default(pgbouncer_default_pool_size|default(0), true)|int) }}"
+    defined_pool_size: "{{ defined_pool_size|default(0)|int + (item.pool_parameters|regex_search('pool_size=(\\d+)', multiline=False)|regex_replace('[^0-9]', '')|default(pgbouncer_default_pool_size|default(0),
+      true)|int) }}"
   loop: "{{ pgbouncer_pools|default([]) }}"
   tags: pgbouncer_conf, pgbouncer
 
@@ -66,8 +67,8 @@
     dest: "{{ pgbouncer_conf_dir }}/pgbouncer.ini"
     owner: postgres
     group: postgres
-    mode: 0640
-  notify: "restart pgbouncer"
+    mode: "0640"
+  notify: restart pgbouncer
   when: existing_pgcluster is not defined or not existing_pgcluster|bool
   tags: pgbouncer, pgbouncer_conf
 
@@ -92,12 +93,10 @@
       {{ pg_shadow_result.stdout }}
 
     dest: /etc/pgbouncer/userlist.txt
-  notify: "reload pgbouncer"
+  notify: reload pgbouncer
   when:
     - pg_shadow_result.rc == 0
     - pg_shadow_result.stdout is defined
     - pg_shadow_result.stdout | length > 0
     - pgbouncer_generate_userlist|bool
   tags: pgbouncer, pgbouncer_generate_userlist
-
-...

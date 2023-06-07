@@ -1,5 +1,4 @@
 ---
-
 - name: Install pgbouncer package
   package:
     name: pgbouncer
@@ -8,9 +7,7 @@
   delay: 5
   retries: 3
   environment: "{{ proxy_env | default({}) }}"
-  when: ansible_os_family == "Debian" or
-        (ansible_os_family == "RedHat" and
-        ansible_distribution_major_version == '7')
+  when: ansible_os_family == "Debian" or (ansible_os_family == "RedHat" and ansible_distribution_major_version == '7')
   tags: pgbouncer_install, pgbouncer
 
 # RHEL 8
@@ -19,8 +16,7 @@
     name: pgbouncer
     disablerepo: AppStream
   environment: "{{ proxy_env | default({}) }}"
-  when: ansible_os_family == "RedHat" and
-        ansible_distribution_major_version >= '8'
+  when: ansible_os_family == "RedHat" and ansible_distribution_major_version >= '8'
   tags: pgbouncer_install, pgbouncer
 
 - name: Ensure config directory "{{ pgbouncer_conf_dir }}" exist
@@ -29,7 +25,7 @@
     state: directory
     owner: postgres
     group: postgres
-    mode: 0750
+    mode: "0750"
   tags: pgbouncer_conf, pgbouncer
 
 - name: Stop and disable standard init script
@@ -46,11 +42,11 @@
     dest: /etc/systemd/system/pgbouncer.service
     owner: postgres
     group: postgres
-    mode: 0644
-  notify: "restart pgbouncer"
+    mode: "0644"
+  notify: restart pgbouncer
   tags: pgbouncer_service, pgbouncer
 
-- block:  # workaround for pgbouncer from postgrespro repo
+- block: # workaround for pgbouncer from postgrespro repo
     - name: Check that /usr/bin/pgbouncer is exists
       stat:
         path: /usr/bin/pgbouncer
@@ -64,8 +60,7 @@
         group: root
         state: link
       when: not pgbouncer_bin.stat.exists
-  when: ansible_os_family == "RedHat" and
-        postgresql_packages|join(" ") is search("postgrespro")
+  when: ansible_os_family == "RedHat" and postgresql_packages|join(" ") is search("postgrespro")
   tags: pgbouncer_service, pgbouncer
 
 - name: Enable log rotation with logrotate
@@ -91,7 +86,8 @@
 # The calculated pool size is then added to the total 'defined_pool_size'.
 - name: Calculate pool_size
   set_fact:
-    defined_pool_size: "{{ defined_pool_size|default(0)|int + (item.pool_parameters|regex_search('pool_size=(\\d+)', multiline=False)|regex_replace('[^0-9]', '')|default(pgbouncer_default_pool_size|default(0), true)|int) }}"
+    defined_pool_size: "{{ defined_pool_size|default(0)|int + (item.pool_parameters|regex_search('pool_size=(\\d+)', multiline=False)|regex_replace('[^0-9]', '')|default(pgbouncer_default_pool_size|default(0),
+      true)|int) }}"
   loop: "{{ pgbouncer_pools|default([]) }}"
   tags: pgbouncer_conf, pgbouncer
 
@@ -142,8 +138,8 @@
     dest: "{{ pgbouncer_conf_dir }}/pgbouncer.ini"
     owner: postgres
     group: postgres
-    mode: 0640
-  notify: "restart pgbouncer"
+    mode: "0640"
+  notify: restart pgbouncer
   when: existing_pgcluster is not defined or not existing_pgcluster|bool
   tags: pgbouncer_conf, pgbouncer
 
@@ -153,11 +149,11 @@
     dest: "{{ pgbouncer_conf_dir }}/userlist.txt"
     owner: postgres
     group: postgres
-    mode: 0640
+    mode: "0640"
   when: existing_pgcluster is not defined or not existing_pgcluster|bool
   tags: pgbouncer
 
-- block:  # for add_pgnode.yml
+- block: # for add_pgnode.yml
     - name: Fetch pgbouncer.ini and userlist.txt conf files from master
       run_once: true
       fetch:
@@ -172,11 +168,11 @@
 
     - name: Copy pgbouncer.ini and userlist.txt conf files to replica
       copy:
-        src: "files/{{ item }}"
+        src: files/{{ item }}
         dest: /etc/pgbouncer/
         owner: postgres
         group: postgres
-        mode: 0640
+        mode: "0640"
       loop:
         - pgbouncer.ini
         - userlist.txt
@@ -184,7 +180,7 @@
     - name: Remove pgbouncer.ini and userlist.txt conf files from localhost
       run_once: true
       file:
-        path: "files/{{ item }}"
+        path: files/{{ item }}
         state: absent
       loop:
         - pgbouncer.ini
@@ -198,12 +194,11 @@
         line: "{{ item.line }}"
         backrefs: true
       loop:
-        - { regexp: '^listen_addr =', line: 'listen_addr = {{ hostvars[inventory_hostname].inventory_hostname }}' }
+        - { regexp: ^listen_addr =, line: "listen_addr = {{ hostvars[inventory_hostname].inventory_hostname }}" }
       loop_control:
         label: "{{ item.line }}"
-      notify: "restart pgbouncer"
-      when: with_haproxy_load_balancing|bool or
-            (cluster_vip is not defined or cluster_vip | length < 1)
+      notify: restart pgbouncer
+      when: with_haproxy_load_balancing|bool or (cluster_vip is not defined or cluster_vip | length < 1)
 
     - name: Prepare pgbouncer.ini conf file (replace "listen_addr")
       lineinfile:
@@ -212,12 +207,10 @@
         line: "{{ item.line }}"
         backrefs: true
       loop:
-        - { regexp: '^listen_addr =', line: 'listen_addr = {{ hostvars[inventory_hostname].inventory_hostname }},{{ cluster_vip }}' }
+        - { regexp: ^listen_addr =, line: "listen_addr = {{ hostvars[inventory_hostname].inventory_hostname }},{{ cluster_vip }}" }
       loop_control:
         label: "{{ item.line }}"
-      notify: "restart pgbouncer"
+      notify: restart pgbouncer
       when: not with_haproxy_load_balancing|bool and (cluster_vip is defined and cluster_vip | length > 0 )
   when: existing_pgcluster is defined and existing_pgcluster|bool
   tags: pgbouncer_conf, pgbouncer
-
-...

@@ -1,5 +1,4 @@
 ---
-
 - name: Add extensions to the databases
   become: true
   become_user: postgres
@@ -7,7 +6,7 @@
     db: "{{ item.db }}"
     name: "{{ item.ext }}"
     schema: "{{ item.schema | default('public') }}"
-    login_host: "127.0.0.1"
+    login_host: 127.0.0.1
     login_port: "{{ postgresql_port }}"
     login_user: "{{ patroni_superuser_username }}"
     login_password: "{{ patroni_superuser_password }}"
@@ -18,5 +17,3 @@
     - postgresql_extensions is defined
     - postgresql_extensions | length > 0
   tags: postgresql_extensions
-
-...
