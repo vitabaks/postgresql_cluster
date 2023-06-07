@@ -1,6 +1,5 @@
 ---
-
-- block:  # install vip-manager package from repo
+- block: # install vip-manager package from repo
     - name: Get vip-manager package
       get_url:
         url: "{{ item }}"
@@ -14,7 +13,7 @@
     - name: Install vip-manager
       apt:
         force_apt_get: true
-        deb: "/tmp/{{ vip_manager_package_repo | basename }}"
+        deb: /tmp/{{ vip_manager_package_repo | basename }}
         state: present
       register: apt_status
       until: apt_status is success
@@ -24,7 +23,7 @@
 
     - name: Install vip-manager
       package:
-        name: "/tmp/{{ vip_manager_package_repo | basename }}"
+        name: /tmp/{{ vip_manager_package_repo | basename }}
         state: present
         disable_gpg_check: true
       register: package_status
@@ -35,7 +34,7 @@
   when: installation_method == "repo" and vip_manager_package_repo | length > 0
   tags: vip, vip_manager, vip_manager_install
 
-- block:  # install vip-manager package from file
+- block: # install vip-manager package from file
     - name: Copy vip-manager package into /tmp
       copy:
         src: "{{ vip_manager_package_file }}"
@@ -44,7 +43,7 @@
     - name: Install vip-manager
       apt:
         force_apt_get: true
-        deb: "/tmp/{{ vip_manager_package_file | basename }}"
+        deb: /tmp/{{ vip_manager_package_file | basename }}
         state: present
       register: apt_status
       until: apt_status is success
@@ -54,7 +53,7 @@
 
     - name: Install vip-manager
       package:
-        name: "/tmp/{{ vip_manager_package_file | basename }}"
+        name: /tmp/{{ vip_manager_package_file | basename }}
         state: present
         disable_gpg_check: true
       register: package_status
@@ -79,26 +78,26 @@
     dest: "{{ vip_manager_conf }}"
     owner: postgres
     group: postgres
-    mode: 0644
-  notify: "restart vip-manager"
+    mode: "0644"
+  notify: restart vip-manager
   when: existing_pgcluster is not defined or not existing_pgcluster|bool
   tags: vip, vip_manager, vip_manager_conf
 
-- block:  # for add_pgnode.yml
+- block: # for add_pgnode.yml
     - name: Fetch "{{ vip_manager_conf | basename }}" conf file from master
       run_once: true
       fetch:
         src: "{{ vip_manager_conf }}"
-        dest: "files/{{ vip_manager_conf | basename }}"
+        dest: files/{{ vip_manager_conf | basename }}
         validate_checksum: true
         flat: true
       delegate_to: "{{ groups.master[0] }}"
 
     - name: Copy "{{ vip_manager_conf | basename }}" conf file to replica
       copy:
-        src: "files/{{ vip_manager_conf | basename }}"
+        src: files/{{ vip_manager_conf | basename }}
         dest: "{{ vip_manager_conf | dirname }}"
-      notify: "restart vip-manager"
+      notify: restart vip-manager
 
     - name: Prepare "{{ vip_manager_conf | basename }}" conf file (replace "nodename","iface")
       lineinfile:
@@ -107,11 +106,11 @@
         line: "{{ item.line }}"
         backrefs: true
       loop:
-        - { regexp: '^nodename:', line: 'nodename: "{{ ansible_hostname }}"' }
-        - { regexp: '^iface:', line: 'iface: {{ vip_manager_iface }} # interface to which the virtual ip will be added' }
+        - { regexp: "^nodename:", line: 'nodename: "{{ ansible_hostname }}"' }
+        - { regexp: "^iface:", line: "iface: {{ vip_manager_iface }} # interface to which the virtual ip will be added" }
       loop_control:
         label: "{{ item.line }}"
-      notify: "restart vip-manager"
+      notify: restart vip-manager
   when: existing_pgcluster is defined and existing_pgcluster|bool
   tags: vip, vip_manager, vip_manager_conf
 
@@ -121,11 +120,9 @@
     dest: /etc/systemd/system/vip-manager.service
     owner: postgres
     group: postgres
-    mode: 0644
-  notify: "restart vip-manager"
+    mode: "0644"
+  notify: restart vip-manager
   tags: vip, vip_manager, vip_manager_service
 
 - name: Make sure handlers are flushed immediately
   meta: flush_handlers
-
-...
