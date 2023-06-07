@@ -13,14 +13,14 @@
 
   pre_tasks:
     - name: Include OS-specific variables
-      include_vars: "vars/{{ ansible_os_family }}.yml"
+      include_vars: vars/{{ ansible_os_family }}.yml
       when: not ansible_os_family == 'Rocky' and not ansible_os_family == 'AlmaLinux'
       tags: always
 
     # For compatibility with Ansible old versions
     # (support for RockyLinux and AlmaLinux has been added to Ansible 2.11)
     - name: Include OS-specific variables
-      include_vars: "vars/RedHat.yml"
+      include_vars: vars/RedHat.yml
       when: ansible_os_family == 'Rocky' or ansible_os_family == 'AlmaLinux'
       tags: always
 
@@ -42,10 +42,10 @@
       tags: always
 
     # Stop, if no nodes found with new_node variable
-    - name: "Pre-Check error. No nodes found with new_node set to true"
+    - name: Pre-Check error. No nodes found with new_node set to true
       run_once: true # noqa run-once
       fail:
-        msg: "Please specify the new_node=true variable for the new server to add it to the existing cluster."
+        msg: Please specify the new_node=true variable for the new server to add it to the existing cluster.
       when: new_nodes | default([]) | length < 1
 
     - name: Print a list of new nodes
@@ -148,14 +148,14 @@
 
   pre_tasks:
     - name: Include OS-specific variables
-      include_vars: "vars/{{ ansible_os_family }}.yml"
+      include_vars: vars/{{ ansible_os_family }}.yml
       when: not ansible_os_family == 'Rocky' and not ansible_os_family == 'AlmaLinux'
       tags: always
 
     # For compatibility with Ansible old versions
     # (support for RockyLinux and AlmaLinux has been added to Ansible 2.11)
     - name: Include OS-specific variables
-      include_vars: "vars/RedHat.yml"
+      include_vars: vars/RedHat.yml
       when: ansible_os_family == 'Rocky' or ansible_os_family == 'AlmaLinux'
       tags: always
 
@@ -185,14 +185,14 @@
     - vars/main.yml
   pre_tasks:
     - name: Include OS-specific variables
-      include_vars: "vars/{{ ansible_os_family }}.yml"
+      include_vars: vars/{{ ansible_os_family }}.yml
       when: not ansible_os_family == 'Rocky' and not ansible_os_family == 'AlmaLinux'
       tags: always
 
     # For compatibility with Ansible old versions
     # (support for RockyLinux and AlmaLinux has been added to Ansible 2.11)
     - name: Include OS-specific variables
-      include_vars: "vars/RedHat.yml"
+      include_vars: vars/RedHat.yml
       when: ansible_os_family == 'Rocky' or ansible_os_family == 'AlmaLinux'
       tags: always
   roles:
@@ -218,14 +218,14 @@
 
   pre_tasks:
     - name: Include OS-specific variables
-      include_vars: "vars/{{ ansible_os_family }}.yml"
+      include_vars: vars/{{ ansible_os_family }}.yml
       when: not ansible_os_family == 'Rocky' and not ansible_os_family == 'AlmaLinux'
       tags: always
 
     # For compatibility with Ansible old versions
     # (support for RockyLinux and AlmaLinux has been added to Ansible 2.11)
     - name: Include OS-specific variables
-      include_vars: "vars/RedHat.yml"
+      include_vars: vars/RedHat.yml
       when: ansible_os_family == 'Rocky' or ansible_os_family == 'AlmaLinux'
       tags: always
 
@@ -246,8 +246,7 @@
     - role: patroni
 
     - role: vip-manager
-      when: not with_haproxy_load_balancing|bool and
-        (cluster_vip is defined and cluster_vip | length > 0)
+      when: not with_haproxy_load_balancing|bool and (cluster_vip is defined and cluster_vip | length > 0)
 
     - role: netdata
       when: netdata_install is defined and netdata_install|bool
