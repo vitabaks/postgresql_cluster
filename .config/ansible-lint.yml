@@ -1,6 +1,6 @@
 ---
 skip_list:
-  - yaml
+  - yaml[line-length]
   - role-name
   - ignore-errors
   - package-latest
@@ -28,5 +28,6 @@ skip_list:
 exclude_paths:
   - ../roles/consul/ # TODO - https://github.com/ansible-community/ansible-consul/pull/520
   - ../.venv
+  - ../.github/workflows
 # https://ansible-lint.readthedocs.io/configuring/
 # https://ansible-lint.readthedocs.io/rules/
