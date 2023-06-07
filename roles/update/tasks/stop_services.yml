@@ -17,7 +17,7 @@
       become_user: postgres
       command: psql -tAXc "CHECKPOINT"
 
-    - name: "Stop Patroni service on the Cluster Replica ({{ ansible_hostname }})"
+    - name: Stop Patroni service on the Cluster Replica ({{ ansible_hostname }})
       become: true
       become_user: root
       service:
@@ -32,11 +32,10 @@
       become_user: postgres
       command: psql -tAXc "CHECKPOINT"
 
-    - name: "Stop Patroni service on the old Cluster Leader ({{ ansible_hostname }})"
+    - name: Stop Patroni service on the old Cluster Leader ({{ ansible_hostname }})
       become: true
       become_user: root
       service:
         name: patroni
         state: stopped
   when: inventory_hostname in groups['primary']
-...

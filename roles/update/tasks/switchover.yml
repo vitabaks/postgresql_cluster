@@ -3,11 +3,11 @@
   become: true
   become_user: postgres
   expect:
-    command: "patronictl -c /etc/patroni/patroni.yml switchover {{ patroni_cluster_name }}"
+    command: patronictl -c /etc/patroni/patroni.yml switchover {{ patroni_cluster_name }}
     responses:
       (.*)Primary(.*): "{{ hostvars[groups['primary'][0]]['ansible_hostname'] }}"
       (.*)Candidate(.*): "{{ hostvars[groups['secondary'][0]]['ansible_hostname'] }}"
-      (.*)When should the switchover take place(.*): "now"
+      (.*)When should the switchover take place(.*): now
       (.*)Are you sure you want to switchover cluster(.*): "y"
   register: patronictl_switchover_result
   environment:
@@ -23,4 +23,3 @@
   until: patroni_replica_result.status == 200
   retries: 300
   delay: 2
-...

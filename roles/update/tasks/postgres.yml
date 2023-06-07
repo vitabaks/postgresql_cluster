@@ -30,4 +30,3 @@
   until: package_status is success
   delay: 5
   retries: 3
-...

@@ -1,15 +1,15 @@
 ---
-- name: "Edit patroni.yml | disable noloadbalance, nosync, nofailover"
+- name: Edit patroni.yml | disable noloadbalance, nosync, nofailover
   replace:
     path: /etc/patroni/patroni.yml
     regexp: "{{ item.regexp }}"
     replace: "{{ item.replace }}"
   loop:
-    - { regexp: 'noloadbalance: true', replace: 'noloadbalance: false' }
-    - { regexp: 'nosync: true', replace: 'nosync: false' }
-    - { regexp: 'nofailover: true', replace: 'nofailover: false' }
+    - { regexp: "noloadbalance: true", replace: "noloadbalance: false" }
+    - { regexp: "nosync: true", replace: "nosync: false" }
+    - { regexp: "nofailover: true", replace: "nofailover: false" }
   loop_control:
-    label: '{{ item.replace }}'
+    label: "{{ item.replace }}"
 
 - name: Reload patroni service
   systemd:
@@ -26,4 +26,3 @@
   until: patroni_replica_result.status == 200
   retries: 30
   delay: 2
-...

@@ -1,5 +1,4 @@
 ---
-
 - name: Set timezone to "{{ timezone }}"
   become: true
   become_method: sudo
@@ -7,5 +6,3 @@
     name: "{{ timezone }}"
   when: timezone is defined and timezone | length > 0
   tags: timezone
-
-...
