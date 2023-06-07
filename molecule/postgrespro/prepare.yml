@@ -1,5 +1,5 @@
 ---
-- name: "Update docker network(s)"
+- name: Update docker network(s)
   hosts: localhost
   gather_facts: false
   become: false
@@ -19,5 +19,3 @@
         state: present
         labels:
           owner: molecule
-
-...

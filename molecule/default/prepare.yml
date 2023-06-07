@@ -1,5 +1,5 @@
 ---
-- name: "Update docker network(s)"
+- name: Update docker network(s)
   hosts: localhost
   gather_facts: false
   become: false
@@ -20,9 +20,7 @@
         labels:
           owner: molecule
 
-    - name: "Install netaddr dependency on controlling host"
+    - name: Install netaddr dependency on controlling host
       pip:
         name: netaddr
       become: false
-
-...
