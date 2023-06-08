@@ -16,9 +16,3 @@
     login_user: "{{ patroni_superuser_username }}"
     login_password: "{{ patroni_superuser_password }}"
     db: postgres
-
-- name: Check if the databases exists
-  postgresql_db:
-    name: "{{ item }}"
-    state: present
-  loop: "{{ postgresql_databases|flatten(levels=1) }}"
