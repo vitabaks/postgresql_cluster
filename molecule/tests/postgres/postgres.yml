@@ -13,11 +13,12 @@
 
 - name: Try to connect to PostgreSQL
   postgresql_ping:
-    login_user: "{{ postgres_user }}"
-    login_password: "{{ postgres_password }}"
+    login_user: "{{ patroni_superuser_username }}"
+    login_password: "{{ patroni_superuser_password }}"
     db: postgres
 
-- name: Check if the database exists
+- name: Check if the databases exists
   postgresql_db:
-    name: "{{ postgres_db_name }}"
+    name: "{{ item }}"
     state: present
+  loop: "{{ postgresql_databases|flatten(levels=1) }}"
