@@ -9,8 +9,7 @@ skip_list:
   - ignore-errors
   - package-latest
   - risky-file-permissions # TODO
-  - no-log-password # We do not display passwords
-  - fqcn-builtins # Use FQCN for builtin actions
+  - fqcn[action-core]
   - no-changed-when
   - name[missing] # All tasks should be named.
   - name[casing] # TODO: All names should start with an uppercase letter.
