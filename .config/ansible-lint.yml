@@ -1,6 +1,9 @@
 ---
 skip_list:
-  - yaml
+  - yaml[line-length]
+  - yaml[octal-values]
+  - yaml[truthy]
+  - yaml[trailing-spaces]
   - role-name
   - ignore-errors
   - package-latest
