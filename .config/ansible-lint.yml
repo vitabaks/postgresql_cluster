@@ -4,6 +4,7 @@ skip_list:
   - yaml[octal-values]
   - yaml[truthy]
   - yaml[trailing-spaces]
+  - role-name[path]
   - role-name
   - ignore-errors
   - package-latest
