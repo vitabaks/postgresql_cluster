@@ -18,7 +18,6 @@ skip_list:
   - jinja[invalid] # TODO
   - no-handler
   - schema[tasks]
-  - template-instead-of-copy # Templated files should use template instead of copy
   - experimental # all rules tagged as experimental
   - command-instead-of-shell # Using command rather than shell where necessary
   - command-instead-of-module # Using command rather than module where necessary
