@@ -6,9 +6,23 @@
     - vars/main.yml
     - vars/system.yml
   pre_tasks:
+    - name: Include OS-specific variables
+      include_vars: "vars/{{ ansible_os_family }}.yml"
+      when: not ansible_os_family == 'Rocky' and not ansible_os_family == 'AlmaLinux'
+      tags: always
+
+    # For compatibility with Ansible old versions
+    # (support for RockyLinux and AlmaLinux has been added to Ansible 2.11)
+    - name: Include OS-specific variables
+      include_vars: "vars/RedHat.yml"
+      when: ansible_os_family == 'Rocky' or ansible_os_family == 'AlmaLinux'
+      tags: always
+
     - name: Set maintenance variable
       set_fact:
         postgresql_cluster_maintenance: true
+      tags: always
+
   roles:
     - role: pre-checks
       vars:
