@@ -48,6 +48,7 @@
 # It checks if 'pgbouncer_pools' is defined and has length > 0 and whether the total pool size is greater than max_connections.
 # If both conditions are met, the execution is stopped with a message indicating that the settings need to be changed.
 - name: Failed when pgbouncer_total_pool_size > max_connections
+  run_once: true
   fail:
     msg: "pgbouncer_total_pool_size: {{ pgbouncer_total_pool_size  }} > max_connections: {{ max_connections }}. Need change settings"
   when:
