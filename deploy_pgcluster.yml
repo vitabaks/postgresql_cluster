@@ -37,6 +37,7 @@
           Architecture: "{{ ansible_architecture | default('N/A') }}"
           Virtualization type: "{{ ansible_virtualization_type | default('N/A') }}"
           Product name: "{{ ansible_product_name | default('N/A') }}"
+      tags: always
 
   roles:
     - role: pre-checks
