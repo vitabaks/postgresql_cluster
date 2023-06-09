@@ -10,6 +10,7 @@ skip_list:
   - package-latest
   - risky-file-permissions # TODO
   - fqcn[action-core]
+  - fqcn[action]
   - no-changed-when
   - name[missing] # All tasks should be named.
   - name[casing] # TODO: All names should start with an uppercase letter.
@@ -21,7 +22,6 @@ skip_list:
   - experimental # all rules tagged as experimental
   - command-instead-of-shell # Using command rather than shell where necessary
   - command-instead-of-module # Using command rather than module where necessary
-  - fqcn[action]
   - no-relative-paths
   - key-order[task] # TODO
   - no-free-form
