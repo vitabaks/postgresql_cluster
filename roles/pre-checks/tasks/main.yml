@@ -1,0 +1,27 @@
+---
+
+- name: Checking ansible version
+  fail:
+    msg: "Ansible version must be {{ minimal_ansible_version }} or higher"
+  delegate_to: localhost
+  when:
+    - ansible_version.full is version(minimal_ansible_version, '<')
+
+- name: Perform pre-checks for timescaledb
+  import_tasks: timescaledb.yml
+  when:
+    - enable_timescale is defined
+    - enable_timescale | bool
+    - inventory_hostname in groups['postgres_cluster']
+
+- name: Perform pre-checks for pgbouncer
+  import_tasks: pgbouncer.yml
+  when:
+    - pgbouncer_install is defined
+    - pgbouncer_install | bool
+    - inventory_hostname in groups['postgres_cluster']
+
+- name: Perform pre-checks for patroni
+  import_tasks: patroni.yml
+  when:
+    - inventory_hostname in groups['postgres_cluster']

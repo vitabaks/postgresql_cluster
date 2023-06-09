@@ -336,7 +336,7 @@ In this example, we add a node with the IP address 10.128.64.144
 [replica]
 10.128.64.142 hostname=pgnode02 postgresql_exists='true'
 10.128.64.143 hostname=pgnode03 postgresql_exists='true'
-10.128.64.144 hostname=pgnode04 postgresql_exists='false' new_node=true
+10.128.64.144 hostname=pgnode04 postgresql_exists=false new_node=true
 ```
 
 Run playbook:

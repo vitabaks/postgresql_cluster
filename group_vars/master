@@ -1,4 +1,4 @@
 ---
 
-is_master: 'true'
-postgresql_exists: 'false'
+is_master: true
+postgresql_exists: false
