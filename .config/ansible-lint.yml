@@ -20,6 +20,7 @@ skip_list:
   - risky-file-permissions # TODO
   - role-name
   - role-name[path]
+  - run-once[task]
   - schema[tasks]
   - yaml[line-length]
   - yaml[octal-values]
