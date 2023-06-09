@@ -48,4 +48,3 @@
   when:
     - pgbouncer_pools|default([]) | length > 0
     - total_pool_size | int > max_connections | default(100) | int
-
