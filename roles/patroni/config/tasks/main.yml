@@ -57,7 +57,7 @@
         body_format: json
       loop: "{{ postgresql_parameters }}"
       when: item.value == "null"
-  when: is_master == "true"
+  when: is_master | bool
   tags: patroni, patroni_conf
 
 - name: Delete postgresql parameters from "/etc/patroni/patroni.yml"
