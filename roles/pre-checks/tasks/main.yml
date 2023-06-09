@@ -8,14 +8,14 @@
     - ansible_version.full is version(minimal_ansible_version, '<')
 
 - name: Perform pre-checks for timescaledb
-  include_tasks: timescaledb.yml
+  import_tasks: timescaledb.yml
   when:
     - enable_timescale is defined
     - enable_timescale | bool
     - inventory_hostname in groups['postgres_cluster']
 
 - name: Perform pre-checks for pgbouncer
-  include_tasks: pgbouncer.yml
+  import_tasks: pgbouncer.yml
   when:
     - pgbouncer_install is defined
     - pgbouncer_install | bool
