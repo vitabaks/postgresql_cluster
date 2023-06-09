@@ -18,7 +18,7 @@
     state: directory
     owner: root
     group: wheel
-    mode: 0700
+    mode: "0700"
   become: true
   when: ansible_os_family == "FreeBSD"
   tags: dnsmasq
@@ -38,7 +38,7 @@
     dest: "{{ dnsmasq_item.dest }}"
     owner: root
     group: "{{ dnsmasq_item.group }}"
-    mode: 0644
+    mode: "0644"
   become: true
   notify: restart dnsmasq
   when: "{{ dnsmasq_item.when }}"

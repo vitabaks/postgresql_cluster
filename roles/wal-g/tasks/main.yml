@@ -256,7 +256,7 @@
     dest: "{{ postgresql_home_dir }}/.walg.json"
     owner: postgres
     group: postgres
-    mode: 0644
+    mode: "0644"
   tags: wal-g, wal_g, wal_g_conf
 
 ...

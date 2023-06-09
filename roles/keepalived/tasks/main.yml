@@ -38,7 +38,7 @@
     dest: /usr/libexec/keepalived/haproxy_check.sh
     owner: root
     group: root
-    mode: 0700
+    mode: "0700"
   notify: "restart keepalived"
   tags: keepalived_conf, keepalived
 
