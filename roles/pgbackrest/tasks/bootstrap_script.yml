@@ -14,7 +14,7 @@
         dest: /etc/patroni/pgbackrest_bootstrap.sh
         owner: postgres
         group: postgres
-        mode: 0775
+        mode: "0775"
   when:
     - patroni_cluster_bootstrap_method is defined
     - patroni_cluster_bootstrap_method == "pgbackrest"

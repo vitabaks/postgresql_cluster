@@ -85,7 +85,7 @@
     path: "{{ etcd_data_dir }}"
     state: directory
     owner: etcd
-    mode: 0700
+    mode: "0700"
   tags: etcd, etcd_conf
 
 - name: Generate conf file "/etc/etcd/etcd.conf"

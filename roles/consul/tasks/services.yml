@@ -7,7 +7,7 @@
     src: service.json.j2
     owner: "{{ consul_user }}"
     group: "{{ consul_group }}"
-    mode: 0644
+    mode: "0644"
   with_items: "{{ consul_services }}"
   loop_control:
     loop_var: service_item

@@ -20,7 +20,7 @@
     dest: /etc/firewall.bash
     owner: root
     group: root
-    mode: 0744
+    mode: "0744"
   notify: restart firewall
 
 - name: Copy firewall init script into place.
@@ -29,7 +29,7 @@
     dest: /etc/init.d/firewall
     owner: root
     group: root
-    mode: 0755
+    mode: "0755"
   when: "ansible_service_mgr != 'systemd'"
 
 - name: Copy firewall systemd unit file into place (for systemd systems).
@@ -38,7 +38,7 @@
     dest: /etc/systemd/system/firewall.service
     owner: root
     group: root
-    mode: 0644
+    mode: "0644"
   when: "ansible_service_mgr == 'systemd'"
 
 # prevents firewall initialization from severing the SSH connection

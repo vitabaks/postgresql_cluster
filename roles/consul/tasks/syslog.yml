@@ -15,7 +15,7 @@
     dest: /etc/syslog-ng/conf.d/consul.conf
     owner: root
     group: root
-    mode: 0444
+    mode: "0444"
   when:
     - ansible_os_family != 'Windows'
     - consul_syslog_enable | bool
@@ -31,7 +31,7 @@
     dest: /etc/rsyslog.d/00-consul.conf
     owner: root
     group: root
-    mode: 0444
+    mode: "0444"
   when:
     - ansible_os_family != 'Windows'
     - consul_syslog_enable | bool

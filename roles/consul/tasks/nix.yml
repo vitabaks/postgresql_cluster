@@ -104,7 +104,7 @@
       copy:
         content: "{{ consul_raw_key }}"
         dest: '/tmp/consul_raw.key'
-        mode: 0600
+        mode: "0600"
       become: false
       vars:
         ansible_become: false
@@ -176,7 +176,7 @@
     dest: /etc/rc.d/consul
     owner: root
     group: wheel
-    mode: 0755
+    mode: "0755"
   when: ansible_os_family == "FreeBSD"
 
 - name: Create SYSV init script
@@ -185,7 +185,7 @@
     dest: /etc/init.d/consul
     owner: root
     group: root
-    mode: 0755
+    mode: "0755"
   when:
     - not ansible_service_mgr == "systemd"
     - not ansible_os_family == "Debian"
@@ -199,7 +199,7 @@
     dest: /etc/init.d/consul
     owner: root
     group: root
-    mode: 0755
+    mode: "0755"
   when:
     - not ansible_service_mgr == "systemd"
     - ansible_os_family == "Debian"
@@ -213,7 +213,7 @@
     dest: "{{ consul_systemd_unit_path }}/consul.service"
     owner: root
     group: root
-    mode: 0644
+    mode: "0644"
   register: systemd_unit
   notify: restart consul
   when:
@@ -253,7 +253,7 @@
     dest: "{{ consul_smf_manifest }}"
     owner: root
     group: root
-    mode: 0644
+    mode: "0644"
   when: ansible_os_family == "Solaris"
   register: smfmanifest
 
@@ -304,7 +304,7 @@
       file:
         dest: "{{ consul_bootstrap_state }}"
         state: touch
-        mode: 0600
+        mode: "0600"
 
     - include_tasks: ../tasks/iptables.yml
       when: consul_iptables_enable | bool
