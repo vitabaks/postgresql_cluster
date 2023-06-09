@@ -1,0 +1,7 @@
+---
+- name: Check Patroni status
+  uri:
+    url: "http://{{ inventory_hostname }}:8008/patroni"
+    return_content: true
+  register: patroni_status
+  failed_when: "'running' not in patroni_status.content"

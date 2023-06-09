@@ -1,0 +1,15 @@
+---
+- name: Molecule | Verify | All
+  hosts: all
+
+  tasks:
+    - name: Include vars of vars/main.yml
+      ansible.builtin.include_vars:
+        file: ../../vars/main.yml
+
+    - name: Molecule | Verify | Include all tests
+      ansible.builtin.include_tasks: "{{ item }}"
+      with_fileglob:
+        - ../tests/etcd/*.yml
+        - ../tests/patroni/*.yml
+        - ../tests/postgres/*.yml
