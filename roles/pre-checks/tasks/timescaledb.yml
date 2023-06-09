@@ -1,6 +1,6 @@
 ---
 
-- name: Checking PostgreSQL version
+- name: TimescaleDB | Checking PostgreSQL version
   run_once: true
   fail:
     msg:
@@ -10,7 +10,7 @@
     - postgresql_version|string is version(timescale_minimal_pg_version|string, '<')
 
 - block:
-    - name: Ensure 'timescaledb' is in 'shared_preload_libraries'
+    - name: TimescaleDB | Ensure 'timescaledb' is in 'shared_preload_libraries'
       set_fact:
         # This complex line does several things:
         # 1. It takes the current list of PostgreSQL parameters,
