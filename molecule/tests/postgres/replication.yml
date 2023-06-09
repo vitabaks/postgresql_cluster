@@ -1,0 +1,10 @@
+---
+- name: Check PostgreSQL replication status
+  postgresql_query:
+    db: postgres
+    login_user: "{{ patroni_superuser_username }}"
+    login_password: "{{ patroni_superuser_password }}"
+    query: "SELECT * FROM pg_stat_wal_receiver;"
+  register: pg_replication_status
+  failed_when: "pg_replication_status.rowcount == 0"
+  when: "'replica' in group_names"

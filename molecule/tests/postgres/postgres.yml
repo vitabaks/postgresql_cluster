@@ -1,0 +1,18 @@
+---
+- name: Check if PostgreSQL process is running
+  command: pgrep -u postgres
+  register: result
+  failed_when: result.rc != 0
+
+- name: Check if PostgreSQL is listening on the default port
+  wait_for:
+    port: 5432
+    timeout: 5
+  register: is_listening
+  failed_when: not is_listening
+
+- name: Try to connect to PostgreSQL
+  postgresql_ping:
+    login_user: "{{ patroni_superuser_username }}"
+    login_password: "{{ patroni_superuser_password }}"
+    db: template1
