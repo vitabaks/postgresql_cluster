@@ -1,29 +1,31 @@
 ---
 skip_list:
-  - yaml
-  - role-name
+  - command-instead-of-module # Using command rather than module where necessary
+  - command-instead-of-shell # Using command rather than shell where necessary
+  - experimental # all rules tagged as experimental
+  - fqcn[action]
+  - fqcn[action-core]
   - ignore-errors
+  - jinja[invalid] # TODO
+  - jinja[spacing] # TODO
+  - key-order[task] # TODO
+  - name[casing] # TODO: All names should start with an uppercase letter.
+  - name[missing] # All tasks should be named.
+  - name[template] # Rule for checking task and play names
+  - no-changed-when
+  - no-free-form
+  - no-handler
+  - no-relative-paths
   - package-latest
   - risky-file-permissions # TODO
-  - no-log-password # We do not display passwords
-  - fqcn-builtins # Use FQCN for builtin actions
-  - no-changed-when
-  - name[missing] # All tasks should be named.
-  - name[casing] # TODO: All names should start with an uppercase letter.
-  - name[template] # Rule for checking task and play names
-  - jinja[spacing] # TODO
-  - jinja[invalid] # TODO
-  - no-handler
+  - role-name
+  - role-name[path]
+  - run-once[task]
   - schema[tasks]
-  - template-instead-of-copy # Templated files should use template instead of copy
-  - experimental # all rules tagged as experimental
-  - command-instead-of-shell # Using command rather than shell where necessary
-  - command-instead-of-module # Using command rather than module where necessary
-  - fqcn[action]
-  - no-relative-paths
-  - key-order[task] # TODO
-  - no-free-form
-  - var-naming[no-role-prefix]
+  - yaml[line-length]
+  - yaml[octal-values]
+  - yaml[trailing-spaces]
+  - yaml[truthy]
 
 exclude_paths:
   - ../roles/consul/ # TODO - https://github.com/ansible-community/ansible-consul/pull/520
