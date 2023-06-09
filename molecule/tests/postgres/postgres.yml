@@ -15,4 +15,4 @@
   postgresql_ping:
     login_user: "{{ patroni_superuser_username }}"
     login_password: "{{ patroni_superuser_password }}"
-    db: postgres
+    db: template1
