@@ -410,19 +410,6 @@
         state: directory
         mode: 0700
 
-    - name: Prepare PostgreSQL | check that data directory "{{ postgresql_data_dir }}" is not initialized
-      stat:
-        path: "{{ postgresql_data_dir }}/PG_VERSION"
-      register: pgdata_initialized
-      when: patroni_cluster_bootstrap_method == "initdb"
-
-    - name: Prepare PostgreSQL | data directory check result
-      fail:
-        msg: "Whoops! data directory {{ postgresql_data_dir }} is already initialized"
-      when: pgdata_initialized.stat.exists is defined and
-            pgdata_initialized.stat.exists
-      tags: patroni, patroni_check_init
-
       # for Debian based distros only
       # patroni bootstrap failure is possible if the postgresql config files are missing
     - name: Prepare PostgreSQL | make sure the postgresql config files exists
@@ -477,17 +464,6 @@
   tags: patroni, point_in_time_recovery
 
 - block:  # when postgresql exists
-    - name: Prepare PostgreSQL | check that data directory "{{ postgresql_data_dir }}" is initialized
-      stat:
-        path: "{{ postgresql_data_dir }}/PG_VERSION"
-      register: pgdata_initialized
-
-    - name: Prepare PostgreSQL | data directory check result
-      fail:
-        msg: "Whoops! data directory {{ postgresql_data_dir }} is not initialized"
-      when: not pgdata_initialized.stat.exists
-      tags: patroni, patroni_check_init
-
     - block:  # for master only
         - name: Prepare PostgreSQL | check PostgreSQL is started on Master
           become: true
