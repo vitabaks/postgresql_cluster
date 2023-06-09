@@ -91,12 +91,12 @@ bootstrap:
     {% endif %}
   {% endif %}
 
-{% if postgresql_exists == 'true' %}
+{% if postgresql_exists|bool %}
 #  initdb:  # List options to be passed on to initdb
 #    - encoding: UTF8
 #    - data-checksums
 {% endif %}
-{% if postgresql_exists == 'false' %}
+{% if not postgresql_exists|bool %}
   initdb:  # List options to be passed on to initdb
     - encoding: {{ postgresql_encoding }}
     - locale: {{ postgresql_locale }}
