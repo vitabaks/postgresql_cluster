@@ -14,7 +14,7 @@
 # If 'pool_size' is defined in 'pool_parameters', it takes that value.
 # If 'pool_size' is not defined, it uses pgbouncer_default_pool_size if available, otherwise 0.
 # The calculated pool size is then added to the total 'pgbouncer_pool_size'.
-- name: Calculate pgbouncer pool_size
+- name: PgBouncer | Calculate pool_size
   run_once: true
   set_fact:
     pgbouncer_pool_size: "{{ pgbouncer_pool_size|default(0)|int + (item.pool_parameters|regex_search('pool_size=(\\d+)', multiline=False)|regex_replace('[^0-9]', '')|default(pgbouncer_default_pool_size|default(0), true)|int) }}"
@@ -24,7 +24,7 @@
 # If 'postgresql_databases' is not defined or is an empty list, the total pool size will be equal to the 'pgbouncer_pool_size'.
 # Otherwise, it adds the 'pgbouncer_pool_size' to the product of the default pool size (or 0 if not defined) and the number of databases not already defined in 'pgbouncer_pools'.
 # This means it checks the 'postgresql_databases' against 'pgbouncer_pools' and for each database that does not have a corresponding pool, it adds the 'pgbouncer_default_pool_size' (or 0 if not defined) to the 'pgbouncer_pool_size'.
-- name: Calculate pgbouncer total pool_size
+- name: PgBouncer | Calculate total pool_size
   run_once: true
   set_fact:
     pgbouncer_total_pool_size: >-
@@ -38,7 +38,7 @@
       }}
   when: pgbouncer_pool_size is defined
 
-- name: Show pgbouncer total pool_size
+- name: PgBouncer | Show total pool_size
   run_once: true
   debug:
     var: pgbouncer_total_pool_size
@@ -47,7 +47,7 @@
 # This task fails the playbook execution if the total pool size is greater than max_connections.
 # It checks if 'pgbouncer_pools' is defined and has length > 0 and whether the total pool size is greater than max_connections.
 # If both conditions are met, the execution is stopped with a message indicating that the settings need to be changed.
-- name: Failed when pgbouncer_total_pool_size > max_connections
+- name: PgBouncer | Failed when pgbouncer_total_pool_size > max_connections
   run_once: true
   fail:
     msg: "pgbouncer_total_pool_size: {{ pgbouncer_total_pool_size  }} > max_connections: {{ max_connections }}. Need change settings"
