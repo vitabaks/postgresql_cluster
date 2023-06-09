@@ -1,7 +1,7 @@
 ---
 name: scheduled PostgreSQL (OracleLinux 9)
 
-on:
+on: # noqa yaml[truthy]
   schedule:
     - cron: "0 1 * * *"
 

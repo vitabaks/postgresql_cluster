@@ -1,7 +1,7 @@
 ---
 name: scheduled PostgreSQL (Debian 10)
 
-on:
+on: # noqa yaml[truthy]
   schedule:
     - cron: "15 0 * * *"
 

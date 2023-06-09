@@ -1,7 +1,7 @@
 ---
 name: scheduled PostgreSQL (Ubuntu 22.04)
 
-on:
+on: # noqa yaml[truthy]
   schedule:
     - cron: "30 0 * * *"
 

@@ -1,7 +1,7 @@
 ---
 name: "Flake8"
 
-on:
+on: # noqa yaml[truthy]
   push:
     branches:
       - master

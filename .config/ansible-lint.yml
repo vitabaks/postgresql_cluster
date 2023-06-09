@@ -25,7 +25,6 @@ skip_list:
   - yaml[line-length]
   - yaml[octal-values]
   - yaml[trailing-spaces]
-  - yaml[truthy]
 
 exclude_paths:
   - ../roles/consul/ # TODO - https://github.com/ansible-community/ansible-consul/pull/520

@@ -1,7 +1,7 @@
 ---
 name: "Docker"
 
-on:
+on: # noqa yaml[truthy]
   push:
     branches:
       - master
