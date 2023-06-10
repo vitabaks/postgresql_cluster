@@ -13,7 +13,6 @@ skip_list:
   - name[missing] # All tasks should be named.
   - name[template] # Rule for checking task and play names
   - no-changed-when
-  - no-free-form
   - no-handler
   - no-relative-paths
   - package-latest
