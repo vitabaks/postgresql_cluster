@@ -10,7 +10,8 @@
       run_once: true
 
     - name: Save gossip encryption key from existing configuration
-      set_fact: consul_raw_key={{ consul_key_read.stdout }}
+      set_fact:
+        consul_raw_key: "{{ consul_key_read.stdout }}"
       ignore_errors: true
 
   when:
@@ -31,7 +32,8 @@
   delegate_to: 127.0.0.1
 
 - name: Read gossip encryption key for servers that require it
-  set_fact: consul_raw_key="{{ lookup('file', '/tmp/consul_raw.key') }}"
+  set_fact:
+    consul_raw_key: "{{ lookup('file', '/tmp/consul_raw.key') }}"
   when:
     - consul_raw_key is not defined
     - bootstrap_state.stat.exists | bool
@@ -55,7 +57,8 @@
       run_once: true
 
     - name: Write gossip encryption key to fact
-      set_fact: consul_raw_key={{ consul_keygen.stdout }}
+      set_fact:
+        consul_raw_key: "{{ consul_keygen.stdout }}"
   when:
     - consul_raw_key is not defined
     - not bootstrap_state.stat.exists | bool
