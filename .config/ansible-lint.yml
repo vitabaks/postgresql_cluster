@@ -19,14 +19,8 @@ skip_list:
   - package-latest
   - risky-file-permissions # TODO
   - role-name
-  - role-name[path]
-  - run-once[task]
-  - schema[tasks]
   - yaml[line-length]
-  - yaml[trailing-spaces]
 
 exclude_paths:
   - ../.venv
   - ../.github
-# https://ansible-lint.readthedocs.io/configuring/
-# https://ansible-lint.readthedocs.io/rules/
