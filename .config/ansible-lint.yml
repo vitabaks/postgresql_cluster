@@ -24,9 +24,9 @@ skip_list:
   - schema[tasks]
   - yaml[line-length]
   - yaml[trailing-spaces]
-  - yaml[truthy]
 
 exclude_paths:
   - ../.venv
+  - ../.github
 # https://ansible-lint.readthedocs.io/configuring/
 # https://ansible-lint.readthedocs.io/rules/
