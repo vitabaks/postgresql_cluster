@@ -161,7 +161,7 @@ _Table of results of daily automated testing of cluster deployment:_
 
 
 ###### Ansible version 
-Minimum supported Ansible version: 2.7
+Minimum supported Ansible version: 2.11.0
 
 ## Requirements
 This playbook requires root privileges or sudo.
