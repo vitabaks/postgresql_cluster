@@ -21,7 +21,6 @@ skip_list:
   - role-name
   - role-name[path]
   - run-once[task]
-  - schema[tasks]
   - yaml[line-length]
 
 exclude_paths:
