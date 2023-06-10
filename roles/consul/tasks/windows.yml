@@ -80,7 +80,7 @@
       copy:
         content: "{{ consul_raw_key }}"
         dest: '/tmp/consul_raw.key'
-        mode: 0600
+        mode: "0600"
       become: false
       vars:
         ansible_become: false
@@ -101,7 +101,7 @@
           copy:
             content: "{{ consul_keygen.stdout }}"
             dest: '/tmp/consul_raw.key'
-            mode: 0600
+            mode: "0600"
           become: false
           vars:
             ansible_become: false

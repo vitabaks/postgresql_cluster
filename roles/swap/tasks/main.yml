@@ -46,7 +46,7 @@
         path: "{{ swap_file_path }}"
         owner: root
         group: root
-        mode: 0600
+        mode: "0600"
 
     - name: Make swap file if necessary
       command: mkswap {{ swap_file_path }}

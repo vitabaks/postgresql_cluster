@@ -29,7 +29,7 @@
     state: directory
     owner: postgres
     group: postgres
-    mode: 0750
+    mode: "0750"
   tags: pgbouncer_conf, pgbouncer
 
 - name: Stop and disable standard init script
@@ -46,7 +46,7 @@
     dest: /etc/systemd/system/pgbouncer.service
     owner: postgres
     group: postgres
-    mode: 0644
+    mode: "0644"
   notify: "restart pgbouncer"
   tags: pgbouncer_service, pgbouncer
 
@@ -90,7 +90,7 @@
     dest: "{{ pgbouncer_conf_dir }}/pgbouncer.ini"
     owner: postgres
     group: postgres
-    mode: 0640
+    mode: "0640"
   notify: "restart pgbouncer"
   when: existing_pgcluster is not defined or not existing_pgcluster|bool
   tags: pgbouncer_conf, pgbouncer
@@ -101,7 +101,7 @@
     dest: "{{ pgbouncer_conf_dir }}/userlist.txt"
     owner: postgres
     group: postgres
-    mode: 0640
+    mode: "0640"
   when: existing_pgcluster is not defined or not existing_pgcluster|bool
   tags: pgbouncer
 
@@ -124,7 +124,7 @@
         dest: /etc/pgbouncer/
         owner: postgres
         group: postgres
-        mode: 0640
+        mode: "0640"
       loop:
         - pgbouncer.ini
         - userlist.txt

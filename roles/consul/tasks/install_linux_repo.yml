@@ -104,7 +104,7 @@
     dest: /etc/systemd/system/consul.service.d/override.conf
     owner: root
     group: root
-    mode: 0644
+    mode: "0644"
   register: systemd_override
   become: true
   notify:

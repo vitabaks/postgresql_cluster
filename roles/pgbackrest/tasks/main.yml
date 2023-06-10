@@ -119,7 +119,7 @@
         dest: "{{ pgbackrest_conf_file }}"
         owner: postgres
         group: postgres
-        mode: 0644
+        mode: "0644"
   when: "'postgres_cluster' in group_names"
   tags: pgbackrest, pgbackrest_conf
 

@@ -123,7 +123,7 @@
         dest: "{{ consul_bin_path }}/consul"
         owner: "{{ consul_user }}"
         group: "{{ consul_group }}"
-        mode: 0755
+        mode: "0755"
       notify:
         - restart consul
         - reload systemd daemon

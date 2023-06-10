@@ -23,7 +23,6 @@ skip_list:
   - run-once[task]
   - schema[tasks]
   - yaml[line-length]
-  - yaml[octal-values]
   - yaml[trailing-spaces]
   - yaml[truthy]
 

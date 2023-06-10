@@ -10,7 +10,7 @@
         state: directory
         owner: "{{ consul_user }}"
         group: "{{ consul_group }}"
-        mode: 0700
+        mode: "0700"
       with_items:
         - "{{ consul_config_path }}"
         - "{{ consul_configd_path }}"
@@ -23,7 +23,7 @@
         state: directory
         owner: "{{ consul_user }}"
         group: "{{ consul_group }}"
-        mode: 0750
+        mode: "0750"
       when: not consul_install_from_repo | bool
 
 - name: Create log directory
@@ -32,7 +32,7 @@
     state: directory
     owner: "{{ consul_user }}"
     group: "{{ consul_group }}"
-    mode: 0700
+    mode: "0700"
   when:
     - ansible_os_family != 'Windows'
     - not consul_syslog_enable | bool
@@ -44,7 +44,7 @@
     state: directory
     owner: "{{ syslog_user }}"
     group: "{{ syslog_group }}"
-    mode: 0700
+    mode: "0700"
   with_items:
     - "{{ consul_log_path }}"
   loop_control:
@@ -59,7 +59,7 @@
     path: "{{ consul_bin_path }}"
     state: directory
     owner: root
-    mode: 0755
+    mode: "0755"
   when:
     # On macOS, we should not alter consul_bin_path, since it may be owned by the homebrew
     # user. This may cause the role to fail on macOS systems where homebrew is not
