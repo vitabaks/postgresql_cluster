@@ -10,7 +10,7 @@
 - block:
     - name: Generate locales
       become: true
-      locale_gen:
+      community.general.locale_gen:
         name: "{{ item.language_country }}.{{ item.encoding }}"
         state: present
       loop: "{{ locale_gen | flatten(1) }}"

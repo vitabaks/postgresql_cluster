@@ -3,7 +3,7 @@
 - name: Add extensions to the databases
   become: true
   become_user: postgres
-  postgresql_ext:
+  community.postgresql.postgresql_ext:
     db: "{{ item.db }}"
     name: "{{ item.ext }}"
     schema: "{{ item.schema | default('public') }}"

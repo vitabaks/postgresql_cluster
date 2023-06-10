@@ -14,7 +14,7 @@
   listen: 'start consul'
 
 - name: start consul on windows
-  win_service:
+  ansible.windows.win_service:
     name: consul
     state: started
   when: ansible_os_family == "Windows"

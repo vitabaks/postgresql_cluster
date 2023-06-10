@@ -31,7 +31,7 @@
   when: "'postgres_cluster' in group_names"
 
 - name: ssh_keys | Add pgbackrest ssh key in "~postgres/.ssh/authorized_keys" on database servers
-  authorized_key:
+  ansible.posix.authorized_key:
     user: postgres
     state: present
     key: "{{ hostvars[item].pgbackrest_sshkey['content'] | b64decode }}"
@@ -39,7 +39,7 @@
   when: "'postgres_cluster' in group_names"
 
 - name: ssh_keys | Add database ssh keys in "~{{ pgbackrest_repo_user }}/.ssh/authorized_keys" on pgbackrest server
-  authorized_key:
+  ansible.posix.authorized_key:
     user: "{{ pgbackrest_repo_user }}"
     state: present
     key: "{{ hostvars[item].postgres_cluster_sshkey['content'] | b64decode }}"

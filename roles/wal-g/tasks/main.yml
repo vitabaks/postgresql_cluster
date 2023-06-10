@@ -136,7 +136,7 @@
     - name: Build WAL-G deps
       become: true
       become_user: root
-      make:
+      community.general.make:
         chdir: /tmp/wal-g/
         target: deps
         params:
@@ -149,7 +149,7 @@
     - name: Build and install WAL-G
       become: true
       become_user: root
-      make:
+      community.general.make:
         chdir: /tmp/wal-g/
         target: pg_install
         params:

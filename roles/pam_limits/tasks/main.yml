@@ -1,7 +1,7 @@
 ---
 
 - name: Linux PAM limits | add or modify nofile limits
-  pam_limits:
+  community.general.pam_limits:
     domain: "{{ limits_user }}"
     limit_type: "{{ item.limit_type }}"
     limit_item: "{{ item.limit_item }}"

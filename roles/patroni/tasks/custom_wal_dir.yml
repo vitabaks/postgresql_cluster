@@ -38,7 +38,7 @@
     - name: "Synchronize {{ postgresql_data_dir }}/{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }} to {{ postgresql_wal_dir }}"
       become: true
       become_user: postgres
-      synchronize:
+      ansible.posix.synchronize:
         src: "{{ postgresql_data_dir }}/{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }}/"
         dest: "{{ postgresql_wal_dir }}/"
       delegate_to: "{{ inventory_hostname }}"
