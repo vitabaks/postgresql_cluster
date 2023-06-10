@@ -769,7 +769,7 @@ https://www.consul.io/docs/guides/autopilot.html
   - Override with `CONSUL_AUTOPILOT_ENABLE` environment variable
 - Default value: false
 
-#### `consul_autopilot_cleanup_dead_Servers`
+#### `consul_autopilot_cleanup_dead_servers`
 
 Dead servers will periodically be cleaned up and removed from the Raft peer set, to prevent them from interfering with the quorum size and leader elections. This cleanup will also happen whenever a new server is successfully added to the cluster.
 

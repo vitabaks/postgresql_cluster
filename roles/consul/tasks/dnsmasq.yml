@@ -41,7 +41,7 @@
     mode: 0644
   become: true
   notify: restart dnsmasq
-  when: "{{ dnsmasq_item.when }}"
+  when: dnsmasq_item.when
   tags: dnsmasq
   loop:
     - { dest: '/etc/dnsmasq.d/10-consul', group: 'root', when: ansible_os_family|lower != "freebsd" }

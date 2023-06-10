@@ -107,7 +107,7 @@ consul_env_vars:
 
 ### Autopilot
 consul_autopilot_enable: "{{ lookup('env', 'CONSUL_AUTOPILOT_ENABLE') | default(false, true) }}"
-consul_autopilot_cleanup_dead_Servers: "{{ lookup('env', 'CONSUL_AUTOPILOT_CLEANUP_DEAD_SERVERS') | default(false, true) }}"
+consul_autopilot_cleanup_dead_servers: "{{ lookup('env', 'CONSUL_AUTOPILOT_CLEANUP_DEAD_SERVERS') | default(false, true) }}"
 consul_autopilot_last_contact_threshold: "{{ lookup('env', 'CONSUL_AUTOPILOT_LAST_CONTACT_THRESHOLD') | default('200ms', true) }}"
 consul_autopilot_max_trailing_logs: "{{ lookup('env', 'CONSUL_AUTOPILOT_MAX_TRAILING_LOGS') | default(250, true) }}"
 consul_autopilot_server_stabilization_time: "{{ lookup('env', 'CONSUL_AUTOPILOT_SERVER_STABILIZATION_TIME') | default('10s', true) }}"

@@ -3,7 +3,9 @@
 
 - block:
     - name: Read gossip encryption key from previously boostrapped server
-      shell: 'cat {{ consul_config_path }}/bootstrap/config.json | grep "encrypt" | sed -E ''s/"encrypt": "(.+)",?/\1/'' | sed ''s/^ *//;s/ *$//'''
+      shell: |
+        set -o pipefail
+        cat {{ consul_config_path }}/bootstrap/config.json | grep "encrypt" | sed -E 's/"encrypt": "(.+)",?/\1/' | sed 's/^ *//;s/ *$//'
       register: consul_key_read
       run_once: true
 

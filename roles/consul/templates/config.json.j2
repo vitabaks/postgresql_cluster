@@ -242,7 +242,7 @@
         {## AutoPilot ##}
         {% if consul_autopilot_enable | bool %}
         "autopilot": {
-            "cleanup_dead_servers": {{ consul_autopilot_cleanup_dead_Servers | bool | to_json }},
+            "cleanup_dead_servers": {{ consul_autopilot_cleanup_dead_servers | bool | to_json }},
             "last_contact_threshold": "{{ consul_autopilot_last_contact_threshold }}",
             "max_trailing_logs": {{ consul_autopilot_max_trailing_logs }},
             "server_stabilization_time": "{{ consul_autopilot_server_stabilization_time }}"{{ ',' if consul_enterprise else '' }}
