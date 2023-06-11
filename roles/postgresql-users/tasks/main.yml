@@ -3,7 +3,7 @@
 - name: Make sure the PostgreSQL users are present
   become: true
   become_user: postgres
-  postgresql_user:
+  community.postgresql.postgresql_user:
     name: "{{ item.name }}"
     password: "{{ item.password }}"
     encrypted: true

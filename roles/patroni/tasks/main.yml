@@ -370,7 +370,7 @@
   tags: patroni, pgsql_stats_tmp
 
 - name: Prepare PostgreSQL | mount the statistics directory in memory (tmpfs)
-  mount:
+  ansible.posix.mount:
     path: "{{ postgresql_stats_temp_directory_path }}"
     src: tmpfs
     fstype: tmpfs
@@ -519,7 +519,7 @@
           failed_when: psql_reload_result.rc != 0
 
         - name: Prepare PostgreSQL | make sure the user "{{ patroni_superuser_username }}" are present, and password does not differ from the specified
-          postgresql_user:
+          community.postgresql.postgresql_user:
             db: postgres
             name: "{{ patroni_superuser_username }}"
             password: "{{ patroni_superuser_password }}"
@@ -532,7 +532,7 @@
           become_user: postgres
 
         - name: Prepare PostgreSQL | make sure the user "{{ patroni_replication_username }}" are present, and password does not differ from the specified
-          postgresql_user:
+          community.postgresql.postgresql_user:
             db: postgres
             name: "{{ patroni_replication_username }}"
             password: "{{ patroni_replication_password }}"
@@ -866,7 +866,7 @@
       when: is_master | bool
 
     - name: Make sure the superuser and replication users are present, and password does not differ from the specified
-      postgresql_user:
+      community.postgresql.postgresql_user:
         db: postgres
         name: "{{ item.name }}"
         password: "{{ item.password }}"
@@ -887,7 +887,7 @@
         - (patroni_replication_username and patroni_replication_password) | length > 0
 
     - name: Make sure the postgresql users are present, and password does not differ from the specified
-      postgresql_user:
+      community.postgresql.postgresql_user:
         db: postgres
         name: "{{ item.name }}"
         password: "{{ item.password }}"

@@ -3,7 +3,7 @@
 - name: Make sure the PostgreSQL schemas are present
   become: true
   become_user: postgres
-  postgresql_schema:
+  community.postgresql.postgresql_schema:
     name: "{{ item.schema }}"
     database: "{{ item.db }}"
     owner: "{{ item.owner }}"

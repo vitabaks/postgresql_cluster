@@ -11,7 +11,7 @@
   tags: keepalived_install, keepalived
 
 - name: Make sure the kernel parameters "net.ipv4.ip_nonlocal_bind", "net.ipv4.ip_forward" are enabled
-  sysctl:
+  ansible.posix.sysctl:
     name: "{{ item }}"
     value: "1"
     sysctl_set: true
@@ -88,7 +88,7 @@
   tags: keepalived_conf, keepalived
 
 - name: selinux | change the keepalived_t domain to permissive
-  selinux_permissive:
+  community.general.selinux_permissive:
     name: keepalived_t
     permissive: true
   when: ansible_selinux.status is defined and

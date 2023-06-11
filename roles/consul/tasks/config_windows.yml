@@ -2,7 +2,7 @@
 # File: config_windows.yml - Consul configuration tasks for Windows
 
 - name: Create configuration
-  win_copy:
+  ansible.windows.win_copy:
     dest: "{{ config_item.dest }}"
     content: "{{ lookup('template', consul_config_template_path, convert_data=True) | to_nice_json }}"
   with_items:
@@ -26,7 +26,7 @@
     - restart consul
 
 - name: Create custom configuration
-  win_copy:
+  ansible.windows.win_copy:
     dest: "{{ consul_configd_path }}/50custom.json"
     content: "{{ lookup('template', 'templates/configd_50custom.json.j2', convert_data=True) | to_nice_json }}"
   when:
@@ -35,7 +35,7 @@
     - restart consul
 
 - name: Get Windows path for custom configuration file
-  win_stat:
+  ansible.windows.win_stat:
     path: "{{ consul_configd_path }}/50custom.json"
   register: custom_config_win_path
 

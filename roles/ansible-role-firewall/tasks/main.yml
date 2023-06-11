@@ -44,21 +44,21 @@
 # prevents firewall initialization from severing the SSH connection
 - block:
     - name: Load the nf_conntrack_ipv4 module
-      modprobe:
+      community.general.modprobe:
         name: nf_conntrack_ipv4
         state: present
       when: ansible_kernel is version('4.19', '<') and
             not (ansible_os_family == "RedHat" and ansible_distribution_version is version('8.3', '>='))
 
     - name: Load the nf_conntrack module
-      modprobe:
+      community.general.modprobe:
         name: nf_conntrack
         state: present
       when: ansible_kernel is version('4.19', '>=') or
             (ansible_os_family == "RedHat" and ansible_distribution_version is version('8.3', '>='))
 
     - name: sysctl | keep connections alive when enabling the firewall
-      sysctl:
+      ansible.posix.sysctl:
         name: net.netfilter.nf_conntrack_tcp_be_liberal
         value: "1"
         state: present

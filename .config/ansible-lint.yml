@@ -3,7 +3,6 @@ skip_list:
   - command-instead-of-module # Using command rather than module where necessary
   - command-instead-of-shell # Using command rather than shell where necessary
   - experimental # all rules tagged as experimental
-  - fqcn[action]
   - fqcn[action-core]
   - ignore-errors
   - jinja[invalid] # TODO

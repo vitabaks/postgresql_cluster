@@ -21,7 +21,7 @@
   when: ansible_facts['os_family'] == "VMware Photon OS"
 
 - name: Update Alpine Package Manager (APK)
-  apk:
+  community.general.apk:
     update_cache: true
   run_once: true
   when: ansible_os_family == "Alpine"

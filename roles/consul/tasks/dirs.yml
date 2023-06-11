@@ -70,7 +70,7 @@
     - not consul_install_from_repo | bool
 
 - name: Create directories on Windows
-  win_file:
+  ansible.windows.win_file:
     dest: "{{ dir_item }}"
     state: directory
   with_items:

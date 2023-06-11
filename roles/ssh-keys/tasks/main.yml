@@ -23,7 +23,7 @@
       changed_when: false
 
     - name: Copy key files and add to authorized_keys
-      authorized_key:
+      ansible.posix.authorized_key:
         user: "{{ ssh_key_user }}"
         state: "{{ ssh_key_state }}"
         key: "{{ lookup('pipe','cat files/*id_rsa.pub') }}"

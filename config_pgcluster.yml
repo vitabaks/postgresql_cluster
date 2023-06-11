@@ -26,7 +26,7 @@
   roles:
     - role: pre-checks
       vars:
-        minimal_ansible_version: 2.7.0
+        minimal_ansible_version: 2.11.0
         timescale_minimal_pg_version: 12 # if enable_timescale is defined
       tags: always
 
@@ -230,7 +230,7 @@
 
     - name: "Check if there are any changed parameters that require a restart"
       become_user: postgres
-      postgresql_query:
+      community.postgresql.postgresql_query:
         login_host: "127.0.0.1"
         login_port: "{{ postgresql_port }}"
         login_user: "{{ patroni_superuser_username }}"

@@ -21,7 +21,7 @@
   listen: 'restart consul'
 
 - name: restart consul on windows
-  win_service:
+  ansible.windows.win_service:
     name: consul
     state: restarted
   # Some tasks with `become: true` end up calling this task. Unfortunately, the `become`
