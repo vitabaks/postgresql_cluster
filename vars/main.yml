@@ -415,8 +415,8 @@ pgbackrest_install: false  # or 'true'
 pgbackrest_install_from_pgdg_repo: true  # or 'false'
 pgbackrest_stanza: "{{ patroni_cluster_name }}"  # specify your --stanza
 pgbackrest_repo_type: "posix"  # or "s3", "gcs", "azure"
-pgbackrest_repo_host: ""  # dedicated repository host
-pgbackrest_repo_user: ""  # if "repo_host" is set
+pgbackrest_repo_host: ""  # dedicated repository host (optional)
+pgbackrest_repo_user: "postgres"
 pgbackrest_conf_file: "/etc/pgbackrest/pgbackrest.conf"
 # see more options https://pgbackrest.org/configuration.html
 pgbackrest_conf:
@@ -428,8 +428,8 @@ pgbackrest_conf:
     - { option: "repo1-type", value: "{{ pgbackrest_repo_type |lower }}" }
     - { option: "repo1-path", value: "/var/lib/pgbackrest" }
     - { option: "repo1-retention-full", value: "4" }
+    - { option: "repo1-retention-archive", value: "4" }
     - { option: "start-fast", value: "y" }
-    - { option: "delta", value: "y" }
     - { option: "stop-auto", value: "y" }
     - { option: "resume", value: "n" }
     - { option: "link-all", value: "y" }
@@ -440,32 +440,58 @@ pgbackrest_conf:
     - { option: "log-level-console", value: "info" }
     - { option: "process-max", value: "4" }
 #    - { option: "", value: "" }
+# (optional) dedicated backup server config (if "repo_host" is set)
+pgbackrest_server_conf:
+  global:
+    - { option: "log-level-file", value: "detail" }
+    - { option: "log-level-console", value: "info" }
+    - { option: "log-path", value: "/var/log/pgbackrest" }
+    - { option: "repo1-type", value: "{{ pgbackrest_repo_type |lower }}" }
+    - { option: "repo1-path", value: "/var/lib/pgbackrest" }
+    - { option: "repo1-retention-full", value: "4" }
+    - { option: "repo1-retention-archive", value: "4" }
+    - { option: "start-fast", value: "y" }
+    - { option: "stop-auto", value: "y" }
+    - { option: "resume", value: "n" }
+    - { option: "link-all", value: "y" }
+    - { option: "archive-check", value: "y" }
+    - { option: "archive-copy", value: "n" }
+    - { option: "backup-standby", value: "y" }
+#    - { option: "", value: "" }
+# the stanza section will be generated automatically
+
 pgbackrest_patroni_cluster_restore_command:
   '/usr/bin/pgbackrest --stanza={{ pgbackrest_stanza }} --delta restore'  # restore from latest backup
 #  '/usr/bin/pgbackrest --stanza={{ pgbackrest_stanza }} --type=time "--target=2020-06-01 11:00:00+03" --delta restore'  # Point-in-Time Recovery (example)
 
+# By default, the cron jobs  is created on the database server.
+# If 'repo_host' is defined, the cron jobs  will be created on the pgabckrest server.
+pgbackrest_cron_jobs:
+  - name: "pgBackRest: Full Backup"
+    file: /etc/cron.d/pgbackrest
+    user: "postgres"
+    minute: "30"
+    hour: "6"
+    day: "*"
+    month: "*"
+    weekday: "0"
+    job: "pgbackrest --type=full --stanza={{ pgbackrest_stanza }} backup"
+    # job: "if [ $(psql -tAXc 'select pg_is_in_recovery()') = 'f' ]; then pgbackrest --type=full --stanza={{ pgbackrest_stanza }} backup; fi"
+  - name: "pgBackRest: Diff Backup"
+    file: /etc/cron.d/pgbackrest
+    user: "postgres"
+    minute: "30"
+    hour: "6"
+    day: "*"
+    month: "*"
+    weekday: "1-6"
+    job: "pgbackrest --type=diff --stanza={{ pgbackrest_stanza }} backup"
+    # job: "if [ $(psql -tAXc 'select pg_is_in_recovery()') = 'f' ]; then pgbackrest --type=diff --stanza={{ pgbackrest_stanza }} backup; fi"
+
 cron_jobs: []
-#  - name: "pgBackRest: Full Backup"
-#    file: /etc/cron.d/pgbackrest
-#    user: "{{ patroni_superuser_username }}"
-#    minute: "30"
-#    hour: "6"
-#    day: "*"
-#    month: "*"
-#    weekday: "0"
-#    job: "if [ $(psql -tAXc 'select pg_is_in_recovery()') = 'f' ]; then pgbackrest --type=full --stanza={{ pgbackrest_stanza }} backup; fi"
-#  - name: "pgBackRest: Diff Backup"
-#    file: /etc/cron.d/pgbackrest
-#    user: "{{ patroni_superuser_username }}"
-#    minute: "30"
-#    hour: "6"
-#    day: "*"
-#    month: "*"
-#    weekday: "1-6"
-#    job: "if [ $(psql -tAXc 'select pg_is_in_recovery()') = 'f' ]; then pgbackrest --type=diff --stanza={{ pgbackrest_stanza }} backup; fi"
 # Example for walg
 #  - name: "WAL-G: Create daily backup"
-#    user: "{{ patroni_superuser_username }}"
+#    user: "postgres"
 #    file: /etc/cron.d/walg
 #    minute: "30"
 #    hour: "6"

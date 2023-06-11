@@ -120,7 +120,6 @@
         owner: postgres
         group: postgres
         mode: "0644"
-  when: "'postgres_cluster' in group_names"
   tags: pgbackrest, pgbackrest_conf
 
 # if pgbackrest_repo_type: "posix" and pgbackrest_repo_host is set
@@ -130,6 +129,12 @@
     - pgbackrest_repo_host is defined
     - pgbackrest_repo_host | length > 0
   tags: pgbackrest, pgbackrest_ssh_keys
+
+- import_tasks: cron.yml
+  when:
+    - pgbackrest_cron_jobs is defined
+    - pgbackrest_cron_jobs | length > 0
+  tags: pgbackrest, pgbackrest_cron
 
 # - import_tasks: bootstrap_script.yml
 #  when:
