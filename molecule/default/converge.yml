@@ -68,9 +68,9 @@
         path: /run/nologin
         state: absent
 
-- name: Deploy PostgreSQL HA Cluster
+- name: Deploy PostgreSQL Cluster
   import_playbook: ../../deploy_pgcluster.yml
 
 - name: PostgreSQL upgrade test
   import_playbook: ../../upgrade_postgres.yml
-  
+
