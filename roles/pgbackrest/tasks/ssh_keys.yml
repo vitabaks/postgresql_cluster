@@ -1,5 +1,27 @@
 ---
 
+- name: Ensure that the openssh-client package is installed
+  become: true
+  become_user: root
+  package:
+    name: openssh-client
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Ensure that the openssh-clients package is installed
+  become: true
+  become_user: root
+  package:
+    name: openssh-clients
+    state: present
+  when: ansible_os_family == "RedHat"
+
+- name: Ensure "{{ pgbackrest_repo_user }}" exists on pgbackrest server
+  user:
+    name: "{{ pgbackrest_repo_user }}"
+    state: present
+  when: "'pgbackrest' in group_names"
+
 - name: ssh_keys | Ensure ssh key are created for "{{ pgbackrest_repo_user }}" user on pgbackrest server
   user:
     name: "{{ pgbackrest_repo_user }}"
