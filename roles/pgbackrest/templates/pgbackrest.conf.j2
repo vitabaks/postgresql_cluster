@@ -1,26 +1,10 @@
 [global]
-{% if inventory_hostname in groups['postgres_cluster'] %}
 {% for global in pgbackrest_conf.global %}
 {{ global.option }}={{ global.value }}
 {% endfor %}
-{% endif %}
-{% if inventory_hostname in groups['pgbackrest'] and pgbackrest_repo_host | default('') | length > 0 %}
-{% for global in pgbackrest_server_conf.global %}
-{{ global.option }}={{ global.value }}
-{% endfor %}
-{% endif %}
 
 [{{ pgbackrest_stanza }}]
-{% if inventory_hostname in groups['postgres_cluster'] %}
 {% for stanza in pgbackrest_conf.stanza %}
 {{ stanza.option }}={{ stanza.value }}
 {% endfor %}
-{% endif %}
-{% if inventory_hostname in groups['pgbackrest'] and pgbackrest_repo_host | default('') | length > 0 %}
-{% for host in groups['postgres_cluster'] %}
-pg{{ loop.index }}-host={{ host }}
-pg{{ loop.index }}-port={{ postgresql_port }}
-pg{{ loop.index }}-path={{ postgresql_data_dir }}
-{% endfor %}
-{% endif %}
 

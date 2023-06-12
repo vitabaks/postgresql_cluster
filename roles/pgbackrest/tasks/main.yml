@@ -120,6 +120,44 @@
         owner: postgres
         group: postgres
         mode: "0644"
+  when: "'postgres_cluster' in group_names"
+  tags: pgbackrest, pgbackrest_conf
+
+# Dedicated pgbackrest server (if "repo_host" is set)
+- block:
+    - name: Ensure config directory exist
+      file:
+        path: "{{ pgbackrest_conf_file | dirname }}"
+        state: directory
+        owner: "{{ pgbackrest_repo_user }}"
+        group: "{{ pgbackrest_repo_user }}"
+
+    - name: Ensure stanza config directory exist
+      file:
+        path: "{{ pgbackrest_conf_file | dirname }}/conf.d"
+        state: directory
+        owner: "{{ pgbackrest_repo_user }}"
+        group: "{{ pgbackrest_repo_user }}"
+
+    - name: "Generate global conf file {{ pgbackrest_conf_file }}"
+      template:
+        src: pgbackrest.server.conf.j2
+        dest: "{{ pgbackrest_conf_file }}"
+        owner: "{{ pgbackrest_repo_user }}"
+        group: "{{ pgbackrest_repo_user }}"
+        mode: "0644"
+
+    - name: "Generate stanza conf file {{ pgbackrest_conf_file | dirname }}/conf.d/{{ pgbackrest_stanza }}.conf"
+      template:
+        src: pgbackrest.server.stanza.conf.j2
+        dest: "{{ pgbackrest_conf_file | dirname }}/conf.d/{{ pgbackrest_stanza }}.conf"
+        owner: "{{ pgbackrest_repo_user }}"
+        group: "{{ pgbackrest_repo_user }}"
+        mode: "0644"
+  when:
+    - "'pgbackrest' in group_names"
+    - pgbackrest_repo_host is defined
+    - pgbackrest_repo_host | length > 0
   tags: pgbackrest, pgbackrest_conf
 
 # if pgbackrest_repo_type: "posix" and pgbackrest_repo_host is set
