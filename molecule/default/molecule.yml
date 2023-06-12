@@ -13,13 +13,13 @@ platforms:
         ipv4_address: 10.172.0.20
     exposed_ports:
       - 22/tcp
-      - 2379/tcp  # if dcs_type: "etcd"
-      - 2380/tcp  # if dcs_type: "etcd"
-      - 8300/tcp  # if dcs_type: "consul"
-      - 8301/tcp  # if dcs_type: "consul"
-      - 8302/tcp  # if dcs_type: "consul"
-      - 8500/tcp  # if dcs_type: "consul"
-      - 8600/tcp  # if dcs_type: "consul"
+      - 2379/tcp # if dcs_type: "etcd"
+      - 2380/tcp # if dcs_type: "etcd"
+      - 8300/tcp # if dcs_type: "consul"
+      - 8301/tcp # if dcs_type: "consul"
+      - 8302/tcp # if dcs_type: "consul"
+      - 8500/tcp # if dcs_type: "consul"
+      - 8600/tcp # if dcs_type: "consul"
       - 8008/tcp
       - 5432/tcp
       - 6432/tcp
