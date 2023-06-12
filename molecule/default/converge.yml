@@ -73,4 +73,3 @@
 
 - name: PostgreSQL upgrade test
   import_playbook: ../../upgrade_postgres.yml
-
