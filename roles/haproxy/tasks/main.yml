@@ -277,7 +277,7 @@
     - name: Build HAProxy
       become: true
       become_user: root
-      make:
+      community.general.make:
         chdir: "/tmp/{{ haproxy_src_repo.split('.tar.gz')[0] | basename }}"
         params:
           TARGET: "{{ target_linux }}"
@@ -297,7 +297,7 @@
     - name: Install HAProxy
       become: true
       become_user: root
-      make:
+      community.general.make:
         chdir: "/tmp/{{ haproxy_src_repo.split('.tar.gz')[0] | basename }}"
         target: install
   when: installation_method == "repo" and haproxy_installation_method == "src"
@@ -316,7 +316,7 @@
     - name: Build HAProxy
       become: true
       become_user: root
-      make:
+      community.general.make:
         chdir: "/tmp/{{ haproxy_src_file.split('.tar.gz')[0] | basename }}"
         params:
           TARGET: "{{ target_linux }}"
@@ -336,7 +336,7 @@
     - name: Install HAProxy
       become: true
       become_user: root
-      make:
+      community.general.make:
         chdir: "/tmp/{{ haproxy_src_file.split('.tar.gz')[0] | basename }}"
         target: install
   when: installation_method == "file" and haproxy_installation_method == "src"
@@ -344,7 +344,7 @@
 
 # Configure
 - name: Make sure the kernel parameter "net.ipv4.ip_nonlocal_bind" are enabled
-  sysctl:
+  ansible.posix.sysctl:
     name: "net.ipv4.ip_nonlocal_bind"
     value: "1"
     sysctl_set: true
@@ -503,13 +503,13 @@
         - haproxy_installation_method == "rpm"
 
     - name: selinux | set haproxy_connect_any flag to enable tcp connections
-      seboolean:
+      ansible.posix.seboolean:
         name: haproxy_connect_any
         state: true
         persistent: true
 
     - name: selinux | change the haproxy_t domain to permissive
-      selinux_permissive:
+      community.general.selinux_permissive:
         name: haproxy_t
         permissive: true
   when: ansible_selinux.status is defined and ansible_selinux.status == 'enabled'

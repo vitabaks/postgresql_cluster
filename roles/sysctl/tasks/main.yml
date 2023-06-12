@@ -10,7 +10,7 @@
       loop: "{{ hostvars[inventory_hostname].group_names }}"
 
     - name: Setting kernel parameters
-      sysctl:
+      ansible.posix.sysctl:
         name: "{{ item.name }}"
         value: "{{ item.value }}"
         sysctl_set: true

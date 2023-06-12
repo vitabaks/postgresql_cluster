@@ -11,7 +11,7 @@
     dest: "{{ postgresql_home_dir }}/.pgpass"
     owner: postgres
     group: postgres
-    mode: 0600
+    mode: "0600"
   when:
     - postgresql_pgpass is defined
     - postgresql_pgpass | length > 0

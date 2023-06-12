@@ -19,7 +19,7 @@
     consul_node_role: "{{ consul_node_role }}"
 
 - name: (Windows) Read bootstrapped state
-  win_stat:
+  ansible.windows.win_stat:
     path: "{{ consul_bootstrap_state }}"
   register: bootstrap_state
   ignore_errors: true
@@ -29,12 +29,12 @@
   import_tasks: dirs.yml
 
 - name: (Windows) Check for existing Consul binary
-  win_stat:
+  ansible.windows.win_stat:
     path: "{{ consul_binary }}"
   register: consul_binary_installed
 
 - name: (Windows) Get current Consul version
-  win_command: "{{ consul_binary }} --version"
+  ansible.windows.win_command: "{{ consul_binary }} --version"
   changed_when: false
   when:
     - not consul_force_install
@@ -80,7 +80,7 @@
       copy:
         content: "{{ consul_raw_key }}"
         dest: '/tmp/consul_raw.key'
-        mode: 0600
+        mode: "0600"
       become: false
       vars:
         ansible_become: false
@@ -92,16 +92,15 @@
 
     # Generate new key if non was found
     - block:
-
         - name: (Windows) Generate gossip encryption key
-          win_shell: "{{ consul_binary }} keygen"
+          ansible.windows.win_shell: "{{ consul_binary }} keygen"
           register: consul_keygen
 
         - name: (Windows) Write key locally to share with other nodes
           copy:
             content: "{{ consul_keygen.stdout }}"
             dest: '/tmp/consul_raw.key'
-            mode: 0600
+            mode: "0600"
           become: false
           vars:
             ansible_become: false
@@ -152,22 +151,22 @@
 
 - block:
     - name: Convert consul_binary from Unix -> Windows
-      win_stat:
+      ansible.windows.win_stat:
         path: "{{ consul_binary }}"
       register: consul_binary_win
 
     - name: Convert consul_config_path from Unix -> Windows
-      win_stat:
+      ansible.windows.win_stat:
         path: "{{ consul_config_path }}"
       register: consul_config_path_win
 
     - name: Convert consul_configd_path from Unix -> Windows
-      win_stat:
+      ansible.windows.win_stat:
         path: "{{ consul_configd_path }}"
       register: consul_configd_path_win
 
     - name: Create Consul as a service
-      win_service:
+      ansible.windows.win_service:
         name: Consul
         path: "{{ consul_binary_win.stat.path }} agent \
           -config-file={{ consul_config_path_win.stat.path }}\\config.json \
@@ -178,12 +177,12 @@
         state: started
 
     - name: (Windows) Check Consul HTTP API
-      win_wait_for:
+      ansible.windows.win_wait_for:
         delay: 5
         port: 8500
 
     - name: (Windows) Create bootstrapped state file
-      win_file:
+      ansible.windows.win_file:
         dest: "{{ consul_bootstrap_state }}"
         state: touch
       when: ansible_os_family == "Windows"

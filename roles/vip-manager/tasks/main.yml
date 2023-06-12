@@ -79,7 +79,7 @@
     dest: "{{ vip_manager_conf }}"
     owner: postgres
     group: postgres
-    mode: 0644
+    mode: "0644"
   notify: "restart vip-manager"
   when: existing_pgcluster is not defined or not existing_pgcluster|bool
   tags: vip, vip_manager, vip_manager_conf
@@ -121,7 +121,7 @@
     dest: /etc/systemd/system/vip-manager.service
     owner: postgres
     group: postgres
-    mode: 0644
+    mode: "0644"
   notify: "restart vip-manager"
   tags: vip, vip_manager, vip_manager_service
 

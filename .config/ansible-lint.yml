@@ -3,7 +3,6 @@ skip_list:
   - command-instead-of-module # Using command rather than module where necessary
   - command-instead-of-shell # Using command rather than shell where necessary
   - experimental # all rules tagged as experimental
-  - fqcn[action]
   - fqcn[action-core]
   - ignore-errors
   - jinja[invalid] # TODO
@@ -13,22 +12,13 @@ skip_list:
   - name[missing] # All tasks should be named.
   - name[template] # Rule for checking task and play names
   - no-changed-when
-  - no-free-form
   - no-handler
   - no-relative-paths
   - package-latest
   - risky-file-permissions # TODO
   - role-name
-  - role-name[path]
-  - run-once[task]
-  - schema[tasks]
   - yaml[line-length]
-  - yaml[octal-values]
-  - yaml[trailing-spaces]
-  - yaml[truthy]
 
 exclude_paths:
-  - ../roles/consul/ # TODO - https://github.com/ansible-community/ansible-consul/pull/520
   - ../.venv
-# https://ansible-lint.readthedocs.io/configuring/
-# https://ansible-lint.readthedocs.io/rules/
+  - ../.github

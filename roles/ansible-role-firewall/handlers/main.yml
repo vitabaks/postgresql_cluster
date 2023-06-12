@@ -1,3 +1,5 @@
 ---
 - name: restart firewall
-  service: name=firewall state=restarted
+  service:
+    name: firewall
+    state: restarted

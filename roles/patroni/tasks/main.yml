@@ -267,7 +267,7 @@
     state: directory
     owner: postgres
     group: postgres
-    mode: 0750
+    mode: "0750"
   tags: patroni, patroni_conf
 
 - name: Generate conf file "/etc/patroni/patroni.yml"
@@ -276,7 +276,7 @@
     dest: /etc/patroni/patroni.yml
     owner: postgres
     group: postgres
-    mode: 0640
+    mode: "0640"
   when: existing_pgcluster is not defined or not existing_pgcluster|bool
   tags: patroni, patroni_conf
 
@@ -286,7 +286,7 @@
     owner: postgres
     group: postgres
     state: directory
-    mode: 0750
+    mode: "0750"
   when: patroni_log_destination == 'logfile'
   tags: patroni, patroni_conf
 
@@ -306,7 +306,7 @@
         dest: /etc/patroni/patroni.yml
         owner: postgres
         group: postgres
-        mode: 0640
+        mode: "0640"
 
     - name: Remove patroni.yml conf files from localhost
       run_once: true
@@ -355,14 +355,14 @@
     dest: /etc/systemd/system/patroni.service
     owner: postgres
     group: postgres
-    mode: 0644
+    mode: "0644"
   tags: patroni, patroni_conf, patroni_service
 
 - name: Prepare PostgreSQL | create statistics directory (if not already exists)
   file:
     path: "{{ postgresql_stats_temp_directory_path }}"
     state: directory
-    mode: 01777
+    mode: "01777"
   when:
     - postgresql_stats_temp_directory_path is defined
     - postgresql_stats_temp_directory_path != 'none'
@@ -370,7 +370,7 @@
   tags: patroni, pgsql_stats_tmp
 
 - name: Prepare PostgreSQL | mount the statistics directory in memory (tmpfs)
-  mount:
+  ansible.posix.mount:
     path: "{{ postgresql_stats_temp_directory_path }}"
     src: tmpfs
     fstype: tmpfs
@@ -388,7 +388,7 @@
     owner: postgres
     group: postgres
     state: directory
-    mode: 0700
+    mode: "0700"
   tags: patroni
 
 - name: Prepare PostgreSQL | make sure the custom WAL directory "{{ postgresql_wal_dir }}" exists
@@ -397,7 +397,7 @@
     owner: postgres
     group: postgres
     state: directory
-    mode: 0700
+    mode: "0700"
   when: postgresql_wal_dir is defined and postgresql_wal_dir | length > 0
   tags: patroni, custom_wal_dir
 
@@ -408,7 +408,7 @@
         owner: postgres
         group: postgres
         state: directory
-        mode: 0700
+        mode: "0700"
 
       # for Debian based distros only
       # patroni bootstrap failure is possible if the postgresql config files are missing
@@ -440,7 +440,7 @@
         state: "{{ item }}"
         owner: postgres
         group: postgres
-        mode: 0700
+        mode: "0700"
       loop:
         - absent
         - directory
@@ -453,7 +453,7 @@
         state: "{{ item }}"
         owner: postgres
         group: postgres
-        mode: 0700
+        mode: "0700"
       loop:
         - absent
         - directory
@@ -509,7 +509,7 @@
             dest: "{{ postgresql_conf_dir }}/pg_hba.conf"
             owner: postgres
             group: postgres
-            mode: 0640
+            mode: "0640"
 
         - name: Prepare PostgreSQL | reload for apply the pg_hba.conf
           become: true
@@ -519,7 +519,7 @@
           failed_when: psql_reload_result.rc != 0
 
         - name: Prepare PostgreSQL | make sure the user "{{ patroni_superuser_username }}" are present, and password does not differ from the specified
-          postgresql_user:
+          community.postgresql.postgresql_user:
             db: postgres
             name: "{{ patroni_superuser_username }}"
             password: "{{ patroni_superuser_password }}"
@@ -532,7 +532,7 @@
           become_user: postgres
 
         - name: Prepare PostgreSQL | make sure the user "{{ patroni_replication_username }}" are present, and password does not differ from the specified
-          postgresql_user:
+          community.postgresql.postgresql_user:
             db: postgres
             name: "{{ patroni_replication_username }}"
             password: "{{ patroni_replication_password }}"
@@ -773,7 +773,7 @@
         dest: "{{ postgresql_conf_dir }}/pg_hba.conf"
         owner: postgres
         group: postgres
-        mode: 0640
+        mode: "0640"
   when: patroni_cluster_bootstrap_method != "initdb" and
         postgresql_conf_dir != postgresql_data_dir and
         (existing_pgcluster is not defined or not existing_pgcluster|bool)
@@ -838,7 +838,7 @@
         dest: "{{ postgresql_conf_dir }}/pg_hba.conf"
         owner: postgres
         group: postgres
-        mode: 0640
+        mode: "0640"
       register: generate_pg_hba
       when: is_master | bool or
             ((not is_master | bool and postgresql_conf_dir != postgresql_data_dir)
@@ -866,7 +866,7 @@
       when: is_master | bool
 
     - name: Make sure the superuser and replication users are present, and password does not differ from the specified
-      postgresql_user:
+      community.postgresql.postgresql_user:
         db: postgres
         name: "{{ item.name }}"
         password: "{{ item.password }}"
@@ -887,7 +887,7 @@
         - (patroni_replication_username and patroni_replication_password) | length > 0
 
     - name: Make sure the postgresql users are present, and password does not differ from the specified
-      postgresql_user:
+      community.postgresql.postgresql_user:
         db: postgres
         name: "{{ item.name }}"
         password: "{{ item.password }}"
@@ -941,7 +941,7 @@
         dest: "{{ postgresql_conf_dir }}/pg_hba.conf"
         owner: postgres
         group: postgres
-        mode: 0640
+        mode: "0640"
   when: existing_pgcluster is defined and existing_pgcluster|bool
         and postgresql_conf_dir != postgresql_data_dir
   tags: patroni, pg_hba, pg_hba_generate
@@ -987,7 +987,7 @@
         content: "manual"
         owner: postgres
         group: postgres
-        mode: 0644
+        mode: "0644"
 
     - name: Disable "postgresql@{{ postgresql_version }}-{{ postgresql_cluster_name }}" service
       systemd:

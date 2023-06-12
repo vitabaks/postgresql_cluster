@@ -8,7 +8,7 @@
         state: directory
         owner: "{{ consul_user }}"
         group: "{{ consul_group }}"
-        mode: 0755
+        mode: "0755"
 
     - name: Copy CA certificate
       copy:
@@ -17,7 +17,7 @@
         dest: "{{ consul_tls_dir }}/{{ consul_tls_ca_crt | basename }}"
         owner: "{{ consul_user }}"
         group: "{{ consul_group }}"
-        mode: 0644
+        mode: "0644"
       notify: restart consul
 
   when:
@@ -31,7 +31,7 @@
         dest: "{{ consul_tls_dir }}/{{ consul_tls_server_crt | basename }}"
         owner: "{{ consul_user }}"
         group: "{{ consul_group }}"
-        mode: 0644
+        mode: "0644"
       notify: restart consul
 
     - name: Copy server key
@@ -41,7 +41,7 @@
         dest: "{{ consul_tls_dir }}/{{ consul_tls_server_key | basename }}"
         owner: "{{ consul_user }}"
         group: "{{ consul_group }}"
-        mode: 0600
+        mode: "0600"
       notify: restart consul
 
   when:

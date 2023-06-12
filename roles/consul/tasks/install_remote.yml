@@ -58,7 +58,7 @@
         dest: "{{ consul_bin_path }}"
         owner: "{{ consul_user }}"
         group: "{{ consul_group }}"
-        mode: 0755
+        mode: "0755"
       register: consul_install
       notify:
         - restart consul

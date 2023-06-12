@@ -2,14 +2,14 @@
 # File: install_remote.yml - package installation tasks for Consul
 
 - name: Verify TLS1.2 is used
-  win_regedit:
+  ansible.windows.win_regedit:
     path: HKLM:\SOFTWARE\Microsoft\.NETFramework\v4.0.30319
     name: SchUseStrongCrypto
     data: 1
     type: dword
 
 - name: Create temporary directory to download Consul
-  win_tempfile:
+  ansible.windows.win_tempfile:
     state: directory
     prefix: ansible-consul.
   register: consul_temp_dir
@@ -17,33 +17,33 @@
 - name: Download and unarchive Consul
   block:
     - name: Read Consul package checksum file
-      win_stat:
+      ansible.windows.win_stat:
         path: "{{ consul_temp_dir.path }}\\consul_{{ consul_version }}_SHA256SUMS"
       register: consul_checksum
       tags: installation
 
     - name: Download Consul package checksum file
-      win_get_url:
+      ansible.windows.win_get_url:
         url: "{{ consul_checksum_file_url }}"
         dest: "{{ consul_temp_dir.path }}\\consul_{{ consul_version }}_SHA256SUMS"
       tags: installation
       when: not consul_checksum.stat.exists | bool
 
     - name: Read Consul package checksum
-      win_shell: "findstr {{ consul_pkg }} {{ consul_temp_dir.path }}\\consul_{{ consul_version }}_SHA256SUMS"
+      ansible.windows.win_shell: "findstr {{ consul_pkg }} {{ consul_temp_dir.path }}\\consul_{{ consul_version }}_SHA256SUMS"
       args:
         chdir: "{{ consul_temp_dir.path }}"
       register: consul_pkg_checksum
       tags: installation
 
     - name: Download Consul
-      win_get_url:
+      ansible.windows.win_get_url:
         url: "{{ consul_zip_url }}"
         dest: "{{ consul_temp_dir.path }}\\{{ consul_pkg }}"
       tags: installation
 
     - name: Calculate checksum
-      win_stat:
+      ansible.windows.win_stat:
         path: "{{ consul_temp_dir.path }}\\{{ consul_pkg }}"
         checksum_algorithm: sha256
       register: consul_pkg_hash
@@ -56,13 +56,13 @@
         - consul_pkg_hash.stat.checksum != (consul_pkg_checksum.stdout.split(' ') | first)
 
     - name: Unarchive Consul and install binary
-      win_unzip:
+      community.windows.win_unzip:
         src: "{{ consul_temp_dir.path }}\\{{ consul_pkg }}"
         dest: "{{ consul_bin_path }}"
       tags: installation
   always:
     - name: Cleanup
-      win_file:
+      ansible.windows.win_file:
         path: "{{ consul_temp_dir.path }}"
         state: absent
       tags: installation

@@ -16,7 +16,7 @@
     dest: /lib/systemd/system/consul_snapshot.service
     owner: root
     group: root
-    mode: 0644
+    mode: "0644"
   register: systemd_unit
   notify: start snapshot
   when:
@@ -31,7 +31,7 @@
     dest: "{{ consul_config_path }}/consul_snapshot.json"
     owner: "{{ consul_user }}"
     group: "{{ consul_group }}"
-    mode: 0644
+    mode: "0644"
   notify: start snapshot
   when:
     - ansible_service_mgr == "systemd"
@@ -50,4 +50,4 @@
     path: "{{ consul_snapshot_storage }}"
     owner: "{{ consul_user }}"
     group: "{{ consul_group }}"
-    mode: 0744
+    mode: "0744"

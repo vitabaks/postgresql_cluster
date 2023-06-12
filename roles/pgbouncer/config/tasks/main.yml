@@ -5,7 +5,7 @@
     state: directory
     owner: postgres
     group: postgres
-    mode: 0750
+    mode: "0750"
   tags: pgbouncer, pgbouncer_conf
 
 - name: Update pgbouncer.ini
@@ -14,7 +14,7 @@
     dest: "{{ pgbouncer_conf_dir }}/pgbouncer.ini"
     owner: postgres
     group: postgres
-    mode: 0640
+    mode: "0640"
   notify: "restart pgbouncer"
   when: existing_pgcluster is not defined or not existing_pgcluster|bool
   tags: pgbouncer, pgbouncer_conf

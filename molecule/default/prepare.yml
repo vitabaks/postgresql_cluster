@@ -5,7 +5,7 @@
   become: false
   tasks:
     - name: "Create docker network: test_docker_network"
-      docker_network:
+      community.docker.docker_network:
         name: test_docker_network
         driver: bridge
         driver_options:
