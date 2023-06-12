@@ -1,0 +1,8 @@
+[global]
+{% for global in pgbackrest_server_conf.global %}
+{{ global.option }}={{ global.value }}
+{% endfor %}
+
+# Include stanzas configuration files
+include-path = {{ pgbackrest_conf_file | dirname }}/conf.d
+

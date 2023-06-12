@@ -1,0 +1,38 @@
+---
+
+- name: Add pgbackrest cron jobs on database server
+  cron:
+    cron_file: "{{ item.file | default('') }}"
+    user: "{{ item.user | default('postgres')  }}"
+    minute: "{{ item.minute | default('*') }}"
+    hour: "{{ item.hour | default('*') }}"
+    day: "{{ item.day | default('*') }}"
+    month: "{{ item.month | default('*') }}"
+    weekday: "{{ item.weekday | default('*') }}"
+    name: "{{ item.name }}"
+    disabled: "{{ item.disabled | default(False) }}"
+    state: "{{ item.state | default('present') }}"
+    job: "{{ item.job }}"
+  loop: "{{ pgbackrest_cron_jobs }}"
+  when:
+    - "'postgres_cluster' in group_names"
+    - pgbackrest_repo_host | default('') | length < 1
+
+# Dedicated pgbackrest server (if "repo_host" is set)
+- name: Add pgbackrest cron jobs on pgbackrest server
+  cron:
+    cron_file: "{{ item.file | default('') }}"
+    user: "{{ item.user | default('postgres')  }}"
+    minute: "{{ item.minute | default('*') }}"
+    hour: "{{ item.hour | default('*') }}"
+    day: "{{ item.day | default('*') }}"
+    month: "{{ item.month | default('*') }}"
+    weekday: "{{ item.weekday | default('*') }}"
+    name: "{{ item.name }}"
+    disabled: "{{ item.disabled | default(False) }}"
+    state: "{{ item.state | default('present') }}"
+    job: "{{ item.job }}"
+  loop: "{{ pgbackrest_cron_jobs }}"
+  when:
+    - "'pgbackrest' in group_names"
+    - pgbackrest_repo_host | default('') | length > 0
