@@ -450,6 +450,8 @@ pgbackrest_server_conf:
     - { option: "repo1-path", value: "/var/lib/pgbackrest" }
     - { option: "repo1-retention-full", value: "4" }
     - { option: "repo1-retention-archive", value: "4" }
+    - { option: "repo1-bundle", value: "y" }
+    - { option: "repo1-block", value: "y" }
     - { option: "start-fast", value: "y" }
     - { option: "stop-auto", value: "y" }
     - { option: "resume", value: "n" }
