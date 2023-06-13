@@ -6,7 +6,7 @@
   file:
     path: "{{ pg_new_datadir }}"
     state: directory
-    mode: 0700
+    mode: "0700"
     group: postgres
     owner: postgres
 
@@ -28,7 +28,7 @@
       file:
         path: "{{ pg_new_datadir }}"
         state: "{{ item }}"
-        mode: 0700
+        mode: "0700"
         group: postgres
         owner: postgres
       loop:
