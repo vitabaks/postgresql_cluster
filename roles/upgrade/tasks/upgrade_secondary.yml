@@ -1,11 +1,17 @@
 ---
 # Upgrade with rsync (hard-links)
 
+# This task performs the upgrade of PostgreSQL on the replica servers using the RSync utility.
+# It follows these steps:
+# 1. Retrieve the list of target secondary servers from the inventory, which are the servers where the upgrade will be performed.
+# 2. Count the number of target secondary servers to determine the parallel execution limit.
+# 3. Use xargs to execute the RSync command in parallel for each target secondary server.
+
 - name: Make sure that the new data directory "{{ pg_new_datadir }}" are empty on the Replica
   file:
     path: "{{ pg_new_datadir }}"
     state: "{{ item }}"
-    mode: 0700
+    mode: "0700"
     group: postgres
     owner: postgres
   loop:
@@ -16,16 +22,31 @@
 
 # If the source and target directories are inside versioned directories
 # (example: /pgdata/<pg_old_version>/main -> /pgdata/<pg_new_version>/main)
-- name: "Upgrade the PostgreSQL on the Replica (using rsync --hard-links)"
-  become: true
-  become_user: postgres
-  shell: >
-    rsync -e "ssh -o StrictHostKeyChecking=no" --archive --delete --hard-links --size-only --no-inc-recursive --verbose
-    {{ pg_upper_datadir }}/{{ pg_old_version }} {{ pg_upper_datadir }}/{{ pg_new_version }} {{ item }}:{{ pg_upper_datadir }}
-  args:
-    executable: /bin/bash
-  register: rsync_result
-  loop: "{{ groups.secondary | list }}"
+- block:
+    - name: "Upgrade the PostgreSQL on the Replica (using rsync --hard-links)"
+      become: true
+      become_user: postgres
+      vars:
+        secondary_servers: "{{ groups['secondary'] | join('\n') }}"
+        secondary_count: "{{ groups['secondary'] | length }}"
+      shell: |
+        set -o pipefail;
+        echo -e "{{ secondary_servers }}" | xargs -I {} -P "{{ secondary_count }}" -n 1 \
+        rsync -e 'ssh -o StrictHostKeyChecking=no' --archive --delete --hard-links --size-only --no-inc-recursive \
+        {{ pg_upper_datadir }}/{{ pg_old_version }} {{ pg_upper_datadir }}/{{ pg_new_version }} {}:{{ pg_upper_datadir }}
+      args:
+        executable: /bin/bash
+      async: 3600  # run the command asynchronously with a maximum duration of 1 hour
+      poll: 0
+      register: rsync_result_1
+
+    - name: Wait for the rsync to complete.
+      async_status:
+        jid: "{{ rsync_result_1.ansible_job_id }}"
+      register: rsync_1_job_result
+      until: rsync_1_job_result.finished
+      retries: 1800
+      delay: 2
   when:
     - inventory_hostname in groups['primary']
     - pg_old_datadir|dirname == pg_upper_datadir + '/' + pg_old_version
@@ -33,16 +54,31 @@
 
 # If the source and target directories are non-versioned directories
 # (example: /pgdata/main -> /pgdata/main<pg_new_version>)
-- name: "Upgrade the PostgreSQL on the Replica (using rsync --hard-links)"
-  become: true
-  become_user: postgres
-  shell: >
-    rsync -e "ssh -o StrictHostKeyChecking=no" --archive --delete --hard-links --size-only --no-inc-recursive --verbose
-    {{ pg_old_datadir }} {{ pg_new_datadir }} {{ item }}:{{ pg_upper_datadir }}
-  args:
-    executable: /bin/bash
-  register: rsync_result
-  loop: "{{ groups.secondary | list }}"
+- block:
+    - name: "Upgrade the PostgreSQL on the Replica (using rsync --hard-links)"
+      become: true
+      become_user: postgres
+      vars:
+        secondary_servers: "{{ groups['secondary'] | join('\n') }}"
+        secondary_count: "{{ groups['secondary'] | length }}"
+      shell: |
+        set -o pipefail;
+        echo -e "{{ secondary_servers }}" | xargs -I {} -P "{{ secondary_count }}" -n 1 \
+        rsync -e 'ssh -o StrictHostKeyChecking=no' --archive --delete --hard-links --size-only --no-inc-recursive \
+        {{ pg_old_datadir }} {{ pg_new_datadir }} {}:{{ pg_upper_datadir }}
+      args:
+        executable: /bin/bash
+      async: 3600  # run the command asynchronously with a maximum duration of 1 hour
+      poll: 0
+      register: rsync_result_2
+
+    - name: Wait for the rsync to complete.
+      async_status:
+        jid: "{{ rsync_result_2.ansible_job_id }}"
+      register: rsync_2_job_result
+      until: rsync_2_job_result.finished
+      retries: 1800
+      delay: 2
   when:
     - inventory_hostname in groups['primary']
     - pg_old_datadir|dirname != pg_upper_datadir + '/' + pg_old_version
