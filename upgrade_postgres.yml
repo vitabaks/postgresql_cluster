@@ -30,7 +30,7 @@
       tags: always
     # Stop, if pg_old_version, pg_new_version are not defined
     - name: Make sure that the required variables are specified
-      run_once: true
+      run_once: true # noqa run-once
       debug:
         msg:
           - "One or more required variables have empty values."
@@ -40,7 +40,7 @@
       tags: always
     # Stop, if the directories of the old and new versions are the same
     - name: "Ensure pg_old and pg_new data and config dirs are not the same"
-      run_once: true
+      run_once: true # noqa run-once
       debug:
         msg:
           - "pg_old_datadir and pg_new_datadir, pg_old_confdir and pg_new_confdir must not be the same."
