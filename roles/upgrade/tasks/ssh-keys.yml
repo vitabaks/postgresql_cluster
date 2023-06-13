@@ -31,7 +31,7 @@
   changed_when: false
 
 - name: Add public SSH keys to authorized_keys
-  authorized_key:
+  ansible.posix.authorized_key:
     user: "{{ ssh_key_user }}"
     state: present
     key: "{{ lookup('pipe','cat files/*id_rsa.pub') }}"
