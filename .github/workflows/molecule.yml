@@ -16,6 +16,9 @@ jobs:
       fail-fast: false
       matrix:
         config:
+          - distro: debian12
+            tag: latest
+            namespace: geerlingguy
           - distro: debian11
             tag: latest
             namespace: geerlingguy
