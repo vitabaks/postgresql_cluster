@@ -13,6 +13,7 @@
   register: pg_cron_database_name
   when:
     - inventory_hostname in groups['primary']
+    - "'pg_cron' in pg_shared_preload_libraries.stdout"
 
 - name: Check if PostgreSQL is running
   command: "{{ pg_new_bindir }}/pg_ctl status -D {{ pg_new_datadir }}"
@@ -28,7 +29,7 @@
     -o "-p {{ (postgresql_port | int) + 1 }}
     -c unix_socket_directories='/tmp'
     -c shared_preload_libraries='{{ pg_shared_preload_libraries.stdout }}'
-    {% if pg_cron_database_name.stdout | length > 0 %}
+    {% if pg_cron_database_name.stdout | default('') | length > 0 %}
     -c cron.database_name='{{ pg_cron_database_name.stdout }}'
     {% endif %}
     -c config_file='{{ pg_new_confdir }}/postgresql.conf'"

@@ -1,6 +1,5 @@
 ---
 # TODO:
-# - PG 9.x support
 # - delete_old_cluster dir
 # - custom WAL dir symlink (pg_new_wal_dir)
 # - patroni cluster state pre-check
