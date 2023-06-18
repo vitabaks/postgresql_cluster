@@ -1,10 +1,20 @@
 ---
 
-- name: Set timezone to "{{ timezone }}"
-  become: true
-  become_method: sudo
-  community.general.timezone:
-    name: "{{ timezone }}"
+- block:
+    - name: Make sure that the tzdata package is installed
+      become: true
+      become_method: sudo
+      ansible.builtin.package:
+        name: tzdata
+        state: present
+      environment: "{{ proxy_env | default({}) }}"
+      when: installation_method == "repo"
+
+    - name: Set timezone to "{{ timezone }}"
+      become: true
+      become_method: sudo
+      community.general.timezone:
+        name: "{{ timezone }}"
   when: timezone is defined and timezone | length > 0
   tags: timezone
 
