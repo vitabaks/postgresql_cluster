@@ -16,7 +16,7 @@ ntp_servers: []
 #  - "10.128.64.45"
 
 timezone: ""
-# timezone: "UTC"
+# timezone: "Etc/UTC"
 # timezone: "America/New_York"
 # timezone: "Europe/Moscow"
 # timezone: "Europe/Berlin"
