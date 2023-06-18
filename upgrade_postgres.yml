@@ -2,6 +2,7 @@
 # TODO:
 # - delete_old_cluster dir
 # - custom WAL dir symlink (pg_new_wal_dir)
+# - tablespaces (rsync for replicas)
 # - patroni cluster state pre-check
 # - current_patroni_cluster_name
 # - pause pgbouncer pools
