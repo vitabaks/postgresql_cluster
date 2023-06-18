@@ -11,7 +11,7 @@
         swap_file_create: false # Added to prevent test failures in CI.
         sysctl_set: false # Added to prevent test failures in CI.
         nameservers: ["8.8.8.8", "9.9.9.9"]
-        timezone: "UTC"
+        timezone: "Etc/UTC"
         with_haproxy_load_balancing: true
         consul_node_role: server # if dcs_type: "consul"
         consul_bootstrap_expect: true # if dcs_type: "consul"
