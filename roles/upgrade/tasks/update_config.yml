@@ -158,7 +158,5 @@
     mode: '0600'
     force: true
     remote_src: true
-  when:
-    - inventory_hostname in groups['primary']
 
 ...
