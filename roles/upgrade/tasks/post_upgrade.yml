@@ -1,5 +1,26 @@
 ---
 
+- name: Ensure the current data directory is the new data directory
+  command: psql -tAXc "show data_directory"
+  changed_when: false
+  register: pg_current_datadir
+
+- name: Delete the old PostgreSQL data directory
+  file:
+    path: "{{ pg_old_datadir }}"
+    state: absent
+  when:
+    - ansible_os_family != "Debian"
+    - pg_new_datadir == pg_current_datadir.stdout | trim
+
+- name: Delete the old PostgreSQL data directory (perform pg_dropcluster)
+  command: >
+    /usr/bin/pg_dropcluster {{ pg_old_version }} {{ postgresql_cluster_name }}
+  failed_when: false
+  when:
+    - ansible_os_family == "Debian"
+    - pg_new_datadir == pg_current_datadir.stdout | trim
+
 - name: Check the Patroni cluster state
   run_once: true
   become: true
@@ -9,12 +30,14 @@
   changed_when: false
   environment:
     PATH: "{{ ansible_env.PATH }}:/usr/bin:/usr/local/bin"
+  when: inventory_hostname in groups['primary']
 
 - name: Check the current PostgreSQL version
   run_once: true
   command: psql -tAXc "select current_setting('server_version')"
   register: postgres_version
   changed_when: false
+  when: inventory_hostname in groups['primary']
 
 # Return the pg_hba.conf file to its original state (if it has been changed)
 - block:

@@ -1,6 +1,5 @@
 ---
 # TODO:
-# - delete_old_cluster dir
 # - custom WAL dir symlink (pg_new_wal_dir)
 # - tablespaces (rsync for replicas)
 # - patroni cluster state pre-check
@@ -310,8 +309,8 @@
     - post-checks
     - update-extensions
 
-- name: "(7/7) POST-UPGRADE: Analyze a PostgreSQL database (update optimizer statistics)"
-  hosts: 'primary'
+- name: "(7/7) POST-UPGRADE: Analyze a PostgreSQL database (update optimizer statistics) and Post-Upgrade tasks"
+  hosts: 'primary:secondary'
   gather_facts: false
   become: true
   become_user: postgres
