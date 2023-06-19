@@ -5,21 +5,60 @@
   changed_when: false
   register: pg_current_datadir
 
+# RedHat based
 - name: Delete the old PostgreSQL data directory
   file:
     path: "{{ pg_old_datadir }}"
     state: absent
   when:
-    - ansible_os_family != "Debian"
     - pg_new_datadir == pg_current_datadir.stdout | trim
+    - ansible_os_family == "RedHat"
 
+# Debian based (use pg_dropcluster)
 - name: Delete the old PostgreSQL data directory (perform pg_dropcluster)
   command: >
     /usr/bin/pg_dropcluster {{ pg_old_version }} {{ postgresql_cluster_name }}
   failed_when: false
   when:
-    - ansible_os_family == "Debian"
     - pg_new_datadir == pg_current_datadir.stdout | trim
+    - ansible_os_family == "Debian"
+
+# RedHat based
+- name: Remove old PostgreSQL packages
+  become: true
+  become_user: root
+  package:
+    name: "{{ item }}"
+    state: absent
+  loop: "{{ postgresql_packages | regex_replace(postgresql_version, pg_old_version) }}"
+  register: package_remove
+  until: package_remove is success
+  delay: 5
+  retries: 3
+  ignore_errors: true
+  when:
+    - item is search(pg_old_version)
+    - pg_old_packages_remove | bool
+    - ansible_os_family == "RedHat"
+
+# Debian based (use purge option)
+- name: Remove old PostgreSQL packages
+  become: true
+  become_user: root
+  apt:
+    name: "{{ item }}"
+    state: absent
+    purge: true
+  loop: "{{ postgresql_packages | regex_replace(postgresql_version, pg_old_version) }}"
+  register: apt_remove
+  until: apt_remove is success
+  delay: 5
+  retries: 3
+  ignore_errors: true
+  when:
+    - item is search(pg_old_version)
+    - pg_old_packages_remove | bool
+    - ansible_os_family == "Debian"
 
 - name: Check the Patroni cluster state
   run_once: true

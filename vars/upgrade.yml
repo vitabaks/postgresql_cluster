@@ -39,6 +39,8 @@ pg_new_packages: "{{ postgresql_packages | regex_replace(postgresql_version, pg_
 #  - postgresql-contrib-{{ pg_new_version }}
 #  - postgresql-{{ pg_new_version }}-repack"
 
+pg_old_packages_remove: true  # remove old postgresql packages after upgrade
+
 pg_start_stop_timeout: 1800  # 30 minutes
 patroni_config_file: /etc/patroni/patroni.yml
 
