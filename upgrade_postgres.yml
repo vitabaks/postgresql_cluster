@@ -5,7 +5,6 @@
 # - patroni cluster state pre-check
 # - current_patroni_cluster_name
 # - pause pgbouncer pools
-# - pgbackrest --stanza=<stanza_name> stanza-upgrade (if pgbackrest_install: true)
 # - README
 - name: "Upgrade PostgreSQL {{ pg_old_version }} to version {{ pg_new_version }} (PostgreSQL HA Cluster: {{ patroni_cluster_name }})"
   hosts: postgres_cluster
