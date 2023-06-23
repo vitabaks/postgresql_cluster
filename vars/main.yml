@@ -52,7 +52,7 @@ dcs_exists: false  # or 'true' if you don't want to deploy a new etcd cluster
 dcs_type: "etcd"  # or 'consul'
 
 # if dcs_type: "etcd" and dcs_exists: false
-etcd_version: "3.5.7"  # version for deploy etcd cluster
+etcd_version: "3.5.9"  # version for deploy etcd cluster
 etcd_data_dir: "/var/lib/etcd"
 etcd_cluster_name: "etcd-{{ patroni_cluster_name }}"  # ETCD_INITIAL_CLUSTER_TOKEN
 
@@ -67,7 +67,7 @@ patroni_etcd_hosts: []  # list of servers of an existing etcd cluster
 # https://patroni.readthedocs.io/en/latest/SETTINGS.html#consul
 
 # if dcs_type: "consul"
-consul_version: "1.14.3"
+consul_version: "1.14.7"
 consul_config_path: "/etc/consul"
 consul_configd_path: "{{ consul_config_path }}/conf.d"
 consul_data_path: "/var/lib/consul"
