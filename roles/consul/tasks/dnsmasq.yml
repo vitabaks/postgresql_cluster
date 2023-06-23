@@ -41,13 +41,13 @@
     mode: "0644"
   become: true
   notify: restart dnsmasq
-  when: dnsmasq_item.when
-  tags: dnsmasq
+  when: "{{ dnsmasq_item.when }}" # noqa no-jinja-when
   loop:
     - { dest: '/etc/dnsmasq.d/10-consul', group: 'root', when: ansible_os_family|lower != "freebsd" }
     - { dest: '/usr/local/etc/dnsmasq.d/consul.conf', group: 'wheel', when: ansible_os_family|lower == "freebsd" }
   loop_control:
     loop_var: dnsmasq_item
+  tags: dnsmasq
 
 - name: Disable systemd-resolved
   when: ansible_service_mgr == "systemd"
