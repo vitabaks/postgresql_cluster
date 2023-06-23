@@ -67,7 +67,7 @@ patroni_etcd_hosts: []  # list of servers of an existing etcd cluster
 # https://patroni.readthedocs.io/en/latest/SETTINGS.html#consul
 
 # if dcs_type: "consul"
-consul_version: "1.14.3"
+consul_version: "1.14.7"
 consul_config_path: "/etc/consul"
 consul_configd_path: "{{ consul_config_path }}/conf.d"
 consul_data_path: "/var/lib/consul"
