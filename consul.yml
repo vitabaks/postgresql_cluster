@@ -75,6 +75,18 @@
       delay: 5
       retries: 3
 
+    - name: Make sure the unzip package are present on the control host
+      run_once: true # noqa run-once
+      delegate_to: 127.0.0.1
+      package:
+        name: unzip
+        state: present
+      register: package_status
+      until: package_status is success
+      delay: 5
+      retries: 3
+      ignore_errors: true
+
     - name: Build a firewall_ports_dynamic_var
       set_fact:
         firewall_ports_dynamic_var: "{{ firewall_ports_dynamic_var | default([]) + (firewall_allowed_tcp_ports_for[item] | default([])) }}"
