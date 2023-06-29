@@ -1,8 +1,7 @@
-FROM ubuntu:jammy
+# First stage: Install build-time dependencies
+FROM ubuntu:jammy as builder
 
 USER root
-
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Copy Python version config file
 COPY .config/python_version.config /tmp/
@@ -12,11 +11,10 @@ ARG NPM_VERSION=9.6.7
 # Set a variable for the ungit version
 ARG UNGIT_VERSION=1.5.23
 
-# Update system and install packages, including Docker
-# Replace "python3.10" with "$(cut -d '=' -f 2 /tmp/python_version.config)" in the apt-get install command
+# Update system and install packages*
 # hadolint ignore=DL3008,DL3013
-RUN PYTHON_VERSION=$(cut -d '=' -f 2 /tmp/python_version.config) && \
-    apt-get update \
+RUN PYTHON_VERSION=$(cut -d '=' -f 2 /tmp/python_version.config) \
+    && apt-get update \
     && apt-get upgrade -y \
     && apt-get install -y --no-install-recommends \
         bash-completion \
@@ -38,21 +36,35 @@ RUN PYTHON_VERSION=$(cut -d '=' -f 2 /tmp/python_version.config) && \
         vim \
         wget \
     && python3 -m pip install --no-cache-dir --upgrade pip \
-    && python3 -m pip install --no-cache-dir virtualenv \
-    # Install Docker
-    && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg \
+    && python3 -m pip install --no-cache-dir virtualenv
+
+# Install Docker
+FROM builder as docker-installer
+
+RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg \
     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
     $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null \
     && apt-get update \
-    && apt-get install -y --no-install-recommends docker-ce docker-ce-cli containerd.io \
-    # Install npm and ungit using the versions specified in the variables
-    && curl -fsSL https://deb.nodesource.com/setup_20.x |bash - \
+    && apt-get install -y --no-install-recommends docker-ce docker-ce-cli containerd.io
+
+# Install npm and ungit
+FROM docker-installer as npm-installer
+
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install  -y --no-install-recommends nodejs \
     && npm install -g npm@${NPM_VERSION} \
     && npm install -g \
-        ungit@${UNGIT_VERSION} \
-    # Clean
-    && apt-get clean && rm -rf /var/lib/apt/lists/* tmp/*
+        ungit@${UNGIT_VERSION}
+
+# Cleanup
+FROM npm-installer as cleanup
+
+RUN apt-get clean && rm -rf /var/lib/apt/lists/* tmp/* 
+
+# Final stage: Setup final image and user
+FROM ubuntu:jammy
+
+COPY --from=cleanup / /
 
 # Create the gitpod user. UID must be 33333.
 RUN useradd -l -u 33333 -G sudo -md /home/gitpod -s /bin/bash -p gitpod gitpod
