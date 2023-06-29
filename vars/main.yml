@@ -248,6 +248,9 @@ postgresql_parameters:
   - { option: "max_parallel_workers", value: "8" }
   - { option: "max_parallel_workers_per_gather", value: "2" }
   - { option: "max_parallel_maintenance_workers", value: "2" }
+  - { option: "tcp_keepalives_count", value: "10" }
+  - { option: "tcp_keepalives_idle", value: "300" }
+  - { option: "tcp_keepalives_interval", value: "30" }
 #  - { option: "old_snapshot_threshold", value: "60min" }
 #  - { option: "", value: "" }
 #  - { option: "", value: "" }
