@@ -228,6 +228,7 @@ postgresql_parameters:
   - { option: "log_lock_waits", value: "on" }
   - { option: "log_temp_files", value: "0" }
   - { option: "track_activities", value: "on" }
+  - { option: "track_activity_query_size", value: "4096" }
   - { option: "track_counts", value: "on" }
   - { option: "track_functions", value: "all" }
   - { option: "log_checkpoints", value: "on" }
