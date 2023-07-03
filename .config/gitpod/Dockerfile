@@ -1,6 +1,7 @@
 # First stage: Install build-time dependencies
 FROM ubuntu:jammy as builder
 
+# hadolint ignore=DL3002
 USER root
 
 # Copy Python version config file
