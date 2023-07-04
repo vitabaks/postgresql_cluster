@@ -202,7 +202,7 @@ postgresql_parameters:
   - { option: "archive_mode", value: "on" }
   - { option: "archive_timeout", value: "1800s" }
   - { option: "archive_command", value: "cd ." }  # not doing anything yet with WAL-s
-#  - { option: "archive_command", value: "wal-g wal-push %p" }  # archive WAL-s using WAL-G
+#  - { option: "archive_command", value: "{{ wal_g_archive_command }}" }  # archive WAL-s using WAL-G
 #  - { option: "archive_command", value: "{{ pgbackrest_archive_command }}" }  # archive WAL-s using pgbackrest
   - { option: "wal_level", value: "replica" }
   - { option: "wal_keep_size", value: "2GB" }
@@ -414,6 +414,7 @@ wal_g_json:  # config https://github.com/wal-g/wal-g#configuration
 #  - { option: "AWS_REGION", value: "us-east-1" }
 #  - { option: "WALG_S3_CA_CERT_FILE", value: "/path/to/custom/ca/file" }
 #  - { option: "", value: "" }
+wal_g_archive_command: "wal-g wal-push %p"
 wal_g_patroni_cluster_bootstrap_command: "wal-g backup-fetch {{ postgresql_data_dir }} LATEST"
 
 # pgBackRest

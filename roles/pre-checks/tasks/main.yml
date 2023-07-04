@@ -32,3 +32,10 @@
     - pgbackrest_install is defined
     - pgbackrest_install | bool
     - inventory_hostname in groups['postgres_cluster']
+
+- name: Perform pre-checks for WAL-G
+  import_tasks: wal_g.yml
+  when:
+    - wal_g_install is defined
+    - wal_g_install | bool
+    - inventory_hostname in groups['postgres_cluster']
