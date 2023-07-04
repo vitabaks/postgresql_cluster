@@ -25,3 +25,10 @@
   import_tasks: patroni.yml
   when:
     - inventory_hostname in groups['postgres_cluster']
+
+- name: Perform pre-checks for pgbackrest
+  import_tasks: pgbackrest.yml
+  when:
+    - pgbackrest_install is defined
+    - pgbackrest_install | bool
+    - inventory_hostname in groups['postgres_cluster']
