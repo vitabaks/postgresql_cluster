@@ -202,8 +202,8 @@ postgresql_parameters:
   - { option: "archive_mode", value: "on" }
   - { option: "archive_timeout", value: "1800s" }
   - { option: "archive_command", value: "cd ." }  # not doing anything yet with WAL-s
-#  - { option: "archive_command", value: "wal-g wal-push %p" }  # archive WAL-s using WAL-G
-#  - { option: "archive_command", value: "pgbackrest --stanza={{ pgbackrest_stanza }} archive-push %p" }  # archive WAL-s using pgbackrest
+#  - { option: "archive_command", value: "{{ wal_g_archive_command }}" }  # archive WAL-s using WAL-G
+#  - { option: "archive_command", value: "{{ pgbackrest_archive_command }}" }  # archive WAL-s using pgbackrest
   - { option: "wal_level", value: "replica" }
   - { option: "wal_keep_size", value: "2GB" }
   - { option: "max_wal_senders", value: "10" }
@@ -414,6 +414,7 @@ wal_g_json:  # config https://github.com/wal-g/wal-g#configuration
 #  - { option: "AWS_REGION", value: "us-east-1" }
 #  - { option: "WALG_S3_CA_CERT_FILE", value: "/path/to/custom/ca/file" }
 #  - { option: "", value: "" }
+wal_g_archive_command: "wal-g wal-push %p"
 wal_g_patroni_cluster_bootstrap_command: "wal-g backup-fetch {{ postgresql_data_dir }} LATEST"
 
 # pgBackRest
@@ -467,6 +468,8 @@ pgbackrest_server_conf:
     - { option: "backup-standby", value: "y" }
 #    - { option: "", value: "" }
 # the stanza section will be generated automatically
+
+pgbackrest_archive_command: "pgbackrest --stanza={{ pgbackrest_stanza }} archive-push %p"
 
 pgbackrest_patroni_cluster_restore_command:
   '/usr/bin/pgbackrest --stanza={{ pgbackrest_stanza }} --delta restore'  # restore from latest backup
