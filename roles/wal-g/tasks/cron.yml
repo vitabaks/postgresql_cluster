@@ -1,0 +1,16 @@
+---
+- name: Add WAL-G cron jobs
+  cron:
+    cron_file: "{{ item.file | default('') }}"
+    user: "{{ item.user | default('postgres')  }}"
+    minute: "{{ item.minute | default('*') }}"
+    hour: "{{ item.hour | default('*') }}"
+    day: "{{ item.day | default('*') }}"
+    month: "{{ item.month | default('*') }}"
+    weekday: "{{ item.weekday | default('*') }}"
+    name: "{{ item.name }}"
+    disabled: "{{ item.disabled | default(False) }}"
+    state: "{{ item.state | default('present') }}"
+    job: "{{ item.job }}"
+  loop: "{{ wal_g_cron_jobs }}"
+  tags: wal_g_cron

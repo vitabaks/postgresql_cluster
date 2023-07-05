@@ -403,19 +403,37 @@ pg_probackup_patroni_cluster_bootstrap_command: "pg_probackup-{{ pg_probackup_ve
 wal_g_install: false  # or 'true'
 wal_g_version: "2.0.1"
 wal_g_json:  # config https://github.com/wal-g/wal-g#configuration
-  - { option: "AWS_ACCESS_KEY_ID", value: "minio" }
-  - { option: "AWS_SECRET_ACCESS_KEY", value: "miniosecret" }
-  - { option: "AWS_ENDPOINT", value: "http://172.26.9.200:9000" }
-  - { option: "WALG_S3_PREFIX", value: "s3://bucket" }
-  - { option: "AWS_S3_FORCE_PATH_STYLE", value: "true" }
-  - { option: "WALG_COMPRESSION_METHOD", value: "brotli" }
+  - { option: "AWS_ACCESS_KEY_ID", value: "{{ AWS_ACCESS_KEY_ID | default('') }}" }  # define values or pass via --extra-vars
+  - { option: "AWS_SECRET_ACCESS_KEY", value: "{{ AWS_SECRET_ACCESS_KEY | default('') }}" }  # define values or pass via --extra-vars
+  - { option: "WALG_S3_PREFIX", value: "{{ WALG_S3_PREFIX | default('') }}" } # define values or pass via --extra-vars
+  - { option: "WALG_COMPRESSION_METHOD", value: "brotli" }  # or "lz4", "lzma", "zstd"
   - { option: "PGDATA", value: "{{ postgresql_data_dir }}" }
   - { option: "PGHOST", value: "{{ postgresql_unix_socket_dir }}" }
-#  - { option: "AWS_REGION", value: "us-east-1" }
-#  - { option: "WALG_S3_CA_CERT_FILE", value: "/path/to/custom/ca/file" }
+#  - { option: "AWS_S3_FORCE_PATH_STYLE", value: "true" }  # to use Minio.io S3-compatible storage
+#  - { option: "AWS_ENDPOINT", value: "http://minio:9000" }  # to use Minio.io S3-compatible storage
 #  - { option: "", value: "" }
 wal_g_archive_command: "wal-g wal-push %p"
 wal_g_patroni_cluster_bootstrap_command: "wal-g backup-fetch {{ postgresql_data_dir }} LATEST"
+
+wal_g_cron_jobs:
+  - name: "WAL-G: Create daily backup"
+    user: "postgres"
+    file: /etc/cron.d/walg
+    minute: "30"
+    hour: "3"
+    day: "*"
+    month: "*"
+    weekday: "*"
+    job: "[ $(curl -s -o /dev/null -w '%{http_code}' http://{{ inventory_hostname }}:{{ patroni_restapi_port }}) = '200' ] && wal-g backup-push"
+  - name: "WAL-G: Delete old backups" # older than 30 days (by default). Change according to your company's backup retention policy.
+    user: "postgres"
+    file: /etc/cron.d/walg
+    minute: "30"
+    hour: "6"
+    day: "*"
+    month: "*"
+    weekday: "*"
+    job: "[ $(curl -s -o /dev/null -w '%{http_code}' http://{{ inventory_hostname }}:{{ patroni_restapi_port }}) = '200' ] && wal-g delete before FIND_FULL $(date -d '-30 days' '+%FT%TZ') --confirm"
 
 # pgBackRest
 pgbackrest_install: false  # or 'true'
@@ -499,17 +517,6 @@ pgbackrest_cron_jobs:
     job: "pgbackrest --type=diff --stanza={{ pgbackrest_stanza }} backup"
     # job: "if [ $(psql -tAXc 'select pg_is_in_recovery()') = 'f' ]; then pgbackrest --type=diff --stanza={{ pgbackrest_stanza }} backup; fi"
 
-cron_jobs: []
-# Example for walg
-#  - name: "WAL-G: Create daily backup"
-#    user: "postgres"
-#    file: /etc/cron.d/walg
-#    minute: "30"
-#    hour: "6"
-#    day: "*"
-#    month: "*"
-#    weekday: "*"
-#    job: "[ $(curl -s -o /dev/null -w '%{http_code}' http://{{ inventory_hostname }}:{{ patroni_restapi_port }}) = '200' ] && wal-g backup-push"
 
 # PITR mode (if patroni_cluster_bootstrap_method: "pgbackrest" or "wal-g"):
 # 1) The database cluster directory will be cleaned (for "wal-g") or overwritten (for "pgbackrest" --delta restore).
