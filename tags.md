@@ -89,12 +89,14 @@
 - wal_g
 - - wal_g_install
 - - wal_g_conf
+- - wal_g_cron
 - pgbackrest
 - - pgbackrest_repo
 - - pgbackrest_install
 - - pgbackrest_conf
 - - pgbackrest_ssh_keys
 - - pgbackrest_stanza_create
+- - pgbackrest_cron
 - pg_probackup
 - - pg_probackup_repo
 - - pg_probackup_install

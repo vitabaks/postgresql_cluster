@@ -259,4 +259,10 @@
     mode: "0644"
   tags: wal-g, wal_g, wal_g_conf
 
+- import_tasks: cron.yml
+  when:
+    - wal_g_cron_jobs is defined
+    - wal_g_cron_jobs | length > 0
+  tags: wal-g, wal_g, wal_g_cron
+
 ...
