@@ -23,6 +23,7 @@
         {{ pgbackrest_conf.global | rejectattr('option', 'equalto', 'repo1-host') | rejectattr('option', 'equalto', 'repo1-host-user') | list
         + [{ 'option': 'repo1-host', 'value': pgbackrest_repo_host }]
         + [{ 'option': 'repo1-host-user', 'value': pgbackrest_repo_user }] }}
+      stanza: "{{ pgbackrest_conf.stanza }}"  # keep 'stanza' section unchanged
   vars:
     repo_host_item: "{{ pgbackrest_conf.global | selectattr('option', 'equalto', 'repo1-host') | list | last }}"
     repo_host_user_item: "{{ pgbackrest_conf.global | selectattr('option', 'equalto', 'repo1-host-user') | list | last }}"
