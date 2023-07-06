@@ -33,7 +33,7 @@ listen master
 {% endif %}
     maxconn {{ haproxy_maxconn.master }}
     option tcplog
-    option httpchk OPTIONS /master
+    option httpchk OPTIONS /primary
     http-check expect status 200
     default-server inter 3s fastinter 1s fall 3 rise 4 on-marked-down shutdown-sessions
 {% if pgbouncer_install|bool %}
