@@ -14,3 +14,22 @@
     - pgbackrest_install | bool
     # Execute the task only when 'archive_command' is undefined or its value is not equal to 'pgbackrest_archive_command'
     - archive_command_item is undefined or archive_command_item.value != pgbackrest_archive_command
+
+# Checking parameters for working with a dedicated pgbackrest server
+- name: "pgBackRest | Ensure 'repo1-host' and 'repo1-host-user' are set correctly"
+  set_fact:
+    pgbackrest_conf:
+      global: >-
+        {{ pgbackrest_conf.global | rejectattr('option', 'equalto', 'repo1-host') | rejectattr('option', 'equalto', 'repo1-host-user') | list
+        + [{ 'option': 'repo1-host', 'value': pgbackrest_repo_host }]
+        + [{ 'option': 'repo1-host-user', 'value': pgbackrest_repo_user }] }}
+      stanza: "{{ pgbackrest_conf.stanza }}"  # keep 'stanza' section unchanged
+  vars:
+    repo_host_item: "{{ pgbackrest_conf.global | selectattr('option', 'equalto', 'repo1-host') | list | last }}"
+    repo_host_user_item: "{{ pgbackrest_conf.global | selectattr('option', 'equalto', 'repo1-host-user') | list | last }}"
+  when:
+    - pgbackrest_repo_host is defined and pgbackrest_repo_host | length > 0
+    # Execute the task only when 'repo1-host' or 'repo1-host-user' is undefined
+    # Or its value is not equal to 'pgbackrest_repo_host' and 'pgbackrest_repo_user'
+    - (repo_host_item is undefined or repo_host_item.value != pgbackrest_repo_host) or
+      (repo_host_user_item is undefined or repo_host_user_item.value != pgbackrest_repo_user)
