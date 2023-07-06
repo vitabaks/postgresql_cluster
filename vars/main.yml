@@ -101,10 +101,10 @@ consul_join: []  # List of LAN servers of an existing consul cluster, to join.
 consul_services:
   - name: "{{ patroni_cluster_name }}"
     id: "{{ patroni_cluster_name }}-master"
-    tags: ['master']
+    tags: ['master', 'primary']
     port: "{{ pgbouncer_listen_port }}"  # or "{{ postgresql_port }}" if pgbouncer_install: false
     checks:
-      - { http: "http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/master", interval: "2s" }
+      - { http: "http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/primary", interval: "2s" }
       - { args: ["systemctl", "status", "pgbouncer"], interval: "5s" }  # comment out this check if pgbouncer_install: false
   - name: "{{ patroni_cluster_name }}"
     id: "{{ patroni_cluster_name }}-replica"
