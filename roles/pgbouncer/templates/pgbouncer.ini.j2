@@ -1,9 +1,12 @@
 [databases]
+{% if pgbouncer_auth_user | bool %}
+* = host=127.0.0.1 port={{ postgresql_port }} dbname=postgres auth_user={{ pgbouncer_auth_username }}
+{% else %}
 {% for pool in pgbouncer_pools %}
 {{ pool.name }} = host=127.0.0.1 port={{ postgresql_port }} dbname={{ pool.dbname }} {{ pool.pool_parameters }}
-{% endfor %}
-
 * = host=127.0.0.1 port={{ postgresql_port }}
+{% endfor %}
+{% endif %}
 
 [pgbouncer]
 logfile = {{ pgbouncer_log_dir }}/pgbouncer.log
@@ -13,6 +16,10 @@ listen_port = {{ pgbouncer_listen_port | default(6432) }}
 unix_socket_dir = /var/run/postgresql
 auth_type = {{ pgbouncer_auth_type }}
 auth_file = /etc/pgbouncer/userlist.txt
+{% if pgbouncer_auth_user | bool %}
+auth_user = "{{ pgbouncer_auth_username }}"
+auth_query = SELECT usename, passwd FROM user_search($1)
+{% endif %}
 admin_users = {{ pgbouncer_admin_users }}
 stats_users = {{ pgbouncer_stats_users }}
 ignore_startup_parameters = {{ pgbouncer_ignore_startup_parameters }}

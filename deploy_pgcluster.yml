@@ -1,4 +1,5 @@
 ---
+
 - name: Deploy PostgreSQL HA Cluster (based on "Patroni" and "{{ dcs_type }}")
   hosts: all
   become: true
@@ -263,6 +264,9 @@
         (cluster_vip is defined and cluster_vip | length > 0)
 
     # optional
+    - role: postgresql-function
+      when: is_master | bool and pgbouncer_auth_user | bool
+
     - role: postgresql-users
       when: is_master | bool and postgresql_users | length > 0
 

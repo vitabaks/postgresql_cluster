@@ -18,6 +18,11 @@ patroni_superuser_password: "postgres-pass"  # please change password
 patroni_replication_username: "replicator"
 patroni_replication_password: "replicator-pass"  # please change password
 
+pgbouncer_auth_user: true # or 'false' if you want to add users to userlist.txt
+pgbouncer_auth_username: pgbouncer # user who can query the database via the user_search function
+pgbouncer_auth_password: "strong-password-here"
+
+
 synchronous_mode: false  # or 'true' for enable synchronous database replication
 synchronous_mode_strict: false  # if 'true' then block all client writes to the master, when a synchronous replica is not available
 synchronous_node_count: 1  # number of synchronous standby databases
@@ -139,7 +144,8 @@ postgresql_data_checksums: true  # for bootstrap only (initdb)
 postgresql_password_encryption_algorithm: "scram-sha-256"  # or "md5" if your clients do not work with passwords encrypted with SCRAM-SHA-256
 
 # (optional) list of users to be created (if not already exists)
-postgresql_users: []
+postgresql_users: 
+  - { name: "{{ pgbouncer_auth_username }}", password: "{{ pgbouncer_auth_password }}", flags: "LOGIN" }
 #  - { name: "mydb-user", password: "mydb-user-pass", flags: "SUPERUSER" }
 #  - { name: "", password: "", flags: "NOSUPERUSER" }
 #  - { name: "", password: "", flags: "NOSUPERUSER" }

@@ -1,1 +1,5 @@
+{% if pgbouncer_auth_user | bool %}
+"{{ pgbouncer_auth_username }}" "{{ pgbouncer_auth_password  }}"
+{% else %}
 "{{ patroni_superuser_username }}" "{{ patroni_superuser_password }}"
+{% endif %}

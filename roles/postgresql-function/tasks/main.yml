@@ -1,0 +1,14 @@
+---
+
+- name: Copy function file
+  ansible.builtin.copy:
+    src: "{{ role_path }}/files/pgbouncer_function.psql" 
+    dest: /tmp
+
+- name: Create function for pgbouncer to query users
+  become: true
+  become_user: postgres
+  shell: |
+      {{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres < /tmp/pgbouncer_function.psql
+
+...
