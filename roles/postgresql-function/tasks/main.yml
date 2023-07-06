@@ -2,7 +2,7 @@
 
 - name: Copy function file
   ansible.builtin.copy:
-    src: "{{ role_path }}/files/pgbouncer_function.psql" 
+    src: "{{ role_path }}/files/pgbouncer_function.psql"
     dest: /tmp
 
 - name: Create function for pgbouncer to query users

@@ -19,7 +19,7 @@
   when: existing_pgcluster is not defined or not existing_pgcluster|bool
   tags: pgbouncer, pgbouncer_conf
 
-- block:  # when pgbouncer_auth_user false 
+- block:  # when pgbouncer_auth_user false
     - name: Get users and password md5 from pg_shadow
       run_once: true
       become: true
@@ -30,7 +30,7 @@
       register: pg_shadow_result
       changed_when: false
       delegate_to: "{{ groups.master[0] }}"
-      when: pgbouncer_generate_userlist|bool 
+      when: pgbouncer_generate_userlist|bool
       tags: pgbouncer, pgbouncer_generate_userlist
 
     - name: Generate /etc/pgbouncer/userlist.txt
@@ -46,7 +46,7 @@
         - pg_shadow_result.rc == 0
         - pg_shadow_result.stdout is defined
         - pg_shadow_result.stdout | length > 0
-        - pgbouncer_generate_userlist|bool or 
+        - pgbouncer_generate_userlist|bool
       tags: pgbouncer, pgbouncer_generate_userlist
   when: not pgbouncer_auth_user|bool
 ...

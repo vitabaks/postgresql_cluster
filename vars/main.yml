@@ -144,7 +144,7 @@ postgresql_data_checksums: true  # for bootstrap only (initdb)
 postgresql_password_encryption_algorithm: "scram-sha-256"  # or "md5" if your clients do not work with passwords encrypted with SCRAM-SHA-256
 
 # (optional) list of users to be created (if not already exists)
-postgresql_users: 
+postgresql_users:
   - { name: "{{ pgbouncer_auth_username }}", password: "{{ pgbouncer_auth_password }}", flags: "LOGIN" }
 #  - { name: "mydb-user", password: "mydb-user-pass", flags: "SUPERUSER" }
 #  - { name: "", password: "", flags: "NOSUPERUSER" }
