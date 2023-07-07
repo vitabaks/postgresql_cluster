@@ -13,7 +13,7 @@ ARG NPM_VERSION=9.6.7
 ARG UNGIT_VERSION=1.5.23
 
 # Update system and install packages*
-# hadolint ignore=DL3008,DL3013
+# hadolint ignore=DL3008,DL3013,DL3009
 RUN PYTHON_VERSION=$(cut -d '=' -f 2 /tmp/python_version.config) \
     && apt-get update \
     && apt-get upgrade -y \
