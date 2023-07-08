@@ -65,6 +65,6 @@
       '; done
   args:
     executable: /bin/bash
-  when: pgbouncer_auth_user|bool
+  when: pgbouncer_auth_user|bool and is_master|bool
   tags: pgbouncer, pgbouncer_conf, pgbouncer_auth_query
 ...
