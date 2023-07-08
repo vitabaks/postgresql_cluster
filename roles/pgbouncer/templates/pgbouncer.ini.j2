@@ -1,8 +1,9 @@
 [databases]
 {% for pool in pgbouncer_pools %}
 {{ pool.name }} = host=127.0.0.1 port={{ postgresql_port }} dbname={{ pool.dbname }} {{ pool.pool_parameters }}
-* = host=127.0.0.1 port={{ postgresql_port }}
 {% endfor %}
+
+* = host=127.0.0.1 port={{ postgresql_port }}
 
 [pgbouncer]
 logfile = {{ pgbouncer_log_dir }}/pgbouncer.log
