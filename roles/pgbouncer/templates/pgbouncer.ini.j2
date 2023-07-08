@@ -1,6 +1,6 @@
 [databases]
 {% if pgbouncer_auth_user | bool %}
-* = host=127.0.0.1 port={{ postgresql_port }} dbname=postgres auth_user={{ pgbouncer_auth_username }}
+* = host=127.0.0.1 port={{ postgresql_port }} dbname=postgres
 {% else %}
 {% for pool in pgbouncer_pools %}
 {{ pool.name }} = host=127.0.0.1 port={{ postgresql_port }} dbname={{ pool.dbname }} {{ pool.pool_parameters }}
