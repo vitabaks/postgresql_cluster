@@ -1,11 +1,13 @@
 ---
 # TODO:
+# - Ensure ‘Latest checkpoint location’ matches on all cluster nodes before upgrade
 # - custom WAL dir symlink (pg_new_wal_dir)
 # - tablespaces (rsync for replicas)
 # - patroni cluster state pre-check
 # - current_patroni_cluster_name
 # - pause pgbouncer pools
 # - README
+# - - recommendation: update postgres/patroni/system and database extensions before upgrade (optional) << update_pgcluster.yml
 - name: "Upgrade PostgreSQL {{ pg_old_version }} to version {{ pg_new_version }} (PostgreSQL HA Cluster: {{ patroni_cluster_name }})"
   hosts: postgres_cluster
   gather_facts: true
