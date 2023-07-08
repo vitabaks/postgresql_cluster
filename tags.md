@@ -46,6 +46,7 @@
 - - patroni_start_replica
 - - postgresql_disable
 - - custom_wal_dir
+- - point_in_time_recovery
 - pgbouncer
 - - pgbouncer_install
 - - pgbouncer_conf
