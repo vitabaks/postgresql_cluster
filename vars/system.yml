@@ -188,4 +188,25 @@ copy_files_to_all_server: []
 #  - { src: "files/ssl-cert-snakeoil.key", dest: "/etc/ssl/private/ssl-cert-snakeoil.key", owner: "postgres", group: "postgres", mode: "0600" }
 #  - { src: "files/myfile", dest: "/path/to/myfile", owner: "postgres", group: "postgres", mode: "0640" }
 
+# System cron jobs
+cron_jobs: []
+#  - name: "Example Job one"
+#    user: "postgres"
+#    file: /etc/cron.d/example_job_one
+#    minute: "00"
+#    hour: "1"
+#    day: "*"
+#    month: "*"
+#    weekday: "*"
+#    job: "echo 'example job one command'"
+#  - name: "Example Job two"
+#    user: "postgres"
+#    file: /etc/cron.d/example_job_two
+#    minute: "00"
+#    hour: "2"
+#    day: "*"
+#    month: "*"
+#    weekday: "*"
+#    job: "echo 'example job two command'"
+
 ...

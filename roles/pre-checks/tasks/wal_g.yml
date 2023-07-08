@@ -1,0 +1,16 @@
+---
+- name: "WAL-G | Ensure 'archive_command' is set to '{{ wal_g_archive_command }}'"
+  set_fact:
+    # Create a new list from postgresql_parameters, excluding 'archive_command' option if it exists
+    # Then, append a new 'archive_command' item with the value of 'wal_g_archive_command'
+    postgresql_parameters: >-
+      {{ postgresql_parameters | rejectattr('option', 'equalto', 'archive_command') | list
+      + [{ 'option': 'archive_command', 'value': wal_g_archive_command }] }}
+  vars:
+    # Find the last item in postgresql_parameters where the option is 'archive_command'
+    archive_command_item: "{{ postgresql_parameters | selectattr('option', 'equalto', 'archive_command') | list | last }}"
+  when:
+    - wal_g_install is defined
+    - wal_g_install | bool
+    # Execute the task only when 'archive_command' is undefined or its value is not equal to 'wal_g_archive_command'
+    - archive_command_item is undefined or archive_command_item.value != wal_g_archive_command

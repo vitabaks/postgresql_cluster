@@ -106,8 +106,8 @@ bootstrap:
 {% endif %}
 
   pg_hba:  # Add following lines to pg_hba.conf after running 'initdb'
-    - host replication {{ patroni_replication_username }} 127.0.0.1/32 md5
-    - host all all 0.0.0.0/0 md5
+    - host replication {{ patroni_replication_username }} 127.0.0.1/32 {{ postgresql_password_encryption_algorithm }}
+    - host all all 0.0.0.0/0 {{ postgresql_password_encryption_algorithm }}
 
 
 postgresql:

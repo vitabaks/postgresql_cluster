@@ -34,14 +34,6 @@
   pre_tasks:
     - name: Include OS-specific variables
       include_vars: "vars/{{ ansible_os_family }}.yml"
-      when: not ansible_os_family == 'Rocky' and not ansible_os_family == 'AlmaLinux'
-      tags: always
-
-    # For compatibility with Ansible old versions
-    # (support for RockyLinux and AlmaLinux has been added to Ansible 2.11)
-    - name: Include OS-specific variables
-      include_vars: "vars/RedHat.yml"
-      when: ansible_os_family == 'Rocky' or ansible_os_family == 'AlmaLinux'
       tags: always
 
     - name: Update apt cache
@@ -74,6 +66,18 @@
       until: package_status is success
       delay: 5
       retries: 3
+
+    - name: Make sure the unzip package are present on the control host
+      run_once: true # noqa run-once
+      delegate_to: 127.0.0.1
+      package:
+        name: unzip
+        state: present
+      register: package_status
+      until: package_status is success
+      delay: 5
+      retries: 3
+      ignore_errors: true
 
     - name: Build a firewall_ports_dynamic_var
       set_fact:
