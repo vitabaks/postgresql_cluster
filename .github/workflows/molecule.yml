@@ -34,9 +34,6 @@ jobs:
           - distro: ubuntu1804
             tag: latest
             namespace: geerlingguy
-          - distro: centos8
-            tag: latest
-            namespace: geerlingguy
           - distro: rockylinux8
             tag: latest
             namespace: geerlingguy
