@@ -239,7 +239,8 @@ To minimize the risk of losing data on autofailover, you can configure settings 
 0. [Install Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) on one control node (which could easily be a laptop)
 
 ```
-sudo apt update && sudo apt install -y ansible sshpass git
+sudo apt update && sudo apt install -y python3-pip sshpass git
+pip3 install ansible
 ```
 
 1. Download or clone this repository
