@@ -51,7 +51,7 @@
   when: not pgbouncer_auth_user|bool
 
 - name: "Create function 'user_search' for pgbouncer 'auth_query' option in all databases"
-  become: yes
+  become: true
   become_user: postgres
   ansible.builtin.shell: |
     for db in $({{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -tAXc \
