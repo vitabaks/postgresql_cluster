@@ -19,7 +19,8 @@
   when: existing_pgcluster is not defined or not existing_pgcluster|bool
   tags: pgbouncer, pgbouncer_conf
 
-- block:  # when pgbouncer_auth_user false
+# if pgbouncer_auth_user is 'false'
+- block:
     - name: Get users and password md5 from pg_shadow
       run_once: true
       become: true
@@ -30,8 +31,6 @@
       register: pg_shadow_result
       changed_when: false
       delegate_to: "{{ groups.master[0] }}"
-      when: pgbouncer_generate_userlist|bool
-      tags: pgbouncer, pgbouncer_generate_userlist
 
     - name: Generate /etc/pgbouncer/userlist.txt
       become: true
@@ -39,17 +38,16 @@
       copy:
         content: |
           {{ pg_shadow_result.stdout }}
-
         dest: /etc/pgbouncer/userlist.txt
       notify: "reload pgbouncer"
       when:
         - pg_shadow_result.rc == 0
         - pg_shadow_result.stdout is defined
         - pg_shadow_result.stdout | length > 0
-        - pgbouncer_generate_userlist|bool
-      tags: pgbouncer, pgbouncer_generate_userlist
   when: not pgbouncer_auth_user|bool
+  tags: pgbouncer, pgbouncer_conf, pgbouncer_generate_userlist
 
+# if pgbouncer_auth_user is 'true'
 - name: "Create function 'user_search' for pgbouncer 'auth_query' option in all databases"
   become: true
   become_user: postgres
@@ -67,4 +65,5 @@
     executable: /bin/bash
   when: pgbouncer_auth_user|bool and is_master|bool
   tags: pgbouncer, pgbouncer_conf, pgbouncer_auth_query
+
 ...

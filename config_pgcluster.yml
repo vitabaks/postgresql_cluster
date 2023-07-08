@@ -186,7 +186,7 @@
       when: is_master | bool and postgresql_extensions | length > 0
 
     - role: pgbouncer/config
-      when: pgbouncer_install|bool and pgbouncer_generate_userlist|bool
+      when: pgbouncer_install|bool
 
 - name: config_pgcluster.yml | Check needed restart cluster and prepare for it
   hosts: postgres_cluster

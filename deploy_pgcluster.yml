@@ -277,7 +277,7 @@
       when: is_master | bool and postgresql_extensions | length > 0
 
     - role: pgbouncer/config
-      when: pgbouncer_install|bool and pgbouncer_generate_userlist|bool
+      when: pgbouncer_install|bool
 
     - role: netdata
       when: netdata_install is defined and netdata_install|bool
