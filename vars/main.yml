@@ -18,11 +18,6 @@ patroni_superuser_password: "postgres-pass"  # please change password
 patroni_replication_username: "replicator"
 patroni_replication_password: "replicator-pass"  # please change password
 
-pgbouncer_auth_user: true # or 'false' if you want to add users to userlist.txt
-pgbouncer_auth_username: pgbouncer # user who can query the database via the user_search function
-pgbouncer_auth_password: "strong-password-here"
-
-
 synchronous_mode: false  # or 'true' for enable synchronous database replication
 synchronous_mode_strict: false  # if 'true' then block all client writes to the master, when a synchronous replica is not available
 synchronous_node_count: 1  # number of synchronous standby databases
@@ -304,6 +299,9 @@ pgbouncer_stats_users: "postgres"  # comma-separated list of users who are just 
 pgbouncer_generate_userlist: true  # generate the authentication file (userlist.txt) from the pg_shadow system table
 pgbouncer_auth_type: "{{ postgresql_password_encryption_algorithm }}"
 pgbouncer_ignore_startup_parameters: "extra_float_digits,geqo,search_path"
+pgbouncer_auth_user: true # or 'false' if you want to manage the list of users for authentication in the database via userlist.txt
+pgbouncer_auth_username: pgbouncer # user who can query the database via the user_search function
+pgbouncer_auth_password: "pgbouncer-pass" # please change password"
 
 pgbouncer_pools:
   - { name: "postgres", dbname: "postgres", pool_parameters: "" }
