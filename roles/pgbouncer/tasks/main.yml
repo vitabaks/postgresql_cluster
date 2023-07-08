@@ -102,46 +102,66 @@
     owner: postgres
     group: postgres
     mode: "0640"
-  when: existing_pgcluster is not defined or not existing_pgcluster|bool
+  when:
+    - (existing_pgcluster is not defined or not existing_pgcluster|bool)
+    - not pgbouncer_auth_user|bool
   tags: pgbouncer
 
 - block:  # for add_pgnode.yml
-    - name: Fetch pgbouncer.ini and userlist.txt conf files from master
+    - name: Fetch pgbouncer.ini file from master
       run_once: true
       fetch:
-        src: "{{ item }}"
+        src: "{{ pgbouncer_conf_dir }}/pgbouncer.ini"
         dest: files/
         validate_checksum: true
         flat: true
-      loop:
-        - /etc/pgbouncer/pgbouncer.ini
-        - /etc/pgbouncer/userlist.txt
       delegate_to: "{{ groups.master[0] }}"
 
-    - name: Copy pgbouncer.ini and userlist.txt conf files to replica
+    - name: Fetch userlist.txt conf file from master
+      run_once: true
+      fetch:
+        src: "{{ pgbouncer_conf_dir }}/userlist.txt"
+        dest: files/
+        validate_checksum: true
+        flat: true
+      delegate_to: "{{ groups.master[0] }}"
+      when: not pgbouncer_auth_user|bool
+
+    - name: Copy pgbouncer.ini file to replica
       copy:
-        src: "files/{{ item }}"
-        dest: /etc/pgbouncer/
+        src: files/pgbouncer.ini
+        dest: "{{ pgbouncer_conf_dir }}"
         owner: postgres
         group: postgres
         mode: "0640"
-      loop:
-        - pgbouncer.ini
-        - userlist.txt
 
-    - name: Remove pgbouncer.ini and userlist.txt conf files from localhost
+    - name: Copy userlist.txt conf file to replica
+      copy:
+        src: files/userlist.txt
+        dest: "{{ pgbouncer_conf_dir }}"
+        owner: postgres
+        group: postgres
+        mode: "0640"
+      when: not pgbouncer_auth_user|bool
+
+    - name: Remove pgbouncer.ini file from localhost
       run_once: true
       file:
-        path: "files/{{ item }}"
+        path: files/pgbouncer.ini
         state: absent
-      loop:
-        - pgbouncer.ini
-        - userlist.txt
       delegate_to: localhost
+
+    - name: Remove userlist.txt conf file from localhost
+      run_once: true
+      file:
+        path: files/userlist.txt
+        state: absent
+      delegate_to: localhost
+      when: not pgbouncer_auth_user|bool
 
     - name: Prepare pgbouncer.ini conf file (replace "listen_addr")
       lineinfile:
-        path: /etc/pgbouncer/pgbouncer.ini
+        path: "{{ pgbouncer_conf_dir }}/pgbouncer.ini"
         regexp: "{{ item.regexp }}"
         line: "{{ item.line }}"
         backrefs: true
@@ -155,7 +175,7 @@
 
     - name: Prepare pgbouncer.ini conf file (replace "listen_addr")
       lineinfile:
-        path: /etc/pgbouncer/pgbouncer.ini
+        path: "{{ pgbouncer_conf_dir }}/pgbouncer.ini"
         regexp: "{{ item.regexp }}"
         line: "{{ item.line }}"
         backrefs: true

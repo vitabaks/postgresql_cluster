@@ -32,13 +32,13 @@
       changed_when: false
       delegate_to: "{{ groups.master[0] }}"
 
-    - name: Generate /etc/pgbouncer/userlist.txt
+    - name: "Generate {{ pgbouncer_conf_dir }}/userlist.txt"
       become: true
       become_user: postgres
       copy:
         content: |
           {{ pg_shadow_result.stdout }}
-        dest: /etc/pgbouncer/userlist.txt
+        dest: "{{ pgbouncer_conf_dir }}/userlist.txt"
       notify: "reload pgbouncer"
       when:
         - pg_shadow_result.rc == 0
