@@ -53,6 +53,7 @@ RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /
 # Install npm and ungit
 FROM docker-installer as npm-installer
 
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # hadolint ignore=DL3008
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install  -y --no-install-recommends nodejs \
