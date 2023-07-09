@@ -67,7 +67,7 @@ FROM npm-installer as cleanup
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* tmp/* 
 
 # Final stage: Setup final image and user
-FROM ubuntu:jammy
+FROM scratch
 
 COPY --from=cleanup / /
 
