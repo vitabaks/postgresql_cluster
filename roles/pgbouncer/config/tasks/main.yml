@@ -61,7 +61,7 @@
         $$
         LANGUAGE sql SECURITY DEFINER;
         REVOKE ALL ON FUNCTION user_search(uname TEXT) FROM public;
-        GRANT EXECUTE ON FUNCTION user_search(uname TEXT) TO pgbouncer;
+        GRANT EXECUTE ON FUNCTION user_search(uname TEXT) TO {{ pgbouncer_auth_username }};
       '; done
   args:
     executable: /bin/bash
