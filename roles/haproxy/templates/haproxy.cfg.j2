@@ -21,11 +21,14 @@ defaults
 
 listen stats
     mode http
+{% if cluster_vip is defined and cluster_vip | length > 0 %}
+    bind {{ cluster_vip }}:{{ haproxy_listen_port.stats }}
+{% else %}
     bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ haproxy_listen_port.stats }}
+{% endif %}
     stats enable
     stats uri /
 
-listen master
 {% if cluster_vip is defined and cluster_vip | length > 0 %}
     bind {{ cluster_vip }}:{{ haproxy_listen_port.master }}
 {% else %}
