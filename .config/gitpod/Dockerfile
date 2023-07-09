@@ -57,9 +57,9 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # hadolint ignore=DL3008
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install  -y --no-install-recommends nodejs \
-    && npm install -g npm@${NPM_VERSION} \
+    && npm install -g "npm@${NPM_VERSION}" \
     && npm install -g \
-        ungit@${UNGIT_VERSION}
+        "ungit@${UNGIT_VERSION}"
 
 # Cleanup
 FROM npm-installer as cleanup
