@@ -60,6 +60,8 @@
         SELECT usename, passwd FROM pg_shadow WHERE usename=$1;
         $$
         LANGUAGE sql SECURITY DEFINER;
+        REVOKE ALL ON FUNCTION user_search(uname TEXT) FROM public;
+        GRANT EXECUTE ON FUNCTION user_search(uname TEXT) TO pgbouncer;
       '; done
   args:
     executable: /bin/bash
