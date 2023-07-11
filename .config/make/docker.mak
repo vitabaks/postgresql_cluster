@@ -9,5 +9,5 @@ docker-lint: ## Run hadolint command to lint Dokerfile
 
 .PHONY: docker-tests
 docker-tests: ## Run tests for docker
-	$(MAKE) docker-build
 	$(MAKE) docker-lint
+	$(MAKE) docker-build
