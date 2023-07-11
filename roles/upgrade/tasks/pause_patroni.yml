@@ -24,6 +24,8 @@
     patronictl -c {{ patroni_config_file }} list -f json | grep -cv '^\[\]$'
   args:
     executable: /bin/bash
+  environment:
+    PATH: "{{ ansible_env.PATH }}:/usr/bin:/usr/local/bin"
   register: patronictl_result
   until: patronictl_result.stdout|int == 0
   retries: 30  # max duration 5 minutes
