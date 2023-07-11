@@ -1,6 +1,6 @@
 ---
 # TODO:
-# - Ensure ‘Latest checkpoint location’ matches on all cluster nodes before upgrade
+# - rollback.yml
 # - custom WAL dir symlink (pg_new_wal_dir)
 # - tablespaces (rsync for replicas)
 # - patroni cluster state pre-check
@@ -179,7 +179,7 @@
       include_vars: "vars/upgrade.yml"
       tags: always
   tasks:
-    - name: Patroni config - Target Cluster
+    - name: Patroni config
       include_role:
         name: upgrade
         tasks_from: update_config
@@ -203,10 +203,20 @@
       include_vars: "vars/upgrade.yml"
       tags: always
   tasks:
+    - name: Pause Patroni
+      include_role:
+        name: upgrade
+        tasks_from: pause_patroni
+
     - name: Stop Services
       include_role:
         name: upgrade
         tasks_from: stop_services
+
+    - name: Check 'Latest checkpoint location'
+      include_role:
+        name: upgrade
+        tasks_from: checkpoint_location
 
     - name: Upgrade Primary
       include_role:

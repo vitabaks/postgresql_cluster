@@ -1,0 +1,36 @@
+---
+# Disable auto failover – we need this to be able to stop leader before its standbys
+- name: Pause Patroni cluster (enable maintenance mode)
+  become: true
+  become_user: postgres
+  command: "patronictl -c {{ patroni_config_file }} pause --wait {{ patroni_cluster_name }}"
+  environment:
+    PATH: "{{ ansible_env.PATH }}:/usr/bin:/usr/local/bin"
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+  when:
+    - inventory_hostname in groups['primary']
+
+- name: Stop Patroni service
+  become: true
+  become_user: root
+  service:
+    name: patroni
+    state: stopped
+
+- name: Wait until the Patroni cluster is stopped
+  shell: |
+    set -o pipefail;
+    patronictl -c {{ patroni_config_file }} list -f json | grep -cv '^\[\]$'
+  args:
+    executable: /bin/bash
+  register: patronictl_result
+  until: patronictl_result.stdout|int == 0
+  retries: 30  # max duration 5 minutes
+  delay: 10
+  changed_when: false
+  failed_when: false
+  when:
+    - inventory_hostname in groups['primary']
+
+...
