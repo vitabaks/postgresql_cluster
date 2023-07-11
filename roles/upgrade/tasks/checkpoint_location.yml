@@ -3,8 +3,8 @@
 # 1. Retrieves the value from the cluster leader and its replicas.
 # 2. Debugs this value for both leader and replicas.
 # 3. Determines if the values match across the leader and replicas, setting 'pg_checkpoint_location_match' accordingly.
-# 4. If the values match across all nodes, a success message is displayed.
-# 5. If there's a mismatch, the playbook starts patroni and terminates execution with an error message.
+# 4. If the values match across all nodes, a success message is displayed and the update procedure continues.
+# 5. If there's a mismatch, the previously stopped cluster starts (rollback), and the playbook stops with an error message.
 
 - name: Get 'Latest checkpoint location' on the Leader
   shell: |
