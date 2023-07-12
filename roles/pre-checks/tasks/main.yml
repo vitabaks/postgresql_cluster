@@ -1,40 +1,40 @@
 ---
 
 - name: Checking ansible version
-  fail:
+  ansible.builtin.fail:
     msg: "Ansible version must be {{ minimal_ansible_version }} or higher"
   delegate_to: localhost
   when:
     - ansible_version.full is version(minimal_ansible_version, '<')
 
 - name: Perform pre-checks for timescaledb
-  import_tasks: timescaledb.yml
+  ansible.builtin.import_tasks: timescaledb.yml
   when:
     - enable_timescale is defined
     - enable_timescale | bool
     - inventory_hostname in groups['postgres_cluster']
 
 - name: Perform pre-checks for pgbouncer
-  import_tasks: pgbouncer.yml
+  ansible.builtin.import_tasks: pgbouncer.yml
   when:
     - pgbouncer_install is defined
     - pgbouncer_install | bool
     - inventory_hostname in groups['postgres_cluster']
 
 - name: Perform pre-checks for patroni
-  import_tasks: patroni.yml
+  ansible.builtin.import_tasks: patroni.yml
   when:
     - inventory_hostname in groups['postgres_cluster']
 
 - name: Perform pre-checks for pgbackrest
-  import_tasks: pgbackrest.yml
+  ansible.builtin.import_tasks: pgbackrest.yml
   when:
     - pgbackrest_install is defined
     - pgbackrest_install | bool
     - inventory_hostname in groups['postgres_cluster']
 
 - name: Perform pre-checks for WAL-G
-  import_tasks: wal_g.yml
+  ansible.builtin.import_tasks: wal_g.yml
   when:
     - wal_g_install is defined
     - wal_g_install | bool

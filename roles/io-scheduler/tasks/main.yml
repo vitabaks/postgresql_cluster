@@ -1,7 +1,7 @@
 ---
 
 - name: Create systemd unit file io-scheduler.service
-  template:
+  ansible.builtin.template:
     src: templates/io-scheduler.service.j2
     dest: /etc/systemd/system/io-scheduler.service
   notify: "restart io-scheduler"
@@ -9,6 +9,6 @@
   tags: scheduler, io_scheduler
 
 - name: Make sure handlers are flushed immediately
-  meta: flush_handlers
+  ansible.builtin.meta: flush_handlers
 
 ...

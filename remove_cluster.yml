@@ -10,36 +10,36 @@
     - vars/{{ ansible_os_family }}.yml
   tasks:
     - name: Stop Patroni service
-      service:
+      ansible.builtin.service:
         name: patroni
         state: stopped
         enabled: false
       ignore_errors: true
       when: remove_postgres|bool
     - name: Delete PostgreSQL database content
-      file:
+      ansible.builtin.file:
         path: "{{ postgresql_data_dir }}"
         state: absent
       when: remove_postgres|bool
     - name: Delete PgBackRest repository
-      file:
+      ansible.builtin.file:
         # path: pgbackrest_conf global repo1-path
         path: /var/lib/pgbackrest
         state: absent
       when: pgbackrest_install|bool
     - name: Delete PgBackRest cron
-      file:
+      ansible.builtin.file:
         path: /etc/cron.d/pgbackrest
         state: absent
       when: pgbackrest_install|bool
     - name: Stop Consul service
-      service:
+      ansible.builtin.service:
         name: consul
         state: stopped
         enabled: false
       when: remove_consul|bool
     - name: Delete Consul content
-      file:
+      ansible.builtin.file:
         path: "{{ consul_data_path }}"
         state: absent
       when: remove_consul|bool
@@ -53,12 +53,12 @@
     - vars/main.yml
   tasks:
     - name: Stop Etcd service
-      service:
+      ansible.builtin.service:
         name: etcd
         state: stopped
         enabled: false
     - name: Delete Etcd content
-      file:
+      ansible.builtin.file:
         path: "{{ etcd_data_dir }}/member"
         state: absent
       when: remove_etcd|bool

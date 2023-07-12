@@ -1,7 +1,7 @@
 ---
 
 - name: Restart haproxy service
-  systemd:
+  ansible.builtin.systemd:
     daemon_reload: true
     name: haproxy
     enabled: true
@@ -9,7 +9,7 @@
   listen: "restart haproxy"
 
 - name: Check HAProxy is started and accepting connections
-  wait_for:
+  ansible.builtin.wait_for:
     port: "{{ haproxy_listen_port.stats }}"
     host: "{{ hostvars[inventory_hostname]['inventory_hostname'] }}"
     state: started

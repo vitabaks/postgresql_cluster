@@ -3,7 +3,7 @@
 - name: Ensure that the openssh-client package is installed
   become: true
   become_user: root
-  package:
+  ansible.builtin.package:
     name: openssh-client
     state: present
   when: ansible_os_family == "Debian"
@@ -11,19 +11,19 @@
 - name: Ensure that the openssh-clients package is installed
   become: true
   become_user: root
-  package:
+  ansible.builtin.package:
     name: openssh-clients
     state: present
   when: ansible_os_family == "RedHat"
 
 - name: Ensure "{{ pgbackrest_repo_user }}" exists on pgbackrest server
-  user:
+  ansible.builtin.user:
     name: "{{ pgbackrest_repo_user }}"
     state: present
   when: "'pgbackrest' in group_names"
 
 - name: ssh_keys | Ensure ssh key are created for "{{ pgbackrest_repo_user }}" user on pgbackrest server
-  user:
+  ansible.builtin.user:
     name: "{{ pgbackrest_repo_user }}"
     generate_ssh_key: true
     ssh_key_bits: 2048
@@ -31,7 +31,7 @@
   when: "'pgbackrest' in group_names"
 
 - name: ssh_keys | Ensure ssh key are created for "postgres" user on database servers
-  user:
+  ansible.builtin.user:
     name: "postgres"
     generate_ssh_key: true
     ssh_key_bits: 2048
@@ -39,14 +39,14 @@
   when: "'postgres_cluster' in group_names"
 
 - name: ssh_keys | Get public ssh key from pgbackrest server
-  slurp:
+  ansible.builtin.slurp:
     src: "~{{ pgbackrest_repo_user }}/.ssh/id_rsa.pub"
   register: pgbackrest_sshkey
   changed_when: false
   when: "'pgbackrest' in group_names"
 
 - name: ssh_keys | Get public ssh key from database servers
-  slurp:
+  ansible.builtin.slurp:
     src: "~postgres/.ssh/id_rsa.pub"
   register: postgres_cluster_sshkey
   changed_when: false
@@ -69,7 +69,7 @@
   when: "'pgbackrest' in group_names"
 
 - name: known_hosts | Get public ssh keys of hosts (ssh-keyscan)
-  command: "ssh-keyscan -trsa -p {{ ansible_ssh_port | default(22) }} {{ item }}"
+  ansible.builtin.command: "ssh-keyscan -trsa -p {{ ansible_ssh_port | default(22) }} {{ item }}"
   loop: "{{ groups['all'] }}"
   register: ssh_known_host_keyscan
   changed_when: false
@@ -77,7 +77,7 @@
 - name: known_hosts | add ssh public keys in "~postgres/.ssh/known_hosts" on database servers
   become: true
   become_user: postgres
-  known_hosts:
+  ansible.builtin.known_hosts:
     host: "{{ item.item }}"
     key: "{{ item.stdout }}"
     path: "~postgres/.ssh/known_hosts"
@@ -88,7 +88,7 @@
 - name: known_hosts | add ssh public keys in "~{{ pgbackrest_repo_user }}/.ssh/known_hosts" on pgbackrest server
   become: true
   become_user: "{{ pgbackrest_repo_user }}"
-  known_hosts:
+  ansible.builtin.known_hosts:
     host: "{{ item.item }}"
     key: "{{ item.stdout }}"
     path: "~{{ pgbackrest_repo_user }}/.ssh/known_hosts"

@@ -3,20 +3,20 @@
 
 - block:
     - name: Check user "{{ ssh_key_user }}" exists
-      user:
+      ansible.builtin.user:
         name: "{{ ssh_key_user }}"
         shell: /bin/bash
         state: present
 
     - name: Create a 2048-bit SSH key for user "{{ ssh_key_user }}" in ~/.ssh/id_rsa (if not already exist)
-      user:
+      ansible.builtin.user:
         name: "{{ ssh_key_user }}"
         generate_ssh_key: true
         ssh_key_bits: 2048
         ssh_key_file: .ssh/id_rsa
 
     - name: Fetch key files from remote servers to ansible server
-      fetch:
+      ansible.builtin.fetch:
         src: "~{{ ssh_key_user }}/.ssh/id_rsa.pub"
         dest: "files/{{ ansible_hostname }}-id_rsa.pub"
         flat: true
@@ -31,7 +31,7 @@
 
     # known_hosts
     - name: known_hosts | for each host, scan for its ssh public key
-      command: "ssh-keyscan -trsa -p {{ ansible_ssh_port | default(22) }} {{ item }}"
+      ansible.builtin.command: "ssh-keyscan -trsa -p {{ ansible_ssh_port | default(22) }} {{ item }}"
       loop: "{{ ssh_known_hosts }}"
       register: ssh_known_host_results
       changed_when: false
@@ -39,7 +39,7 @@
     - name: known_hosts | for each host, add/update the public key in the "~{{ ssh_key_user }}/.ssh/known_hosts"
       become: true
       become_user: "{{ ssh_key_user }}"
-      known_hosts:
+      ansible.builtin.known_hosts:
         name: "{{ item.item }}"
         key: "{{ item.stdout }}"
         path: "~{{ ssh_key_user }}/.ssh/known_hosts"

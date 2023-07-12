@@ -7,7 +7,7 @@
 # install pip package from repo (installation_method: "repo")
 - block:  # with get-pip.py
     - name: pip | get-pip.py
-      get_url:
+      ansible.builtin.get_url:
         url: "{{ pip_package_repo }}"
         dest: /tmp/
         timeout: 60
@@ -16,7 +16,7 @@
       when: ansible_python_version is version('3.7', '>=')
 
     - name: pip | get-pip.py
-      get_url:
+      ansible.builtin.get_url:
         url: "https://bootstrap.pypa.io/pip/3.6/get-pip.py"
         dest: /tmp/
         timeout: 60
@@ -27,7 +27,7 @@
         - ansible_python_version is version('3.7', '<')
 
     - name: pip | install pip
-      command: >
+      ansible.builtin.command: >
         python3 get-pip.py
         --trusted-host=pypi.python.org
         --trusted-host=pypi.org
@@ -43,7 +43,7 @@
 
 - block:  # with tar.gz
     - name: pip | download pip package
-      get_url:
+      ansible.builtin.get_url:
         url: "{{ item }}"
         dest: /tmp/
         timeout: 60
@@ -53,7 +53,7 @@
       register: pip_package_result
 
     - name: pip | extract pip package into /tmp
-      unarchive:
+      ansible.builtin.unarchive:
         src: "/tmp/{{ pip_package_repo | basename }}"
         dest: /tmp/
         extra_opts:
@@ -61,7 +61,7 @@
         remote_src: true
 
     - name: pip | install pip
-      command: "python3 setup.py install"
+      ansible.builtin.command: "python3 setup.py install"
       args:
         chdir: "/tmp/{{ pip_package_repo.split('.tar.gz')[0] | basename }}"
       when: pip_package_result.changed
@@ -72,7 +72,7 @@
 # install pip package from file (installation_method: "file")
 - block:
     - name: pip | extract pip package into /tmp
-      unarchive:
+      ansible.builtin.unarchive:
         src: "{{ pip_package_file }}"
         dest: /tmp/
         extra_opts:
@@ -80,7 +80,7 @@
       register: pip_package_result
 
     - name: pip | install pip
-      command: python3 setup.py install
+      ansible.builtin.command: python3 setup.py install
       args:
         chdir: "/tmp/{{ pip_package_file.split('.tar.gz')[0] | basename }}"
       when: pip_package_result.changed

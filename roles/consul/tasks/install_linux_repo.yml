@@ -2,7 +2,7 @@
 # File: install_linux_repo.yml - package installation tasks for Consul
 
 - name: Install OS packages
-  package:
+  ansible.builtin.package:
     name: "{{ consul_repo_prerequisites }}"
     state: present
   register: package_status
@@ -14,22 +14,22 @@
   tags: installation
 
 - name: Gather the package facts
-  package_facts:
+  ansible.builtin.package_facts:
     manager: auto
 
 - name: Clean up previous consul data
   block:
     - name: Populate service facts
-      service_facts:
+      ansible.builtin.service_facts:
 
     - name: Stop service consul, if running
-      service:
+      ansible.builtin.service:
         name: consul
         state: stopped
       when: ansible_facts.services | join is match('.*consul.*')
 
     - name: Remove consul service unit files from previous installation
-      file:
+      ansible.builtin.file:
         path: "{{ service_unit_item }}"
         state: absent
       loop:
@@ -39,7 +39,7 @@
         loop_var: service_unit_item
 
     - name: Remove the user 'consul'
-      user:
+      ansible.builtin.user:
         name: consul
         state: absent
         remove: true
@@ -50,7 +50,7 @@
 - name: Install repository
   block:
     - name: Add Redhat/CentOS/Fedora/Amazon Linux repository
-      command: "yum-config-manager --add-repo {{ consul_repo_url }}"
+      ansible.builtin.command: "yum-config-manager --add-repo {{ consul_repo_url }}"
       args:
         creates: /etc/yum.repos.d/hashicorp.repo
       when: >
@@ -62,13 +62,13 @@
         ansible_distribution|lower == 'almalinux'
 
     - name: Add an Apt signing key, uses whichever key is at the URL
-      apt_key:
+      ansible.builtin.apt_key:
         url: "{{ consul_repo_url }}/gpg"
         state: present
       when: "ansible_os_family|lower == 'debian'"
 
     - name: Add Debian/Ubuntu Linux repository
-      apt_repository:
+      ansible.builtin.apt_repository:
         repo: "deb {{ consul_repo_url }} {{ ansible_distribution_release }} main"
         state: present
         update_cache: true
@@ -78,7 +78,7 @@
   become: true
 
 - name: Install consul package
-  package:
+  ansible.builtin.package:
     name: "consul{{ '=' if ansible_pkg_mgr == 'apt' else '-' }}{{ consul_version }}"
     state: present
   register: package_status
@@ -88,7 +88,7 @@
   become: true
 
 - name: Create a directory /etc/systemd/system/consul.service.d
-  file:
+  ansible.builtin.file:
     path: /etc/systemd/system/consul.service.d
     state: directory
     mode: '0755'
@@ -99,7 +99,7 @@
   when: ansible_service_mgr == "systemd"
 
 - name: Override systemd service params
-  template:
+  ansible.builtin.template:
     src: consul_systemd_service.override.j2
     dest: /etc/systemd/system/consul.service.d/override.conf
     owner: root
@@ -115,10 +115,10 @@
     - consul_install_from_repo | bool
 
 - name: Flush handlers
-  meta: flush_handlers
+  ansible.builtin.meta: flush_handlers
 
 - name: As, this role work with json conf file only - delete file /etc/consul.d/consul.hcl
-  file:
+  ansible.builtin.file:
     path: /etc/consul.d/consul.hcl
     state: absent
   become: true

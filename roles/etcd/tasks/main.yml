@@ -1,10 +1,10 @@
 ---
 
 - name: Make sure handlers are flushed immediately
-  meta: flush_handlers
+  ansible.builtin.meta: flush_handlers
 
 - name: Make sure the unzip/tar packages are present
-  package:
+  ansible.builtin.package:
     name:
       - unzip
       - tar
@@ -18,7 +18,7 @@
 
 - block:  # install etcd package from repo
     - name: Download "etcd" package
-      get_url:
+      ansible.builtin.get_url:
         url: "{{ item }}"
         dest: /tmp/
         timeout: 60
@@ -28,7 +28,7 @@
       environment: "{{ proxy_env | default({}) }}"
 
     - name: Extract "etcd" into /tmp
-      unarchive:
+      ansible.builtin.unarchive:
         src: "/tmp/{{ etcd_package_repo | basename }}"
         dest: /tmp/
         extra_opts:
@@ -36,7 +36,7 @@
         remote_src: true
 
     - name: Copy "etcd" and "etcdctl" binary files to /usr/local/bin/
-      copy:
+      ansible.builtin.copy:
         src: "/tmp/{{ etcd_package_repo.split('.tar.gz')[0] | basename }}/{{ item }}"
         dest: /usr/local/bin/
         mode: u+x,g+x,o+x
@@ -49,14 +49,14 @@
 
 - block:  # install etcd package from file
     - name: Extract "etcd" into /tmp
-      unarchive:
+      ansible.builtin.unarchive:
         src: "{{ etcd_package_file }}"
         dest: /tmp/
         extra_opts:
           - --no-same-owner
 
     - name: Copy "etcd" and "etcdctl" binary files to /usr/local/bin/
-      copy:
+      ansible.builtin.copy:
         src: "/tmp/{{ etcd_package_file.split('.tar.gz')[0] | basename }}/{{ item }}"
         dest: /usr/local/bin/
         mode: u+x,g+x,o+x
@@ -68,20 +68,20 @@
   tags: etcd, etcd_install
 
 - name: Add etcd user
-  user:
+  ansible.builtin.user:
     name: etcd
     shell: /usr/sbin/nologin
     home: "{{ etcd_data_dir }}"
   tags: etcd, etcd_conf
 
 - name: Create etcd conf directory
-  file:
+  ansible.builtin.file:
     path: /etc/etcd
     state: directory
   tags: etcd, etcd_conf
 
 - name: Create etcd data directory
-  file:
+  ansible.builtin.file:
     path: "{{ etcd_data_dir }}"
     state: directory
     owner: etcd
@@ -89,19 +89,19 @@
   tags: etcd, etcd_conf
 
 - name: Generate conf file "/etc/etcd/etcd.conf"
-  template:
+  ansible.builtin.template:
     src: templates/etcd.conf.j2
     dest: /etc/etcd/etcd.conf
   tags: etcd, etcd_conf
 
 - name: Copy systemd service file
-  template:
+  ansible.builtin.template:
     src: templates/etcd.service.j2
     dest: /etc/systemd/system/etcd.service
   tags: etcd, etcd_conf
 
 - name: Enable and start etcd service
-  systemd:
+  ansible.builtin.systemd:
     daemon_reload: true
     name: etcd
     enabled: true
@@ -109,7 +109,7 @@
   tags: etcd, etcd_start
 
 - name: Wait for port 2379 to become open on the host
-  wait_for:
+  ansible.builtin.wait_for:
     port: 2379
     host: 127.0.0.1
     state: started
@@ -120,7 +120,7 @@
 
 - block:
     - name: Wait until the etcd cluster is healthy
-      command: >
+      ansible.builtin.command: >
         /usr/local/bin/etcdctl endpoint health
         --endpoints=http://{{ inventory_hostname }}:2379
       register: etcd_health_result
@@ -131,7 +131,7 @@
       ignore_errors: false
 
     - name: cluster health
-      debug:
+      ansible.builtin.debug:
         msg: "{{ etcd_health_result.stdout }}"
   tags: etcd, etcd_start, etcd_status
 

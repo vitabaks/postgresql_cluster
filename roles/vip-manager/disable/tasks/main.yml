@@ -1,6 +1,6 @@
 ---
 - name: Disabe vip-manager service
-  systemd:
+  ansible.builtin.systemd:
     daemon_reload: true
     name: vip-manager
     state: stopped

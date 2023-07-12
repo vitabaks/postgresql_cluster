@@ -2,14 +2,14 @@
 
 - block:  # Debian/Ubuntu
     - name: Add repository apt-key
-      apt_key:
+      ansible.builtin.apt_key:
         url: "{{ item.key }}"
         state: present
       loop: "{{ apt_repository_keys }}"
       when: apt_repository_keys | length > 0
 
     - name: Add repository
-      apt_repository:
+      ansible.builtin.apt_repository:
         repo: "{{ item.repo }}"
         state: present
         update_cache: true
@@ -21,7 +21,7 @@
 
 - block:  # RedHat/CentOS
     - name: Add repository
-      yum_repository:
+      ansible.builtin.yum_repository:
         name: "{{ item.name }}"
         description: "{{ item.description }}"
         baseurl: "{{ item.baseurl }}"
@@ -32,7 +32,7 @@
 
     # Install Epel Repository
     - name: Remove epel-release package (if exists)
-      package:
+      ansible.builtin.package:
         name: epel-release
         state: absent
       register: package_status
@@ -43,7 +43,7 @@
       tags: install_epel_repo
 
     - name: Get epel-release-latest rpm package
-      get_url:
+      ansible.builtin.get_url:
         url: "https://dl.fedoraproject.org/pub/epel/epel-release-latest-{{ ansible_distribution_major_version }}.noarch.rpm"
         dest: /tmp/
         timeout: 30
@@ -52,7 +52,7 @@
       tags: install_epel_repo
 
     - name: Install EPEL repository
-      package:
+      ansible.builtin.package:
         name: "/tmp/epel-release-latest-{{ ansible_distribution_major_version }}.noarch.rpm"
         state: present
         disable_gpg_check: true
@@ -65,7 +65,7 @@
 
     # Install SCL Repository
     - name: Install Software Collections (SCL) repository for CentOS 7
-      package:
+      ansible.builtin.package:
         name: centos-release-scl-rh
         state: present
       register: package_status
@@ -78,7 +78,7 @@
       tags: install_scl_repo
 
     - name: Add Software Collections (SCL) repository for OracleLinux 7
-      yum_repository:
+      ansible.builtin.yum_repository:
         name: ol7_software_collections
         description: Software Collection Library packages for Oracle Linux 7 (x86_64)
         baseurl: https://yum.oracle.com/repo/OracleLinux/OL7/SoftwareCollections/x86_64/
@@ -92,7 +92,7 @@
 
       # Development repository (for llvm-toolset-7-clang)
     - name: Add Development repository for OracleLinux 7
-      yum_repository:
+      ansible.builtin.yum_repository:
         name: ol7_developer
         description: Packages for test and development - Oracle Linux 7 (x86_64)
         baseurl: https://yum.oracle.com/repo/OracleLinux/OL7/developer/x86_64
@@ -104,7 +104,7 @@
 
       # Optional Development repository (for libedit-devel)
     - name: Add Optional Development repository for OracleLinux 7
-      yum_repository:
+      ansible.builtin.yum_repository:
         name: ol7_optional_developer
         description: Developer preview optional packages for Development on Oracle Linux 7 (x86_64)
         baseurl: https://yum.oracle.com/repo/OracleLinux/OL7/optional/developer/x86_64
@@ -117,7 +117,7 @@
     - name: Enable Software Collections (SCL) repository for RedHat 7
       become: true
       become_user: root
-      command: subscription-manager repos --enable rhel-server-rhscl-7-rpms
+      ansible.builtin.command: subscription-manager repos --enable rhel-server-rhscl-7-rpms
       when: install_scl_repo|bool and
             (ansible_distribution == 'RedHat' and
             ansible_distribution_major_version == '7')
@@ -125,28 +125,28 @@
 
     # PowerTools repository (to install dependencies for postgresql<version>-devel package)
     - name: Enable PowerTools repository
-      command: dnf config-manager --set-enabled "[Pp]ower[Tt]ools"
+      ansible.builtin.command: dnf config-manager --set-enabled "[Pp]ower[Tt]ools"
       when:
         - ansible_distribution_major_version is version('8', '==')
         - ansible_distribution != "OracleLinux"
 
     # CodeReady Linux Builder (crb) repository (to install dependencies for postgresql<version>-devel package)
     - name: Enable CodeReady Linux Builder (crb) repository
-      command: dnf config-manager --set-enabled crb
+      ansible.builtin.command: dnf config-manager --set-enabled crb
       when:
         - ansible_distribution_major_version is version('9', '>=')
         - ansible_distribution != "OracleLinux"
 
     # CodeReady Builder repository for OracleLinux (to install dependencies for postgresql<version>-devel package)
     - name: Enable CodeReady Builder repository
-      command: dnf config-manager --enable ol{{ ansible_distribution_major_version }}_codeready_builder
+      ansible.builtin.command: dnf config-manager --enable ol{{ ansible_distribution_major_version }}_codeready_builder
       when:
         - ansible_distribution == "OracleLinux"
         - ansible_distribution_major_version is version('8', '>=')
 
     # Install PostgreSQL Repository
     - name: Get pgdg-redhat-repo-latest.noarch.rpm
-      get_url:
+      ansible.builtin.get_url:
         url: "https://download.postgresql.org/pub/repos/yum/reporpms/EL-{{ ansible_distribution_major_version }}-x86_64/pgdg-redhat-repo-latest.noarch.rpm"
         dest: /tmp/
         timeout: 30
@@ -155,7 +155,7 @@
       tags: install_postgresql_repo
 
     - name: Install PostgreSQL repository
-      package:
+      ansible.builtin.package:
         name: /tmp/pgdg-redhat-repo-latest.noarch.rpm
         state: present
         disable_gpg_check: true
@@ -173,13 +173,13 @@
 - block:
     # Debian based
     - name: Add TimescaleDB repository apt-key
-      apt_key:
+      ansible.builtin.apt_key:
         url: "https://packagecloud.io/timescale/timescaledb/gpgkey"
         state: present
       when: ansible_os_family == "Debian"
 
     - name: Add TimescaleDB repository
-      apt_repository:
+      ansible.builtin.apt_repository:
         repo: "deb https://packagecloud.io/timescale/timescaledb/{{ ansible_distribution | lower }}/ {{ ansible_distribution_release }} main"
         state: present
         update_cache: true
@@ -187,7 +187,7 @@
 
     # RedHat based
     - name: Add TimescaleDB repository
-      yum_repository:
+      ansible.builtin.yum_repository:
         name: "timescale_timescaledb"
         description: "timescaledb repo"
         baseurl: "https://packagecloud.io/timescale/timescaledb/el/{{ ansible_distribution_major_version }}/x86_64"

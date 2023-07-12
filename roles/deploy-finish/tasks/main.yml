@@ -1,14 +1,14 @@
 ---
 
 - name: Make sure handlers are flushed immediately
-  meta: flush_handlers
+  ansible.builtin.meta: flush_handlers
 
 - block:
     - name: Check postgresql cluster health
       run_once: true
       become: true
       become_user: postgres
-      command: patronictl -c /etc/patroni/patroni.yml list
+      ansible.builtin.command: patronictl -c /etc/patroni/patroni.yml list
       register: patronictl_result
       environment:
         PATH: "{{ ansible_env.PATH }}:/usr/bin:/usr/local/bin"
@@ -16,7 +16,7 @@
 
     - name: PostgreSQL Cluster health
       run_once: true
-      debug:
+      ansible.builtin.debug:
         var: patronictl_result.stdout_lines
   ignore_errors: true
   tags: patroni_status, cluster_info, cluster_status, point_in_time_recovery
@@ -26,7 +26,7 @@
       run_once: true
       become: true
       become_user: postgres
-      command:
+      ansible.builtin.command:
         "{{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -c
         \"
           SELECT
@@ -54,7 +54,7 @@
 
     - name: PostgreSQL list of databases
       run_once: true
-      debug:
+      ansible.builtin.debug:
         var: dbs_result.stdout_lines
   ignore_errors: true
   tags: databases, db_list, cluster_info, cluster_status, point_in_time_recovery
@@ -62,7 +62,7 @@
 - block:  # if cluster_vip is defined
     - name: PostgreSQL Cluster connection info
       run_once: true
-      debug:
+      ansible.builtin.debug:
         msg:
           - +------------------------------------------------+
           - address (VIP) {{ cluster_vip }}
@@ -77,7 +77,7 @@
 
     - name: PostgreSQL Cluster connection info
       run_once: true
-      debug:
+      ansible.builtin.debug:
         msg:
           - +------------------------------------------------+
           - address (VIP) {{ cluster_vip }}
@@ -90,7 +90,7 @@
 
     - name: PostgreSQL Cluster connection info
       run_once: true
-      debug:
+      ansible.builtin.debug:
         msg:
           - +------------------------------------------------+
           - address (VIP) {{ cluster_vip }}
@@ -106,13 +106,13 @@
 
 - block:
     - name: Get vip info
-      set_fact:
+      ansible.builtin.set_fact:
         man_ip: "{{ item }}"
       loop: "{{ ansible_all_ipv4_addresses }}"
       when: item == cluster_vip
 
     - name: Virtual IP Address (VIP) info
-      debug:
+      ansible.builtin.debug:
         msg:
           "Cluster ip address (VIP) {{ cluster_vip }}
            is running on server {{ ansible_hostname }}"
@@ -127,13 +127,13 @@
 - block:  # if cluster_vip is not defined
     - name: Create list of nodes
       run_once: true
-      set_fact:
+      ansible.builtin.set_fact:
         haproxy_nodes: "{% for host in groups['balancers'] | default([]) %}{{ hostvars[host]['inventory_hostname'] }}{% if not loop.last %},{% endif %}{% endfor %}"
         postgres_cluster_nodes: "{% for host in groups['postgres_cluster'] %}{{ hostvars[host]['inventory_hostname'] }}{% if not loop.last %},{% endif %}{% endfor %}"
 
     - name: PostgreSQL Cluster connection info
       run_once: true
-      debug:
+      ansible.builtin.debug:
         msg:
           - +------------------------------------------------+
           - address {{ haproxy_nodes }}
@@ -148,7 +148,7 @@
 
     - name: PostgreSQL Cluster connection info
       run_once: true
-      debug:
+      ansible.builtin.debug:
         msg:
           - +------------------------------------------------+
           - address {{ haproxy_nodes }}
@@ -161,7 +161,7 @@
 
     - name: PostgreSQL Cluster connection info
       run_once: true
-      debug:
+      ansible.builtin.debug:
         msg:
           - +------------------------------------------------+
           - address {{ postgres_cluster_nodes }}
@@ -179,7 +179,7 @@
 - block:  # if dcs_type: "consul"
     - name: PostgreSQL Cluster connection info
       run_once: true
-      debug:
+      ansible.builtin.debug:
         msg:
           - +------------------------------------------------+
           - "Client access point (DNS):"
@@ -191,7 +191,7 @@
 
     - name: PostgreSQL Cluster connection info
       run_once: true
-      debug:
+      ansible.builtin.debug:
         msg:
           - +------------------------------------------------+
           - "Client access point (DNS):"

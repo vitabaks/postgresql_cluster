@@ -2,7 +2,7 @@
 # File: install.yml - package installation tasks for Consul
 
 - name: Install OS packages
-  package:
+  ansible.builtin.package:
     name: "{{ consul_os_packages }}"
     state: present
   register: package_status
@@ -13,7 +13,7 @@
   when: not ansible_facts['os_family'] == "VMware Photon OS" and (consul_os_packages | length > 0)
 
 - name: Install OS packages
-  command: "tdnf install -y {{ package_item }}"
+  ansible.builtin.command: "tdnf install -y {{ package_item }}"
   with_items: "{{ consul_os_packages }}"
   loop_control:
     loop_var: package_item
@@ -28,7 +28,7 @@
   delegate_to: 127.0.0.1
 
 - name: Read package checksum file
-  stat:
+  ansible.builtin.stat:
     path: "{{ role_path }}/files/consul_{{ consul_version }}_SHA256SUMS"
   become: false
   vars:
@@ -39,7 +39,7 @@
   delegate_to: 127.0.0.1
 
 - name: Download package checksum file
-  get_url:
+  ansible.builtin.get_url:
     url: "{{ consul_checksum_file_url }}"
     dest: "{{ role_path }}/files/consul_{{ consul_version }}_SHA256SUMS"
   become: false
@@ -51,7 +51,7 @@
   delegate_to: 127.0.0.1
 
 - name: Read package checksum
-  shell: grep "{{ consul_pkg }}" "{{ role_path }}/files/consul_{{ consul_version }}_SHA256SUMS" | awk '{print $1}'
+  ansible.builtin.shell: grep "{{ consul_pkg }}" "{{ role_path }}/files/consul_{{ consul_version }}_SHA256SUMS" | awk '{print $1}'
   become: false
   vars:
     ansible_become: false
@@ -63,7 +63,7 @@
   delegate_to: 127.0.0.1
 
 - name: Check Consul package file
-  stat:
+  ansible.builtin.stat:
     path: "{{ role_path }}/files/{{ consul_pkg }}"
   become: false
   vars:
@@ -74,7 +74,7 @@
   delegate_to: 127.0.0.1
 
 - name: Download Consul package
-  get_url:
+  ansible.builtin.get_url:
     url: "{{ consul_zip_url }}"
     dest: "{{ role_path }}/files/{{ consul_pkg }}"
     checksum: "sha256:{{ consul_sha256.stdout }}"
@@ -89,7 +89,7 @@
   ignore_errors: "{{ ansible_check_mode }}"
 
 - name: Create Temporary Directory for Extraction
-  tempfile:
+  ansible.builtin.tempfile:
     state: directory
     prefix: ansible-consul.
   become: false
@@ -103,7 +103,7 @@
 - name: Unarchive and install Consul
   block:
     - name: Unarchive Consul package
-      unarchive:
+      ansible.builtin.unarchive:
         src: "{{ role_path }}/files/{{ consul_pkg }}"
         dest: "{{ install_temp.path }}/"
         creates: "{{ install_temp.path }}/consul"
@@ -118,7 +118,7 @@
       ignore_errors: "{{ ansible_check_mode }}"
 
     - name: Install Consul
-      copy:
+      ansible.builtin.copy:
         src: "{{ install_temp.path }}/consul"
         dest: "{{ consul_bin_path }}/consul"
         owner: "{{ consul_user }}"
@@ -131,7 +131,7 @@
       ignore_errors: "{{ ansible_check_mode }}"
   always:
     - name: Cleanup
-      file:
+      ansible.builtin.file:
         path: "{{ install_temp.path }}"
         state: "absent"
       become: false

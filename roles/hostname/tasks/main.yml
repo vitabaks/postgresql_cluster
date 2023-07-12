@@ -2,11 +2,11 @@
 
 - block:
     - name: Change hostname
-      hostname:
+      ansible.builtin.hostname:
         name: "{{ hostname }}"
 
     - name: Change hostname in /etc/hosts
-      lineinfile:
+      ansible.builtin.lineinfile:
         dest: /etc/hosts
         regexp: "{{ item.regexp }}"
         line: "{{ item.line }}"

@@ -1,7 +1,7 @@
 ---
 
 - name: Ensure iptables is present.
-  package:
+  ansible.builtin.package:
     name: iptables
     state: present
   register: package_status
@@ -10,12 +10,12 @@
   retries: 3
 
 - name: Flush iptables the first time playbook runs.
-  command: >
+  ansible.builtin.command: >
     iptables -F
     creates=/etc/firewall.bash
 
 - name: Copy firewall script into place.
-  template:
+  ansible.builtin.template:
     src: firewall.bash.j2
     dest: /etc/firewall.bash
     owner: root
@@ -24,7 +24,7 @@
   notify: restart firewall
 
 - name: Copy firewall init script into place.
-  template:
+  ansible.builtin.template:
     src: firewall.init.j2
     dest: /etc/init.d/firewall
     owner: root
@@ -33,7 +33,7 @@
   when: "ansible_service_mgr != 'systemd'"
 
 - name: Copy firewall systemd unit file into place (for systemd systems).
-  template:
+  ansible.builtin.template:
     src: firewall.unit.j2
     dest: /etc/systemd/system/firewall.service
     owner: root
@@ -68,12 +68,12 @@
   ignore_errors: true
 
 - name: Configure the firewall service.
-  service:
+  ansible.builtin.service:
     name: firewall
     state: "{{ firewall_state }}"
     enabled: "{{ firewall_enabled_at_boot }}"
 
-- import_tasks: disable-other-firewalls.yml
+- ansible.builtin.import_tasks: disable-other-firewalls.yml
   when: firewall_disable_firewalld|bool or firewall_disable_ufw|bool
 
 ...

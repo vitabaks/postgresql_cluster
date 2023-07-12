@@ -2,7 +2,7 @@
 
 - name: TimescaleDB | Checking PostgreSQL version
   run_once: true
-  fail:
+  ansible.builtin.fail:
     msg:
       - "The current PostgreSQL version ({{ postgresql_version }}) is not supported by the TimescaleDB."
       - "PostgreSQL version must be {{ timescale_minimal_pg_version }} or higher."
@@ -11,7 +11,7 @@
 
 - block:
     - name: TimescaleDB | Ensure 'timescaledb' is in 'shared_preload_libraries'
-      set_fact:
+      ansible.builtin.set_fact:
         # This complex line does several things:
         # 1. It takes the current list of PostgreSQL parameters,
         # 2. Removes any item where the option is 'shared_preload_libraries',

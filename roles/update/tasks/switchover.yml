@@ -2,7 +2,7 @@
 - name: Perform switchover of the leader for the Patroni cluster "{{ patroni_cluster_name }}"
   become: true
   become_user: postgres
-  expect:
+  ansible.builtin.expect:
     command: "patronictl -c /etc/patroni/patroni.yml switchover {{ patroni_cluster_name }}"
     responses:
       (.*)Primary(.*): "{{ hostvars[groups['primary'][0]]['ansible_hostname'] }}"
@@ -16,7 +16,7 @@
     ansible_python_interpreter: /usr/bin/python3
 
 - name: Make sure that the Patroni is healthy and is a replica
-  uri:
+  ansible.builtin.uri:
     url: http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/replica
     status_code: 200
   register: patroni_replica_result

@@ -2,12 +2,12 @@
 
 - block:
     - name: Make sure /etc/resolv.conf exists
-      stat:
+      ansible.builtin.stat:
         path: /etc/resolv.conf
       register: resolv_conf
 
     - name: Create /etc/resolv.conf
-      file:
+      ansible.builtin.file:
         path: /etc/resolv.conf
         state: touch
         owner: root
@@ -16,7 +16,7 @@
       when: not resolv_conf.stat.exists
 
     - name: Add DNS server(s) into /etc/resolv.conf
-      lineinfile:
+      ansible.builtin.lineinfile:
         path: /etc/resolv.conf
         regexp: "^nameserver {{ item }}"
         insertbefore: '^options'

@@ -2,7 +2,7 @@
 
 - block:  # Debian family
     - name: Make sure the gnupg and apt-transport-https packages are present
-      apt:
+      ansible.builtin.apt:
         pkg:
           - gnupg
           - apt-transport-https
@@ -13,16 +13,16 @@
       retries: 3
 
     - name: Make sure pgdg apt key is installed
-      apt_key:
+      ansible.builtin.apt_key:
         id: 636D717E
         url: https://repo.postgrespro.ru/pg_probackup/keys/GPG-KEY-PG_PROBACKUP
 
     - name: Make sure pgdg repository is installed
-      apt_repository:
+      ansible.builtin.apt_repository:
         repo: "deb [arch=amd64] http://repo.postgrespro.ru/pg_probackup/deb/ {{ ansible_distribution_release }} main-{{ ansible_distribution_release }}"
 
     - name: Update apt cache
-      apt:
+      ansible.builtin.apt:
         update_cache: true
       register: apt_status
       until: apt_status is success
@@ -30,7 +30,7 @@
       retries: 3
 
     - name: Install pg_probackup
-      package:
+      ansible.builtin.package:
         name:
           - pg-probackup-{{ pg_probackup_version }}
           - pg-probackup-{{ pg_probackup_version }}-dbg
@@ -49,7 +49,7 @@
 - block:  # RedHat family
     # RPM Centos Packages
     - name: Get pg_probackup-repo-centos.noarch.rpm
-      get_url:
+      ansible.builtin.get_url:
         url: "https://repo.postgrespro.ru/pg_probackup/keys/pg_probackup-repo-centos.noarch.rpm"
         dest: "/tmp/pg_probackup-repo.rpm"
         timeout: 30
@@ -57,7 +57,7 @@
       when: ansible_distribution == 'CentOS'
     # RPM Oracle Linux Packages
     - name: Get pg_probackup-repo-oraclelinux.noarch.rpm
-      get_url:
+      ansible.builtin.get_url:
         url: "https://repo.postgrespro.ru/pg_probackup/keys/pg_probackup-repo-oraclelinux.noarch.rpm"
         dest: "/tmp/pg_probackup-repo.rpm"
         timeout: 30
@@ -65,7 +65,7 @@
       when: ansible_distribution == 'OracleLinux'
     # RPM RHEL Packages
     - name: Get pg_probackup-repo-rhel.noarch.rpm
-      get_url:
+      ansible.builtin.get_url:
         url: "https://repo.postgrespro.ru/pg_probackup/keys/pg_probackup-repo-rhel.noarch.rpm"
         dest: "/tmp/pg_probackup-repo.rpm"
         timeout: 30
@@ -75,7 +75,7 @@
         - ansible_distribution != 'OracleLinux'
 
     - name: Make sure pgdg repository is installed
-      package:
+      ansible.builtin.package:
         name: /tmp/pg_probackup-repo.rpm
         state: present
       register: package_status
@@ -84,15 +84,15 @@
       retries: 3
 
     - name: Clean yum cache
-      command: yum clean all
+      ansible.builtin.command: yum clean all
       when: ansible_distribution_major_version == '7'
 
     - name: Clean dnf cache
-      command: dnf clean all
+      ansible.builtin.command: dnf clean all
       when: ansible_distribution_major_version is version('8', '>=')
 
     - name: Install pg_probackup
-      package:
+      ansible.builtin.package:
         name:
           - pg_probackup-{{ pg_probackup_version }}
           - pg_probackup-{{ pg_probackup_version }}-debuginfo

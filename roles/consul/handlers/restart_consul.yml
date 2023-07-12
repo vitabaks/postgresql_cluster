@@ -1,13 +1,13 @@
 ---
 - name: Daemon reload systemd in case the binaries upgraded
-  systemd:
+  ansible.builtin.systemd:
     daemon_reload: true
   become: true
   when: ansible_service_mgr == "systemd"
   listen: 'reload systemd daemon'
 
 - name: restart consul on unix
-  service:
+  ansible.builtin.service:
     name: consul
     state: restarted
   when:
@@ -16,7 +16,7 @@
   listen: 'restart consul'
 
 - name: restart consul on Mac
-  include_tasks: "{{ role_path }}/handlers/restart_consul_mac.yml"
+  ansible.builtin.include_tasks: "{{ role_path }}/handlers/restart_consul_mac.yml"
   when: ansible_os_family == "Darwin"
   listen: 'restart consul'
 

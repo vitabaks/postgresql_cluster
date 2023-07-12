@@ -1,6 +1,6 @@
 ---
 - name: "Edit patroni.yml | enable noloadbalance, nosync, nofailover"
-  replace:
+  ansible.builtin.replace:
     path: /etc/patroni/patroni.yml
     regexp: "{{ item.regexp }}"
     replace: "{{ item.replace }}"
@@ -12,14 +12,14 @@
     label: '{{ item.replace }}'
 
 - name: Reload patroni service
-  systemd:
+  ansible.builtin.systemd:
     daemon_reload: true
     name: patroni
     enabled: true
     state: reloaded
 
 - name: Make sure replica endpoint is unavailable
-  uri:
+  ansible.builtin.uri:
     url: http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/replica
     status_code: 503
   register: patroni_replica_result
@@ -30,7 +30,7 @@
 - name: Wait for active transactions to complete
   become: true
   become_user: postgres
-  command: >-
+  ansible.builtin.command: >-
     psql -tAXc "select
     count(*) from pg_stat_activity
     where pid <> pg_backend_pid()

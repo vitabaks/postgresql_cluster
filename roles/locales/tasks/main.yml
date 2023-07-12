@@ -2,7 +2,7 @@
 
 # for OracleLinux 7
 - name: Reinstall glibc-common to avoid problem when generating locales
-  command: yum reinstall glibc-common -y
+  ansible.builtin.command: yum reinstall glibc-common -y
   environment: "{{ proxy_env | default({}) }}"
   when: (ansible_distribution == "OracleLinux" and
          ansible_distribution_major_version == '7')
@@ -18,7 +18,7 @@
 
     - name: Generate locales
       become: true
-      command: >
+      ansible.builtin.command: >
         localedef -c
         -i {{ item.language_country }}
         -f {{ item.encoding }} {{ item.language_country }}.{{ item.encoding }}
@@ -28,7 +28,7 @@
             ansible_distribution_major_version == '7'
 
     - name: Install glibc-langpack
-      dnf:
+      ansible.builtin.dnf:
         name: "{{ item }}"
       loop: "{{ glibc_langpack }}"
       environment: "{{ proxy_env | default({}) }}"
@@ -39,7 +39,7 @@
 
 - block:
     - name: Set locale "{{ locale }}" into /etc/default/locale
-      lineinfile:
+      ansible.builtin.lineinfile:
         dest: "/etc/default/locale"
         regexp: "{{ item.regexp }}"
         line: "{{ item.line }}"
@@ -55,13 +55,13 @@
       when: ansible_os_family == "Debian"
 
     - name: Check that the /etc/locale.conf exists
-      stat:
+      ansible.builtin.stat:
         path: /etc/locale.conf
       register: locale_conf
       when: ansible_os_family == "RedHat"
 
     - name: Set locale "{{ locale }}" into /etc/locale.conf
-      lineinfile:
+      ansible.builtin.lineinfile:
         dest: "/etc/locale.conf"
         regexp: "{{ item.regexp }}"
         line: "{{ item.line }}"
@@ -76,7 +76,7 @@
       when: ansible_os_family == "RedHat" and locale_conf.stat.exists
 
     - name: Set locale "{{ locale }}" into /etc/environment
-      lineinfile:
+      ansible.builtin.lineinfile:
         dest: "/etc/environment"
         regexp: "{{ item.regexp }}"
         line: "{{ item.line }}"

@@ -2,13 +2,13 @@
 - name: See if consul service exists
   become: true
   become_user: "{{ consul_user }}"
-  command: "launchctl list {{ consul_launchctl_ident }}"
+  ansible.builtin.command: "launchctl list {{ consul_launchctl_ident }}"
   changed_when: false
   ignore_errors: true
   register: consul_service_list
 
 - name: Get UID for consul user
-  command: "id -u {{ consul_user }}"
+  ansible.builtin.command: "id -u {{ consul_user }}"
   changed_when: false
   register: uid
   when: consul_service_list is succeeded
@@ -16,7 +16,7 @@
 - name: Unload consul service
   become: true
   become_user: "{{ consul_user }}"
-  command: "launchctl bootout gui/{{ uid.stdout }} {{ consul_launchctl_plist }}"
+  ansible.builtin.command: "launchctl bootout gui/{{ uid.stdout }} {{ consul_launchctl_plist }}"
   changed_when: false
   register: unload_consul_service
   # Code 113 is returned by launchctl for the error "Could not find service in domain for
