@@ -90,10 +90,6 @@
 - name: "Stop PostgreSQL {{ pg_old_version }}"
   command: >
     {{ pg_old_bindir }}/pg_ctl -D {{ pg_old_datadir }} stop -w -t {{ pg_start_stop_timeout }}
-  register: pg_ctl_stop_old_result
-  until: pg_ctl_stop_old_result.rc == 0
-  retries: "{{ (pg_start_stop_timeout | int) // 10 }}"
-  delay: 10
   when:
     - pg_ctl_status_old_result is defined
     - pg_ctl_status_old_result.rc == 0
@@ -101,10 +97,6 @@
 - name: "Stop PostgreSQL {{ pg_new_version }}"
   command: >
     {{ pg_new_bindir }}/pg_ctl -D {{ pg_new_datadir }} stop -w -t {{ pg_start_stop_timeout }}
-  register: pg_ctl_stop_new_result
-  until: pg_ctl_stop_new_result.rc == 0
-  retries: "{{ (pg_start_stop_timeout | int) // 10 }}"
-  delay: 10
   when:
     - pg_ctl_status_new_result is defined
     - pg_ctl_status_new_result.rc == 0
