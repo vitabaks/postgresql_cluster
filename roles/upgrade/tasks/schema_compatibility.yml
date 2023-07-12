@@ -116,10 +116,6 @@
 - name: Stop new PostgreSQL to re-initdb
   command: >
     {{ pg_new_bindir }}/pg_ctl -D {{ pg_new_datadir }} stop -w -t {{ pg_start_stop_timeout }}
-  register: pg_ctl_stop_result
-  until: pg_ctl_stop_result.rc == 0
-  retries: "{{ (pg_start_stop_timeout | int) // 10 }}"
-  delay: 10
   when:
     - inventory_hostname in groups['primary']
     - pg_new_confdir == pg_new_datadir
