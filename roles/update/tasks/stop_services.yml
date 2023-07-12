@@ -3,7 +3,7 @@
 - name: Check PostgreSQL is started and accepting connections
   become: true
   become_user: postgres
-  command: "{{ postgresql_bin_dir }}/pg_isready -p {{ postgresql_port }}"
+  ansible.builtin.command: "{{ postgresql_bin_dir }}/pg_isready -p {{ postgresql_port }}"
   register: pg_isready_result
   until: pg_isready_result.rc == 0
   retries: 30
@@ -15,12 +15,12 @@
     - name: Execute CHECKPOINT before stopping PostgreSQL
       become: true
       become_user: postgres
-      command: psql -tAXc "CHECKPOINT"
+      ansible.builtin.command: psql -tAXc "CHECKPOINT"
 
     - name: "Stop Patroni service on the Cluster Replica ({{ ansible_hostname }})"
       become: true
       become_user: root
-      service:
+      ansible.builtin.service:
         name: patroni
         state: stopped
   when: inventory_hostname in groups['secondary']
@@ -30,12 +30,12 @@
     - name: Execute CHECKPOINT before stopping PostgreSQL
       become: true
       become_user: postgres
-      command: psql -tAXc "CHECKPOINT"
+      ansible.builtin.command: psql -tAXc "CHECKPOINT"
 
     - name: "Stop Patroni service on the old Cluster Leader ({{ ansible_hostname }})"
       become: true
       become_user: root
-      service:
+      ansible.builtin.service:
         name: patroni
         state: stopped
   when: inventory_hostname in groups['primary']

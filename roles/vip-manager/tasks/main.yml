@@ -2,7 +2,7 @@
 
 - block:  # install vip-manager package from repo
     - name: Get vip-manager package
-      get_url:
+      ansible.builtin.get_url:
         url: "{{ item }}"
         dest: /tmp/
         timeout: 60
@@ -12,7 +12,7 @@
       environment: "{{ proxy_env | default({}) }}"
 
     - name: Install vip-manager
-      apt:
+      ansible.builtin.apt:
         force_apt_get: true
         deb: "/tmp/{{ vip_manager_package_repo | basename }}"
         state: present
@@ -23,7 +23,7 @@
       when: ansible_os_family == "Debian"
 
     - name: Install vip-manager
-      package:
+      ansible.builtin.package:
         name: "/tmp/{{ vip_manager_package_repo | basename }}"
         state: present
         disable_gpg_check: true
@@ -37,12 +37,12 @@
 
 - block:  # install vip-manager package from file
     - name: Copy vip-manager package into /tmp
-      copy:
+      ansible.builtin.copy:
         src: "{{ vip_manager_package_file }}"
         dest: /tmp/
 
     - name: Install vip-manager
-      apt:
+      ansible.builtin.apt:
         force_apt_get: true
         deb: "/tmp/{{ vip_manager_package_file | basename }}"
         state: present
@@ -53,7 +53,7 @@
       when: ansible_os_family == "Debian"
 
     - name: Install vip-manager
-      package:
+      ansible.builtin.package:
         name: "/tmp/{{ vip_manager_package_file | basename }}"
         state: present
         disable_gpg_check: true
@@ -66,7 +66,7 @@
   tags: vip, vip_manager, vip_manager_install
 
 - name: Make sure the conf directory "{{ vip_manager_conf | dirname }}" exist
-  file:
+  ansible.builtin.file:
     dest: "{{ vip_manager_conf | dirname }}"
     state: directory
     owner: postgres
@@ -74,7 +74,7 @@
   tags: vip, vip_manager, vip_manager_conf
 
 - name: Generate conf file "{{ vip_manager_conf }}"
-  template:
+  ansible.builtin.template:
     src: templates/vip-manager.yml.j2
     dest: "{{ vip_manager_conf }}"
     owner: postgres
@@ -87,7 +87,7 @@
 - block:  # for add_pgnode.yml
     - name: Fetch "{{ vip_manager_conf | basename }}" conf file from master
       run_once: true
-      fetch:
+      ansible.builtin.fetch:
         src: "{{ vip_manager_conf }}"
         dest: "files/{{ vip_manager_conf | basename }}"
         validate_checksum: true
@@ -95,13 +95,13 @@
       delegate_to: "{{ groups.master[0] }}"
 
     - name: Copy "{{ vip_manager_conf | basename }}" conf file to replica
-      copy:
+      ansible.builtin.copy:
         src: "files/{{ vip_manager_conf | basename }}"
         dest: "{{ vip_manager_conf | dirname }}"
       notify: "restart vip-manager"
 
     - name: Prepare "{{ vip_manager_conf | basename }}" conf file (replace "nodename","iface")
-      lineinfile:
+      ansible.builtin.lineinfile:
         path: "{{ vip_manager_conf }}"
         regexp: "{{ item.regexp }}"
         line: "{{ item.line }}"
@@ -116,7 +116,7 @@
   tags: vip, vip_manager, vip_manager_conf
 
 - name: Generate systemd service file
-  template:
+  ansible.builtin.template:
     src: templates/vip-manager.service.j2
     dest: /etc/systemd/system/vip-manager.service
     owner: postgres
@@ -126,6 +126,6 @@
   tags: vip, vip_manager, vip_manager_service
 
 - name: Make sure handlers are flushed immediately
-  meta: flush_handlers
+  ansible.builtin.meta: flush_handlers
 
 ...

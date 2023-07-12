@@ -1,6 +1,6 @@
 ---
 - name: Check if firewalld package is installed (on RHEL).
-  command: yum list installed firewalld
+  ansible.builtin.command: yum list installed firewalld
   register: firewalld_installed
   failed_when: false
   changed_when: false
@@ -10,7 +10,7 @@
   check_mode: false
 
 - name: Disable the firewalld service (on RHEL, if configured).
-  service:
+  ansible.builtin.service:
     name: firewalld
     state: stopped
     enabled: false
@@ -20,7 +20,7 @@
     - firewalld_installed.rc == 0
 
 - name: Check if ufw package is installed (on Ubuntu).
-  command: service ufw status
+  ansible.builtin.command: service ufw status
   register: ufw_installed
   failed_when: false
   changed_when: false
@@ -30,7 +30,7 @@
   check_mode: false
 
 - name: Disable the ufw firewall (on Ubuntu, if configured).
-  service:
+  ansible.builtin.service:
     name: ufw
     state: stopped
     enabled: false
@@ -40,7 +40,7 @@
     - ufw_installed.rc == 0
 
 - name: Check if ufw package is installed (on Archlinux).
-  command: pacman -Q ufw
+  ansible.builtin.command: pacman -Q ufw
   register: ufw_installed
   ignore_errors: true
   changed_when: false
@@ -50,7 +50,7 @@
   check_mode: false
 
 - name: Disable the ufw firewall (on Archlinux, if configured).
-  service:
+  ansible.builtin.service:
     name: ufw
     state: stopped
     enabled: false

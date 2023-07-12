@@ -2,34 +2,34 @@
 # File: main.yml - Handlers for Consul
 
 - name: restart consul
-  import_tasks: restart_consul.yml
+  ansible.builtin.import_tasks: restart_consul.yml
 
 - name: start consul
-  import_tasks: start_consul.yml
+  ansible.builtin.import_tasks: start_consul.yml
 
 - name: reload consul configuration
-  import_tasks: reload_consul_conf.yml
+  ansible.builtin.import_tasks: reload_consul_conf.yml
 
 - name: restart dnsmasq
-  service:
+  ansible.builtin.service:
     name: dnsmasq
     enabled: true
     state: restarted
   become: true
 
 - name: restart rsyslog
-  import_tasks: restart_rsyslog.yml
+  ansible.builtin.import_tasks: restart_rsyslog.yml
 
 - name: restart syslog-ng
-  import_tasks: restart_syslogng.yml
+  ansible.builtin.import_tasks: restart_syslogng.yml
 
 - name: restart syslog-ng
-  import_tasks: restart_syslogng.yml
+  ansible.builtin.import_tasks: restart_syslogng.yml
 
 - name: start snapshot
-  import_tasks: start_snapshot.yml
+  ansible.builtin.import_tasks: start_snapshot.yml
 
 - name: systemctl daemon-reload
-  systemd:
+  ansible.builtin.systemd:
     daemon_reload: true
   become: true

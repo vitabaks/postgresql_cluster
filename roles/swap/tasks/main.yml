@@ -1,7 +1,7 @@
 ---
 
 - name: Ensure swap exists
-  command: swapon --show=SIZE --bytes --noheadings
+  ansible.builtin.command: swapon --show=SIZE --bytes --noheadings
   register: swap_exists
   changed_when: false
   when:
@@ -10,7 +10,7 @@
   tags: swap, swap_create, swap_remove
 
 - name: Swap exists
-  debug:
+  ansible.builtin.debug:
     msg: "swap_size_mb: {{ (swap_exists.stdout_lines|map('trim')|map('int')|sum / 1024 / 1024)|round|int }}"
   when: swap_exists.stdout is defined and swap_exists.stdout | length > 1
   tags: swap, swap_create, swap_remove
@@ -18,16 +18,16 @@
 # if the swap exists and the size is not equal to swap_file_size_mb
 - block:
     - name: Disable all existing swaps
-      command: swapoff --all
+      ansible.builtin.command: swapoff --all
 
     - name: Remove swap from /etc/fstab
-      lineinfile:
+      ansible.builtin.lineinfile:
         path: /etc/fstab
         state: absent
         regexp: ' swap '
 
     - name: Remove swap file (if exists)
-      file:
+      ansible.builtin.file:
         path: "{{ swap_file_path }}"
         state: absent
   when: (swap_exists.stdout is defined and swap_exists.stdout | length > 1) and
@@ -37,23 +37,23 @@
 # if the swap does not exist
 - block:
     - name: Create swap file
-      command: >
+      ansible.builtin.command: >
         dd if=/dev/zero of={{ swap_file_path }} bs=1M count={{ swap_file_size_mb }}
         creates='{{ swap_file_path }}'
 
     - name: Set permissions on swap file
-      file:
+      ansible.builtin.file:
         path: "{{ swap_file_path }}"
         owner: root
         group: root
         mode: "0600"
 
     - name: Make swap file if necessary
-      command: mkswap {{ swap_file_path }}
+      ansible.builtin.command: mkswap {{ swap_file_path }}
       register: mkswap_result
 
     - name: Run swapon on the swap file
-      command: swapon {{ swap_file_path }}
+      ansible.builtin.command: swapon {{ swap_file_path }}
 
     - name: Manage swap file entry in fstab
       ansible.posix.mount:

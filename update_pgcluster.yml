@@ -9,7 +9,7 @@
     - vars/main.yml
   tasks:
     - name: "[Prepare] Get Patroni Cluster Leader Node"
-      uri:
+      ansible.builtin.uri:
         url: http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/leader
         status_code: 200
       register: patroni_leader_result
@@ -18,7 +18,7 @@
       tags: always
 
     - name: '[Prepare] Add host to group "primary" (in-memory inventory)'
-      add_host:
+      ansible.builtin.add_host:
         name: "{{ item }}"
         groups: primary
       when: hostvars[item]['patroni_leader_result']['status'] == 200
@@ -27,7 +27,7 @@
       tags: always
 
     - name: '[Prepare] Add hosts to group "secondary" (in-memory inventory)'
-      add_host:
+      ansible.builtin.add_host:
         name: "{{ item }}"
         groups: secondary
       when: hostvars[item]['patroni_leader_result']['status'] != 200
@@ -36,7 +36,7 @@
       tags: always
 
     - name: "Print Patroni Cluster info"
-      debug:
+      ansible.builtin.debug:
         msg:
           - "Cluster Name: {{ patroni_cluster_name }}"
           - "Cluster Leader: {{ ansible_hostname }}"
@@ -54,7 +54,7 @@
     max_transaction_sec: 15 # seconds
   tasks:
     - name: Running Pre-Checks
-      include_role:
+      ansible.builtin.include_role:
         name: update
         tasks_from: pre_checks
   tags:
@@ -75,46 +75,46 @@
     target: postgres # or 'patroni', 'system'
   pre_tasks:
     - name: Include OS-specific variables
-      include_vars: "vars/{{ ansible_os_family }}.yml"
+      ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
       tags: always
 
   tasks:
     - name: Stop read-only traffic
-      include_role:
+      ansible.builtin.include_role:
         name: update
         tasks_from: stop_traffic
 
     - name: Stop Services
-      include_role:
+      ansible.builtin.include_role:
         name: update
         tasks_from: stop_services
 
     - name: Update PostgreSQL
-      include_role:
+      ansible.builtin.include_role:
         name: update
         tasks_from: postgres
       when: target | lower == 'postgres'
 
     - name: Update Patroni
-      include_role:
+      ansible.builtin.include_role:
         name: update
         tasks_from: patroni
       when: target | lower == 'patroni' or
         (target | lower == 'system' and patroni_installation_method == "pip")
 
     - name: Update all system packages (includes PostgreSQL and Patroni)
-      include_role:
+      ansible.builtin.include_role:
         name: update
         tasks_from: system
       when: target | lower == 'system'
 
     - name: Start Services
-      include_role:
+      ansible.builtin.include_role:
         name: update
         tasks_from: start_services
 
     - name: Start read-only traffic
-      include_role:
+      ansible.builtin.include_role:
         name: update
         tasks_from: start_traffic
   tags:
@@ -134,51 +134,51 @@
     target: postgres # or 'patroni', 'system'
   pre_tasks:
     - name: Include OS-specific variables
-      include_vars: "vars/{{ ansible_os_family }}.yml"
+      ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
       tags: always
 
   tasks:
     - name: "Switchover Patroni leader role"
-      include_role:
+      ansible.builtin.include_role:
         name: update
         tasks_from: switchover
 
     - name: Stop read-only traffic
-      include_role:
+      ansible.builtin.include_role:
         name: update
         tasks_from: stop_traffic
 
     - name: Stop Services
-      include_role:
+      ansible.builtin.include_role:
         name: update
         tasks_from: stop_services
 
     - name: Update PostgreSQL
-      include_role:
+      ansible.builtin.include_role:
         name: update
         tasks_from: postgres
       when: target | lower == 'postgres'
 
     - name: Update Patroni
-      include_role:
+      ansible.builtin.include_role:
         name: update
         tasks_from: patroni
       when: target | lower == 'patroni' or
         (target | lower == 'system' and patroni_installation_method == "pip")
 
     - name: Update all system packages (includes PostgreSQL and Patroni)
-      include_role:
+      ansible.builtin.include_role:
         name: update
         tasks_from: system
       when: target | lower == 'system'
 
     - name: Start Services
-      include_role:
+      ansible.builtin.include_role:
         name: update
         tasks_from: start_services
 
     - name: Start read-only traffic
-      include_role:
+      ansible.builtin.include_role:
         name: update
         tasks_from: start_traffic
   tags:
@@ -197,7 +197,7 @@
     update_extensions: true # or 'false', to avoid updating extensions
   tasks:
     - name: Update extensions
-      include_role:
+      ansible.builtin.include_role:
         name: update
         tasks_from: extensions
       when: update_extensions | bool
@@ -207,7 +207,7 @@
       run_once: true # noqa run-once
       become: true
       become_user: postgres
-      command: patronictl -c /etc/patroni/patroni.yml list
+      ansible.builtin.command: patronictl -c /etc/patroni/patroni.yml list
       register: patronictl_result
       changed_when: false
       environment:
@@ -215,19 +215,19 @@
 
     - name: Check the current PostgreSQL version
       run_once: true # noqa run-once
-      command: psql -tAXc "select current_setting('server_version')"
+      ansible.builtin.command: psql -tAXc "select current_setting('server_version')"
       register: postgres_version
       changed_when: false
 
     - name: List the Patroni cluster members
       run_once: true # noqa run-once
-      debug:
+      ansible.builtin.debug:
         msg: "{{ patronictl_result.stdout_lines }}"
       when: patronictl_result.stdout_lines is defined
 
     - name: Update completed
       run_once: true # noqa run-once
-      debug:
+      ansible.builtin.debug:
         msg:
           - "PostgreSQL HA cluster update completed."
           - "Current version: {{ postgres_version.stdout }}"

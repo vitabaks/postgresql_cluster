@@ -1,7 +1,7 @@
 ---
 
 - name: Install keepalived packages
-  package:
+  ansible.builtin.package:
     name: keepalived
   register: package_status
   until: package_status is success
@@ -23,7 +23,7 @@
   tags: keepalived_conf, keepalived
 
 - name: Make sure the "/usr/libexec/keepalived" directory exists
-  file:
+  ansible.builtin.file:
     dest: /usr/libexec/keepalived
     state: directory
     owner: root
@@ -31,7 +31,7 @@
   tags: keepalived_conf, keepalived
 
 - name: Create vrrp_script "/usr/libexec/keepalived/haproxy_check.sh"
-  copy:
+  ansible.builtin.copy:
     content: |
       #!/bin/bash
       /bin/kill -0 `cat /run/haproxy/haproxy.pid`
@@ -43,7 +43,7 @@
   tags: keepalived_conf, keepalived
 
 - name: Generate conf file "/etc/keepalived/keepalived.conf"
-  template:
+  ansible.builtin.template:
     src: templates/keepalived.conf.j2
     dest: /etc/keepalived/keepalived.conf
   notify: "restart keepalived"
@@ -53,7 +53,7 @@
 - block:  # for add_balancer.yml
     - name: "Fetch keepalived.conf conf file from {{ groups.balancers[0] }}"
       run_once: true
-      fetch:
+      ansible.builtin.fetch:
         src: /etc/keepalived/keepalived.conf
         dest: files/keepalived.conf
         validate_checksum: true
@@ -61,20 +61,20 @@
       delegate_to: "{{ groups.balancers[0] }}"
 
     - name: Copy keepalived.conf conf file to replica
-      copy:
+      ansible.builtin.copy:
         src: files/keepalived.conf
         dest: /etc/keepalived/keepalived.conf
       notify: "restart keepalived"
 
     - name: Remove keepalived.conf file from localhost
       run_once: true
-      file:
+      ansible.builtin.file:
         path: files/keepalived.conf
         state: absent
       delegate_to: localhost
 
     - name: Prepare keepalived.conf conf file (replace "interface")
-      lineinfile:
+      ansible.builtin.lineinfile:
         path: /etc/keepalived/keepalived.conf
         regexp: "{{ item.regexp }}"
         line: "{{ item.line }}"

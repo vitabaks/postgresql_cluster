@@ -3,14 +3,14 @@
 # Install packages from files
 - block:
     - name: Copy packages into /tmp
-      copy:
+      ansible.builtin.copy:
         src: "{{ item }}"
         dest: /tmp/
       loop: "{{ packages_from_file }}"
       register: copy_packages_result
 
     - name: Install packages
-      apt:
+      ansible.builtin.apt:
         force_apt_get: true
         deb: "/tmp/{{ item }}"
         state: present
@@ -22,7 +22,7 @@
       when: ansible_os_family == "Debian" and copy_packages_result.changed
 
     - name: Install packages
-      package:
+      ansible.builtin.package:
         name: "/tmp/{{ item }}"
         state: present
       loop: "{{ packages_from_file | map('basename') | list }}"
@@ -36,11 +36,11 @@
 
 - block:  # RedHat (update cache)
     - name: Clean yum cache
-      command: yum clean all
+      ansible.builtin.command: yum clean all
       when: ansible_distribution_major_version == '7'
 
     - name: Clean dnf cache
-      command: dnf clean all
+      ansible.builtin.command: dnf clean all
       when: ansible_distribution_major_version is version('8', '>=')
   environment: "{{ proxy_env | default({}) }}"
   when: ansible_os_family == "RedHat" and installation_method == "repo"
@@ -49,7 +49,7 @@
 # Install packages from repository
 # RedHat
 - name: Install system packages
-  package:
+  ansible.builtin.package:
     name: "{{ item }}"
     state: present
   loop: "{{ system_packages }}"
@@ -63,7 +63,7 @@
 
 # Debian
 - name: Install system packages
-  apt:
+  ansible.builtin.apt:
     name: "{{ item }}"
     state: present
   loop: "{{ system_packages }}"
@@ -78,7 +78,7 @@
 # PostgreSQL prepare for install (for Debian based only)
 - block:
     - name: PostgreSQL | ensure postgresql database-cluster manager package
-      package:
+      ansible.builtin.package:
         name: postgresql-common
         state: present
       register: package_status
@@ -88,13 +88,13 @@
       environment: "{{ proxy_env | default({}) }}"
 
     - name: PostgreSQL | disable initializing of a default postgresql cluster
-      replace:
+      ansible.builtin.replace:
         path: /etc/postgresql-common/createcluster.conf
         replace: create_main_cluster = false
         regexp: ^#?create_main_cluster.*$
 
     - name: PostgreSQL | disable log rotation with logrotate for postgresql
-      file:
+      ansible.builtin.file:
         dest: /etc/logrotate.d/postgresql-common
         state: absent
   when: installation_method == "repo" and ansible_os_family == "Debian"
@@ -103,12 +103,12 @@
 # PostgreSQL prepare for install (for RHEL 8)
 - block:
     - name: PostgreSQL | check if appstream module is enabled
-      command: 'dnf -y -C module list postgresql'
+      ansible.builtin.command: 'dnf -y -C module list postgresql'
       register: postgresql_module_result
       changed_when: false
 
     - name: PostgreSQL | disable appstream module
-      command: 'dnf -y -C module disable postgresql'
+      ansible.builtin.command: 'dnf -y -C module disable postgresql'
       when: "'[x] ' not in postgresql_module_result.stdout"
   when: installation_method == "repo" and
         ansible_os_family == "RedHat" and
@@ -119,7 +119,7 @@
 # Install PostgreSQL from repository
 # RedHat
 - name: Install PostgreSQL packages
-  package:
+  ansible.builtin.package:
     name: "{{ item }}"
     state: present
   loop: "{{ postgresql_packages }}"
@@ -133,7 +133,7 @@
 
 # Debian
 - name: Install PostgreSQL packages
-  apt:
+  ansible.builtin.apt:
     name: "{{ item }}"
     state: present
   loop: "{{ postgresql_packages }}"
@@ -147,7 +147,7 @@
 
 # timescaledb (if enable_timescale is defined)
 - name: Install TimescaleDB package
-  package:
+  ansible.builtin.package:
     name: "{{ item }}"
     state: present
   loop:

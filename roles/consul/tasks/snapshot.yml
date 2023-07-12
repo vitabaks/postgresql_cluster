@@ -11,7 +11,7 @@
 # update my vars file
 
 - name: Create snapshot systemd script
-  template:
+  ansible.builtin.template:
     src: consul_systemd_snapshot.service.j2
     dest: /lib/systemd/system/consul_snapshot.service
     owner: root
@@ -26,7 +26,7 @@
     - consul_snapshot | bool
 
 - name: Create snapshot agent config
-  template:
+  ansible.builtin.template:
     src: consul_snapshot.json.j2
     dest: "{{ consul_config_path }}/consul_snapshot.json"
     owner: "{{ consul_user }}"
@@ -40,12 +40,12 @@
     - consul_snapshot | bool
 
 - name: Reload systemd
-  systemd:
+  ansible.builtin.systemd:
     daemon_reload: true
   when: systemd_unit | changed
 
 - name: Create snaps storage folder
-  file:
+  ansible.builtin.file:
     state: directory
     path: "{{ consul_snapshot_storage }}"
     owner: "{{ consul_user }}"

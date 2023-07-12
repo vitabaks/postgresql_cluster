@@ -2,7 +2,7 @@
 # tasks file for cron
 
 - name: Add cron jobs
-  cron:
+  ansible.builtin.cron:
     cron_file: "{{ item.file | default('') }}"
     user: "{{ item.user | default('postgres')  }}"
     minute: "{{ item.minute | default('*') }}"
@@ -21,7 +21,7 @@
   tags: cron
 
 - name: Uninstall cron jobs
-  cron:
+  ansible.builtin.cron:
     cron_file: "{{ item.file | default('') }}"
     user: "{{ item.user | default('postgres')  }}"
     minute: "{{ item.minute | default('*') }}"

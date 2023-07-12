@@ -5,7 +5,7 @@
   when: ansible_os_family != 'Windows'
   block:
     - name: Configuration and data directories
-      file:
+      ansible.builtin.file:
         dest: "{{ dir_item }}"
         state: directory
         owner: "{{ consul_user }}"
@@ -18,7 +18,7 @@
       loop_control:
         loop_var: dir_item
     - name: Run directory
-      file:
+      ansible.builtin.file:
         dest: "{{ consul_run_path }}"
         state: directory
         owner: "{{ consul_user }}"
@@ -27,7 +27,7 @@
       when: not consul_install_from_repo | bool
 
 - name: Create log directory
-  file:
+  ansible.builtin.file:
     dest: "{{ consul_log_path }}"
     state: directory
     owner: "{{ consul_user }}"
@@ -39,7 +39,7 @@
     - not consul_configure_syslogd | bool
 
 - name: Create log directory
-  file:
+  ansible.builtin.file:
     dest: "{{ log_item }}"
     state: directory
     owner: "{{ syslog_user }}"
@@ -55,7 +55,7 @@
     - consul_configure_syslogd | bool
 
 - name: Verify binary path
-  file:
+  ansible.builtin.file:
     path: "{{ consul_bin_path }}"
     state: directory
     owner: root

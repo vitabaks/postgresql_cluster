@@ -2,7 +2,7 @@
 # patroni_installation_method: "pip"
 - block:
     - name: Install the latest version of Patroni
-      pip:
+      ansible.builtin.pip:
         name: patroni
         state: latest
         executable: pip3
@@ -19,7 +19,7 @@
 - block:
     # Debian
     - name: Install the latest version of Patroni packages
-      package:
+      ansible.builtin.package:
         name: "{{ patroni_packages| default('patroni')}}"
         state: latest
       register: package_status
@@ -30,7 +30,7 @@
 
     # RedHat
     - name: Install the latest version of Patroni packages
-      package:
+      ansible.builtin.package:
         name: "{{ patroni_packages| default('patroni')}}"
         state: latest
       register: package_status
@@ -42,7 +42,7 @@
     # when patroni_deb_package_repo or patroni_rpm_package_repo URL is defined
     # Debian
     - name: Download Patroni deb package
-      get_url:
+      ansible.builtin.get_url:
         url: "{{ item }}"
         dest: /tmp/
         timeout: 60
@@ -51,7 +51,7 @@
       when: ansible_os_family == "Debian" and patroni_deb_package_repo | length > 0
 
     - name: Install Patroni from deb package
-      apt:
+      ansible.builtin.apt:
         force_apt_get: true
         deb: "/tmp/{{ item }}"
         state: present
@@ -64,7 +64,7 @@
 
     # RedHat
     - name: Download Patroni rpm package
-      get_url:
+      ansible.builtin.get_url:
         url: "{{ item }}"
         dest: /tmp/
         timeout: 60
@@ -73,7 +73,7 @@
       when: ansible_os_family == "RedHat" and patroni_rpm_package_repo | length > 0
 
     - name: Install Patroni from rpm package
-      package:
+      ansible.builtin.package:
         name: "/tmp/{{ item }}"
         state: present
       loop: "{{ patroni_rpm_package_repo | map('basename') | list }}"

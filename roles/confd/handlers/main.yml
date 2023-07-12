@@ -1,7 +1,7 @@
 ---
 
 - name: Restart confd service
-  systemd:
+  ansible.builtin.systemd:
     daemon_reload: true
     name: confd
     enabled: true

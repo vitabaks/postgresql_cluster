@@ -14,11 +14,11 @@
 
   pre_tasks:
     - name: Include OS-specific variables
-      include_vars: "vars/{{ ansible_os_family }}.yml"
+      ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
       tags: always
 
     - name: System information
-      debug:
+      ansible.builtin.debug:
         var: system_info
       vars:
         system_info:
@@ -41,19 +41,19 @@
 
   tasks:
     - name: Clean yum cache
-      command: yum clean all
+      ansible.builtin.command: yum clean all
       when:
         - ansible_os_family == "RedHat"
         - ansible_distribution_major_version == '7'
 
     - name: Clean dnf cache
-      command: dnf clean all
+      ansible.builtin.command: dnf clean all
       when:
         - ansible_os_family == "RedHat"
         - ansible_distribution_major_version is version('8', '>=')
 
     - name: Update apt cache
-      apt:
+      ansible.builtin.apt:
         update_cache: true
         cache_valid_time: 3600
       register: apt_status
@@ -63,7 +63,7 @@
       when: ansible_os_family == "Debian"
 
     - name: Make sure the gnupg and apt-transport-https packages are present
-      apt:
+      ansible.builtin.apt:
         pkg:
           - gnupg
           - apt-transport-https
@@ -76,7 +76,7 @@
 
     # Ansible requires the iproute package for network facts to be populated
     - name: Make sure that the iproute is installed
-      package:
+      ansible.builtin.package:
         name: iproute
         state: present
       register: package_status
@@ -86,7 +86,7 @@
       when: ansible_os_family == "RedHat"
 
     - name: Make sure that the iproute is installed
-      apt:
+      ansible.builtin.apt:
         name: iproute2
         state: present
       register: apt_status
@@ -96,12 +96,12 @@
       when: ansible_os_family == "Debian"
 
 - name: deploy_pgcluster.yml | Deploy etcd cluster
-  import_playbook: etcd_cluster.yml
+  ansible.builtin.import_playbook: etcd_cluster.yml
   when: not dcs_exists|bool and dcs_type == "etcd"
   tags: etcd
 
 - name: deploy_pgcluster.yml | Deploy Consul
-  import_playbook: consul.yml
+  ansible.builtin.import_playbook: consul.yml
   when: dcs_type == "consul"
   tags: consul
 
@@ -117,28 +117,28 @@
 
   pre_tasks:
     - name: Include OS-specific variables
-      include_vars: "vars/{{ ansible_os_family }}.yml"
+      ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
       tags: always
 
     - name: Checking Linux distribution
-      fail:
+      ansible.builtin.fail:
         msg: "{{ ansible_distribution }} is not supported"
       when: ansible_distribution not in os_valid_distributions
 
     - name: Checking version of OS Linux
-      fail:
+      ansible.builtin.fail:
         msg: "{{ ansible_distribution_version }} of {{ ansible_distribution }} is not supported"
       when: ansible_distribution_version is version_compare(os_minimum_versions[ansible_distribution], '<')
 
     - name: Build a firewall_ports_dynamic_var
-      set_fact:
+      ansible.builtin.set_fact:
         firewall_ports_dynamic_var: "{{ firewall_ports_dynamic_var | default([]) + (firewall_allowed_tcp_ports_for[item] | default([])) }}"
       loop: "{{ hostvars[inventory_hostname].group_names }}"
       when: firewall_enabled_at_boot|bool
       tags: firewall
 
     - name: Build a firewall_rules_dynamic_var
-      set_fact:
+      ansible.builtin.set_fact:
         firewall_rules_dynamic_var: "{{ firewall_rules_dynamic_var | default([]) + (firewall_additional_rules_for[item] | default([])) }}"
       loop: "{{ hostvars[inventory_hostname].group_names }}"
       when: firewall_enabled_at_boot|bool
@@ -171,7 +171,7 @@
     - role: copy
 
 - name: deploy_pgcluster.yml | Deploy balancers
-  import_playbook: balancers.yml
+  ansible.builtin.import_playbook: balancers.yml
   when: with_haproxy_load_balancing|bool
   tags: load_balancing, haproxy
 
@@ -185,7 +185,7 @@
     - vars/main.yml
   pre_tasks:
     - name: Include OS-specific variables
-      include_vars: "vars/{{ ansible_os_family }}.yml"
+      ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
       tags: always
 
   roles:
@@ -199,14 +199,14 @@
   gather_facts: true
   any_errors_fatal: true
   handlers:
-    - import_tasks: roles/pgbouncer/handlers/main.yml
+    - ansible.builtin.import_tasks: roles/pgbouncer/handlers/main.yml
   vars_files:
     - vars/main.yml
     - vars/system.yml
 
   pre_tasks:
     - name: Include OS-specific variables
-      include_vars: "vars/{{ ansible_os_family }}.yml"
+      ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
       tags: always
 
   roles:
