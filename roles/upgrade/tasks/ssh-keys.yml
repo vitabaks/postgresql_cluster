@@ -40,7 +40,6 @@
 - name: Remove public SSH keys from localhost
   run_once: true
   become: false
-  become_user: "{{ lookup('env', 'USER') }}"
   ansible.builtin.file:
     path: files/{{ item }}-id_rsa.pub
     state: absent
