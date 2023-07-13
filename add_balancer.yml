@@ -11,21 +11,21 @@
 
   pre_tasks:
     - name: Include OS-specific variables
-      include_vars: "vars/{{ ansible_os_family }}.yml"
+      ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
       tags: always
 
     - name: "[Pre-Check] Checking Linux distribution"
-      fail:
+      ansible.builtin.fail:
         msg: "{{ ansible_distribution }} is not supported"
       when: ansible_distribution not in os_valid_distributions
 
     - name: "[Pre-Check] Checking version of OS Linux"
-      fail:
+      ansible.builtin.fail:
         msg: "{{ ansible_distribution_version }} of {{ ansible_distribution }} is not supported"
       when: ansible_distribution_version is version_compare(os_minimum_versions[ansible_distribution], '<')
 
     - name: "[Pre-Check] Check if there is a node with new_node set to true"
-      set_fact:
+      ansible.builtin.set_fact:
         new_nodes: "{{ new_nodes | default([]) + [item] }}"
       when: hostvars[item]['new_node'] | default(false) | bool
       loop: "{{ groups['balancers'] }}"
@@ -34,18 +34,18 @@
     # Stop, if no nodes found with new_node variable
     - name: "Pre-Check error. No nodes found with new_node set to true"
       run_once: true # noqa run-once
-      fail:
+      ansible.builtin.fail:
         msg: "Please specify the new_node=true variable for the new balancer server to add it to the existing cluster."
       when: new_nodes | default([]) | length < 1
 
     - name: Print a list of new balancer nodes
       run_once: true # noqa run-once
-      debug:
+      ansible.builtin.debug:
         var: new_nodes
       tags: always
 
     - name: Update apt cache
-      apt:
+      ansible.builtin.apt:
         update_cache: true
         cache_valid_time: 3600
       register: apt_status
@@ -59,7 +59,7 @@
         - installation_method == "repo"
 
     - name: Make sure the gnupg and apt-transport-https packages are present
-      apt:
+      ansible.builtin.apt:
         pkg:
           - gnupg
           - apt-transport-https
@@ -75,7 +75,7 @@
         - installation_method == "repo"
 
     - name: Build a firewall_ports_dynamic_var
-      set_fact:
+      ansible.builtin.set_fact:
         firewall_ports_dynamic_var: "{{ firewall_ports_dynamic_var | default([]) + (firewall_allowed_tcp_ports_for[item] | default([])) }}"
       loop: "{{ hostvars[inventory_hostname].group_names }}"
       when:
@@ -84,7 +84,7 @@
       tags: firewall
 
     - name: Build a firewall_rules_dynamic_var
-      set_fact:
+      ansible.builtin.set_fact:
         firewall_rules_dynamic_var: "{{ firewall_rules_dynamic_var | default([]) + (firewall_additional_rules_for[item] | default([])) }}"
       loop: "{{ hostvars[inventory_hostname].group_names }}"
       when:
@@ -109,7 +109,7 @@
 
   tasks:
     - name: Add host to group new_balancer (in-memory inventory)
-      add_host:
+      ansible.builtin.add_host:
         name: "{{ item }}"
         groups: new_balancer
       loop: "{{ new_nodes }}"
@@ -130,7 +130,7 @@
 
   pre_tasks:
     - name: Include OS-specific variables
-      include_vars: "vars/{{ ansible_os_family }}.yml"
+      ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
       tags: always
 
   roles:

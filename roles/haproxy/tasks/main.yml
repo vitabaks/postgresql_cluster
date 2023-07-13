@@ -5,7 +5,7 @@
 - block:
     # RedHat/CentOS/OracleLinux 7 (SCL)
     - name: Install Software Collections (SCL) repository for CentOS 7
-      package:
+      ansible.builtin.package:
         name: centos-release-scl-rh
         state: present
       register: package_status
@@ -18,7 +18,7 @@
       tags: haproxy_scl_repo
 
     - name: Install Software Collections (SCL) repository for OracleLinux 7
-      yum_repository:
+      ansible.builtin.yum_repository:
         name: ol7_software_collections
         description: Software Collection Library packages for Oracle Linux 7 (x86_64)
         baseurl: https://yum.oracle.com/repo/OracleLinux/OL7/SoftwareCollections/x86_64/
@@ -33,14 +33,14 @@
     - name: Enable Software Collections (SCL) repository for RedHat 7
       become: true
       become_user: root
-      command: subscription-manager repos --enable rhel-server-rhscl-7-rpms
+      ansible.builtin.command: subscription-manager repos --enable rhel-server-rhscl-7-rpms
       when: haproxy_install_repo|bool and
             (ansible_distribution == 'RedHat' and
             ansible_distribution_major_version == '7')
       tags: haproxy_scl_repo
 
     - name: Install HAProxy v1.8 (rh-haproxy18 package)
-      package:
+      ansible.builtin.package:
         name: rh-haproxy18
         state: present
       register: package_status
@@ -50,7 +50,7 @@
       when: ansible_distribution_major_version == '7'
 
     - name: create a symlink "/usr/sbin/haproxy"
-      file:
+      ansible.builtin.file:
         src: /opt/rh/rh-haproxy18/root/usr/sbin/haproxy
         dest: /usr/sbin/haproxy
         owner: root
@@ -66,7 +66,7 @@
 - block:
     # RedHat os family version 8 (and higher)
     - name: Install HAProxy package
-      package:
+      ansible.builtin.package:
         name: haproxy
         state: present
       register: package_status
@@ -83,7 +83,7 @@
 - block:
     # Debian
     - name: Add haproxy.debian.net repository apt-key
-      apt_key:
+      ansible.builtin.apt_key:
         url: https://haproxy.debian.net/bernat.debian.org.gpg
         state: present
       when: haproxy_install_repo|bool and
@@ -91,7 +91,7 @@
             ansible_distribution_major_version is version('10', '<='))
 
     - name: Add haproxy.debian.net repository
-      apt_repository:
+      ansible.builtin.apt_repository:
         repo: "deb https://haproxy.debian.net {{ ansible_distribution_release }}-backports-1.8 main"
         state: present
         update_cache: true
@@ -101,7 +101,7 @@
 
     # Ubuntu
     - name: Add ppa:vbernat/haproxy-1.8 repository apt-key
-      apt_key:  # https://github.com/ansible/ansible/issues/31691
+      ansible.builtin.apt_key:  # https://github.com/ansible/ansible/issues/31691
         data: |
           -----BEGIN PGP PUBLIC KEY BLOCK-----
 
@@ -121,7 +121,7 @@
             ansible_distribution_major_version is version('18', '<='))
 
     - name: Add ppa:vbernat/haproxy-1.8 repository
-      apt_repository:
+      ansible.builtin.apt_repository:
         repo: "deb http://ppa.launchpad.net/vbernat/haproxy-1.8/ubuntu {{ ansible_distribution_release }} main"
         state: present
         update_cache: true
@@ -130,7 +130,7 @@
             ansible_distribution_major_version is version('18', '<='))
 
     - name: Install HAProxy v1.8 package
-      apt:
+      ansible.builtin.apt:
         force_apt_get: true
         name: "haproxy=1.8.*"
         state: present
@@ -142,7 +142,7 @@
             (ansible_distribution == 'Ubuntu' and ansible_distribution_major_version is version('18', '<='))
 
     - name: Install HAProxy package
-      apt:
+      ansible.builtin.apt:
         name: haproxy
         state: present
       register: apt_status
@@ -160,14 +160,14 @@
 # from file (rpm/deb packages)
 - block:
     - name: Copy packages into /tmp
-      copy:
+      ansible.builtin.copy:
         src: "{{ item }}"
         dest: /tmp/
       loop: "{{ haproxy_package_file }}"
       register: copy_packages_result
 
     - name: Install packages
-      apt:
+      ansible.builtin.apt:
         force_apt_get: true
         deb: "/tmp/{{ item }}"
         state: present
@@ -179,7 +179,7 @@
       when: ansible_os_family == "Debian" and copy_packages_result.changed
 
     - name: Install packages
-      package:
+      ansible.builtin.package:
         name: "/tmp/{{ item }}"
         state: present
       loop: "{{ haproxy_package_file | map('basename') | list }}"
@@ -193,7 +193,7 @@
 
 # Build and install HAproxy from source
 - name: Setting facts
-  set_fact:
+  ansible.builtin.set_fact:
     target_linux: "{% if haproxy_major is version('2.0', '>=') %}linux-glibc{% else %}linux2628{% endif %}"
   when: haproxy_installation_method == "src"
   tags: haproxy, load_balancing
@@ -201,7 +201,7 @@
 # from repo
 - block:
     - name: "Download HAProxy and lua source files"
-      get_url:
+      ansible.builtin.get_url:
         url: "{{ item }}"
         dest: /tmp/
         timeout: 120
@@ -212,7 +212,7 @@
       environment: "{{ proxy_env | default({}) }}"
 
     - name: "Extract HAProxy source files into /tmp"
-      unarchive:
+      ansible.builtin.unarchive:
         src: "/tmp/{{ haproxy_src_repo | basename }}"
         dest: /tmp/
         extra_opts:
@@ -221,7 +221,7 @@
       when: haproxy_src_repo | length > 0
 
     - name: "Extract lua source files into /tmp"
-      unarchive:
+      ansible.builtin.unarchive:
         src: "/tmp/{{ lua_src_repo | basename }}"
         dest: /tmp/
         extra_opts:
@@ -235,7 +235,7 @@
 # from file
 - block:
     - name: "Extract HAProxy source files into /tmp"
-      unarchive:
+      ansible.builtin.unarchive:
         src: "{{ haproxy_src_file }}"
         dest: /tmp/
         extra_opts:
@@ -243,7 +243,7 @@
       when: haproxy_src_file | length > 0
 
     - name: "Extract lua source files into /tmp"
-      unarchive:
+      ansible.builtin.unarchive:
         src: "{{ lua_src_file }}"
         dest: /tmp/
         extra_opts:
@@ -254,7 +254,7 @@
   tags: haproxy, load_balancing
 
 - name: Install the prerequisites packages to compile HAProxy
-  package:
+  ansible.builtin.package:
     name: "{{ haproxy_compile_requirements }}"
     state: present
   register: package_status
@@ -269,7 +269,7 @@
     - name: Build and install lua (required for haproxy)
       become: true
       become_user: root
-      shell: "make INSTALL_TOP=/opt/{{ lua_src_repo.split('.tar.gz')[0] | basename }} linux install"
+      ansible.builtin.shell: "make INSTALL_TOP=/opt/{{ lua_src_repo.split('.tar.gz')[0] | basename }} linux install"
       args:
         chdir: "/tmp/{{ lua_src_repo.split('.tar.gz')[0] | basename }}"
       tags: lua
@@ -308,7 +308,7 @@
     - name: Build and install lua (required for haproxy)
       become: true
       become_user: root
-      shell: "make INSTALL_TOP=/opt/{{ lua_src_file.split('.tar.gz')[0] | basename }} linux install"
+      ansible.builtin.shell: "make INSTALL_TOP=/opt/{{ lua_src_file.split('.tar.gz')[0] | basename }} linux install"
       args:
         chdir: "/tmp/{{ lua_src_file.split('.tar.gz')[0] | basename }}"
       tags: lua
@@ -354,13 +354,13 @@
   tags: haproxy, load_balancing
 
 - name: Add haproxy group
-  group:
+  ansible.builtin.group:
     name: haproxy
     state: present
   tags: haproxy, load_balancing
 
 - name: Add haproxy user
-  user:
+  ansible.builtin.user:
     name: haproxy
     comment: "HAProxy user"
     group: haproxy
@@ -368,7 +368,7 @@
   tags: haproxy, load_balancing
 
 - name: Create directories
-  file:
+  ansible.builtin.file:
     dest: "{{ item }}"
     state: directory
     owner: haproxy
@@ -380,7 +380,7 @@
   tags: haproxy, load_balancing
 
 - name: Generate conf file "/etc/haproxy/haproxy.cfg"
-  template:
+  ansible.builtin.template:
     src: templates/haproxy.cfg.j2
     dest: /etc/haproxy/haproxy.cfg
     owner: haproxy
@@ -391,7 +391,7 @@
   tags: haproxy, haproxy_conf, load_balancing
 
 - name: Generate systemd service file "/etc/systemd/system/haproxy.service"
-  template:
+  ansible.builtin.template:
     src: templates/haproxy.service.j2
     dest: /etc/systemd/system/haproxy.service
     owner: haproxy
@@ -402,7 +402,7 @@
 - block:  # for add_balancer.yml
     - name: "Fetch haproxy.cfg file from {{ groups.balancers[0] }}"
       run_once: true
-      fetch:
+      ansible.builtin.fetch:
         src: /etc/haproxy/haproxy.cfg
         dest: files/haproxy.cfg
         validate_checksum: true
@@ -411,7 +411,7 @@
       delegate_to: "{{ groups.balancers[0] }}"
 
     - name: Copy haproxy.cfg file to replica
-      copy:
+      ansible.builtin.copy:
         src: files/haproxy.cfg
         dest: /etc/haproxy/haproxy.cfg
         owner: haproxy
@@ -420,13 +420,13 @@
 
     - name: Remove haproxy.cfg file from localhost
       run_once: true
-      file:
+      ansible.builtin.file:
         path: files/haproxy.cfg
         state: absent
       delegate_to: localhost
 
     - name: Prepare haproxy.cfg conf file (replace "bind")
-      lineinfile:
+      ansible.builtin.lineinfile:
         path: /etc/haproxy/haproxy.cfg
         regexp: "{{ item.regexp }}"
         line: "{{ item.line }}"
@@ -443,7 +443,7 @@
       when: cluster_vip is not defined or cluster_vip | length < 1
 
     - name: Prepare haproxy.cfg conf file (replace "bind" for stats)
-      lineinfile:
+      ansible.builtin.lineinfile:
         path: /etc/haproxy/haproxy.cfg
         regexp: "{{ item.regexp }}"
         line: "{{ item.line }}"
@@ -463,7 +463,7 @@
 
 - block:
     - name: selinux | make sure the libsemanage-python, policycoreutils-python packages is present
-      package:
+      ansible.builtin.package:
         name: "{{ packages }}"
         state: present
         update_cache: true
@@ -483,7 +483,7 @@
         - haproxy_installation_method == "rpm"
 
     - name: selinux | make sure the python3-libsemanage, python3-policycoreutils packages is present
-      package:
+      ansible.builtin.package:
         name: "{{ packages }}"
         state: present
         update_cache: true

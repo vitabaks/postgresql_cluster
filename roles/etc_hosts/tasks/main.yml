@@ -1,7 +1,7 @@
 ---
 
 - name: Add entries into /etc/hosts file
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: /etc/hosts
     regexp: "^{{ item }}"
     line: "{{ item }}"

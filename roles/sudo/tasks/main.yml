@@ -2,7 +2,7 @@
 
 # if nopasswd = "yes"
 - name: Add user to /etc/sudoers.d/
-  copy:
+  ansible.builtin.copy:
     dest: "/etc/sudoers.d/{{ item.name }}"
     content: |
       {{ item.name }}  ALL=(ALL)  NOPASSWD: ALL
@@ -14,7 +14,7 @@
 
 # if nopasswd = "yes" and commands is defined
 - name: Add user to /etc/sudoers.d/
-  copy:
+  ansible.builtin.copy:
     dest: "/etc/sudoers.d/{{ item.name }}"
     content: |
       {{ item.name }}  ALL=(ALL)  NOPASSWD: {{ item.commands }}
@@ -26,7 +26,7 @@
 
 # if nopasswd = "no"
 - name: Add user to /etc/sudoers.d/
-  copy:
+  ansible.builtin.copy:
     dest: "/etc/sudoers.d/{{ item.name }}"
     content: |
       {{ item.name }}  ALL=(ALL)  ALL
@@ -38,7 +38,7 @@
 
 # if nopasswd = "no" and commands is defined
 - name: Add user to /etc/sudoers.d/
-  copy:
+  ansible.builtin.copy:
     dest: "/etc/sudoers.d/{{ item.name }}"
     content: |
       {{ item.name }}  ALL=(ALL)  {{ item.commands }}

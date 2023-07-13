@@ -1,6 +1,6 @@
 ---
 - name: Ensure config directory "{{ pgbouncer_conf_dir }}" exist
-  file:
+  ansible.builtin.file:
     path: "{{ pgbouncer_conf_dir }}"
     state: directory
     owner: postgres
@@ -9,7 +9,7 @@
   tags: pgbouncer, pgbouncer_conf
 
 - name: Update pgbouncer.ini
-  template:
+  ansible.builtin.template:
     src: ../templates/pgbouncer.ini.j2
     dest: "{{ pgbouncer_conf_dir }}/pgbouncer.ini"
     owner: postgres
@@ -25,7 +25,7 @@
       run_once: true
       become: true
       become_user: postgres
-      command: >
+      ansible.builtin.command: >
         {{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -Atq
         -c "SELECT concat('\"', usename, '\" \"', passwd, '\"') FROM pg_shadow where usename != '{{ patroni_replication_username }}'"
       register: pg_shadow_result
@@ -35,7 +35,7 @@
     - name: "Generate {{ pgbouncer_conf_dir }}/userlist.txt"
       become: true
       become_user: postgres
-      copy:
+      ansible.builtin.copy:
         content: |
           {{ pg_shadow_result.stdout }}
         dest: "{{ pgbouncer_conf_dir }}/userlist.txt"
@@ -60,6 +60,8 @@
         SELECT usename, passwd FROM pg_shadow WHERE usename=$1;
         $$
         LANGUAGE sql SECURITY DEFINER;
+        REVOKE ALL ON FUNCTION user_search(uname TEXT) FROM public;
+        GRANT EXECUTE ON FUNCTION user_search(uname TEXT) TO {{ pgbouncer_auth_username }};
       '; done
   args:
     executable: /bin/bash

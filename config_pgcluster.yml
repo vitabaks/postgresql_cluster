@@ -7,11 +7,11 @@
     - vars/system.yml
   pre_tasks:
     - name: Include OS-specific variables
-      include_vars: "vars/{{ ansible_os_family }}.yml"
+      ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
       tags: always
 
     - name: Set maintenance variable
-      set_fact:
+      ansible.builtin.set_fact:
         postgresql_cluster_maintenance: true
       tags: always
 
@@ -39,21 +39,21 @@
 
   pre_tasks:
     - name: Include OS-specific variables
-      include_vars: "vars/{{ ansible_os_family }}.yml"
+      ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
       tags: always
 
     - name: Checking Linux distribution
-      fail:
+      ansible.builtin.fail:
         msg: "{{ ansible_distribution }} is not supported"
       when: ansible_distribution not in os_valid_distributions
 
     - name: Checking version of OS Linux
-      fail:
+      ansible.builtin.fail:
         msg: "{{ ansible_distribution_version }} of {{ ansible_distribution }} is not supported"
       when: ansible_distribution_version is version_compare(os_minimum_versions[ansible_distribution], '<')
 
     - name: Update apt cache
-      apt:
+      ansible.builtin.apt:
         update_cache: true
         cache_valid_time: 3600
       register: apt_status
@@ -65,7 +65,7 @@
       tags: add_repo, install_packages, install_postgres
 
     - name: Make sure the gnupg and apt-transport-https packages are present
-      apt:
+      ansible.builtin.apt:
         pkg:
           - gnupg
           - apt-transport-https
@@ -79,14 +79,14 @@
       tags: add_repo, install_packages, install_postgres
 
     - name: Build a firewall_ports_dynamic_var
-      set_fact:
+      ansible.builtin.set_fact:
         firewall_ports_dynamic_var: "{{ firewall_ports_dynamic_var | default([]) + (firewall_allowed_tcp_ports_for[item] | default([])) }}"
       loop: "{{ hostvars[inventory_hostname].group_names }}"
       when: firewall_enabled_at_boot|bool
       tags: config_firewall, firewall
 
     - name: Build a firewall_rules_dynamic_var
-      set_fact:
+      ansible.builtin.set_fact:
         firewall_rules_dynamic_var: "{{ firewall_rules_dynamic_var | default([]) + (firewall_additional_rules_for[item] | default([])) }}"
       loop: "{{ hostvars[inventory_hostname].group_names }}"
       when: firewall_enabled_at_boot|bool
@@ -115,7 +115,7 @@
     - role: copy
 
 - name: config_pgcluster.yml | Configure HAProxy Load Balancing
-  import_playbook: balancers.yml
+  ansible.builtin.import_playbook: balancers.yml
   when: with_haproxy_load_balancing|bool
   tags: config_balancers,load_balancing, haproxy
 
@@ -126,15 +126,15 @@
   gather_facts: true
   any_errors_fatal: true
   handlers:
-    - import_tasks: roles/patroni/handlers/main.yml
-    - import_tasks: roles/pgbouncer/handlers/main.yml
+    - ansible.builtin.import_tasks: roles/patroni/handlers/main.yml
+    - ansible.builtin.import_tasks: roles/pgbouncer/handlers/main.yml
   vars_files:
     - vars/main.yml
     - vars/system.yml
 
   pre_tasks:
     - name: Include OS-specific variables
-      include_vars: "vars/{{ ansible_os_family }}.yml"
+      ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
       tags: always
 
   roles:
@@ -174,7 +174,7 @@
     - vars/main.yml
   tasks:
     - name: "[Prepare] Get Patroni Cluster Leader Node"
-      uri:
+      ansible.builtin.uri:
         url: http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/leader
         status_code: 200
       register: patroni_leader_result
@@ -182,7 +182,7 @@
       failed_when: false
 
     - name: '[Prepare] Add host to group "primary" (in-memory inventory)'
-      add_host:
+      ansible.builtin.add_host:
         name: "{{ item }}"
         groups: primary
       when: hostvars[item]['patroni_leader_result']['status'] == 200
@@ -190,7 +190,7 @@
       changed_when: false
 
     - name: '[Prepare] Add hosts to group "secondary" (in-memory inventory)'
-      add_host:
+      ansible.builtin.add_host:
         name: "{{ item }}"
         groups: secondary
       when: hostvars[item]['patroni_leader_result']['status'] != 200
@@ -198,7 +198,7 @@
       changed_when: false
 
     - name: "Print Patroni Cluster info"
-      debug:
+      ansible.builtin.debug:
         msg:
           - "Cluster Name: {{ patroni_cluster_name }}"
           - "Cluster Leader: {{ ansible_hostname }}"
@@ -216,11 +216,11 @@
       register: pending_restart_result
 
     - name: "Set pg_pending_restart_settings variable"
-      set_fact:
+      ansible.builtin.set_fact:
         pg_pending_restart_settings: "{{ pending_restart_result.query_result }}"
 
     - name: "Display parameters requiring PostgreSQL restart"
-      debug:
+      ansible.builtin.debug:
         msg:
           - "On server {{ ansible_hostname }}, the following parameters have changed and require PostgreSQL to restart:"
           - "{{ pg_pending_restart_settings | map(attribute='name') | list }}"
@@ -239,12 +239,12 @@
     - vars/main.yml
   pre_tasks:
     - name: Include OS-specific variables
-      include_vars: "vars/{{ ansible_os_family }}.yml"
+      ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
       tags: always
 
   tasks:
     - name: Stop read-only traffic
-      include_role:
+      ansible.builtin.include_role:
         name: update
         tasks_from: stop_traffic
       when:
@@ -252,7 +252,7 @@
         - pg_pending_restart_settings | length > 0
 
     - name: Stop Services
-      include_role:
+      ansible.builtin.include_role:
         name: update
         tasks_from: stop_services
       when:
@@ -260,7 +260,7 @@
         - pg_pending_restart_settings | length > 0
 
     - name: Start Services
-      include_role:
+      ansible.builtin.include_role:
         name: update
         tasks_from: start_services
       when:
@@ -268,7 +268,7 @@
         - pg_pending_restart_settings | length > 0
 
     - name: Start read-only traffic
-      include_role:
+      ansible.builtin.include_role:
         name: update
         tasks_from: start_traffic
       when:
@@ -288,12 +288,12 @@
     - vars/main.yml
   pre_tasks:
     - name: Include OS-specific variables
-      include_vars: "vars/{{ ansible_os_family }}.yml"
+      ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
       tags: always
 
   tasks:
     - name: Switchover Patroni leader role
-      include_role:
+      ansible.builtin.include_role:
         name: update
         tasks_from: switchover
       when:
@@ -301,7 +301,7 @@
         - pg_pending_restart_settings | length > 0
 
     - name: Stop read-only traffic
-      include_role:
+      ansible.builtin.include_role:
         name: update
         tasks_from: stop_traffic
       when:
@@ -309,7 +309,7 @@
         - pg_pending_restart_settings | length > 0
 
     - name: Stop Services
-      include_role:
+      ansible.builtin.include_role:
         name: update
         tasks_from: stop_services
       when:
@@ -317,7 +317,7 @@
         - pg_pending_restart_settings | length > 0
 
     - name: Start Services
-      include_role:
+      ansible.builtin.include_role:
         name: update
         tasks_from: start_services
       when:
@@ -325,7 +325,7 @@
         - pg_pending_restart_settings | length > 0
 
     - name: Start read-only traffic
-      include_role:
+      ansible.builtin.include_role:
         name: update
         tasks_from: start_traffic
       when:

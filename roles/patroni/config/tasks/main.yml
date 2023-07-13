@@ -2,7 +2,7 @@
 
 # Patroni configure
 - name: Make sure that conf directory exists
-  file:
+  ansible.builtin.file:
     path: /etc/patroni
     state: directory
     owner: postgres
@@ -11,7 +11,7 @@
   tags: patroni, patroni_conf
 
 - name: Make sure that patroni log directory exists
-  file:
+  ansible.builtin.file:
     path: "{{ patroni_log_dir }}"
     owner: postgres
     group: postgres
@@ -21,7 +21,7 @@
   tags: patroni
 
 - name: Make sure the postgresql log directory "{{ postgresql_log_dir }}" exists
-  file:
+  ansible.builtin.file:
     path: "{{ postgresql_log_dir }}"
     owner: postgres
     group: postgres
@@ -30,7 +30,7 @@
   tags: patroni
 
 - name: Update conf file "/etc/patroni/patroni.yml"
-  template:
+  ansible.builtin.template:
     src: ../templates/patroni.yml.j2
     dest: /etc/patroni/patroni.yml
     owner: postgres
@@ -41,7 +41,7 @@
 
 - block:
     - name: Update postgresql parameters in DCS
-      uri:
+      ansible.builtin.uri:
         url: http://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ patroni_restapi_port }}/config
         method: PATCH
         body: '{"postgresql":{"parameters":{"{{ item.option }}":"{{ item.value }}"}}}'
@@ -50,7 +50,7 @@
       when: item.value != "null"
 
     - name: Delete postgresql parameters from DCS
-      uri:
+      ansible.builtin.uri:
         url: http://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ patroni_restapi_port }}/config
         method: PATCH
         body: '{"postgresql":{"parameters":{"{{ item.option }}":null}}}'
@@ -61,7 +61,7 @@
   tags: patroni, patroni_conf
 
 - name: Delete postgresql parameters from "/etc/patroni/patroni.yml"
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: /etc/patroni/patroni.yml
     regexp: '^.*{{ item.option }}: {{ item.value }}$'
     state: absent
@@ -70,7 +70,7 @@
   tags: patroni, patroni_conf
 
 # Update pg_hba.conf
-- import_tasks: pg_hba.yml
+- ansible.builtin.import_tasks: pg_hba.yml
   tags: patroni, patroni_conf, pg_hba, pg_hba_generate
 
 ...

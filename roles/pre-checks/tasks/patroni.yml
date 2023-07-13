@@ -3,13 +3,13 @@
 # when postgresql NOT exists
 - block:
     - name: PostgreSQL | check that data directory "{{ postgresql_data_dir }}" is not initialized
-      stat:
+      ansible.builtin.stat:
         path: "{{ postgresql_data_dir }}/PG_VERSION"
       register: pgdata_initialized
       when: patroni_cluster_bootstrap_method == "initdb"
 
     - name: PostgreSQL | data directory check result
-      fail:
+      ansible.builtin.fail:
         msg: "Whoops! data directory {{ postgresql_data_dir }} is already initialized"
       when:
         - pgdata_initialized.stat.exists is defined
@@ -21,12 +21,12 @@
 # when postgresql exists
 - block:
     - name: PostgreSQL | check that data directory "{{ postgresql_data_dir }}" is initialized
-      stat:
+      ansible.builtin.stat:
         path: "{{ postgresql_data_dir }}/PG_VERSION"
       register: pgdata_initialized
 
     - name: PostgreSQL | data directory check result
-      fail:
+      ansible.builtin.fail:
         msg: "Whoops! data directory {{ postgresql_data_dir }} is not initialized"
       when:
         - pgdata_initialized.stat.exists is defined

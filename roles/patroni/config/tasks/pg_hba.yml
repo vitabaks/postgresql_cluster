@@ -1,6 +1,6 @@
 ---
 - name: Update pg_hba.conf
-  template:
+  ansible.builtin.template:
     src: ../templates/pg_hba.conf.j2
     dest: "{{ postgresql_conf_dir }}/pg_hba.conf"
     owner: postgres

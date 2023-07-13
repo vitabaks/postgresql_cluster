@@ -1,7 +1,7 @@
 ---
 
 - name: Create systemd service "disable-transparent-huge-pages.service"
-  blockinfile:
+  ansible.builtin.blockinfile:
     path: /etc/systemd/system/disable-transparent-huge-pages.service
     create: true
     block: |
@@ -25,6 +25,6 @@
   tags: disable_thp, transparent_huge_pages
 
 - name: Make sure handlers are flushed immediately
-  meta: flush_handlers
+  ansible.builtin.meta: flush_handlers
 
 ...

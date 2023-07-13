@@ -7,13 +7,13 @@
     - vars/main.yml
   tasks:
     - name: Check if the consul role requirements (ansible.utils) are installed
-      command: ansible-galaxy collection list ansible.utils
+      ansible.builtin.command: ansible-galaxy collection list ansible.utils
       changed_when: false
       failed_when: false
       register: ansible_utils_result
 
     - name: Consul role requirements
-      fail:
+      ansible.builtin.fail:
         msg:
           - "Please install consul role requirements (ansible.utils)"
           - "ansible-galaxy install -r roles/consul/requirements.yml"
@@ -33,11 +33,11 @@
 
   pre_tasks:
     - name: Include OS-specific variables
-      include_vars: "vars/{{ ansible_os_family }}.yml"
+      ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
       tags: always
 
     - name: Update apt cache
-      apt:
+      ansible.builtin.apt:
         update_cache: true
         cache_valid_time: 3600
       register: apt_status
@@ -47,7 +47,7 @@
       when: ansible_os_family == "Debian" and installation_method == "repo"
 
     - name: Make sure the gnupg and apt-transport-https packages are present
-      apt:
+      ansible.builtin.apt:
         pkg:
           - gnupg
           - apt-transport-https
@@ -59,7 +59,7 @@
       when: ansible_os_family == "Debian" and installation_method == "repo"
 
     - name: Make sure the python3-pip package are present
-      package:
+      ansible.builtin.package:
         name: python3-pip
         state: present
       register: package_status
@@ -70,7 +70,7 @@
     - name: Make sure the unzip package are present on the control host
       run_once: true # noqa run-once
       delegate_to: 127.0.0.1
-      package:
+      ansible.builtin.package:
         name: unzip
         state: present
       register: package_status
@@ -80,14 +80,14 @@
       ignore_errors: true
 
     - name: Build a firewall_ports_dynamic_var
-      set_fact:
+      ansible.builtin.set_fact:
         firewall_ports_dynamic_var: "{{ firewall_ports_dynamic_var | default([]) + (firewall_allowed_tcp_ports_for[item] | default([])) }}"
       loop: "{{ hostvars[inventory_hostname].group_names }}"
       when: firewall_enabled_at_boot|bool
       tags: firewall
 
     - name: Build a firewall_rules_dynamic_var
-      set_fact:
+      ansible.builtin.set_fact:
         firewall_rules_dynamic_var: "{{ firewall_rules_dynamic_var | default([]) + (firewall_additional_rules_for[item] | default([])) }}"
       loop: "{{ hostvars[inventory_hostname].group_names }}"
       when: firewall_enabled_at_boot|bool

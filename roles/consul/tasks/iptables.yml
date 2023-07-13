@@ -2,7 +2,7 @@
 # File: iptables.yml - iptables tasks for Consul
 
 - name: Install iptables
-  apt:
+  ansible.builtin.apt:
     name: iptables
   register: apt_status
   until: apt_status is success
@@ -10,7 +10,7 @@
   retries: 3
 
 - name: Redirect local DNS (1/4)
-  iptables:
+  ansible.builtin.iptables:
     table: nat
     chain: PREROUTING
     protocol: udp
@@ -20,7 +20,7 @@
     to_ports: 8600
 
 - name: Redirect local DNS (2/4)
-  iptables:
+  ansible.builtin.iptables:
     table: nat
     chain: PREROUTING
     protocol: tcp
@@ -30,7 +30,7 @@
     to_ports: 8600
 
 - name: Redirect local DNS (3/4)
-  iptables:
+  ansible.builtin.iptables:
     table: nat
     chain: OUTPUT
     protocol: udp
@@ -41,7 +41,7 @@
     destination: localhost
 
 - name: Redirect local DNS (4/4)
-  iptables:
+  ansible.builtin.iptables:
     table: nat
     chain: OUTPUT
     protocol: tcp

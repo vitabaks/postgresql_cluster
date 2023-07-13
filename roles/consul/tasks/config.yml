@@ -2,7 +2,7 @@
 # File: config.yml - Consul configuration tasks
 
 - name: Create configuration
-  copy:
+  ansible.builtin.copy:
     dest: "{{ config_item.dest }}"
     owner: "{{ consul_user }}"
     group: "{{ consul_group }}"
@@ -29,7 +29,7 @@
     - restart consul
 
 - name: Create custom configuration
-  copy:
+  ansible.builtin.copy:
     dest: "{{ consul_configd_path }}/50custom.json"
     owner: "{{ consul_user }}"
     group: "{{ consul_group }}"
@@ -41,6 +41,6 @@
     - restart consul
 
 - name: Set fact list with custom configuration file
-  set_fact:
+  ansible.builtin.set_fact:
     managed_files: "{{ managed_files |default([]) }} + \
       [ '{{ consul_configd_path }}/50custom.json' ]"

@@ -1,6 +1,6 @@
 ---
 - name: start consul on unix
-  service:
+  ansible.builtin.service:
     name: consul
     state: started
   when:
@@ -9,7 +9,7 @@
   listen: 'start consul'
 
 - name: start consul on Mac
-  include_tasks: "{{ role_path }}/handlers/start_consul_mac.yml"
+  ansible.builtin.include_tasks: "{{ role_path }}/handlers/start_consul_mac.yml"
   when: ansible_os_family == "Darwin"
   listen: 'start consul'
 

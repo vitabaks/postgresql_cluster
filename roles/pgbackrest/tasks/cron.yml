@@ -1,7 +1,7 @@
 ---
 
 - name: Add pgbackrest cron jobs on database server
-  cron:
+  ansible.builtin.cron:
     cron_file: "{{ item.file | default('') }}"
     user: "{{ item.user | default('postgres')  }}"
     minute: "{{ item.minute | default('*') }}"
@@ -20,7 +20,7 @@
 
 # Dedicated pgbackrest server (if "repo_host" is set)
 - name: Add pgbackrest cron jobs on pgbackrest server
-  cron:
+  ansible.builtin.cron:
     cron_file: "{{ item.file | default('') }}"
     user: "{{ item.user | default('postgres')  }}"
     minute: "{{ item.minute | default('*') }}"

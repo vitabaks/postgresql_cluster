@@ -2,7 +2,7 @@
 
 - block:
     - name: Install ntp package
-      package:
+      ansible.builtin.package:
         name: ntp
         state: present
       register: package_status
@@ -16,7 +16,7 @@
       tags: ntp_install
 
     - name: Copy the ntp.conf file
-      template:
+      ansible.builtin.template:
         src: ntp.conf.j2
         dest: /etc/ntp.conf
       notify: "restart ntp"
@@ -24,7 +24,7 @@
       tags: ntp_conf
 
     - name: Copy the ntp.conf file
-      template:
+      ansible.builtin.template:
         src: ntp.conf.j2
         dest: /etc/ntp.conf
       notify: "restart ntpd"
@@ -33,7 +33,7 @@
       tags: ntp_conf
 
     - name: Install chrony package
-      package:
+      ansible.builtin.package:
         name: chrony
         state: present
       register: package_status
@@ -46,7 +46,7 @@
             ansible_distribution_major_version >= '8'
 
     - name: Copy the chrony.conf template file
-      template:
+      ansible.builtin.template:
         src: chrony.conf.j2
         dest: /etc/chrony.conf
       notify: "restart chronyd"

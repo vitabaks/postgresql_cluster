@@ -21,7 +21,7 @@
           owner: molecule
 
     - name: "Install netaddr dependency on controlling host"
-      pip:
+      ansible.builtin.pip:
         name: netaddr
       become: false
 

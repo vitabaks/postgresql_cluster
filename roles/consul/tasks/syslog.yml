@@ -2,7 +2,7 @@
 # File: syslog.yml - syslog config for Consul logging
 
 - name: Detect syslog program
-  stat:
+  ansible.builtin.stat:
     path: /usr/sbin/syslog-ng
   register: stat_syslogng
   when:
@@ -10,7 +10,7 @@
     - consul_configure_syslogd | bool
 
 - name: Install syslog-ng config
-  template:
+  ansible.builtin.template:
     src: syslogng_consul.conf.j2
     dest: /etc/syslog-ng/conf.d/consul.conf
     owner: root
@@ -26,7 +26,7 @@
     - restart consul
 
 - name: Install rsyslogd config
-  template:
+  ansible.builtin.template:
     src: rsyslogd_00-consul.conf.j2
     dest: /etc/rsyslog.d/00-consul.conf
     owner: root

@@ -2,7 +2,7 @@
 
 - name: Fetch files from the master
   run_once: true
-  fetch:
+  ansible.builtin.fetch:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
     flat: true
@@ -15,7 +15,7 @@
   tags: fetch_files
 
 - name: Copy files to all servers
-  copy:
+  ansible.builtin.copy:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
     owner: "{{ item.owner }}"

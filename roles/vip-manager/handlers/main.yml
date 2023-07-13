@@ -1,7 +1,7 @@
 ---
 
 - name: Restart vip-manager service
-  systemd:
+  ansible.builtin.systemd:
     daemon_reload: true
     name: vip-manager
     state: restarted
@@ -9,7 +9,7 @@
   listen: "restart vip-manager"
 
 - name: Wait for the cluster ip address (VIP) "{{ cluster_vip }}" is running
-  wait_for:
+  ansible.builtin.wait_for:
     host: "{{ cluster_vip }}"
     port: "{{ ansible_ssh_port | default(22) }}"
     state: started

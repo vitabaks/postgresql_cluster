@@ -2,12 +2,12 @@
 - name: Start Patroni service
   become: true
   become_user: root
-  service:
+  ansible.builtin.service:
     name: patroni
     state: started
 
 - name: "Wait for port {{ patroni_restapi_port }} to become open on the host"
-  wait_for:
+  ansible.builtin.wait_for:
     port: '{{ patroni_restapi_port }}'
     host: '{{ hostvars[inventory_hostname][''inventory_hostname''] }}'
     state: started
@@ -15,7 +15,7 @@
     delay: 10
 
 - name: Check that the Patroni is healthy
-  uri:
+  ansible.builtin.uri:
     url: http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/health
     status_code: 200
   register: patroni_replica_result
@@ -26,7 +26,7 @@
 - name: Check PostgreSQL is started and accepting connections
   become: true
   become_user: postgres
-  command: "{{ postgresql_bin_dir }}/pg_isready -p {{ postgresql_port }}"
+  ansible.builtin.command: "{{ postgresql_bin_dir }}/pg_isready -p {{ postgresql_port }}"
   register: pg_isready_result
   until: pg_isready_result.rc == 0
   retries: 30

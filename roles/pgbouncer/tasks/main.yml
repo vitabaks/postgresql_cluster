@@ -1,7 +1,7 @@
 ---
 
 - name: Install pgbouncer package
-  package:
+  ansible.builtin.package:
     name: pgbouncer
   register: package_status
   until: package_status is success
@@ -15,7 +15,7 @@
 
 # RHEL 8
 - name: Install pgbouncer package
-  dnf:
+  ansible.builtin.dnf:
     name: pgbouncer
     disablerepo: AppStream
   environment: "{{ proxy_env | default({}) }}"
@@ -24,7 +24,7 @@
   tags: pgbouncer_install, pgbouncer
 
 - name: Ensure config directory "{{ pgbouncer_conf_dir }}" exist
-  file:
+  ansible.builtin.file:
     path: "{{ pgbouncer_conf_dir }}"
     state: directory
     owner: postgres
@@ -33,7 +33,7 @@
   tags: pgbouncer_conf, pgbouncer
 
 - name: Stop and disable standard init script
-  service:
+  ansible.builtin.service:
     name: pgbouncer
     state: stopped
     enabled: false
@@ -41,7 +41,7 @@
   tags: pgbouncer_service, pgbouncer
 
 - name: Copy systemd service file
-  template:
+  ansible.builtin.template:
     src: templates/pgbouncer.service.j2
     dest: /etc/systemd/system/pgbouncer.service
     owner: postgres
@@ -52,12 +52,12 @@
 
 - block:  # workaround for pgbouncer from postgrespro repo
     - name: Check that /usr/bin/pgbouncer is exists
-      stat:
+      ansible.builtin.stat:
         path: /usr/bin/pgbouncer
       register: pgbouncer_bin
 
     - name: create a symlink to /usr/sbin/pgbouncer
-      file:
+      ansible.builtin.file:
         src: /usr/sbin/pgbouncer
         dest: /usr/bin/pgbouncer
         owner: root
@@ -69,7 +69,7 @@
   tags: pgbouncer_service, pgbouncer
 
 - name: Enable log rotation with logrotate
-  copy:
+  ansible.builtin.copy:
     content: |
       /var/log/pgbouncer/pgbouncer.log {
              daily
@@ -85,7 +85,7 @@
   tags: pgbouncer_logrotate, pgbouncer
 
 - name: Configure pgbouncer.ini
-  template:
+  ansible.builtin.template:
     src: templates/pgbouncer.ini.j2
     dest: "{{ pgbouncer_conf_dir }}/pgbouncer.ini"
     owner: postgres
@@ -96,7 +96,7 @@
   tags: pgbouncer_conf, pgbouncer
 
 - name: Create userlist.txt
-  template:
+  ansible.builtin.template:
     src: templates/userlist.txt.j2
     dest: "{{ pgbouncer_conf_dir }}/userlist.txt"
     owner: postgres
@@ -110,7 +110,7 @@
 - block:  # for add_pgnode.yml
     - name: Fetch pgbouncer.ini file from master
       run_once: true
-      fetch:
+      ansible.builtin.fetch:
         src: "{{ pgbouncer_conf_dir }}/pgbouncer.ini"
         dest: files/
         validate_checksum: true
@@ -119,7 +119,7 @@
 
     - name: Fetch userlist.txt conf file from master
       run_once: true
-      fetch:
+      ansible.builtin.fetch:
         src: "{{ pgbouncer_conf_dir }}/userlist.txt"
         dest: files/
         validate_checksum: true
@@ -128,7 +128,7 @@
       when: not pgbouncer_auth_user|bool
 
     - name: Copy pgbouncer.ini file to replica
-      copy:
+      ansible.builtin.copy:
         src: files/pgbouncer.ini
         dest: "{{ pgbouncer_conf_dir }}"
         owner: postgres
@@ -136,7 +136,7 @@
         mode: "0640"
 
     - name: Copy userlist.txt conf file to replica
-      copy:
+      ansible.builtin.copy:
         src: files/userlist.txt
         dest: "{{ pgbouncer_conf_dir }}"
         owner: postgres
@@ -146,21 +146,21 @@
 
     - name: Remove pgbouncer.ini file from localhost
       run_once: true
-      file:
+      ansible.builtin.file:
         path: files/pgbouncer.ini
         state: absent
       delegate_to: localhost
 
     - name: Remove userlist.txt conf file from localhost
       run_once: true
-      file:
+      ansible.builtin.file:
         path: files/userlist.txt
         state: absent
       delegate_to: localhost
       when: not pgbouncer_auth_user|bool
 
     - name: Prepare pgbouncer.ini conf file (replace "listen_addr")
-      lineinfile:
+      ansible.builtin.lineinfile:
         path: "{{ pgbouncer_conf_dir }}/pgbouncer.ini"
         regexp: "{{ item.regexp }}"
         line: "{{ item.line }}"
@@ -174,7 +174,7 @@
             (cluster_vip is not defined or cluster_vip | length < 1)
 
     - name: Prepare pgbouncer.ini conf file (replace "listen_addr")
-      lineinfile:
+      ansible.builtin.lineinfile:
         path: "{{ pgbouncer_conf_dir }}/pgbouncer.ini"
         regexp: "{{ item.regexp }}"
         line: "{{ item.line }}"

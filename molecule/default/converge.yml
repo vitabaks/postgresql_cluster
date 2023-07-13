@@ -5,7 +5,7 @@
 
   tasks:
     - name: Set variables for Patroni cluster deployment test
-      set_fact:
+      ansible.builtin.set_fact:
         firewall_enabled_at_boot: false
         firewall_enable_ipv6: false # Added to prevent test failures in CI.
         swap_file_create: false # Added to prevent test failures in CI.
@@ -18,7 +18,7 @@
         cacheable: true
 
     - name: Set variables for TimescaleDB cluster deployment test
-      set_fact:
+      ansible.builtin.set_fact:
         enable_timescale: true
       when:
         - not (ansible_distribution == 'Ubuntu' and ansible_distribution_version is version('20.04', '<'))
@@ -31,19 +31,19 @@
         pg_new_version: "15"
 
     - name: Clean yum cache (molecule containers)
-      command: yum clean all
+      ansible.builtin.command: yum clean all
       when:
         - ansible_os_family == "RedHat"
         - ansible_distribution_major_version == '7'
 
     - name: Clean dnf cache (molecule containers)
-      command: dnf clean all
+      ansible.builtin.command: dnf clean all
       when:
         - ansible_os_family == "RedHat"
         - ansible_distribution_major_version is version('8', '>=')
 
     - name: Update apt cache (molecule containers)
-      apt:
+      ansible.builtin.apt:
         update_cache: true
         cache_valid_time: 3600
       register: apt_status
@@ -54,25 +54,25 @@
 
     - name: Install openssh-server package (molecule containers)
       become: true
-      package:
+      ansible.builtin.package:
         name: openssh-server
         state: present
 
     - name: Start ssh service (molecule containers)
       become: true
-      systemd:
+      ansible.builtin.systemd:
         name: "{{ 'ssh' if ansible_os_family == 'Debian' else 'sshd' }}"
         state: started
         enabled: true
 
     - name: Delete "/run/nologin" file (if exists)
       become: true
-      file:
+      ansible.builtin.file:
         path: /run/nologin
         state: absent
 
 - name: Deploy PostgreSQL Cluster
-  import_playbook: ../../deploy_pgcluster.yml
+  ansible.builtin.import_playbook: ../../deploy_pgcluster.yml
 
 - name: PostgreSQL upgrade test
-  import_playbook: ../../upgrade_postgres.yml
+  ansible.builtin.import_playbook: ../../upgrade_postgres.yml

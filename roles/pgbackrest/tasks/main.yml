@@ -2,7 +2,7 @@
 
 - block:  # Debian pgdg repo
     - name: Make sure the gnupg and apt-transport-https packages are present
-      apt:
+      ansible.builtin.apt:
         pkg:
           - gnupg
           - apt-transport-https
@@ -13,16 +13,16 @@
       retries: 3
 
     - name: Make sure pgdg apt key is installed
-      apt_key:
+      ansible.builtin.apt_key:
         id: ACCC4CF8
         url: https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc
 
     - name: Make sure pgdg repository is installed
-      apt_repository:
+      ansible.builtin.apt_repository:
         repo: "deb https://apt.postgresql.org/pub/repos/apt/ {{ ansible_distribution_release }}-pgdg main"
 
     - name: Update apt cache
-      apt:
+      ansible.builtin.apt:
         update_cache: true
       register: apt_status
       until: apt_status is success
@@ -37,14 +37,14 @@
 
 - block:  # RedHat pgdg repo
     - name: Get pgdg-redhat-repo-latest.noarch.rpm
-      get_url:
+      ansible.builtin.get_url:
         url: "https://download.postgresql.org/pub/repos/yum/reporpms/EL-{{ ansible_distribution_major_version }}-x86_64/pgdg-redhat-repo-latest.noarch.rpm"
         dest: /tmp/
         timeout: 30
         validate_certs: false
 
     - name: Make sure pgdg repository is installed
-      package:
+      ansible.builtin.package:
         name: /tmp/pgdg-redhat-repo-latest.noarch.rpm
         state: present
       register: package_status
@@ -53,11 +53,11 @@
       retries: 3
 
     - name: Clean yum cache
-      command: yum clean all
+      ansible.builtin.command: yum clean all
       when: ansible_distribution_major_version == '7'
 
     - name: Clean dnf cache
-      command: dnf clean all
+      ansible.builtin.command: dnf clean all
       when: ansible_distribution_major_version is version('8', '>=')
   environment: "{{ proxy_env | default({}) }}"
   when:
@@ -71,7 +71,7 @@
 # The problem will be solved when CentOS 8.2 will be released.
 - block:
     - name: Get libzstd rpm package from archived EPEL
-      get_url:
+      ansible.builtin.get_url:
         url: https://dl.fedoraproject.org/pub/archive/epel/8.1/Everything/x86_64/Packages/l/libzstd-1.4.4-1.el8.x86_64.rpm
         dest: /tmp/
         timeout: 120
@@ -79,7 +79,7 @@
       register: get_libzstd_result
 
     - name: Install libzstd
-      package:
+      ansible.builtin.package:
         name: /tmp/libzstd-1.4.4-1.el8.x86_64.rpm
         state: present
       register: package_status
@@ -95,7 +95,7 @@
   tags: pgbackrest, pgbackrest_install
 
 - name: Install pgbackrest
-  package:
+  ansible.builtin.package:
     name: pgbackrest
     state: present
   register: package_status
@@ -107,14 +107,14 @@
 
 - block:
     - name: Ensure config directory exist
-      file:
+      ansible.builtin.file:
         path: "{{ pgbackrest_conf_file | dirname }}"
         state: directory
         owner: postgres
         group: postgres
 
     - name: "Generate conf file {{ pgbackrest_conf_file }}"
-      template:
+      ansible.builtin.template:
         src: pgbackrest.conf.j2
         dest: "{{ pgbackrest_conf_file }}"
         owner: postgres
@@ -126,21 +126,21 @@
 # Dedicated pgbackrest server (if "repo_host" is set)
 - block:
     - name: Ensure config directory exist
-      file:
+      ansible.builtin.file:
         path: "{{ pgbackrest_conf_file | dirname }}"
         state: directory
         owner: "{{ pgbackrest_repo_user }}"
         group: "{{ pgbackrest_repo_user }}"
 
     - name: Ensure stanza config directory exist
-      file:
+      ansible.builtin.file:
         path: "{{ pgbackrest_conf_file | dirname }}/conf.d"
         state: directory
         owner: "{{ pgbackrest_repo_user }}"
         group: "{{ pgbackrest_repo_user }}"
 
     - name: "Generate global conf file {{ pgbackrest_conf_file }}"
-      template:
+      ansible.builtin.template:
         src: pgbackrest.server.conf.j2
         dest: "{{ pgbackrest_conf_file }}"
         owner: "{{ pgbackrest_repo_user }}"
@@ -148,7 +148,7 @@
         mode: "0644"
 
     - name: "Generate stanza conf file {{ pgbackrest_conf_file | dirname }}/conf.d/{{ pgbackrest_stanza }}.conf"
-      template:
+      ansible.builtin.template:
         src: pgbackrest.server.stanza.conf.j2
         dest: "{{ pgbackrest_conf_file | dirname }}/conf.d/{{ pgbackrest_stanza }}.conf"
         owner: "{{ pgbackrest_repo_user }}"
@@ -161,14 +161,14 @@
   tags: pgbackrest, pgbackrest_conf
 
 # if pgbackrest_repo_type: "posix" and pgbackrest_repo_host is set
-- import_tasks: ssh_keys.yml
+- ansible.builtin.import_tasks: ssh_keys.yml
   when:
     - pgbackrest_repo_type|lower == "posix"
     - pgbackrest_repo_host is defined
     - pgbackrest_repo_host | length > 0
   tags: pgbackrest, pgbackrest_ssh_keys
 
-- import_tasks: cron.yml
+- ansible.builtin.import_tasks: cron.yml
   when:
     - pgbackrest_cron_jobs is defined
     - pgbackrest_cron_jobs | length > 0

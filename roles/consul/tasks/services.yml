@@ -2,7 +2,7 @@
 ## File: services.yml - services configuration
 
 - name: Configure consul services
-  template:
+  ansible.builtin.template:
     dest: "{{ consul_configd_path }}/service_{{ service_item.id }}.json"
     src: service.json.j2
     owner: "{{ consul_user }}"
@@ -15,7 +15,7 @@
     - restart consul
 
 - name: Get the list of service config files
-  find:
+  ansible.builtin.find:
     paths: "{{ consul_configd_path }}"
     file_type: file
   register: services_enabled_unix
@@ -29,24 +29,24 @@
   when: ansible_os_family == 'Windows'
 
 - name: Set var for enabled services
-  set_fact:
+  ansible.builtin.set_fact:
     services_enabled_files: "{{ services_enabled_unix['files'] }}"
   when: ansible_os_family != 'Windows'
 
 - name: Set var for enabled services [Windows]
-  set_fact:
+  ansible.builtin.set_fact:
     services_enabled_files: "{{ services_enabled_windows['files'] }}"
   when: ansible_os_family == 'Windows'
 
 - name: Set fact with list of existing configuration files
-  set_fact:
+  ansible.builtin.set_fact:
     list_current_service_config: "{{ list_current_service_config |default([]) + [ config_file_item.path ] }}"
   with_items: "{{ services_enabled_files }}"
   loop_control:
     loop_var: config_file_item
 
 - name: Set fact with list of services we manage
-  set_fact:
+  ansible.builtin.set_fact:
     managed_files: "{{ managed_files |default([]) }} + \
     [ '{{ consul_configd_path }}/service_{{ service_item.id }}.json' ]"
   with_items: "{{ consul_services }}"
@@ -64,7 +64,7 @@
   when: ansible_os_family == 'Windows'
 
 - name: Set fact with list of services we manage [Windows]
-  set_fact:
+  ansible.builtin.set_fact:
     managed_files: "{{ managed_files | default([]) }} + [ '{{ service_item.stat.path }}' ]"
   with_items: "{{ managed_files_win_paths.results }}"
   loop_control:
@@ -72,7 +72,7 @@
   when: ansible_os_family == 'Windows'
 
 - name: Delete non declared services
-  file:
+  ansible.builtin.file:
     path: "{{ non_declared_service_item }}"
     state: absent
   when:

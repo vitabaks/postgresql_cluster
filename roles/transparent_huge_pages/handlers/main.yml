@@ -1,7 +1,7 @@
 ---
 
 - name: Start disable-transparent-huge-pages service
-  systemd:
+  ansible.builtin.systemd:
     daemon_reload: true
     name: disable-transparent-huge-pages
     state: restarted
