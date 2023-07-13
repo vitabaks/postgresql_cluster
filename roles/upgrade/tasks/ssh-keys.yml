@@ -4,7 +4,7 @@
 - name: Make sure that the openssh-client package is installed
   become: true
   become_user: root
-  package:
+  ansible.builtin.package:
     name: openssh-client
     state: present
   when: ansible_os_family == "Debian"
@@ -12,19 +12,19 @@
 - name: Make sure that the openssh-clients package is installed
   become: true
   become_user: root
-  package:
+  ansible.builtin.package:
     name: openssh-clients
     state: present
   when: ansible_os_family == "RedHat"
 
 - name: Make sure the SSH key for user "{{ ssh_key_user }}" exists
-  user:
+  ansible.builtin.user:
     name: "{{ ssh_key_user }}"
     generate_ssh_key: true
     ssh_key_file: .ssh/id_rsa
 
 - name: Fetch public SSH keys from database servers
-  fetch:
+  ansible.builtin.fetch:
     src: "~{{ ssh_key_user }}/.ssh/id_rsa.pub"
     dest: "files/{{ inventory_hostname }}-id_rsa.pub"
     flat: true
@@ -41,7 +41,7 @@
   run_once: true
   become: false
   become_user: "{{ lookup('env', 'USER') }}"
-  file:
+  ansible.builtin.file:
     path: files/{{ item }}-id_rsa.pub
     state: absent
   loop: "{{ groups['postgres_cluster'] }}"
@@ -50,7 +50,7 @@
 
 # known_hosts
 - name: known_hosts | for each host, scan for its ssh public key
-  command: "ssh-keyscan -trsa -p {{ ansible_ssh_port | default(22) }} {{ item }}"
+  ansible.builtin.command: "ssh-keyscan -trsa -p {{ ansible_ssh_port | default(22) }} {{ item }}"
   loop: "{{ groups['postgres_cluster'] }}"
   register: ssh_known_host_results
   changed_when: false
@@ -58,7 +58,7 @@
 - name: known_hosts | for each host, add/update the public key in the "~{{ ssh_key_user }}/.ssh/known_hosts"
   become: true
   become_user: "{{ ssh_key_user }}"
-  known_hosts:
+  ansible.builtin.known_hosts:
     name: "{{ item.item }}"
     key: "{{ item.stdout }}"
     path: "~{{ ssh_key_user }}/.ssh/known_hosts"

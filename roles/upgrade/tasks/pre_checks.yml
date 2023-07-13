@@ -2,7 +2,7 @@
 
 # required to perform the dcs_remove_cluster.yml
 - name: '[Pre-Check] Make sure the ansible required Python library is installed'
-  pip:
+  ansible.builtin.pip:
     name: "{{ item }}"
     state: present
     executable: pip3
@@ -16,7 +16,7 @@
     ansible_python_interpreter: /usr/bin/python3
 
 - name: '[Pre-Check] Test PostgreSQL database access using a unix socket'
-  command: psql -tAXc 'select 1'
+  ansible.builtin.command: psql -tAXc 'select 1'
   register: socket_access_result
   changed_when: false
   failed_when: "socket_access_result.rc != 0 and 'no pg_hba.conf entry' not in socket_access_result.stderr"
@@ -27,20 +27,20 @@
     # The rule grants the specified PostgreSQL user ("postgres") peer-based access to all databases locally.
     # This is necessary to ensure a smooth upgrade process and will be removed after the upgrade is complete.
     - name: Add temporary local access rule for the "postgres" user (during the upgrade)
-      blockinfile:
+      ansible.builtin.blockinfile:
         path: "{{ pg_old_confdir }}/pg_hba.conf"
         marker: "# {mark} ANSIBLE TEMPORARY pg_upgrade RULE"
         insertbefore: BOF
         content: "local all postgres peer"
 
     - name: Update the PostgreSQL configuration
-      command: "{{ pg_old_bindir }}/pg_ctl reload -D {{ pg_old_datadir }}"
+      ansible.builtin.command: "{{ pg_old_bindir }}/pg_ctl reload -D {{ pg_old_datadir }}"
   when:
     - socket_access_result.stderr is defined
     - "'no pg_hba.conf entry' in socket_access_result.stderr"
 
 - name: '[Pre-Check] Check the current version of PostgreSQL'
-  command: psql -tAXc "select setting::integer/10000 from pg_settings where name = 'server_version_num'"
+  ansible.builtin.command: psql -tAXc "select setting::integer/10000 from pg_settings where name = 'server_version_num'"
   register: pg_current_version
   changed_when: false
   when:
@@ -49,7 +49,7 @@
 
 # for compatibility with Postgres 9.x
 - name: '[Pre-Check] Check the current version of PostgreSQL'
-  command: psql -tAXc "select substring(setting from '^[0-9]+\.[0-9]+') from pg_settings where name = 'server_version'"
+  ansible.builtin.command: psql -tAXc "select substring(setting from '^[0-9]+\.[0-9]+') from pg_settings where name = 'server_version'"
   register: pg_current_version
   changed_when: false
   when:
@@ -58,7 +58,7 @@
 
 # Stop, if the current version does not match pg_old_version
 - name: "Pre-Check error. An incorrect version of PostgreSQL may have been specified"
-  fail:
+  ansible.builtin.fail:
     msg:
       - "The current version of PostgreSQL is {{ pg_current_version.stdout }}"
       - "Make sure that you have specified the correct version in the pg_old_version variable."
@@ -69,7 +69,7 @@
 
 # Stop, if the current version greater than or equal to pg_new_version
 - name: "Pre-Check error. An incorrect target version of PostgreSQL may have been specified"
-  fail:
+  ansible.builtin.fail:
     msg:
       - "The current version of PostgreSQL is {{ pg_current_version.stdout }}, no upgrade is needed."
       - "Or, make sure that you have specified the correct version in the pg_new_version variable."
@@ -81,7 +81,7 @@
 # the current directory must not be equal to the path specified in the pg_new_datadir variable
 # which will later be cleaned up before executing initdb for a new version of PostgreSQL
 - name: '[Pre-Check] Ensure new data directory is different from the current one'
-  command: psql -tAXc "show data_directory"
+  ansible.builtin.command: psql -tAXc "show data_directory"
   changed_when: false
   register: pg_current_datadir
   when:
@@ -89,7 +89,7 @@
 
 # Stop, if the current data directory is the same as pg_new_datadir
 - name: "Pre-Check error. The current data directory is the same as new data directory"
-  fail:
+  ansible.builtin.fail:
     msg:
       - "The new data directory ({{ pg_new_datadir }}) must be different from the current one ({{ pg_current_datadir.stdout | trim }})"
   when:
@@ -97,7 +97,7 @@
     - pg_new_datadir == pg_current_datadir.stdout | trim
 
 - name: '[Pre-Check] Make sure that physical replication is active'
-  command: >-
+  ansible.builtin.command: >-
     psql -tAXc "select count(*) from pg_stat_replication
     where application_name != 'pg_basebackup'"
   register: pg_replication_state
@@ -107,14 +107,14 @@
 
 # Stop, if there are no active replicas
 - name: "Pre-Check error. Print physical replication state"
-  fail:
+  ansible.builtin.fail:
     msg: "There are no active replica servers (pg_stat_replication returned 0 entries)."
   when:
     - inventory_hostname in groups['primary']
     - pg_replication_state.stdout | int == 0
 
 - name: '[Pre-Check] Make sure there is no high replication lag (more than {{ max_replication_lag_bytes | human_readable }})'
-  command: >-
+  ansible.builtin.command: >-
     psql -tAXc "select
       pg_wal_lsn_diff(pg_current_wal_lsn(),replay_lsn) as pg_lag_bytes
       from pg_stat_replication
@@ -131,7 +131,7 @@
 
 # for compatibility with Postgres 9.x
 - name: '[Pre-Check] Make sure there is no high replication lag (more than {{ max_replication_lag_bytes | human_readable }})'
-  command: >-
+  ansible.builtin.command: >-
     psql -tAXc "select
       pg_xlog_location_diff(pg_current_xlog_location(),replay_location) as pg_lag_bytes
       from pg_stat_replication
@@ -149,19 +149,19 @@
 # Stop, if replication lag is high
 - block:
     - name: "Print replication lag"
-      debug:
+      ansible.builtin.debug:
         msg: "Current replication lag:
           {{ pg_lag_bytes.stdout | int | human_readable }}"
 
     - name: "Pre-Check error. Please try again later"
-      fail:
+      ansible.builtin.fail:
         msg: High replication lag on the Patroni Cluster, please try again later.
   when:
     - pg_lag_bytes.stdout is defined
     - pg_lag_bytes.stdout|int >= max_replication_lag_bytes|int
 
 - name: '[Pre-Check] Make sure there are no long-running transactions (more than {{ max_transaction_sec }} seconds)'
-  command: >-
+  ansible.builtin.command: >-
     psql -tAXc "select pid, usename, client_addr, clock_timestamp() - xact_start as xact_age,
       state, wait_event_type ||':'|| wait_event as wait_events,
       left(regexp_replace(query, E'[ \\t\\n\\r]+', ' ', 'g'),100) as query
@@ -179,7 +179,7 @@
 
 # for compatibility with Postgres 9.x
 - name: '[Pre-Check] Make sure there are no long-running transactions (more than {{ max_transaction_sec }} seconds)'
-  command: >-
+  ansible.builtin.command: >-
     psql -tAXc "select pid, usename, client_addr, clock_timestamp() - xact_start as xact_age,
       state, left(regexp_replace(query, E'[ \\t\\n\\r]+', ' ', 'g'),100) as query
       from pg_stat_activity
@@ -196,11 +196,11 @@
 # Stop, if long-running transactions detected
 - block:
     - name: "Print long-running (>{{ max_transaction_sec }}s) transactions"
-      debug:
+      ansible.builtin.debug:
         msg: "{{ pg_long_transactions.stdout_lines }}"
 
     - name: "Pre-Check error. Please try again later"
-      fail:
+      ansible.builtin.fail:
         msg: long-running transactions detected (more than {{ max_transaction_sec }} seconds), please try again later.
   when:
     - pg_long_transactions.stdout is defined
@@ -208,7 +208,7 @@
 
 # SSH Keys (required for upgrade replicas with rsync)
 - name: '[Pre-Check] Make sure that SSH key-based authentication is configured between cluster nodes'
-  include_tasks: ssh-keys.yml
+  ansible.builtin.include_tasks: ssh-keys.yml
   vars:
     ssh_key_user: postgres
 
@@ -216,14 +216,14 @@
 - name: '[Pre-Check] Make sure that the rsync package are installed'
   become: true
   become_user: root
-  package:
+  ansible.builtin.package:
     name: rsync
     state: present
 
 - name: '[Pre-Check] Rsync Checks: create testrsync file on Primary'
   become: true
   become_user: postgres
-  file:
+  ansible.builtin.file:
     path: /tmp/testrsync
     state: touch
   when:
@@ -232,7 +232,7 @@
 - name: '[Pre-Check] Rsync Checks: test rsync and ssh key access'
   become: true
   become_user: postgres
-  shell: >
+  ansible.builtin.shell: >
     rsync -e "ssh -o StrictHostKeyChecking=no" --archive --delete --hard-links --size-only --no-inc-recursive --omit-dir-times
     /tmp/testrsync {{ item }}:/tmp/
   args:
@@ -244,7 +244,7 @@
 - name: "[Pre-Check] Cleanup testrsync file"
   become: true
   become_user: postgres
-  file:
+  ansible.builtin.file:
     path: /tmp/testrsync
     state: absent
 

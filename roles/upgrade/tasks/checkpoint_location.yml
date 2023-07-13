@@ -7,7 +7,7 @@
 # 5. If there's a mismatch, the previously stopped cluster starts (rollback), and the playbook stops with an error message.
 
 - name: Get 'Latest checkpoint location' on the Leader
-  shell: |
+  ansible.builtin.shell: |
     set -o pipefail;
     {{ pg_old_bindir }}/pg_controldata {{ pg_old_datadir }} | grep 'Latest checkpoint location' | awk '{print $4}'
   args:
@@ -18,7 +18,7 @@
     - inventory_hostname in groups['primary']
 
 - name: Get 'Latest checkpoint location' on the Replicas
-  shell: |
+  ansible.builtin.shell: |
     set -o pipefail;
     {{ pg_old_bindir }}/pg_controldata {{ pg_old_datadir }} | grep 'Latest checkpoint location' | awk '{print $4}'
   args:
@@ -29,25 +29,25 @@
     - inventory_hostname in groups['secondary']
 
 - name: Print 'Latest checkpoint location' for the Leader
-  debug:
+  ansible.builtin.debug:
     msg: "Leader's latest checkpoint location: {{ pg_checkpoint_location_leader.stdout }}"
   when:
     - inventory_hostname in groups['primary']
 
 - name: Print 'Latest checkpoint location' for the Replica
-  debug:
+  ansible.builtin.debug:
     msg: "Replica: {{ inventory_hostname }}, latest checkpoint location: {{ pg_checkpoint_location_replica.stdout }}"
   when:
     - inventory_hostname in groups['secondary']
 
 - name: Check if all 'Latest checkpoint location' values match
-  set_fact:
+  ansible.builtin.set_fact:
     pg_checkpoint_location_match: "{{ pg_checkpoint_location_replica.stdout == hostvars[groups['primary'][0]]['pg_checkpoint_location_leader']['stdout'] }}"
   when:
     - inventory_hostname in groups['secondary']
 
 - name: "SUCCESS: 'Latest checkpoint location' values match on all cluster nodes"
-  debug:
+  ansible.builtin.debug:
     msg: "'Latest checkpoint location' is the same on the leader and its standbys"
   run_once: true
   when:
@@ -59,16 +59,16 @@
 # Stop, if 'Latest checkpoint location' doesn't match
 - block:
     - name: "'Latest checkpoint location' doesn't match"
-      debug:
+      ansible.builtin.debug:
         msg: "'Latest checkpoint location' doesn't match on leader and its standbys"
       run_once: true
 
     # rollback (TODO)
 #    - name: Perform rollback
-#      include_tasks: rollback.yml
+#      ansible.builtin.include_tasks: rollback.yml
 
     - name: "ERROR: 'Latest checkpoint location' doesn't match"
-      fail:
+      ansible.builtin.fail:
         msg: "'Latest checkpoint location' doesn't match on leader and its standbys. Please try again later"
       run_once: true
   when:

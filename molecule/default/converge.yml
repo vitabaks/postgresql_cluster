@@ -25,7 +25,7 @@
         - not (ansible_distribution == 'Debian' and ansible_distribution_version is version('11', '>')) # TODO Debian 12
 
     - name: Set variables for PostgreSQL upgrade test
-      set_fact:
+      ansible.builtin.set_fact:
         postgresql_version: "14"  # redefine the version to install for the upgrade test
         pg_old_version: "14"
         pg_new_version: "15"

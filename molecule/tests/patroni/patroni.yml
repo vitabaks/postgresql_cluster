@@ -1,6 +1,6 @@
 ---
 - name: Check Patroni status
-  uri:
+  ansible.builtin.uri:
     url: "http://{{ inventory_hostname }}:8008/patroni"
     return_content: true
   register: patroni_status

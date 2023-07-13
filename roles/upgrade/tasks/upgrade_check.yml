@@ -1,14 +1,14 @@
 ---
 
 - name: Get the current shared_preload_libraries settings
-  command: psql -tAXc "show shared_preload_libraries"
+  ansible.builtin.command: psql -tAXc "show shared_preload_libraries"
   changed_when: false
   register: pg_shared_preload_libraries_result
   when:
     - inventory_hostname in groups['primary']
 
 - name: 'Set the variable: pg_shared_preload_libraries_value'
-  set_fact:
+  ansible.builtin.set_fact:
     pg_shared_preload_libraries_value: "{{ pg_shared_preload_libraries_result.stdout }}"
   when:
     - inventory_hostname in groups['primary']
@@ -16,7 +16,7 @@
 # In the --new-options argument, an inline if condition checks if 'timescaledb' is present in the pg_shared_preload_libraries_value.
 # If it is, it appends '-c timescaledb.restoring='on'' to the --new-options argument.
 - name: Verify the two clusters are compatible (pg_upgrade --check)
-  command: >
+  ansible.builtin.command: >
     {{ pg_new_bindir }}/pg_upgrade
     --old-bindir {{ pg_old_bindir }}
     --new-bindir {{ pg_new_bindir }}
@@ -35,7 +35,7 @@
     - inventory_hostname in groups['primary']
 
 - name: Print the result of the pg_upgrade check
-  debug:
+  ansible.builtin.debug:
     var: pg_upgrade_check_result.stdout_lines
   failed_when: "'Clusters are compatible' not in pg_upgrade_check_result.stdout"
   when:

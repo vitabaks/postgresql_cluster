@@ -3,7 +3,7 @@
 - name: Pause Patroni cluster (enable maintenance mode)
   become: true
   become_user: postgres
-  command: "patronictl -c {{ patroni_config_file }} pause --wait {{ patroni_cluster_name }}"
+  ansible.builtin.command: "patronictl -c {{ patroni_config_file }} pause --wait {{ patroni_cluster_name }}"
   environment:
     PATH: "{{ ansible_env.PATH }}:/usr/bin:/usr/local/bin"
   vars:
@@ -14,12 +14,12 @@
 - name: Stop Patroni service
   become: true
   become_user: root
-  service:
+  ansible.builtin.service:
     name: patroni
     state: stopped
 
 - name: Wait until the Patroni cluster is stopped
-  shell: |
+  ansible.builtin.shell: |
     set -o pipefail;
     patronictl -c {{ patroni_config_file }} list -f json | grep -cv '^\[\]$'
   args:

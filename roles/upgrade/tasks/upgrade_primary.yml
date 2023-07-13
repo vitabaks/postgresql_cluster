@@ -4,7 +4,7 @@
 # In the --new-options argument, an inline if condition checks if 'timescaledb' is present in the pg_shared_preload_libraries_value.
 # If it is, it appends '-c timescaledb.restoring='on'' to the --new-options argument.
 - name: "Upgrade the PostgreSQL to version {{ pg_new_version }} on the Primary (using pg_upgrade --link)"
-  command: >
+  ansible.builtin.command: >
     {{ pg_new_bindir }}/pg_upgrade
     --old-bindir {{ pg_old_bindir }}
     --new-bindir {{ pg_new_bindir }}
@@ -24,7 +24,7 @@
 # the upgrade_output variable will include the first 70 lines, an ellipsis (...),
 # and the last 30 lines of the pg_upgrade_result.stdout_lines.
 - name: Print the result of the pg_upgrade
-  debug:
+  ansible.builtin.debug:
     msg:
       - "{{ pg_upgrade_result.stdout_lines[:70] }}"
       - "    ...    "
@@ -35,7 +35,7 @@
 
 # Otherwise, it will include all lines of the pg_upgrade_result.stdout_lines.
 - name: Print the result of the pg_upgrade
-  debug:
+  ansible.builtin.debug:
     msg:
       - "{{ pg_upgrade_result.stdout_lines }}"
   when:

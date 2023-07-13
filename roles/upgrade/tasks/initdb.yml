@@ -3,7 +3,7 @@
 - name: Make sure new PostgreSQL data directory "{{ pg_new_datadir }}" exists
   become: true
   become_user: root
-  file:
+  ansible.builtin.file:
     path: "{{ pg_new_datadir }}"
     state: directory
     mode: "0700"
@@ -11,13 +11,13 @@
     owner: postgres
 
 - name: Make sure new PostgreSQL data directory "{{ pg_new_datadir }}" is not initialized
-  stat:
+  ansible.builtin.stat:
     path: "{{ pg_new_datadir }}/PG_VERSION"
   register: pgdata_initialized
 
 - block:  # if already initialized
     - name: Perform pg_dropcluster
-      command: >
+      ansible.builtin.command: >
         /usr/bin/pg_dropcluster --stop {{ pg_new_version }} {{ postgresql_cluster_name }}
       failed_when: false
       when:
@@ -25,7 +25,7 @@
         - pg_new_confdir != pg_new_datadir
 
     - name: Clear the new PostgreSQL data directory "{{ pg_new_datadir }}"
-      file:
+      ansible.builtin.file:
         path: "{{ pg_new_datadir }}"
         state: "{{ item }}"
         mode: "0700"
@@ -39,7 +39,7 @@
     - pgdata_initialized.stat.exists
 
 - name: Get the current encodig and data_checksums settings
-  command: psql -tAXc "show {{ item }}"
+  ansible.builtin.command: psql -tAXc "show {{ item }}"
   changed_when: false
   register: pg_settings
   loop:
@@ -57,7 +57,7 @@
 # for Debian based use pg_createcluster, if the PostgreSQL configuration is not located in the data directory.
 # Note: Patroni failure is possible if the default postgresql config files are missing in the /etc/postgresql/...
 - name: Initialize new PostgreSQL data directory with default config files
-  command: >
+  ansible.builtin.command: >
     /usr/bin/pg_createcluster {{ pg_new_version }} {{ postgresql_cluster_name }}
     --datadir={{ pg_new_datadir }}
     --encoding={{ hostvars[groups['primary'][0]].pg_settings.results[0].stdout }}
@@ -77,7 +77,7 @@
 
 # Use initdb, if the PostgreSQL configuration is located in the data directory.
 - name: Initialize new PostgreSQL data directory on the Primary
-  command: >
+  ansible.builtin.command: >
     {{ pg_new_bindir }}/initdb
     --pgdata={{ pg_new_datadir }}
     --encoding={{ pg_settings.results[0].stdout }}

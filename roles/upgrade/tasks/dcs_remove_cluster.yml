@@ -1,7 +1,7 @@
 ---
 
 - name: Remove existing cluster "{{ patroni_cluster_name }}" from DCS
-  expect:
+  ansible.builtin.expect:
     command: "patronictl -c {{ patroni_config_file }} remove {{ patroni_cluster_name }}"
     responses:
       (.*)Please confirm the cluster name to remove: "{{ patroni_cluster_name }}"

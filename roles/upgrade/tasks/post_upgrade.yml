@@ -1,13 +1,13 @@
 ---
 
 - name: Ensure the current data directory is the new data directory
-  command: psql -tAXc "show data_directory"
+  ansible.builtin.command: psql -tAXc "show data_directory"
   changed_when: false
   register: pg_current_datadir
 
 # RedHat based
 - name: Delete the old PostgreSQL data directory
-  file:
+  ansible.builtin.file:
     path: "{{ pg_old_datadir }}"
     state: absent
   when:
@@ -16,7 +16,7 @@
 
 # Debian based (use pg_dropcluster)
 - name: Delete the old PostgreSQL data directory (perform pg_dropcluster)
-  command: >
+  ansible.builtin.command: >
     /usr/bin/pg_dropcluster {{ pg_old_version }} {{ postgresql_cluster_name }}
   failed_when: false
   when:
@@ -27,7 +27,7 @@
 - name: Remove old PostgreSQL packages
   become: true
   become_user: root
-  package:
+  ansible.builtin.package:
     name: "{{ item }}"
     state: absent
   loop: "{{ postgresql_packages | regex_replace(postgresql_version, pg_old_version) }}"
@@ -45,7 +45,7 @@
 - name: Remove old PostgreSQL packages
   become: true
   become_user: root
-  apt:
+  ansible.builtin.apt:
     name: "{{ item }}"
     state: absent
     purge: true
@@ -63,12 +63,12 @@
 # pgbackrest (local)
 - block:
     - name: pgbackrest | Check pg-path option
-      command: "grep -c '^pg.*-path=' {{ pgbackrest_conf_file }}"
+      ansible.builtin.command: "grep -c '^pg.*-path=' {{ pgbackrest_conf_file }}"
       register: pg_path_count
       changed_when: false
 
     - name: pgbackrest | Update pg-path in pgbackrest.conf
-      lineinfile:
+      ansible.builtin.lineinfile:
         path: "{{ pgbackrest_conf_file }}"
         regexp: '^pg{{ idx + 1 }}-path='
         line: 'pg{{ idx + 1 }}-path={{ pg_new_datadir }}'
@@ -79,7 +79,7 @@
       when: pg_path_count.stdout | length > 0
 
     - name: pgbackrest | Upgrade stanza "{{ pgbackrest_stanza }}"
-      command: "pgbackrest --stanza={{ pgbackrest_stanza }} --no-online stanza-upgrade"
+      ansible.builtin.command: "pgbackrest --stanza={{ pgbackrest_stanza }} --no-online stanza-upgrade"
       when: pg_path_count.stdout | length > 0
   become: true
   become_user: postgres
@@ -93,14 +93,14 @@
     - name: pgbackrest | Check pg-path option
       delegate_to: "{{ groups['pgbackrest'][0] }}"
       run_once: true
-      command: "grep -c '^pg.*-path=' {{ pgbackrest_conf_file | dirname }}/conf.d/{{ pgbackrest_stanza }}.conf"
+      ansible.builtin.command: "grep -c '^pg.*-path=' {{ pgbackrest_conf_file | dirname }}/conf.d/{{ pgbackrest_stanza }}.conf"
       register: pg_path_count
       changed_when: false
 
     - name: pgbackrest | Update pg-path in pgbackrest.conf
       delegate_to: "{{ groups['pgbackrest'][0] }}"
       run_once: true
-      lineinfile:
+      ansible.builtin.lineinfile:
         path: "{{ pgbackrest_conf_file | dirname }}/conf.d/{{ pgbackrest_stanza }}.conf"
         regexp: '^pg{{ idx + 1 }}-path='
         line: 'pg{{ idx + 1 }}-path={{ pg_new_datadir }}'
@@ -113,7 +113,7 @@
     - name: pgbackrest | Upgrade stanza "{{ pgbackrest_stanza }}"
       delegate_to: "{{ groups['pgbackrest'][0] }}"
       run_once: true
-      command: "pgbackrest --stanza={{ pgbackrest_stanza }} --no-online stanza-upgrade"
+      ansible.builtin.command: "pgbackrest --stanza={{ pgbackrest_stanza }} --no-online stanza-upgrade"
       when: pg_path_count.stdout | length > 0
   become: true
   become_user: "{{ pgbackrest_repo_user }}"
@@ -126,7 +126,7 @@
   run_once: true
   become: true
   become_user: postgres
-  command: "patronictl -c {{ patroni_config_file }} list"
+  ansible.builtin.command: "patronictl -c {{ patroni_config_file }} list"
   register: patronictl_result
   changed_when: false
   environment:
@@ -135,7 +135,7 @@
 
 - name: Check the current PostgreSQL version
   run_once: true
-  command: psql -tAXc "select current_setting('server_version')"
+  ansible.builtin.command: psql -tAXc "select current_setting('server_version')"
   register: postgres_version
   changed_when: false
   when: inventory_hostname in groups['primary']
@@ -143,13 +143,13 @@
 # Return the pg_hba.conf file to its original state (if it has been changed)
 - block:
     - name: Remove temporary local access rule for the "postgres" user
-      blockinfile:
+      ansible.builtin.blockinfile:
         path: "{{ pg_new_confdir }}/pg_hba.conf"
         marker: "# {mark} ANSIBLE TEMPORARY pg_upgrade RULE"
         state: absent
 
     - name: Update the PostgreSQL configuration
-      command: "{{ pg_new_bindir }}/pg_ctl reload -D {{ pg_new_datadir }}"
+      ansible.builtin.command: "{{ pg_new_bindir }}/pg_ctl reload -D {{ pg_new_datadir }}"
   when:
     - socket_access_result.stderr is defined
     - "'no pg_hba.conf entry' in socket_access_result.stderr"
@@ -157,13 +157,13 @@
 # finish (info)
 - name: List the Patroni cluster members
   run_once: true
-  debug:
+  ansible.builtin.debug:
     msg: "{{ patronictl_result.stdout_lines }}"
   when: patronictl_result.stdout_lines is defined
 
 - name: Upgrade completed
   run_once: true
-  debug:
+  ansible.builtin.debug:
     msg:
       - "PostgreSQL upgrade completed."
       - "Current version: {{ postgres_version.stdout }}"

@@ -1,6 +1,6 @@
 ---
 - name: Check etcd health
-  uri:
+  ansible.builtin.uri:
     url: "http://{{ inventory_hostname }}:2379/health"
     return_content: true
   register: etcd_health_status

@@ -8,7 +8,7 @@
 # 3. Use xargs to execute the RSync command in parallel for each target secondary server.
 
 - name: Make sure that the new data directory "{{ pg_new_datadir }}" are empty on the Replica
-  file:
+  ansible.builtin.file:
     path: "{{ pg_new_datadir }}"
     state: "{{ item }}"
     mode: "0700"
@@ -27,7 +27,7 @@
       vars:
         secondary_servers: "{{ groups['secondary'] | join('\n') }}"
         secondary_count: "{{ groups['secondary'] | length }}"
-      shell: |
+      ansible.builtin.shell: |
         set -o pipefail;
         echo -e "{{ secondary_servers }}" | xargs -I {} -P "{{ secondary_count }}" -n 1 \
         rsync -e 'ssh -o StrictHostKeyChecking=no' --archive --delete --hard-links --size-only --no-inc-recursive \
@@ -39,7 +39,7 @@
       register: rsync_result_1
 
     - name: Wait for the rsync to complete.
-      async_status:
+      ansible.builtin.async_status:
         jid: "{{ rsync_result_1.ansible_job_id }}"
       register: rsync_1_job_result
       until: rsync_1_job_result.finished
@@ -59,7 +59,7 @@
       vars:
         secondary_servers: "{{ groups['secondary'] | join('\n') }}"
         secondary_count: "{{ groups['secondary'] | length }}"
-      shell: |
+      ansible.builtin.shell: |
         set -o pipefail;
         echo -e "{{ secondary_servers }}" | xargs -I {} -P "{{ secondary_count }}" -n 1 \
         rsync -e 'ssh -o StrictHostKeyChecking=no' --archive --delete --hard-links --size-only --no-inc-recursive \
@@ -71,7 +71,7 @@
       register: rsync_result_2
 
     - name: Wait for the rsync to complete.
-      async_status:
+      ansible.builtin.async_status:
         jid: "{{ rsync_result_2.ansible_job_id }}"
       register: rsync_2_job_result
       until: rsync_2_job_result.finished

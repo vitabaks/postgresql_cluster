@@ -5,7 +5,9 @@
 # - tablespaces (rsync for replicas)
 # - patroni cluster state pre-check
 # - current_patroni_cluster_name
-# - pause pgbouncer pools
+# - pause pgbouncer pools (optional)
+# - update PGDATA in WAL-G config after upgrade
+# - copy files - FTS, etc (optional)
 # - README
 # - - recommendation: update postgres/patroni/system and database extensions before upgrade (optional) << update_pgcluster.yml
 - name: "Upgrade PostgreSQL {{ pg_old_version }} to version {{ pg_new_version }} (PostgreSQL HA Cluster: {{ patroni_cluster_name }})"
@@ -19,12 +21,12 @@
     - vars/upgrade.yml
   pre_tasks:
     - name: Include OS-specific variables
-      include_vars: "vars/{{ ansible_os_family }}.yml"
+      ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
       tags: always
     # Stop, if pg_old_version, pg_new_version are not defined
     - name: Make sure that the required variables are specified
       run_once: true # noqa run-once
-      debug:
+      ansible.builtin.debug:
         msg:
           - "One or more required variables have empty values."
           - "Please specify a value for the variables: pg_old_version, pg_new_version"
@@ -34,7 +36,7 @@
     # Stop, if the directories of the old and new versions are the same
     - name: "Ensure pg_old and pg_new data and config dirs are not the same"
       run_once: true # noqa run-once
-      debug:
+      ansible.builtin.debug:
         msg:
           - "pg_old_datadir and pg_new_datadir, pg_old_confdir and pg_new_confdir must not be the same."
           - "Please check your configuration (vars/upgrade.yml)"
@@ -43,7 +45,7 @@
       tags: always
   tasks:
     - name: '[Prepare] Get Patroni Cluster Leader Node'
-      uri:
+      ansible.builtin.uri:
         url: http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/leader
         status_code: 200
       register: patroni_leader_result
@@ -52,7 +54,7 @@
       tags: always
 
     - name: '[Prepare] Add host to group "primary" (in-memory inventory)'
-      add_host:
+      ansible.builtin.add_host:
         name: "{{ item }}"
         groups: primary
       when: hostvars[item]['patroni_leader_result']['status'] == 200
@@ -61,7 +63,7 @@
       tags: always
 
     - name: '[Prepare] Add hosts to group "secondary" (in-memory inventory)'
-      add_host:
+      ansible.builtin.add_host:
         name: "{{ item }}"
         groups: secondary
       when: hostvars[item]['patroni_leader_result']['status'] != 200
@@ -70,7 +72,7 @@
       tags: always
 
     - name: "Print Patroni Cluster info"
-      debug:
+      ansible.builtin.debug:
         msg:
           - "Cluster Name: {{ patroni_cluster_name }}"
           - "Cluster Leader: {{ ansible_hostname }}"
@@ -88,14 +90,14 @@
     - vars/main.yml
   pre_tasks:
     - name: Include OS-specific variables
-      include_vars: "vars/{{ ansible_os_family }}.yml"
+      ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
       tags: always
     - name: Include upgrade variables
-      include_vars: "vars/upgrade.yml"
+      ansible.builtin.include_vars: "vars/upgrade.yml"
       tags: always
   tasks:
     - name: Running Pre-Checks
-      include_role:
+      ansible.builtin.include_role:
         name: upgrade
         tasks_from: pre_checks
   tags:
@@ -113,14 +115,14 @@
     - vars/main.yml
   pre_tasks:
     - name: Include OS-specific variables
-      include_vars: "vars/{{ ansible_os_family }}.yml"
+      ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
       tags: always
     - name: Include upgrade variables
-      include_vars: "vars/upgrade.yml"
+      ansible.builtin.include_vars: "vars/upgrade.yml"
       tags: always
   tasks:
     - name: Install packages
-      include_role:
+      ansible.builtin.include_role:
         name: upgrade
         tasks_from: packages
   tags:
@@ -137,25 +139,25 @@
     - vars/main.yml
   pre_tasks:
     - name: Include OS-specific variables
-      include_vars: "vars/{{ ansible_os_family }}.yml"
+      ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
       tags: always
     - name: Include upgrade variables
-      include_vars: "vars/upgrade.yml"
+      ansible.builtin.include_vars: "vars/upgrade.yml"
       tags: always
   tasks:
     - name: Create Data directory and initdb
-      include_role:
+      ansible.builtin.include_role:
         name: upgrade
         tasks_from: initdb
 
     - name: Check Schema Compatibility
-      import_role:
+      ansible.builtin.import_role:
         name: upgrade
         tasks_from: schema_compatibility
       when: schema_compatibility_check | bool
 
     - name: Check pg_upgrade
-      import_role:
+      ansible.builtin.import_role:
         name: upgrade
         tasks_from: upgrade_check
   tags:
@@ -173,14 +175,14 @@
     - vars/main.yml
   pre_tasks:
     - name: Include OS-specific variables
-      include_vars: "vars/{{ ansible_os_family }}.yml"
+      ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
       tags: always
     - name: Include upgrade variables
-      include_vars: "vars/upgrade.yml"
+      ansible.builtin.include_vars: "vars/upgrade.yml"
       tags: always
   tasks:
     - name: Patroni config
-      include_role:
+      ansible.builtin.include_role:
         name: upgrade
         tasks_from: update_config
   tags:
@@ -197,44 +199,44 @@
     - vars/main.yml
   pre_tasks:
     - name: Include OS-specific variables
-      include_vars: "vars/{{ ansible_os_family }}.yml"
+      ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
       tags: always
     - name: Include upgrade variables
-      include_vars: "vars/upgrade.yml"
+      ansible.builtin.include_vars: "vars/upgrade.yml"
       tags: always
   tasks:
     - name: Pause Patroni
-      include_role:
+      ansible.builtin.include_role:
         name: upgrade
         tasks_from: pause_patroni
 
     - name: Stop Services
-      include_role:
+      ansible.builtin.include_role:
         name: upgrade
         tasks_from: stop_services
 
     - name: Check 'Latest checkpoint location'
-      include_role:
+      ansible.builtin.include_role:
         name: upgrade
         tasks_from: checkpoint_location
 
     - name: Upgrade Primary
-      include_role:
+      ansible.builtin.include_role:
         name: upgrade
         tasks_from: upgrade_primary
 
     - name: Upgrade Secondary
-      include_role:
+      ansible.builtin.include_role:
         name: upgrade
         tasks_from: upgrade_secondary
 
     - name: Remove old cluster from DCS
-      include_role:
+      ansible.builtin.include_role:
         name: upgrade
         tasks_from: dcs_remove_cluster
 
     - name: Start Services
-      include_role:
+      ansible.builtin.include_role:
         name: upgrade
         tasks_from: start_services
   tags:
@@ -250,19 +252,19 @@
     - vars/main.yml
   pre_tasks:
     - name: Include OS-specific variables
-      include_vars: "vars/{{ ansible_os_family }}.yml"
+      ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
       tags: always
     - name: Include upgrade variables
-      include_vars: "vars/upgrade.yml"
+      ansible.builtin.include_vars: "vars/upgrade.yml"
       tags: always
   tasks:
     - name: Running Post-Checks
-      include_role:
+      ansible.builtin.include_role:
         name: upgrade
         tasks_from: post_checks
 
     - name: Update extensions
-      include_role:
+      ansible.builtin.include_role:
         name: upgrade
         tasks_from: extensions
       when: update_extensions | bool
@@ -281,19 +283,19 @@
     - vars/main.yml
   pre_tasks:
     - name: Include OS-specific variables
-      include_vars: "vars/{{ ansible_os_family }}.yml"
+      ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
       tags: always
     - name: Include upgrade variables
-      include_vars: "vars/upgrade.yml"
+      ansible.builtin.include_vars: "vars/upgrade.yml"
       tags: always
   tasks:
     - name: Analyze database
-      include_role:
+      ansible.builtin.include_role:
         name: upgrade
         tasks_from: statistics
 
     - name: Running Post-Upgrade tasks
-      include_role:
+      ansible.builtin.include_role:
         name: upgrade
         tasks_from: post_upgrade
   tags:
