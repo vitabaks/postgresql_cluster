@@ -19,7 +19,7 @@
       loop: "{{ sysctl_conf_dynamic_var | default([]) | unique }}"
       when: sysctl_conf_dynamic_var | default([]) | length > 0
   ignore_errors: true
-  when: sysctl_set|bool
+  when: sysctl_set
   tags: sysctl, kernel
 
 ...

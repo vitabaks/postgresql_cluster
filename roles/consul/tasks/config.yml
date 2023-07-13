@@ -14,13 +14,13 @@
       when: true
     - dest: "{{ consul_config_path }}/bootstrap.json"
       config_version: bootstrap
-      when: "{{ consul_debug | bool }}"
+      when: "{{ consul_debug }}"
     - dest: "{{ consul_config_path }}/server.json"
       config_version: server
-      when: "{{ consul_debug | bool }}"
+      when: "{{ consul_debug }}"
     - dest: "{{ consul_config_path }}/client.json"
       config_version: client
-      when: "{{ consul_debug | bool }}"
+      when: "{{ consul_debug }}"
   loop_control:
     loop_var: config_item
   when:
@@ -42,5 +42,4 @@
 
 - name: Set fact list with custom configuration file
   ansible.builtin.set_fact:
-    managed_files: "{{ managed_files |default([]) }} + \
-      [ '{{ consul_configd_path }}/50custom.json' ]"
+    managed_files: "{{ managed_files | default([]) }} + [ '{{ consul_configd_path }}/50custom.json' ]"

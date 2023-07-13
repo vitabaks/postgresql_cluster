@@ -112,7 +112,7 @@
     - restart consul
   when:
     - ansible_service_mgr == "systemd"
-    - consul_install_from_repo | bool
+    - consul_install_from_repo
 
 - name: Flush handlers
   ansible.builtin.meta: flush_handlers

@@ -5,7 +5,7 @@
     src: templates/io-scheduler.service.j2
     dest: /etc/systemd/system/io-scheduler.service
   notify: "restart io-scheduler"
-  when: set_scheduler is defined and set_scheduler|bool
+  when: set_scheduler is defined and set_scheduler
   tags: scheduler, io_scheduler
 
 - name: Make sure handlers are flushed immediately

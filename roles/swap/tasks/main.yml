@@ -5,13 +5,13 @@
   register: swap_exists
   changed_when: false
   when:
-    - swap_file_create | bool
+    - swap_file_create
     - ansible_virtualization_type not in ['container', 'docker', 'lxc', 'podman']  # exclude for containers to prevent test failures in CI.
   tags: swap, swap_create, swap_remove
 
 - name: Swap exists
   ansible.builtin.debug:
-    msg: "swap_size_mb: {{ (swap_exists.stdout_lines|map('trim')|map('int')|sum / 1024 / 1024)|round|int }}"
+    msg: "swap_size_mb: {{ (swap_exists.stdout_lines | map('trim') | map('int') | sum / 1024 / 1024) | round | int }}"
   when: swap_exists.stdout is defined and swap_exists.stdout | length > 1
   tags: swap, swap_create, swap_remove
 

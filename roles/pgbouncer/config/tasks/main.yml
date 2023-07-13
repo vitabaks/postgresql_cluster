@@ -16,7 +16,7 @@
     group: postgres
     mode: "0640"
   notify: "restart pgbouncer"
-  when: existing_pgcluster is not defined or not existing_pgcluster|bool
+  when: existing_pgcluster is not defined or not existing_pgcluster
   tags: pgbouncer, pgbouncer_conf
 
 # if pgbouncer_auth_user is 'false'
@@ -44,7 +44,7 @@
         - pg_shadow_result.rc == 0
         - pg_shadow_result.stdout is defined
         - pg_shadow_result.stdout | length > 0
-  when: not pgbouncer_auth_user|bool
+  when: not pgbouncer_auth_user
   tags: pgbouncer, pgbouncer_conf, pgbouncer_generate_userlist
 
 # if pgbouncer_auth_user is 'true'
@@ -65,7 +65,7 @@
       '; done
   args:
     executable: /bin/bash
-  when: pgbouncer_auth_user|bool and is_master|bool
+  when: pgbouncer_auth_user and is_master
   tags: pgbouncer, pgbouncer_conf, pgbouncer_auth_query
 
 ...

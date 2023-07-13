@@ -6,7 +6,7 @@ Before=basic.target
 
 [Service]
 Type=oneshot
-{% if set_scheduler|bool %}
+{% if set_scheduler %}
 {% for set in scheduler %}
 ExecStart=/bin/bash -c 'echo {{ set.sched }} > /sys/block/{{ set.device }}/queue/scheduler && echo {{ set.nr_requests }} > /sys/block/{{ set.device }}/queue/nr_requests'
 {% endfor %}

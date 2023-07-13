@@ -43,7 +43,7 @@
   when:
     - installation_method == "repo"
     - ansible_os_family == "Debian"
-    - pg_probackup_install_from_postgrespro_repo|bool
+    - pg_probackup_install_from_postgrespro_repo
   tags: pg_probackup, pg_probackup_repo, pg_probackup_install
 
 - block:  # RedHat family
@@ -105,7 +105,7 @@
   when:
     - installation_method == "repo"
     - ansible_os_family == "RedHat"
-    - pg_probackup_install_from_postgrespro_repo|bool
+    - pg_probackup_install_from_postgrespro_repo
   tags: pg_probackup, pg_probackup_repo, pg_probackup_install
 
 ...

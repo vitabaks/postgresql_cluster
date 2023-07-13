@@ -29,11 +29,11 @@ restapi:
 #    username: username
 #    password: password
 
-{% if not dcs_exists|bool and dcs_type == 'etcd' %}
+{% if not dcs_exists and dcs_type == 'etcd' %}
 etcd3:
   hosts: {% for host in groups['etcd_cluster'] %}{{ hostvars[host]['inventory_hostname'] }}:2379{% if not loop.last %},{% endif %}{% endfor %}
 {% endif %}
-{% if dcs_exists|bool and dcs_type == 'etcd' %}
+{% if dcs_exists and dcs_type == 'etcd' %}
 etcd3:
   hosts: {% for etcd_hosts in patroni_etcd_hosts %}{{etcd_hosts.host}}:{{etcd_hosts.port}}{% if not loop.last %},{% endif %}{% endfor %}
 {% endif %}
@@ -91,16 +91,16 @@ bootstrap:
     {% endif %}
   {% endif %}
 
-{% if postgresql_exists|bool %}
+{% if postgresql_exists %}
 #  initdb:  # List options to be passed on to initdb
 #    - encoding: UTF8
 #    - data-checksums
 {% endif %}
-{% if not postgresql_exists|bool %}
+{% if not postgresql_exists %}
   initdb:  # List options to be passed on to initdb
     - encoding: {{ postgresql_encoding }}
     - locale: {{ postgresql_locale }}
-  {% if postgresql_data_checksums|bool %}
+  {% if postgresql_data_checksums %}
     - data-checksums
   {% endif %}
 {% endif %}
@@ -111,7 +111,7 @@ bootstrap:
 
 
 postgresql:
-{% if not with_haproxy_load_balancing|bool and not pgbouncer_install|bool and (cluster_vip is defined and cluster_vip | length > 0) %}
+{% if not with_haproxy_load_balancing and not pgbouncer_install and (cluster_vip is defined and cluster_vip | length > 0) %}
   listen: {{ hostvars[inventory_hostname]['inventory_hostname'] }},{{ cluster_vip }},127.0.0.1:{{ postgresql_port }}
 {% else %}
   listen: {{ hostvars[inventory_hostname]['inventory_hostname'] }},127.0.0.1:{{ postgresql_port }}

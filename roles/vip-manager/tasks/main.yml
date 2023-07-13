@@ -81,7 +81,7 @@
     group: postgres
     mode: "0644"
   notify: "restart vip-manager"
-  when: existing_pgcluster is not defined or not existing_pgcluster|bool
+  when: existing_pgcluster is not defined or not existing_pgcluster
   tags: vip, vip_manager, vip_manager_conf
 
 - block:  # for add_pgnode.yml
@@ -112,7 +112,7 @@
       loop_control:
         label: "{{ item.line }}"
       notify: "restart vip-manager"
-  when: existing_pgcluster is defined and existing_pgcluster|bool
+  when: existing_pgcluster is defined and existing_pgcluster
   tags: vip, vip_manager, vip_manager_conf
 
 - name: Generate systemd service file

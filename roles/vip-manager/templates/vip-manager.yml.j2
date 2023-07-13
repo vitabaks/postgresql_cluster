@@ -17,13 +17,13 @@ hosting-type: basic # possible values: basic, or hetzner.
 
 dcs-type: {{ dcs_type }} # etcd or consul
 # a list that contains all DCS endpoints to which vip-manager could talk.
-{% if not dcs_exists|bool and dcs_type == 'etcd' %}
+{% if not dcs_exists and dcs_type == 'etcd' %}
 dcs-endpoints:
 {% for host in groups['etcd_cluster'] %}
   - http://{{ hostvars[host]['inventory_hostname'] }}:2379
 {% endfor %}
 {% endif %}
-{% if dcs_exists|bool and dcs_type == 'etcd' %}
+{% if dcs_exists and dcs_type == 'etcd' %}
 dcs-endpoints:
 {% for etcd_hosts in patroni_etcd_hosts %}
   - http://{{ etcd_hosts.host }}:{{ etcd_hosts.port }}

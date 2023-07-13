@@ -47,7 +47,7 @@
     src: templates/keepalived.conf.j2
     dest: /etc/keepalived/keepalived.conf
   notify: "restart keepalived"
-  when: add_balancer is not defined or not add_balancer|bool
+  when: add_balancer is not defined or not add_balancer
   tags: keepalived_conf, keepalived
 
 - block:  # for add_balancer.yml
@@ -84,7 +84,7 @@
       loop_control:
         label: "{{ item.line }}"
       notify: "restart keepalived"
-  when: add_balancer is defined and add_balancer|bool
+  when: add_balancer is defined and add_balancer
   tags: keepalived_conf, keepalived
 
 - name: selinux | change the keepalived_t domain to permissive

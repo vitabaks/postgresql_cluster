@@ -53,7 +53,7 @@
         dest: /etc/confd/templates/haproxy.tmpl
       notify: "restart confd"
       tags: haproxy_tmpl
-  when: add_balancer is not defined or not add_balancer|bool
+  when: add_balancer is not defined or not add_balancer
   tags: confd_conf, confd
 
 - block:  # for add_balancer.yml
@@ -126,7 +126,7 @@
         label: "{{ item.line }}"
       notify: "restart confd"
       when: cluster_vip is not defined or cluster_vip | length < 1
-  when: add_balancer is defined and add_balancer|bool
+  when: add_balancer is defined and add_balancer
   tags: confd_conf, confd
 
 - name: Copy systemd service file

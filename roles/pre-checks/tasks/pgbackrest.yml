@@ -5,13 +5,13 @@
     # Then, append a new 'archive_command' item with the value of 'pgbackrest_archive_command'
     postgresql_parameters: >-
       {{ postgresql_parameters | rejectattr('option', 'equalto', 'archive_command') | list
-      + [{ 'option': 'archive_command', 'value': pgbackrest_archive_command }] }}
+      + [{'option': 'archive_command', 'value': pgbackrest_archive_command}] }}
   vars:
     # Find the last item in postgresql_parameters where the option is 'archive_command'
     archive_command_item: "{{ postgresql_parameters | selectattr('option', 'equalto', 'archive_command') | list | last }}"
   when:
     - pgbackrest_install is defined
-    - pgbackrest_install | bool
+    - pgbackrest_install
     # Execute the task only when 'archive_command' is undefined or its value is not equal to 'pgbackrest_archive_command'
     - archive_command_item is undefined or archive_command_item.value != pgbackrest_archive_command
 

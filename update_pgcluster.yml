@@ -200,7 +200,7 @@
       ansible.builtin.include_role:
         name: update
         tasks_from: extensions
-      when: update_extensions | bool
+      when: update_extensions
 
     # finish (info)
     - name: Check the Patroni cluster state

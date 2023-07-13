@@ -72,8 +72,8 @@
           - port {{ haproxy_listen_port.replicas_async }} (read only)  asynchronous replicas only
           - +------------------------------------------------+
       when:
-        - with_haproxy_load_balancing | bool
-        - synchronous_mode | bool
+        - with_haproxy_load_balancing
+        - synchronous_mode
 
     - name: PostgreSQL Cluster connection info
       run_once: true
@@ -85,8 +85,8 @@
           - port {{ haproxy_listen_port.replicas }} (read only)  all replicas
           - +------------------------------------------------+
       when:
-        - with_haproxy_load_balancing | bool
-        - not synchronous_mode | bool
+        - with_haproxy_load_balancing
+        - not synchronous_mode
 
     - name: PostgreSQL Cluster connection info
       run_once: true
@@ -97,7 +97,7 @@
           - port {% if pgbouncer_install %}{{ pgbouncer_listen_port }} (pgbouncer){% else %}{{ postgresql_port }}{% endif %}
           - +------------------------------------------------+
       when:
-        - not with_haproxy_load_balancing | bool
+        - not with_haproxy_load_balancing
   when:
     - (cluster_vip is defined and cluster_vip | length > 0)
     - dcs_type == "etcd"
@@ -143,8 +143,8 @@
           - port {{ haproxy_listen_port.replicas_async }} (read only)  asynchronous replicas only
           - +------------------------------------------------+
       when:
-        - with_haproxy_load_balancing | bool
-        - synchronous_mode | bool
+        - with_haproxy_load_balancing
+        - synchronous_mode
 
     - name: PostgreSQL Cluster connection info
       run_once: true
@@ -156,8 +156,8 @@
           - port {{ haproxy_listen_port.replicas }} (read only)  all replicas
           - +------------------------------------------------+
       when:
-        - with_haproxy_load_balancing | bool
-        - not synchronous_mode | bool
+        - with_haproxy_load_balancing
+        - not synchronous_mode
 
     - name: PostgreSQL Cluster connection info
       run_once: true
@@ -168,7 +168,7 @@
           - port {% if pgbouncer_install %}{{ pgbouncer_listen_port }} (pgbouncer){% else %}{{ postgresql_port }}{% endif %}
           - +------------------------------------------------+
       when:
-        - not with_haproxy_load_balancing | bool
+        - not with_haproxy_load_balancing
   ignore_errors: true
   when:
     - (cluster_vip is not defined or cluster_vip | length < 1)
@@ -187,7 +187,7 @@
           - " replica.{{ patroni_cluster_name }}.service.consul "
           - port {% if pgbouncer_install %}{{ pgbouncer_listen_port }} (pgbouncer){% else %}{{ postgresql_port }}{% endif %}
           - +------------------------------------------------+
-      when: not synchronous_mode | bool
+      when: not synchronous_mode
 
     - name: PostgreSQL Cluster connection info
       run_once: true
@@ -201,7 +201,7 @@
           - " async-replica.{{ patroni_cluster_name }}.service.consul "
           - port {% if pgbouncer_install %}{{ pgbouncer_listen_port }} (pgbouncer){% else %}{{ postgresql_port }}{% endif %}
           - +------------------------------------------------+
-      when: synchronous_mode | bool
+      when: synchronous_mode
   when: dcs_type == "consul"
 
 ...

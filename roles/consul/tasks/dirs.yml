@@ -24,7 +24,7 @@
         owner: "{{ consul_user }}"
         group: "{{ consul_group }}"
         mode: "0750"
-      when: not consul_install_from_repo | bool
+      when: not consul_install_from_repo
 
 - name: Create log directory
   ansible.builtin.file:
@@ -35,8 +35,8 @@
     mode: "0700"
   when:
     - ansible_os_family != 'Windows'
-    - not consul_syslog_enable | bool
-    - not consul_configure_syslogd | bool
+    - not consul_syslog_enable
+    - not consul_configure_syslogd
 
 - name: Create log directory
   ansible.builtin.file:
@@ -51,8 +51,8 @@
     loop_var: log_item
   when:
     - ansible_os_family != 'Windows'
-    - consul_syslog_enable | bool
-    - consul_configure_syslogd | bool
+    - consul_syslog_enable
+    - consul_configure_syslogd
 
 - name: Verify binary path
   ansible.builtin.file:
@@ -67,7 +67,7 @@
     # before running this role.
     - ansible_os_family != 'Darwin'
     - ansible_os_family != 'Windows'
-    - not consul_install_from_repo | bool
+    - not consul_install_from_repo
 
 - name: Create directories on Windows
   ansible.windows.win_file:

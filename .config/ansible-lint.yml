@@ -5,7 +5,6 @@ skip_list:
   - experimental # all rules tagged as experimental
   - ignore-errors
   - jinja[invalid] # TODO
-  - jinja[spacing] # TODO
   - key-order[task] # TODO
   - name[casing] # TODO: All names should start with an uppercase letter.
   - name[missing] # All tasks should be named.

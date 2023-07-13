@@ -12,7 +12,7 @@ listen_addr = {{ pgbouncer_listen_addr | default('0.0.0.0') }}
 listen_port = {{ pgbouncer_listen_port | default(6432) }}
 unix_socket_dir = /var/run/postgresql
 auth_type = {{ pgbouncer_auth_type }}
-{% if pgbouncer_auth_user | bool %}
+{% if pgbouncer_auth_user  %}
 auth_user = {{ pgbouncer_auth_username }}
 auth_query = SELECT usename, passwd FROM user_search($1)
 {% else %} 

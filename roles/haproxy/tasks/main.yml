@@ -12,7 +12,7 @@
       until: package_status is success
       delay: 5
       retries: 3
-      when: haproxy_install_repo|bool and
+      when: haproxy_install_repo and
             (ansible_distribution == 'CentOS' and
             ansible_distribution_major_version == '7')
       tags: haproxy_scl_repo
@@ -25,7 +25,7 @@
         gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-oracle
         gpgcheck: true
         enabled: true
-      when: haproxy_install_repo|bool and
+      when: haproxy_install_repo and
             (ansible_distribution == "OracleLinux" and
             ansible_distribution_major_version == '7')
       tags: haproxy_scl_repo
@@ -34,7 +34,7 @@
       become: true
       become_user: root
       ansible.builtin.command: subscription-manager repos --enable rhel-server-rhscl-7-rpms
-      when: haproxy_install_repo|bool and
+      when: haproxy_install_repo and
             (ansible_distribution == 'RedHat' and
             ansible_distribution_major_version == '7')
       tags: haproxy_scl_repo
@@ -86,7 +86,7 @@
       ansible.builtin.apt_key:
         url: https://haproxy.debian.net/bernat.debian.org.gpg
         state: present
-      when: haproxy_install_repo|bool and
+      when: haproxy_install_repo and
             (ansible_distribution == "Debian" and
             ansible_distribution_major_version is version('10', '<='))
 
@@ -95,7 +95,7 @@
         repo: "deb https://haproxy.debian.net {{ ansible_distribution_release }}-backports-1.8 main"
         state: present
         update_cache: true
-      when: haproxy_install_repo|bool and
+      when: haproxy_install_repo and
             (ansible_distribution == "Debian" and
             ansible_distribution_major_version is version('10', '<='))
 
@@ -116,7 +116,7 @@
           =ZiOf
           -----END PGP PUBLIC KEY BLOCK-----
         state: present
-      when: haproxy_install_repo|bool and
+      when: haproxy_install_repo and
             (ansible_distribution == 'Ubuntu' and
             ansible_distribution_major_version is version('18', '<='))
 
@@ -125,7 +125,7 @@
         repo: "deb http://ppa.launchpad.net/vbernat/haproxy-1.8/ubuntu {{ ansible_distribution_release }} main"
         state: present
         update_cache: true
-      when: haproxy_install_repo|bool and
+      when: haproxy_install_repo and
             (ansible_distribution == 'Ubuntu' and
             ansible_distribution_major_version is version('18', '<='))
 
@@ -386,8 +386,8 @@
     owner: haproxy
     group: haproxy
   notify: "restart haproxy"
-  when: (add_balancer is not defined or not add_balancer|bool) and
-        (postgresql_cluster_maintenance is not defined or not postgresql_cluster_maintenance|bool)
+  when: (add_balancer is not defined or not add_balancer) and
+        (postgresql_cluster_maintenance is not defined or not postgresql_cluster_maintenance)
   tags: haproxy, haproxy_conf, load_balancing
 
 - name: Generate systemd service file "/etc/systemd/system/haproxy.service"
@@ -458,7 +458,7 @@
         label: "{{ item.line }}"
       notify: "restart haproxy"
       when: cluster_vip is defined and cluster_vip | length > 0
-  when: add_balancer is defined and add_balancer|bool
+  when: add_balancer is defined and add_balancer
   tags: haproxy, haproxy_conf, load_balancing
 
 - block:

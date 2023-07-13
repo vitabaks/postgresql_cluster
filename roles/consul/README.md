@@ -1222,7 +1222,7 @@ Services object:
 | address             | False    | string |         | service-specific IP address                                                                                |
 | meta                | False    | dict   |         | Dict of 64 key/values with string semantics                                                                |
 | port                | False    | int    |         | Port of the service                                                                                        |
-| enable_tag_override | False    | bool   |         | enable/disable the anti-entropy feature for the service                                                    |
+| enable_tag_override | False       |         | enable/disable the anti-entropy feature for the service                                                    |
 | kind                | False    | string |         | identify the service as a Connect proxy instance                                                           |
 | proxy               | False    | dict   |         | [proxy configuration](https://www.consul.io/docs/connect/proxies.html#complete-configuration-example)      |
 | checks              | False    | list   |         | List of [checks configuration](https://www.consul.io/docs/agent/checks.html)                               |

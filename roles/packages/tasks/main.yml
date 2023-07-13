@@ -160,7 +160,7 @@
   when:
     - installation_method == "repo"
     - enable_timescale is defined
-    - enable_timescale | bool
+    - enable_timescale
   tags: install_packages, install_postgres, install_timescaledb
 
 ...

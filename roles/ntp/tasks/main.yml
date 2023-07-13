@@ -53,7 +53,7 @@
       tags: ntp_conf
       when: ansible_os_family == "RedHat" and
             ansible_distribution_major_version >= '8'
-  when: ntp_enabled is defined and ntp_enabled|bool
+  when: ntp_enabled is defined and ntp_enabled
   tags: ntp
 
 ...

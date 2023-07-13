@@ -7,7 +7,7 @@
   register: stat_syslogng
   when:
     - ansible_os_family != 'Windows'
-    - consul_configure_syslogd | bool
+    - consul_configure_syslogd
 
 - name: Install syslog-ng config
   ansible.builtin.template:
@@ -18,8 +18,8 @@
     mode: "0444"
   when:
     - ansible_os_family != 'Windows'
-    - consul_syslog_enable | bool
-    - consul_configure_syslogd | bool
+    - consul_syslog_enable
+    - consul_configure_syslogd
     - stat_syslogng.stat.exists
   notify:
     - restart syslog-ng
@@ -34,8 +34,8 @@
     mode: "0444"
   when:
     - ansible_os_family != 'Windows'
-    - consul_syslog_enable | bool
-    - consul_configure_syslogd | bool
+    - consul_syslog_enable
+    - consul_configure_syslogd
     - not stat_syslogng.stat.exists
   notify:
     - restart rsyslog

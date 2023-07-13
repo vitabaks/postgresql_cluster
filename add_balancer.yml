@@ -27,7 +27,7 @@
     - name: "[Pre-Check] Check if there is a node with new_node set to true"
       ansible.builtin.set_fact:
         new_nodes: "{{ new_nodes | default([]) + [item] }}"
-      when: hostvars[item]['new_node'] | default(false) | bool
+      when: hostvars[item]['new_node'] | default(false)
       loop: "{{ groups['balancers'] }}"
       tags: always
 
@@ -54,7 +54,7 @@
       retries: 3
       environment: "{{ proxy_env | default({}) }}"
       when:
-        - new_node | default(false) | bool
+        - new_node | default(false)
         - ansible_os_family == "Debian"
         - installation_method == "repo"
 
@@ -70,7 +70,7 @@
       retries: 3
       environment: "{{ proxy_env | default({}) }}"
       when:
-        - new_node | default(false) | bool
+        - new_node | default(false)
         - ansible_os_family == "Debian"
         - installation_method == "repo"
 
@@ -79,8 +79,8 @@
         firewall_ports_dynamic_var: "{{ firewall_ports_dynamic_var | default([]) + (firewall_allowed_tcp_ports_for[item] | default([])) }}"
       loop: "{{ hostvars[inventory_hostname].group_names }}"
       when:
-        - new_node | default(false) | bool
-        - firewall_enabled_at_boot | bool
+        - new_node | default(false)
+        - firewall_enabled_at_boot
       tags: firewall
 
     - name: Build a firewall_rules_dynamic_var
@@ -88,8 +88,8 @@
         firewall_rules_dynamic_var: "{{ firewall_rules_dynamic_var | default([]) + (firewall_additional_rules_for[item] | default([])) }}"
       loop: "{{ hostvars[inventory_hostname].group_names }}"
       when:
-        - new_node | default(false) | bool
-        - firewall_enabled_at_boot | bool
+        - new_node | default(false)
+        - firewall_enabled_at_boot
       tags: firewall
 
   roles:
@@ -99,13 +99,13 @@
         firewall_allowed_tcp_ports: "{{ firewall_ports_dynamic_var | default([]) | unique }}"
         firewall_additional_rules: "{{ firewall_rules_dynamic_var | default([]) | unique }}"
       when:
-        - new_node | default(false) | bool
-        - firewall_enabled_at_boot | bool
+        - new_node | default(false)
+        - firewall_enabled_at_boot
       tags: firewall
 
     - role: sysctl
       when:
-        - new_node | default(false) | bool
+        - new_node | default(false)
 
   tasks:
     - name: Add host to group new_balancer (in-memory inventory)
@@ -138,12 +138,12 @@
     - role: resolv_conf
 
     - role: haproxy
-      when: with_haproxy_load_balancing|bool
+      when: with_haproxy_load_balancing
 
     - role: confd
       when: dcs_type == "etcd" and
-        with_haproxy_load_balancing|bool
+        with_haproxy_load_balancing
 
     - role: keepalived
       when: cluster_vip is defined and cluster_vip | length > 0 and
-        with_haproxy_load_balancing|bool
+        with_haproxy_load_balancing
