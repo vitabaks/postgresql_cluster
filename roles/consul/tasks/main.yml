@@ -8,7 +8,7 @@
 
 - name: Install python dependencies
   when:
-    - consul_install_dependencies
+    - consul_install_dependencies | bool
   block:
     - name: Make sure the python3-pip package are present on controlling host
       ansible.builtin.package:

@@ -1,7 +1,7 @@
 {
 "snapshot_agent": {
-    "http_addr": "{% if consul_tls_enable  %}https://{% endif %}{{ consul_client_address }}:{% if consul_tls_enable  %}{{ consul_ports.https }}{% else %}{{ consul_ports.http }}{% endif %}",
-    {% if consul_tls_enable  -%}
+    "http_addr": "{% if consul_tls_enable | bool %}https://{% endif %}{{ consul_client_address }}:{% if consul_tls_enable | bool %}{{ consul_ports.https }}{% else %}{{ consul_ports.http }}{% endif %}",
+    {% if consul_tls_enable | bool -%}
     "ca_file": "{{ consul_tls_dir }}/{{ consul_tls_ca_crt }}",
     "cert_file": "{{ consul_tls_dir }}/{{ consul_tls_server_crt }}",
     "key_file": "{{ consul_tls_dir }}/{{ consul_tls_server_key }}",

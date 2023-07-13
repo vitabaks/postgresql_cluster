@@ -27,7 +27,7 @@
         url: "{{ consul_checksum_file_url }}"
         dest: "{{ consul_temp_dir.path }}\\consul_{{ consul_version }}_SHA256SUMS"
       tags: installation
-      when: not consul_checksum.stat.exists
+      when: not consul_checksum.stat.exists | bool
 
     - name: Read Consul package checksum
       ansible.windows.win_shell: "findstr {{ consul_pkg }} {{ consul_temp_dir.path }}\\consul_{{ consul_version }}_SHA256SUMS"

@@ -32,7 +32,7 @@
   when:
     - installation_method == "repo"
     - ansible_os_family == "Debian"
-    - pgbackrest_install_from_pgdg_repo
+    - pgbackrest_install_from_pgdg_repo|bool
   tags: pgbackrest, pgbackrest_repo, pgbackrest_install
 
 - block:  # RedHat pgdg repo
@@ -63,7 +63,7 @@
   when:
     - installation_method == "repo"
     - ansible_os_family == "RedHat"
-    - pgbackrest_install_from_pgdg_repo
+    - pgbackrest_install_from_pgdg_repo|bool
   tags: pgbackrest, pgbackrest_repo, pgbackrest_install
 
 # (workaround for CentOS 8.0/8.1)

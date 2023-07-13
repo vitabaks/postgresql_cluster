@@ -92,7 +92,7 @@
     group: postgres
     mode: "0640"
   notify: "restart pgbouncer"
-  when: existing_pgcluster is not defined or not existing_pgcluster
+  when: existing_pgcluster is not defined or not existing_pgcluster|bool
   tags: pgbouncer_conf, pgbouncer
 
 - name: Create userlist.txt
@@ -103,8 +103,8 @@
     group: postgres
     mode: "0640"
   when:
-    - (existing_pgcluster is not defined or not existing_pgcluster)
-    - not pgbouncer_auth_user
+    - (existing_pgcluster is not defined or not existing_pgcluster|bool)
+    - not pgbouncer_auth_user|bool
   tags: pgbouncer
 
 - block:  # for add_pgnode.yml
@@ -125,7 +125,7 @@
         validate_checksum: true
         flat: true
       delegate_to: "{{ groups.master[0] }}"
-      when: not pgbouncer_auth_user
+      when: not pgbouncer_auth_user|bool
 
     - name: Copy pgbouncer.ini file to replica
       ansible.builtin.copy:
@@ -142,7 +142,7 @@
         owner: postgres
         group: postgres
         mode: "0640"
-      when: not pgbouncer_auth_user
+      when: not pgbouncer_auth_user|bool
 
     - name: Remove pgbouncer.ini file from localhost
       run_once: true
@@ -157,7 +157,7 @@
         path: files/userlist.txt
         state: absent
       delegate_to: localhost
-      when: not pgbouncer_auth_user
+      when: not pgbouncer_auth_user|bool
 
     - name: Prepare pgbouncer.ini conf file (replace "listen_addr")
       ansible.builtin.lineinfile:
@@ -170,7 +170,7 @@
       loop_control:
         label: "{{ item.line }}"
       notify: "restart pgbouncer"
-      when: with_haproxy_load_balancing or
+      when: with_haproxy_load_balancing|bool or
             (cluster_vip is not defined or cluster_vip | length < 1)
 
     - name: Prepare pgbouncer.ini conf file (replace "listen_addr")
@@ -184,8 +184,8 @@
       loop_control:
         label: "{{ item.line }}"
       notify: "restart pgbouncer"
-      when: not with_haproxy_load_balancing and (cluster_vip is defined and cluster_vip | length > 0 )
-  when: existing_pgcluster is defined and existing_pgcluster
+      when: not with_haproxy_load_balancing|bool and (cluster_vip is defined and cluster_vip | length > 0 )
+  when: existing_pgcluster is defined and existing_pgcluster|bool
   tags: pgbouncer_conf, pgbouncer
 
 ...

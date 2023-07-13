@@ -23,7 +23,7 @@
     - ansible_service_mgr == "systemd"
     - not ansible_os_family == "FreeBSD"
     - not ansible_os_family == "Solaris"
-    - consul_snapshot
+    - consul_snapshot | bool
 
 - name: Create snapshot agent config
   ansible.builtin.template:
@@ -37,7 +37,7 @@
     - ansible_service_mgr == "systemd"
     - not ansible_os_family == "FreeBSD"
     - not ansible_os_family == "Solaris"
-    - consul_snapshot
+    - consul_snapshot | bool
 
 - name: Reload systemd
   ansible.builtin.systemd:

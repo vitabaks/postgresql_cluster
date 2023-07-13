@@ -11,13 +11,13 @@
       when: true
     - dest: "{{ consul_config_path }}/bootstrap.json"
       config_version: "bootstrap"
-      when: "{{ consul_debug }}"
+      when: "{{ consul_debug | bool }}"
     - dest: "{{ consul_config_path }}/server.json"
       config_version: "server"
-      when: "{{ consul_debug }}"
+      when: "{{ consul_debug | bool }}"
     - dest: "{{ consul_config_path }}/client.json"
       config_version: "client"
-      when: "{{ consul_debug }}"
+      when: "{{ consul_debug | bool }}"
   loop_control:
     loop_var: config_item
   when:

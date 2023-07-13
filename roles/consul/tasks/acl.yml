@@ -24,7 +24,7 @@
       when: consul_acl_master_token | length == 0
 
   when:
-    - bootstrap_state.stat.exists
+    - bootstrap_state.stat.exists | bool
     - (consul_acl_master_token is not defined or consul_acl_master_token | length == 0)
     - consul_node_role == 'server'
 
@@ -43,7 +43,7 @@
 
   when:
     - (consul_acl_master_token is not defined or consul_acl_master_token | length == 0)
-    - not bootstrap_state.stat.exists
+    - not bootstrap_state.stat.exists | bool
     - consul_node_role == 'server'
 
 - name: Display ACL Master Token
@@ -51,7 +51,7 @@
     msg: "{{ consul_acl_master_token }}"
   run_once: true
   when:
-    - consul_acl_master_token_display
+    - consul_acl_master_token_display | bool
     - consul_node_role == 'server'
 
 - block:
@@ -70,7 +70,7 @@
       no_log: true
 
   when:
-    - bootstrap_state.stat.exists
+    - bootstrap_state.stat.exists | bool
     - (consul_acl_replication_token is not defined or consul_acl_replication_token | length == 0)
     - consul_node_role == 'server'
 
@@ -89,7 +89,7 @@
 
   when:
     - (consul_acl_replication_token is not defined or consul_acl_replication_token | length == 0)
-    - not bootstrap_state.stat.exists
+    - not bootstrap_state.stat.exists | bool
     - consul_node_role == 'server'
 
 - name: Create ACL policy configuration
@@ -101,4 +101,4 @@
     mode: "0600"
   notify:
     - restart consul
-  when: consul_acl_policy
+  when: consul_acl_policy | bool

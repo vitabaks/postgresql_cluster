@@ -46,7 +46,7 @@
     - name: "Rename {{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }} to {{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }}_old"
       ansible.builtin.command: mv {{ postgresql_data_dir }}/{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }} {{ postgresql_data_dir }}/{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }}_old
       register: mv_result
-  when: sym.stat.exists and not sym.stat.islnk
+  when: sym.stat.exists and not sym.stat.islnk|bool
 
 - name: "Create symlink {{ postgresql_data_dir }}/{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }} -> {{ postgresql_wal_dir }}"
   become: true
@@ -55,7 +55,7 @@
     src: "{{ postgresql_wal_dir }}"
     dest: "{{ postgresql_data_dir }}/{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }}"
     state: link
-  when: sym.stat.islnk is not defined or not sym.stat.islnk
+  when: sym.stat.islnk is not defined or not sym.stat.islnk|bool
 
 - block:  # start patroni
     - name: Start patroni service

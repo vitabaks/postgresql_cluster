@@ -11,7 +11,7 @@
     archive_command_item: "{{ postgresql_parameters | selectattr('option', 'equalto', 'archive_command') | list | last }}"
   when:
     - pgbackrest_install is defined
-    - pgbackrest_install
+    - pgbackrest_install | bool
     # Execute the task only when 'archive_command' is undefined or its value is not equal to 'pgbackrest_archive_command'
     - archive_command_item is undefined or archive_command_item.value != pgbackrest_archive_command
 

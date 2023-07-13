@@ -32,7 +32,7 @@
         dest: "{{ consul_temp_dir.path }}/consul_{{ consul_version }}_SHA256SUMS"
         validate_certs: false
       tags: installation
-      when: not consul_checksum.stat.exists
+      when: not consul_checksum.stat.exists | bool
 
     - name: Read Consul package checksum
       ansible.builtin.shell: "grep {{ consul_pkg }} {{ consul_temp_dir.path }}/consul_{{ consul_version }}_SHA256SUMS"

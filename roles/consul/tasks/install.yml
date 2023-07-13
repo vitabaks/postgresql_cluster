@@ -47,7 +47,7 @@
     ansible_become: false
   run_once: true
   tags: installation
-  when: not consul_checksum.stat.exists
+  when: not consul_checksum.stat.exists | bool
   delegate_to: 127.0.0.1
 
 - name: Read package checksum
@@ -83,7 +83,7 @@
   vars:
     ansible_become: false
   tags: installation
-  when: not consul_package.stat.exists
+  when: not consul_package.stat.exists | bool
   run_once: true
   delegate_to: 127.0.0.1
   ignore_errors: "{{ ansible_check_mode }}"

@@ -15,34 +15,34 @@
         state: stopped
         enabled: false
       ignore_errors: true
-      when: remove_postgres
+      when: remove_postgres | bool
     - name: Delete PostgreSQL database content
       ansible.builtin.file:
         path: "{{ postgresql_data_dir }}"
         state: absent
-      when: remove_postgres
+      when: remove_postgres | bool
     - name: Delete PgBackRest repository
       ansible.builtin.file:
         # path: pgbackrest_conf global repo1-path
         path: /var/lib/pgbackrest
         state: absent
-      when: pgbackrest_install
+      when: pgbackrest_install | bool
     - name: Delete PgBackRest cron
       ansible.builtin.file:
         path: /etc/cron.d/pgbackrest
         state: absent
-      when: pgbackrest_install
+      when: pgbackrest_install | bool
     - name: Stop Consul service
       ansible.builtin.service:
         name: consul
         state: stopped
         enabled: false
-      when: remove_consul
+      when: remove_consul | bool
     - name: Delete Consul content
       ansible.builtin.file:
         path: "{{ consul_data_path }}"
         state: absent
-      when: remove_consul
+      when: remove_consul | bool
 
 - name: remove_cluster.yml | Etcd Cluster Play
   hosts: etcd_cluster
@@ -61,4 +61,4 @@
       ansible.builtin.file:
         path: "{{ etcd_data_dir }}/member"
         state: absent
-      when: remove_etcd
+      when: remove_etcd | bool

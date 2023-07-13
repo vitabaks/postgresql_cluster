@@ -10,7 +10,7 @@
   loop_control:
     loop_var: host_item
   ignore_errors: true
-  when: consul_gather_server_facts
+  when: consul_gather_server_facts | bool
 
 - name: (Windows) Expose bind_address, datacenter and node_role as facts
   ansible.builtin.set_fact:
@@ -49,7 +49,7 @@
 
 - name: (Windows) Install OS packages and consul
   ansible.builtin.include_tasks: install_windows.yml
-  when: consul_install_binary
+  when: consul_install_binary | bool
 
 - block:
     - block:
@@ -72,7 +72,7 @@
       no_log: true
       when:
         - consul_raw_key is not defined
-        - bootstrap_state.stat.exists
+        - bootstrap_state.stat.exists | bool
         - inventory_hostname in consul_servers
 
     # Key provided by extra vars or the above block
@@ -110,7 +110,7 @@
       run_once: true
       when:
         - not consul_local_key.changed
-        - not bootstrap_state.stat.exists
+        - not bootstrap_state.stat.exists | bool
 
     - name: (Windows) Read gossip encryption key for servers that require it
       ansible.builtin.set_fact:
@@ -139,15 +139,15 @@
   ansible.builtin.fail:
     msg: "ACL and TLS are not supported on Windows hosts yet."
   when:
-    - consul_acl_enable or consul_tls_enable
+    - (consul_acl_enable | bool) or (consul_tls_enable | bool)
 
 - name: (Windows) Create ACL configuration
   ansible.builtin.include_tasks: acl.yml
-  when: consul_acl_enable
+  when: consul_acl_enable | bool
 
 - name: (Windows) Create TLS configuration
   ansible.builtin.include_tasks: tls.yml
-  when: consul_tls_enable
+  when: consul_tls_enable | bool
 
 - block:
     - name: Convert consul_binary from Unix -> Windows
@@ -188,9 +188,9 @@
       when: ansible_os_family == "Windows"
 
     - ansible.builtin.include_tasks: ../tasks/iptables.yml
-      when: consul_iptables_enable
+      when: consul_iptables_enable | bool
 
   when: not bootstrap_state.stat.exists
 
 - ansible.builtin.include_tasks: ../tasks/dnsmasq.yml
-  when: consul_dnsmasq_enable
+  when: consul_dnsmasq_enable | bool

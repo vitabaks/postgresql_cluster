@@ -54,14 +54,14 @@
       ansible.builtin.set_fact:
         firewall_ports_dynamic_var: "{{ firewall_ports_dynamic_var | default([]) + (firewall_allowed_tcp_ports_for[item] | default([])) }}"
       loop: "{{ hostvars[inventory_hostname].group_names }}"
-      when: firewall_enabled_at_boot
+      when: firewall_enabled_at_boot | bool
       tags: firewall
 
     - name: Build a firewall_rules_dynamic_var
       ansible.builtin.set_fact:
         firewall_rules_dynamic_var: "{{ firewall_rules_dynamic_var | default([]) + (firewall_additional_rules_for[item] | default([])) }}"
       loop: "{{ hostvars[inventory_hostname].group_names }}"
-      when: firewall_enabled_at_boot
+      when: firewall_enabled_at_boot | bool
       tags: firewall
 
   roles:
@@ -70,7 +70,7 @@
       vars:
         firewall_allowed_tcp_ports: "{{ firewall_ports_dynamic_var | default([]) | unique }}"
         firewall_additional_rules: "{{ firewall_rules_dynamic_var | default([]) | unique }}"
-      when: firewall_enabled_at_boot
+      when: firewall_enabled_at_boot|bool
       tags: firewall
 
     - role: hostname
@@ -83,7 +83,7 @@
       when: dcs_type == "etcd"
 
     - role: vip-manager/disable
-      when: vip_manager_disable
+      when: vip_manager_disable|bool
 
     - role: keepalived
       when: cluster_vip is defined and cluster_vip | length > 0

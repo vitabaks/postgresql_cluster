@@ -74,6 +74,6 @@
     enabled: "{{ firewall_enabled_at_boot }}"
 
 - ansible.builtin.import_tasks: disable-other-firewalls.yml
-  when: firewall_disable_firewalld or firewall_disable_ufw
+  when: firewall_disable_firewalld|bool or firewall_disable_ufw|bool
 
 ...

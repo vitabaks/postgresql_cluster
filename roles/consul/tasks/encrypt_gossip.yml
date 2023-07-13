@@ -16,7 +16,7 @@
 
   when:
     - consul_raw_key is not defined
-    - bootstrap_state.stat.exists
+    - bootstrap_state.stat.exists | bool
 
 - name: Write gossip encryption key locally for use with new servers
   ansible.builtin.copy:
@@ -28,7 +28,7 @@
     ansible_become: false
   when:
     - consul_raw_key is defined
-    - bootstrap_state.stat.exists
+    - bootstrap_state.stat.exists | bool
   delegate_to: 127.0.0.1
 
 - name: Read gossip encryption key for servers that require it
@@ -36,7 +36,7 @@
     consul_raw_key: "{{ lookup('file', '/tmp/consul_raw.key') }}"
   when:
     - consul_raw_key is not defined
-    - bootstrap_state.stat.exists
+    - bootstrap_state.stat.exists | bool
 
 - name: Delete gossip encryption key file
   ansible.builtin.file:
@@ -47,7 +47,7 @@
     ansible_become: false
   when:
     - consul_raw_key is defined
-    - bootstrap_state.stat.exists
+    - bootstrap_state.stat.exists | bool
   delegate_to: 127.0.0.1
 
 - block:
@@ -61,4 +61,4 @@
         consul_raw_key: "{{ consul_keygen.stdout }}"
   when:
     - consul_raw_key is not defined
-    - not bootstrap_state.stat.exists
+    - not bootstrap_state.stat.exists | bool

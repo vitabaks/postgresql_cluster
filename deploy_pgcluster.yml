@@ -97,7 +97,7 @@
 
 - name: deploy_pgcluster.yml | Deploy etcd cluster
   ansible.builtin.import_playbook: etcd_cluster.yml
-  when: not dcs_exists and dcs_type == "etcd"
+  when: not dcs_exists|bool and dcs_type == "etcd"
   tags: etcd
 
 - name: deploy_pgcluster.yml | Deploy Consul
@@ -134,14 +134,14 @@
       ansible.builtin.set_fact:
         firewall_ports_dynamic_var: "{{ firewall_ports_dynamic_var | default([]) + (firewall_allowed_tcp_ports_for[item] | default([])) }}"
       loop: "{{ hostvars[inventory_hostname].group_names }}"
-      when: firewall_enabled_at_boot
+      when: firewall_enabled_at_boot | bool
       tags: firewall
 
     - name: Build a firewall_rules_dynamic_var
       ansible.builtin.set_fact:
         firewall_rules_dynamic_var: "{{ firewall_rules_dynamic_var | default([]) + (firewall_additional_rules_for[item] | default([])) }}"
       loop: "{{ hostvars[inventory_hostname].group_names }}"
-      when: firewall_enabled_at_boot
+      when: firewall_enabled_at_boot | bool
       tags: firewall
 
   roles:
@@ -150,7 +150,7 @@
       vars:
         firewall_allowed_tcp_ports: "{{ firewall_ports_dynamic_var | default([]) | unique }}"
         firewall_additional_rules: "{{ firewall_rules_dynamic_var | default([]) | unique }}"
-      when: firewall_enabled_at_boot
+      when: firewall_enabled_at_boot|bool
       tags: firewall
 
     - role: hostname
@@ -172,7 +172,7 @@
 
 - name: deploy_pgcluster.yml | Deploy balancers
   ansible.builtin.import_playbook: balancers.yml
-  when: with_haproxy_load_balancing
+  when: with_haproxy_load_balancing|bool
   tags: load_balancing, haproxy
 
 - name: deploy_pgcluster.yml | Install and configure pgBackRest
@@ -190,7 +190,7 @@
 
   roles:
     - role: pgbackrest
-      when: pgbackrest_install
+      when: pgbackrest_install|bool
 
 - name: deploy_pgcluster.yml | PostgreSQL Cluster Deployment
   hosts: postgres_cluster
@@ -211,45 +211,45 @@
 
   roles:
     - role: wal-g
-      when: wal_g_install
+      when: wal_g_install|bool
 
     - role: pg_probackup
-      when: pg_probackup_install
+      when: pg_probackup_install|bool
 
     - role: cron
 
     - role: pgbouncer
-      when: pgbouncer_install
+      when: pgbouncer_install|bool
 
     - role: pgpass
 
     - role: patroni
 
     - role: pgbackrest/stanza-create
-      when: pgbackrest_install
+      when: pgbackrest_install|bool
 
     - role: vip-manager
-      when: not with_haproxy_load_balancing and
+      when: not with_haproxy_load_balancing|bool and
         (cluster_vip is defined and cluster_vip | length > 0)
 
     # optional
     - role: postgresql-users
-      when: is_master  and postgresql_users | length > 0
+      when: is_master | bool and postgresql_users | length > 0
 
     - role: postgresql-databases
-      when: is_master  and postgresql_databases | length > 0
+      when: is_master | bool and postgresql_databases | length > 0
 
     - role: postgresql-schemas
-      when: is_master  and postgresql_schemas | length > 0
+      when: is_master | bool and postgresql_schemas | length > 0
 
     - role: postgresql-extensions
-      when: is_master  and postgresql_extensions | length > 0
+      when: is_master | bool and postgresql_extensions | length > 0
 
     - role: pgbouncer/config
-      when: pgbouncer_install
+      when: pgbouncer_install|bool
 
     - role: netdata
-      when: netdata_install is defined and netdata_install
+      when: netdata_install is defined and netdata_install|bool
 
     # finish (info)
     - role: deploy-finish

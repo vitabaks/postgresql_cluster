@@ -20,7 +20,7 @@
       WantedBy=basic.target
   notify: "restart disable-thp"
   when:
-    - (disable_thp is defined and disable_thp)
+    - (disable_thp is defined and disable_thp|bool)
     - ansible_virtualization_type not in ['container', 'docker', 'lxc', 'podman']  # exclude for containers to prevent test failures in CI.
   tags: disable_thp, transparent_huge_pages
 

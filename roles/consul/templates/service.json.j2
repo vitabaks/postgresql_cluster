@@ -11,7 +11,7 @@
     "address": "{{ service_item.address }}",
     {% endif -%}
     {% if service_item.enable_tag_override is defined -%}
-    "enable_tag_override": {{ service_item.enable_tag_override  | to_json }},
+    "enable_tag_override": {{ service_item.enable_tag_override | bool | to_json }},
     {% endif -%}
     {% if service_item.kind is defined -%}
     "kind": "{{ service_item.kind }}",

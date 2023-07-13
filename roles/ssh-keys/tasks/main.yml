@@ -47,7 +47,7 @@
       loop: "{{ ssh_known_host_results.results }}"
   ignore_errors: true
   when: enable_ssh_key_based_authentication is defined and
-        enable_ssh_key_based_authentication
+        enable_ssh_key_based_authentication|bool
   tags: ssh_keys
 
 ...

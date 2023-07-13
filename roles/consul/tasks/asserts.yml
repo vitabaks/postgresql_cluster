@@ -74,7 +74,7 @@
   ansible.builtin.fail:
     msg: "Use DNSmasq instead of iptables on {{ ansible_distribution }}."
   when:
-    - consul_iptables_enable
+    - consul_iptables_enable | bool
     - ansible_distribution in ['RedHat', 'CentOS', 'OracleLinux', 'Rocky', 'AlmaLinux']
     - ansible_distribution_version is version_compare(6, '>=')
 
@@ -82,14 +82,14 @@
   ansible.builtin.fail:
     msg: "EONEORTHEOTHER: DNSmasq and iptables together is not supported."
   when:
-    - consul_dnsmasq_enable
-    - consul_iptables_enable
+    - consul_dnsmasq_enable | bool
+    - consul_iptables_enable | bool
 
 - name: Check for iptables enabled but no recursors
   ansible.builtin.fail:
     msg: "Recursors are required if iptables is enabled."
   when:
-    - consul_iptables_enable
+    - consul_iptables_enable | bool
     - consul_recursors | length == 0
 
 - name: Check consul_group_name is included in groups
@@ -108,7 +108,7 @@
     msg: "Can't use a bootstrap server and bootstrap_expect at the same time."
   when:
     - _consul_bootstrap_servers | length > 0
-    - consul_bootstrap_expect
+    - consul_bootstrap_expect | bool
 
 # Check for unzip binary
 

@@ -486,7 +486,7 @@ Do not enable a default set of ACL policies
 
 ## v1.18.5
 
-- Set `` where needed to stop warnings about template delimiters
+- Set `| bool` where needed to stop warnings about template delimiters
 - Add consul group when managing the consul user
 
 ## v1.18.4

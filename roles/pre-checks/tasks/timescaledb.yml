@@ -33,4 +33,4 @@
           }}
   when:
     - enable_timescale is defined
-    - enable_timescale
+    - enable_timescale | bool

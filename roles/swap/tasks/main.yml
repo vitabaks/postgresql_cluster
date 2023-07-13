@@ -5,7 +5,7 @@
   register: swap_exists
   changed_when: false
   when:
-    - swap_file_create
+    - swap_file_create | bool
     - ansible_virtualization_type not in ['container', 'docker', 'lxc', 'podman']  # exclude for containers to prevent test failures in CI.
   tags: swap, swap_create, swap_remove
 

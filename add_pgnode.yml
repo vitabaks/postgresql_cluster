@@ -29,7 +29,7 @@
     - name: "[Pre-Check] Check if there is a node with new_node set to true"
       ansible.builtin.set_fact:
         new_nodes: "{{ new_nodes | default([]) + [item] }}"
-      when: hostvars[item]['new_node'] | default(false)
+      when: hostvars[item]['new_node'] | default(false) | bool
       loop: "{{ groups['replica'] }}"
       tags: always
 
@@ -50,7 +50,7 @@
       ansible.builtin.include_role:
         name: patroni/config
         tasks_from: pg_hba
-      when: not new_node | default(false)
+      when: not new_node | default(false) | bool
 
     - name: Update apt cache
       ansible.builtin.apt:
@@ -62,7 +62,7 @@
       retries: 3
       environment: "{{ proxy_env | default({}) }}"
       when:
-        - new_node | default(false)
+        - new_node | default(false) | bool
         - ansible_os_family == "Debian"
         - installation_method == "repo"
 
@@ -78,7 +78,7 @@
       retries: 3
       environment: "{{ proxy_env | default({}) }}"
       when:
-        - new_node | default(false)
+        - new_node | default(false) | bool
         - ansible_os_family == "Debian"
         - installation_method == "repo"
 
@@ -87,8 +87,8 @@
         firewall_ports_dynamic_var: "{{ firewall_ports_dynamic_var | default([]) + (firewall_allowed_tcp_ports_for[item] | default([])) }}"
       loop: "{{ hostvars[inventory_hostname].group_names }}"
       when:
-        - new_node | default(false)
-        - firewall_enabled_at_boot
+        - new_node | default(false) | bool
+        - firewall_enabled_at_boot | bool
       tags: firewall
 
     - name: Build a firewall_rules_dynamic_var
@@ -96,8 +96,8 @@
         firewall_rules_dynamic_var: "{{ firewall_rules_dynamic_var | default([]) + (firewall_additional_rules_for[item] | default([])) }}"
       loop: "{{ hostvars[inventory_hostname].group_names }}"
       when:
-        - new_node | default(false)
-        - firewall_enabled_at_boot
+        - new_node | default(false) | bool
+        - firewall_enabled_at_boot | bool
       tags: firewall
 
   roles:
@@ -107,17 +107,17 @@
         firewall_allowed_tcp_ports: "{{ firewall_ports_dynamic_var | default([]) | unique }}"
         firewall_additional_rules: "{{ firewall_rules_dynamic_var | default([]) | unique }}"
       when:
-        - new_node | default(false)
-        - firewall_enabled_at_boot
+        - new_node | default(false) | bool
+        - firewall_enabled_at_boot | bool
       tags: firewall
 
     - role: sysctl
       when:
-        - new_node | default(false)
+        - new_node | default(false) | bool
 
     - role: ssh-keys
       when:
-        - enable_ssh_key_based_authentication | default(false)
+        - enable_ssh_key_based_authentication | default(false) | bool
 
   tasks:
     - name: Add host to group new_replica (in-memory inventory)
@@ -174,7 +174,7 @@
 
   roles:
     - role: pgbackrest
-      when: pgbackrest_install
+      when: pgbackrest_install|bool
 
 - name: add_pgnode.yml | Import Consul playbook
   ansible.builtin.import_playbook: consul.yml
@@ -200,26 +200,26 @@
 
   roles:
     - role: wal-g
-      when: wal_g_install
+      when: wal_g_install|bool
 
     - role: pg_probackup
-      when: pg_probackup_install
+      when: pg_probackup_install|bool
 
     - role: cron
 
     - role: pgbouncer
-      when: pgbouncer_install
+      when: pgbouncer_install|bool
 
     - role: pgpass
 
     - role: patroni
 
     - role: vip-manager
-      when: not with_haproxy_load_balancing and
+      when: not with_haproxy_load_balancing|bool and
         (cluster_vip is defined and cluster_vip | length > 0)
 
     - role: netdata
-      when: netdata_install is defined and netdata_install
+      when: netdata_install is defined and netdata_install|bool
 
     # finish (info)
     - role: deploy-finish
