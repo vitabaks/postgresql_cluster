@@ -4,7 +4,7 @@
     file: ../../../../vars/main.yml
 
 # pg_probackup[0].value
-- name: Setting host facts using complex arguments
+- name: Setting pg_probackup_first_value
   ansible.builtin.set_fact: # yamllint disable rule:line-length
     pg_probackup_first_value: "pg_probackup-{{ pg_probackup_version }} restore -B {{ pg_probackup_dir }} --instance {{ pg_probackup_instance }} -j {{ pg_probackup_threads }} {{ pg_probackup_add_keys }}"
 
@@ -20,3 +20,22 @@
       Assertion failed: pg_probackup[0].value is "{{ pg_probackup[0].value }}",
       but expected "{{ pg_probackup_first_value}}"
     success_msg: "pg_probackup[0].value is correct"
+
+
+# pg_probackup_patroni_cluster_bootstrap_command
+- name: Setting host facts using complex arguments
+  ansible.builtin.set_fact: # yamllint disable rule:line-length
+    origin_pg_probackup_patroni_cluster_bootstrap_command: "pg_probackup-{{ pg_probackup_version }} restore -B {{ pg_probackup_dir }} --instance {{ pg_probackup_instance }} -j {{ pg_probackup_threads }} {{ pg_probackup_add_keys }}"
+
+- name: Debug pg_probackup_patroni_cluster_bootstrap_command
+  debug:
+    var: pg_probackup_patroni_cluster_bootstrap_command
+
+- name: Assert pg_probackup_patroni_cluster_bootstrap_command
+  assert:
+    that:
+      - pg_probackup_patroni_cluster_bootstrap_command == origin_pg_probackup_patroni_cluster_bootstrap_command
+    fail_msg: >
+      Assertion failed: pg_probackup_patroni_cluster_bootstrap_command is "{{ pg_probackup_patroni_cluster_bootstrap_command }}",
+      but expected "{{ origin_pg_probackup_patroni_cluster_bootstrap_command }}"
+    success_msg: "pg_probackup_patroni_cluster_bootstrap_command is correct"
