@@ -1,0 +1,9 @@
+---
+- hosts: localhost
+  gather_facts: false
+
+  tasks:
+    - name: Molecule | Tests | Roles | Swap | Include all tests
+      ansible.builtin.include_tasks: "{{ item }}"
+      with_fileglob:
+        - conditions/*.yml

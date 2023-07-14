@@ -1,0 +1,18 @@
+---
+# Create
+- name: Include vars
+  ansible.builtin.include_vars:
+    file: ../../../../vars/system.yml
+
+- name: Set swap_exists for testing
+  ansible.builtin.set_fact:
+    swap_exists:
+      stdout: ""
+      stdout_lines: []
+
+- name: Assert condition for creating swap
+  ansible.builtin.assert:
+    that: (swap_exists.stdout is defined and swap_exists.stdout | length < 1) or
+          (swap_exists.stdout_lines is defined and (swap_exists.stdout_lines | map('trim') | map('int') | sum / 1024 / 1024) | round | int != swap_file_size_mb|int)
+    fail_msg: "Condition for creating swap is false"
+    success_msg: "Condition for creating swap is true"

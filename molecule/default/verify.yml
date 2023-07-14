@@ -2,6 +2,9 @@
 - name: Include asserts playbook for postgres
   ansible.builtin.import_playbook: "../tests/variables/main.yml"
 
+- name: Include tests for role swap
+  ansible.builtin.import_playbook: "../tests/roles/swap/main.yml"
+
 - name: Molecule | Verify | All
   hosts: all
 
