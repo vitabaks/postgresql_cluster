@@ -392,7 +392,10 @@ pg_probackup:
 postgresql_restore_command: ""
 # postgresql_restore_command: "wal-g wal-fetch %f %p"  # restore WAL-s using WAL-G
 # postgresql_restore_command: "pgbackrest --stanza={{ pgbackrest_stanza }} archive-get %f %p"  # restore WAL-s using pgbackrest
-# postgresql_restore_command: "pg_probackup-{{ pg_probackup_version }} archive-get -B {{ pg_probackup_dir }} --instance {{ pg_probackup_instance }} --wal-file-path=%p --wal-file-name=%f"  # restore WAL-s using pg_probackup
+
+# postgresql_restore_command: "pg_probackup-{{ pg_probackup_version }} archive-get -B 
+# {{ pg_probackup_dir }} --instance {{ pg_probackup_instance }} --wal-file-path=%p 
+# --wal-file-name=%f"  # restore WAL-s using pg_probackup
 
 # pg_probackup
 pg_probackup_install: false  # or 'true'
