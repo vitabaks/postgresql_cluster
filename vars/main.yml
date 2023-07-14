@@ -438,6 +438,9 @@ wal_g_patroni_cluster_bootstrap_command: "wal-g backup-fetch {{ postgresql_data_
 wal_g_cron_create_job_parts:
   - "[ $(curl -s -o /dev/null -w '%{http_code}' http://{{ inventory_hostname }}:{{ patroni_restapi_port }}) = '200' ]"
   - " && wal-g backup-push {{ postgresql_data_dir }} > {{ postgresql_log_dir }}/walg_backup.log 2>&1"
+wal_g_cron_delete_job_parts:
+  - "[ $(curl -s -o /dev/null -w '%{http_code}' http://{{ inventory_hostname }}:{{ patroni_restapi_port }}) = '200' ]"
+  - " && wal-g delete retain FULL 4 --confirm > {{ postgresql_log_dir }}/walg_delete.log 2>&1"
 
 wal_g_cron_jobs:
   - name: "WAL-G: Create daily backup"
@@ -457,7 +460,7 @@ wal_g_cron_jobs:
     day: "*"
     month: "*"
     weekday: "*"
-    job: "[ $(curl -s -o /dev/null -w '%{http_code}' http://{{ inventory_hostname }}:{{ patroni_restapi_port }}) = '200' ] && wal-g delete retain FULL 4 --confirm > {{ postgresql_log_dir }}/walg_delete.log 2>&1"
+    job: "{{ wal_g_cron_delete_job_parts | join('') }}"
 
 # pgBackRest
 pgbackrest_install: false  # or 'true'
