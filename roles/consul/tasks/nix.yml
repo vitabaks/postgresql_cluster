@@ -291,7 +291,7 @@
     - name: Check Consul HTTP API (via TCP socket)
       ansible.builtin.wait_for:
         delay: 15
-        port: "{{ consul_ports.http|int }}"
+        port: "{{ consul_ports.http | int }}"
         host: "{{ consul_addresses.http }}"
       when: (consul_ports.http|int > -1) and (consul_addresses.http|ansible.utils.ipaddr)
 

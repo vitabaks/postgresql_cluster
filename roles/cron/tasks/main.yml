@@ -4,7 +4,7 @@
 - name: Add cron jobs
   ansible.builtin.cron:
     cron_file: "{{ item.file | default('') }}"
-    user: "{{ item.user | default('postgres')  }}"
+    user: "{{ item.user | default('postgres') }}"
     minute: "{{ item.minute | default('*') }}"
     hour: "{{ item.hour | default('*') }}"
     day: "{{ item.day | default('*') }}"
@@ -23,7 +23,7 @@
 - name: Uninstall cron jobs
   ansible.builtin.cron:
     cron_file: "{{ item.file | default('') }}"
-    user: "{{ item.user | default('postgres')  }}"
+    user: "{{ item.user | default('postgres') }}"
     minute: "{{ item.minute | default('*') }}"
     hour: "{{ item.hour | default('*') }}"
     day: "{{ item.day | default('*') }}"

@@ -40,15 +40,14 @@
 
 - name: Set fact with list of existing configuration files
   ansible.builtin.set_fact:
-    list_current_service_config: "{{ list_current_service_config |default([]) + [ config_file_item.path ] }}"
+    list_current_service_config: "{{ list_current_service_config | default([]) + [config_file_item.path] }}"
   with_items: "{{ services_enabled_files }}"
   loop_control:
     loop_var: config_file_item
 
 - name: Set fact with list of services we manage
   ansible.builtin.set_fact:
-    managed_files: "{{ managed_files |default([]) }} + \
-    [ '{{ consul_configd_path }}/service_{{ service_item.id }}.json' ]"
+    managed_files: "{{ managed_files | default([]) }} + [ '{{ consul_configd_path }}/service_{{ service_item.id }}.json' ]"
   with_items: "{{ consul_services }}"
   loop_control:
     loop_var: service_item

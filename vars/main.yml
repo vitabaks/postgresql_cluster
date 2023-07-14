@@ -178,8 +178,8 @@ postgresql_parameters:
   - { option: "max_locks_per_transaction", value: "512" }
   - { option: "max_prepared_transactions", value: "0" }
   - { option: "huge_pages", value: "try" }  # or "on" if you set "vm_nr_hugepages" in kernel parameters
-  - { option: "shared_buffers", value: "{{ (ansible_memtotal_mb * 0.25)|int }}MB" }  # by default, 25% of RAM
-  - { option: "effective_cache_size", value: "{{ (ansible_memtotal_mb * 0.75)|int }}MB" }  # by default, 75% of RAM
+  - { option: "shared_buffers", value: "{{ (ansible_memtotal_mb * 0.25) | int }}MB" }  # by default, 25% of RAM
+  - { option: "effective_cache_size", value: "{{ (ansible_memtotal_mb * 0.75) | int }}MB" }  # by default, 75% of RAM
   - { option: "work_mem", value: "128MB" }  # please change this value
   - { option: "maintenance_work_mem", value: "256MB" }  # please change this value
   - { option: "checkpoint_timeout", value: "15min" }
@@ -458,7 +458,7 @@ pgbackrest_conf:
     - { option: "log-path", value: "/var/log/pgbackrest" }
 #    - { option: "repo1-host", value: "{{ pgbackrest_repo_host }}" }
 #    - { option: "repo1-host-user", value: "{{ pgbackrest_repo_user }}" }
-    - { option: "repo1-type", value: "{{ pgbackrest_repo_type |lower }}" }
+    - { option: "repo1-type", value: "{{ pgbackrest_repo_type | lower }}" }
     - { option: "repo1-path", value: "/var/lib/pgbackrest" }
     - { option: "repo1-retention-full", value: "4" }
     - { option: "repo1-retention-archive", value: "4" }
@@ -479,7 +479,7 @@ pgbackrest_server_conf:
     - { option: "log-level-file", value: "detail" }
     - { option: "log-level-console", value: "info" }
     - { option: "log-path", value: "/var/log/pgbackrest" }
-    - { option: "repo1-type", value: "{{ pgbackrest_repo_type |lower }}" }
+    - { option: "repo1-type", value: "{{ pgbackrest_repo_type | lower }}" }
     - { option: "repo1-path", value: "/var/lib/pgbackrest" }
     - { option: "repo1-retention-full", value: "4" }
     - { option: "repo1-retention-archive", value: "4" }
