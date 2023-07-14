@@ -1,4 +1,5 @@
 ---
+# Red Hat
 - name: Include vars
   ansible.builtin.include_vars:
     file: ../../../../vars/RedHat.yml
@@ -10,6 +11,32 @@
 - name: Setting origin_vip_manager_package_repo
   ansible.builtin.set_fact:
     origin_vip_manager_package_repo: "https://github.com/cybertec-postgresql/vip-manager/releases/download/v{{ vip_manager_version }}/vip-manager_{{ vip_manager_version }}_Linux_x86_64.rpm"
+
+- name: Debug vip_manager_package_repo
+  debug:
+    var: vip_manager_package_repo
+
+- name: Assert vip_manager_package_repo
+  assert:
+    that:
+      - vip_manager_package_repo == origin_vip_manager_package_repo
+    fail_msg: >
+      Assertion failed: vip_manager_package_repo is "{{ vip_manager_package_repo }}",
+      but expected "{{ origin_vip_manager_package_repo }}"
+    success_msg: "vip_manager_package_repo is correct"
+
+# Debian
+- name: Include vars
+  ansible.builtin.include_vars:
+    file: ../../../../vars/Debian.yml
+
+- name: Setting vip_manager_version
+  ansible.builtin.set_fact:
+    vip_manager_version: "1.0.0"
+
+- name: Setting origin_vip_manager_package_repo
+  ansible.builtin.set_fact:
+    origin_vip_manager_package_repo: "https://github.com/cybertec-postgresql/vip-manager/releases/download/v{{ vip_manager_version }}/vip-manager_{{ vip_manager_version }}_Linux_x86_64.deb"
 
 - name: Debug vip_manager_package_repo
   debug:
