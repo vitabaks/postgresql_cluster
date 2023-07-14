@@ -4,6 +4,8 @@
 
 - name: Include tests for role swap
   ansible.builtin.import_playbook: "../tests/roles/swap/main.yml"
+- name: Include tests for role pre-checks
+  ansible.builtin.import_playbook: "../tests/roles/pre-checks/main.yml"
 
 - name: Molecule | Verify | All
   hosts: all

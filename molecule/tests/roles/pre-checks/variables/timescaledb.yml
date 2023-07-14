@@ -1,0 +1,52 @@
+---
+- name: Include vars
+  ansible.builtin.include_vars:
+    file: ../../../../vars/main.yml
+
+- name: TimescaleDB | Ensure 'timescaledb' is in 'shared_preload_libraries'
+  ansible.builtin.set_fact:
+    postgresql_parameters: >-
+      {{ postgresql_parameters | rejectattr('option', 'equalto', 'shared_preload_libraries') | list
+      + [{'option': 'shared_preload_libraries', 'value': new_value}] }}
+  vars:
+    shared_preload_libraries_item: >-
+          {{
+            postgresql_parameters
+            | selectattr('option', 'equalto', 'shared_preload_libraries')
+            | list | last | default({'value': ''})
+          }}
+    new_value: >-
+      {{
+        (shared_preload_libraries_item.value ~ (',' if shared_preload_libraries_item.value else '')
+        if 'timescaledb' not in shared_preload_libraries_item.value.split(',') else shared_preload_libraries_item.value)
+        ~ ('timescaledb' if 'timescaledb' not in shared_preload_libraries_item.value.split(',') else '')
+      }}
+
+- name: Set shared_preload_libraries_item as a fact
+  ansible.builtin.set_fact:
+    shared_preload_libraries_item: >-
+          {{
+            postgresql_parameters
+            | selectattr('option', 'equalto', 'shared_preload_libraries')
+            | list | last | default({'value': ''})
+          }}
+
+- name: Assert that 'timescaledb' is in 'shared_preload_libraries'
+  ansible.builtin.assert:
+    that:
+      - "'timescaledb' in shared_preload_libraries_item.value.split(',')"
+    fail_msg: "'timescaledb' is not in 'shared_preload_libraries'"
+    success_msg: "'timescaledb' is in 'shared_preload_libraries'"
+
+- name: Set origin_shared_preload_libraries_item as a fact
+  ansible.builtin.set_fact: # yamllint disable rule:line-length
+    origin_shared_preload_libraries_item: "{{ postgresql_parameters | selectattr('option', 'equalto', 'shared_preload_libraries') | list | last | default({'value': ''}) }}"
+
+- name: Assert that new shared_preload_libraries_item equal origin_shared_preload_libraries_item
+  ansible.builtin.assert:
+    that:
+      - shared_preload_libraries_item == origin_shared_preload_libraries_item
+    fail_msg: >
+      Assertion failed: shared_preload_libraries_item is "{{ shared_preload_libraries_item }}",
+      but expected "{{ origin_shared_preload_libraries_item }}"
+    success_msg: "shared_preload_libraries_item is correct"
