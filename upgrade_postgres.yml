@@ -1,6 +1,5 @@
 ---
 # TODO:
-# - rollback.yml
 # - custom WAL dir symlink (pg_new_wal_dir)
 # - tablespaces (rsync for replicas)
 # - patroni cluster state pre-check
@@ -22,7 +21,6 @@
   pre_tasks:
     - name: Include OS-specific variables
       ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
-      tags: always
     # Stop, if pg_old_version, pg_new_version are not defined
     - name: Make sure that the required variables are specified
       run_once: true # noqa run-once
@@ -32,7 +30,6 @@
           - "Please specify a value for the variables: pg_old_version, pg_new_version"
       failed_when: pg_old_version | length < 1 or pg_new_version | length < 1
       when: pg_old_version | length < 1 or pg_new_version | length < 1
-      tags: always
     # Stop, if the directories of the old and new versions are the same
     - name: "Ensure pg_old and pg_new data and config dirs are not the same"
       run_once: true # noqa run-once
@@ -42,7 +39,6 @@
           - "Please check your configuration (vars/upgrade.yml)"
       failed_when: (pg_old_datadir == pg_new_datadir) or (pg_old_confdir == pg_new_confdir)
       when: (pg_old_datadir == pg_new_datadir) or (pg_old_confdir == pg_new_confdir)
-      tags: always
   tasks:
     - name: '[Prepare] Get Patroni Cluster Leader Node'
       ansible.builtin.uri:
@@ -51,7 +47,6 @@
       register: patroni_leader_result
       changed_when: false
       failed_when: false
-      tags: always
 
     - name: '[Prepare] Add host to group "primary" (in-memory inventory)'
       ansible.builtin.add_host:
@@ -60,7 +55,6 @@
       when: hostvars[item]['patroni_leader_result']['status'] == 200
       loop: "{{ groups['postgres_cluster'] }}"
       changed_when: false
-      tags: always
 
     - name: '[Prepare] Add hosts to group "secondary" (in-memory inventory)'
       ansible.builtin.add_host:
@@ -69,7 +63,6 @@
       when: hostvars[item]['patroni_leader_result']['status'] != 200
       loop: "{{ groups['postgres_cluster'] }}"
       changed_when: false
-      tags: always
 
     - name: "Print Patroni Cluster info"
       ansible.builtin.debug:
@@ -77,7 +70,8 @@
           - "Cluster Name: {{ patroni_cluster_name }}"
           - "Cluster Leader: {{ ansible_hostname }}"
       when: inventory_hostname in groups['primary']
-      tags: always
+  tags:
+    - always
 
 - name: "(1/7) PRE-UPGRADE: Perform Pre-Checks"
   hosts: 'primary:secondary'
@@ -127,6 +121,7 @@
         tasks_from: packages
   tags:
     - upgrade
+    - upgrade-check
     - packages
 
 - name: "(3/7) PRE-UPGRADE: Initialize new db, schema compatibility check, and pg_upgrade --check"

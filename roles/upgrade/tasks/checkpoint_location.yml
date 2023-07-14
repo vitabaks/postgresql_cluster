@@ -63,9 +63,9 @@
         msg: "'Latest checkpoint location' doesn't match on leader and its standbys"
       run_once: true
 
-    # rollback (TODO)
-#    - name: Perform rollback
-#      ansible.builtin.include_tasks: rollback.yml
+    # rollback
+    - name: Perform rollback
+      ansible.builtin.include_tasks: rollback.yml
 
     - name: "ERROR: 'Latest checkpoint location' doesn't match"
       ansible.builtin.fail:
