@@ -1,0 +1,21 @@
+---
+- name: Include vars
+  ansible.builtin.include_vars:
+    file: ../../../../vars/Debian.yml
+
+- name: Setting vip_manager_version
+  ansible.builtin.set_fact:
+    vip_manager_version: "1.0.0"
+
+- name: Debug vip_manager_package_repo
+  debug:
+    var: vip_manager_package_repo
+
+- name: Assert vip_manager_package_repo
+  assert:
+    that:
+      - vip_manager_package_repo == "https://github.com/cybertec-postgresql/vip-manager/releases/download/v1.0.0/vip-manager_1.0.0_Linux_x86_64.deb"
+    fail_msg: >
+      Assertion failed: vip_manager_package_repo is "{{ vip_manager_package_repo }}",
+      but expected "https://github.com/cybertec-postgresql/vip-manager/releases/download/v1.0.0/vip-manager_1.0.0_Linux_x86_64.deb"
+    success_msg: "vip_manager_package_repo is correct"

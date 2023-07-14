@@ -1,0 +1,18 @@
+---
+# yamllint disable rule:line-length
+- name: Include vars
+  ansible.builtin.include_vars:
+    file: ../../../../vars/main.yml
+
+- name: Debug pg_probackup[0].value
+  debug:
+    var: pg_probackup[0].value
+
+- name: Assert pg_probackup[0].value
+  assert:
+    that:
+      - pg_probackup[0].value == "pg_probackup-{{ pg_probackup_version }} restore -B {{ pg_probackup_dir }} --instance {{ pg_probackup_instance }} -j {{ pg_probackup_threads }} {{ pg_probackup_add_keys }}"
+    fail_msg: >
+      Assertion failed: pg_probackup[0].value is "{{ pg_probackup[0].value }}",
+      but expected "pg_probackup-{{ pg_probackup_version }} restore -B {{ pg_probackup_dir }} --instance {{ pg_probackup_instance }} -j {{ pg_probackup_threads }} {{ pg_probackup_add_keys }}"
+    success_msg: "pg_probackup[0].value is correct"
