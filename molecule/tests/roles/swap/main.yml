@@ -1,5 +1,6 @@
 ---
-- hosts: localhost
+- name: Molecule | Tests | Roles | Swap
+  hosts: localhost
   gather_facts: false
 
   tasks:
