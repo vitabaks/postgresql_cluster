@@ -435,6 +435,7 @@ wal_g_archive_command: "wal-g wal-push %p"
 wal_g_patroni_cluster_bootstrap_command: "wal-g backup-fetch {{ postgresql_data_dir }} LATEST"
 
 # Define job_parts outside of wal_g_cron_jobs
+# ⚠️ Ensure there is a space at the beginning of each part to prevent commands from concatenating.
 wal_g_cron_create_job_parts:
   - "[ $(curl -s -o /dev/null -w '%{http_code}' http://{{ inventory_hostname }}:{{ patroni_restapi_port }}) = '200' ]"
   - " && wal-g backup-push {{ postgresql_data_dir }} > {{ postgresql_log_dir }}/walg_backup.log 2>&1"
