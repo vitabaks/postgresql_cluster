@@ -1,4 +1,7 @@
 ---
+- name: Include asserts playbook for postgres
+  ansible.builtin.import_playbook: "../tests/variables/main.yml"
+
 - name: Molecule | Verify | All
   hosts: all
 
