@@ -434,6 +434,11 @@ wal_g_json:  # config https://github.com/wal-g/wal-g#configuration
 wal_g_archive_command: "wal-g wal-push %p"
 wal_g_patroni_cluster_bootstrap_command: "wal-g backup-fetch {{ postgresql_data_dir }} LATEST"
 
+# Define job_parts outside of wal_g_cron_jobs
+wal_g_cron_create_job_parts:
+  - "[ $(curl -s -o /dev/null -w '%{http_code}' http://{{ inventory_hostname }}:{{ patroni_restapi_port }}) = '200' ]"
+  - " && wal-g backup-push {{ postgresql_data_dir }} > {{ postgresql_log_dir }}/walg_backup.log 2>&1"
+
 wal_g_cron_jobs:
   - name: "WAL-G: Create daily backup"
     user: "postgres"
@@ -443,7 +448,7 @@ wal_g_cron_jobs:
     day: "*"
     month: "*"
     weekday: "*"
-    job: "[ $(curl -s -o /dev/null -w '%{http_code}' http://{{ inventory_hostname }}:{{ patroni_restapi_port }}) = '200' ] && wal-g backup-push {{ postgresql_data_dir }} > {{ postgresql_log_dir }}/walg_backup.log 2>&1"
+    job: "{{ wal_g_cron_create_job_parts | join('') }}"
   - name: "WAL-G: Delete old backups" # retain 4 full backups (adjust according to your company's backup retention policy)
     user: "postgres"
     file: /etc/cron.d/walg
