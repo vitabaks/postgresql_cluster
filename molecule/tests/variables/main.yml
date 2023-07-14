@@ -1,9 +1,10 @@
 ---
-- hosts: localhost
+- name: Molecule | Tests | Variables
+  hosts: localhost
   gather_facts: false
 
   tasks:
-    - name: Molecule | Tests | Include all asserts
+    - name: Molecule | Tests | Variables | Include all tests
       ansible.builtin.include_tasks: "{{ item }}"
       with_fileglob:
         - asserts/*.yml
