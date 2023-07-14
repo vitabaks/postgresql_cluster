@@ -9,7 +9,7 @@
     vip_manager_version: "1.0.0"
 
 - name: Setting origin_vip_manager_package_repo
-  ansible.builtin.set_fact:
+  ansible.builtin.set_fact: # yamllint disable rule:line-length
     origin_vip_manager_package_repo: "https://github.com/cybertec-postgresql/vip-manager/releases/download/v{{ vip_manager_version }}/vip-manager_{{ vip_manager_version }}_Linux_x86_64.rpm"
 
 - name: Debug vip_manager_package_repo
@@ -35,7 +35,7 @@
     vip_manager_version: "1.0.0"
 
 - name: Setting origin_vip_manager_package_repo
-  ansible.builtin.set_fact:
+  ansible.builtin.set_fact: # yamllint disable rule:line-length
     origin_vip_manager_package_repo: "https://github.com/cybertec-postgresql/vip-manager/releases/download/v{{ vip_manager_version }}/vip-manager_{{ vip_manager_version }}_Linux_x86_64.deb"
 
 - name: Debug vip_manager_package_repo
