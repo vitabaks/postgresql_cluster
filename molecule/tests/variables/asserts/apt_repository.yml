@@ -26,6 +26,7 @@
 
 # 🖨️ Debugging the established repo
 - name: Molecule.tests.variables.asserts.baseurl | Debug repo
+  run_once: true
   ansible.builtin.debug:
     var: apt_repository['repo']
 

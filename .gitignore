@@ -4,4 +4,4 @@
 .vscode/settings.json
 __pycache__/
 *.log
-molecule/tests/**/tmp
+molecule/**/tmp

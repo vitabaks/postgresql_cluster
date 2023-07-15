@@ -26,6 +26,7 @@
 
 # 🖨️ Debugging the established CPU model
 - name: Molecule.tests.variables.asserts.system_info | Debug CPU Model
+  run_once: true
   ansible.builtin.debug:
     var: system_info['CPU model']
 
@@ -73,6 +74,7 @@
 
 # 🖨️ Debugging the established Disk space total
 - name: Molecule.tests.variables.asserts.system_info | Debug Disk space total
+  run_once: true
   ansible.builtin.debug:
     var: system_info['Disk space total']
 

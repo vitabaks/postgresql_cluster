@@ -1,10 +1,12 @@
 ---
 # Delete
 - name: Include vars
+  run_once: true
   ansible.builtin.include_vars:
-    file: ../../../../vars/system.yml
+    file: ../../../../../vars/system.yml
 
 - name: Set swap_exists for testing
+  run_once: true
   ansible.builtin.set_fact:
     swap_exists:
       stdout: "1048576"  # Suppose we have a 1MB swap file
@@ -12,6 +14,7 @@
         - "1048576"
 
 - name: Assert condition for deleting swap
+  run_once: true
   ansible.builtin.assert:
     that: (swap_exists.stdout is defined and swap_exists.stdout | length > 1) and
           ((swap_exists.stdout_lines|map('trim')|map('int')|sum / 1024 / 1024)|round|int != swap_file_size_mb|int)

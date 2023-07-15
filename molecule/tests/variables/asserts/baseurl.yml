@@ -25,6 +25,7 @@
 
 # 🖨️ Debugging the established OracleLinux
 - name: Molecule.tests.variables.asserts.baseurl | Debug OracleLinux
+  run_once: true
   ansible.builtin.debug:
     var: _baseurl['OracleLinux']
 

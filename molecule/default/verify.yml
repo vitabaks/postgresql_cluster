@@ -1,20 +1,7 @@
 ---
-- name: Include asserts playbook for postgres
-  ansible.builtin.import_playbook: "../tests/variables/main.yml"
-
-- name: Include tests for role deploy-finish
-  ansible.builtin.import_playbook: "../tests/roles/deploy-finish/main.yml"
-- name: Include tests for role haproxy
-  ansible.builtin.import_playbook: "../tests/roles/haproxy/main.yml"
-- name: Include tests for role patroni
-  ansible.builtin.import_playbook: "../tests/roles/patroni/main.yml"
-- name: Include tests for role swap
-  ansible.builtin.import_playbook: "../tests/roles/swap/main.yml"
-- name: Include tests for role pre-checks
-  ansible.builtin.import_playbook: "../tests/roles/pre-checks/main.yml"
-
 - name: Molecule | Verify | All
   hosts: all
+  gather_facts: true
 
   tasks:
     - name: Include vars of vars/main.yml
@@ -24,7 +11,13 @@
     - name: Molecule | Verify | Include all tests
       ansible.builtin.include_tasks: "{{ item }}"
       with_fileglob:
+        - ../tests/variables/main.yml
         - ../tests/etcd/*.yml
         - ../tests/patroni/*.yml
         - ../tests/postgres/*.yml
         - ../tests/roles/confd/main.yml
+        - ../tests/roles/deploy-finish/main.yml
+        - ../tests/roles/haproxy/main.yml
+        - ../tests/roles/patroni/main.yml
+        - ../tests/roles/pre-checks/main.yml
+        - ../tests/roles/swap/main.yml
