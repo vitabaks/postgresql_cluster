@@ -309,6 +309,7 @@
         mode: "0640"
 
     - name: Remove patroni.yml conf files from localhost
+      become: false
       run_once: true
       ansible.builtin.file:
         path: files/patroni.yml

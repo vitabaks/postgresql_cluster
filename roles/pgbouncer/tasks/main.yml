@@ -145,6 +145,7 @@
       when: not pgbouncer_auth_user|bool
 
     - name: Remove pgbouncer.ini file from localhost
+      become: false
       run_once: true
       ansible.builtin.file:
         path: files/pgbouncer.ini
@@ -152,6 +153,7 @@
       delegate_to: localhost
 
     - name: Remove userlist.txt conf file from localhost
+      become: false
       run_once: true
       ansible.builtin.file:
         path: files/userlist.txt
