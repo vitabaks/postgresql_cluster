@@ -8,6 +8,8 @@
   ansible.builtin.import_playbook: "../tests/roles/deploy-finish/main.yml"
 - name: Include tests for role haproxy
   ansible.builtin.import_playbook: "../tests/roles/haproxy/main.yml"
+- name: Include tests for role patroni
+  ansible.builtin.import_playbook: "../tests/roles/patroni/main.yml"
 - name: Include tests for role swap
   ansible.builtin.import_playbook: "../tests/roles/swap/main.yml"
 - name: Include tests for role pre-checks
