@@ -23,18 +23,18 @@
         (pool_item.pool_parameters
          | regex_search('pool_size=(\\d+)', multiline=False)
          | regex_replace('[^0-9]', '')
-         | default(pgbouncer_default_pool_size
-         | default(0), true)
+         | default(pgbouncer_default_pool_size | default(0), true)
          | int)
       }}"
   loop: "{{ pgbouncer_pools | default([]) }}"
   loop_control:
     loop_var: pool_item
 
-# This task calculates the total pool size across all databases.
-# If 'postgresql_databases' is not defined or is an empty list, the total pool size will be equal to the 'pgbouncer_pool_size'.
-# Otherwise, it adds the 'pgbouncer_pool_size' to the product of the default pool size (or 0 if not defined) and the number of databases not already defined in 'pgbouncer_pools'.
-# This means it checks the 'postgresql_databases' against 'pgbouncer_pools' and for each database that does not have a corresponding pool, it adds the 'pgbouncer_default_pool_size' (or 0 if not defined) to the 'pgbouncer_pool_size'.
+# This task computes the total pool size across all databases.
+# If 'postgresql_databases' isn't defined or is empty, 'pgbouncer_pool_size' is the total pool size.
+# If 'postgresql_databases' is defined, the task does the following:
+#   1. It checks each database against 'pgbouncer_pools'.
+#   2. For databases without a corresponding pool, it adds 'pgbouncer_default_pool_size' (or 0 if not defined) to 'pgbouncer_pool_size'.
 - name: PgBouncer | Calculate total pool_size
   run_once: true
   ansible.builtin.set_fact:

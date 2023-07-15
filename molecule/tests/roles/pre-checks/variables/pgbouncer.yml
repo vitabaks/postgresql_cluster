@@ -1,10 +1,9 @@
 ---
-# 🚀 This tasks are designed to calculate the total pool size for PgBouncer, a PostgreSQL connection pooler.
-# 🎯 The goal is to make sure that the size of each pool is correctly defined and calculated
+# 🚀 These tasks aim to compute the overall pool size for PgBouncer, a PostgreSQL connection pooler.
+# 🎯 The objective is to guarantee that each database's pool size is precisely defined and calculated.
 
-# 📝 Set test data for PgBouncer pools
-# We are defining two databases, each with a pool size defined in the pool_parameters.
-- name: Set test pgbouncer_pools
+# 📝 Establishing test data for PgBouncer pools. Two databases are specified, each with a pool size indicated in pool_parameters.
+- name: Molecule | Tests | Roles | Pre-checks | Variables | Pgbouncer | Establish PgBouncer Pools Test Data
   run_once: true
   ansible.builtin.set_fact:
     pgbouncer_pools:
@@ -13,10 +12,11 @@
       - dbname: db2
         pool_parameters: "pool_size=20"
 
-# 🔄 Calculate the total pool size (pgbouncer_pool_size)
+# 🔄 Calculating the overall pool size (pgbouncer_pool_size).
 # For each database in pgbouncer_pools, we extract the pool size from pool_parameters and add it to the total.
-# If pool size is not defined, we use the default pool size (pgbouncer_default_pool_size), or 0 if that's also not defined.
-- name: Setting pgbouncer_pool_size
+# If pool size is undefined, we use the default pool size (pgbouncer_default_pool_size), or 0 if that's also undefined.
+- name: Molecule | Tests | Roles | Pre-checks | Variables | Pgbouncer | Compute Overall Pool Size
+  run_once: true
   ansible.builtin.set_fact:
     pgbouncer_pool_size: "{{
         (pgbouncer_pool_size | default(0) | int)
@@ -24,26 +24,76 @@
         (pool_item.pool_parameters
          | regex_search('pool_size=(\\d+)', multiline=False)
          | regex_replace('[^0-9]', '')
-         | default(pgbouncer_default_pool_size
-         | default(0), true)
+         | default(pgbouncer_default_pool_size | default(0), true)
          | int)
       }}"
   loop: "{{ pgbouncer_pools | default([]) }}"
   loop_control:
     loop_var: pool_item
 
-# 🖨️ Prints the calculated total pool size for debugging purposes.
-- name: Debug pgbouncer_pool_size
-  debug:
+# 🖨️ Debugging the calculated overall pool size.
+- name: Molecule | Tests | Roles | Pre-checks | Variables | Pgbouncer | Debug Overall Pool Size
+  ansible.builtin.debug:
     var: pgbouncer_pool_size
 
-# ✅ Test if the calculated total pool size is correct
-# In this case, we expect the total pool size to be 30 (10 from db1 and 20 from db2).
-# If the calculated total pool size is not 30, the test fails and an error message is displayed.
-- name: Test | PgBouncer | Calculate pool_size
+# ✅ Verifying the correctness of the calculated overall pool size.
+# The expected overall pool size is 30 (10 from db1 and 20 from db2).
+# If the calculated overall pool size is not 30, the test fails and an error message is displayed.
+- name: Molecule | Tests | Roles | Pre-checks | Variables | Pgbouncer | Verify Pool Size Calculation
   run_once: true
   ansible.builtin.assert:
     that:
       - pgbouncer_pool_size | int == 30
     fail_msg: "Test failed: pgbouncer_pool_size is not equal to 30."
     success_msg: "Test passed: pgbouncer_pool_size is equal to 30."
+
+# 🖨️ Debugging test variables.
+- name: Molecule | Tests | Roles | Pre-checks | Variables | Pgbouncer | Debug Test Variables
+  debug:
+    var: "{{ debug_item }}"
+  loop:
+    - postgresql_databases
+    - pgbouncer_pools
+    - pgbouncer_default_pool_size
+  loop_control:
+    loop_var: debug_item
+
+# 📝 Establishing test data for PostgreSQL databases.
+- name: Molecule | Tests | Roles | Pre-checks | Variables | Pgbouncer | Establish PostgreSQL Databases Test Data
+  run_once: true
+  ansible.builtin.set_fact:
+    postgresql_databases:
+      - db: db1
+      - db: db2
+      - db: db3
+
+# 🔄 Calculating the overall pool size (pgbouncer_total_pool_size) across all databases.
+- name: Molecule | Tests | Roles | Pre-checks | Variables | Pgbouncer | Compute Total Pool Size
+  run_once: true
+  ansible.builtin.set_fact:
+    pgbouncer_total_pool_size: >-
+      {{
+        (pgbouncer_pool_size|int)
+        if (postgresql_databases is not defined or postgresql_databases|default([]) == [])
+        else
+        ((pgbouncer_pool_size|int)
+        +
+        (postgresql_databases|default([]) | rejectattr('db', 'in', pgbouncer_pools|map(attribute='dbname')|list)|length) * (pgbouncer_default_pool_size|default(0)|int))
+      }}
+  when: pgbouncer_pool_size is defined
+
+# 🖨️ Debugging the calculated overall pool size.
+- name: Molecule | Tests | Roles | Pre-checks | Variables | Pgbouncer | Debug Total Pool Size
+  debug:
+    var: pgbouncer_total_pool_size
+
+# ✅ Verifying the correctness of the calculated overall pool size.
+# The expected overall pool size is 50 (10 from db1, 20 from db2 and 20 from db3 as db3 is not defined in pgbouncer_pools and hence, its pool size is pgbouncer_default_pool_size which is 20).
+# If the calculated overall pool size is not 50, the test fails and an error message is displayed.
+- name: Molecule | Tests | Roles | Pre-checks | Variables | Pgbouncer | Verify Total Pool Size Calculation
+  run_once: true
+  ansible.builtin.assert:
+    that:
+      - pgbouncer_total_pool_size | int == 50
+    fail_msg: "Test failed: pgbouncer_total_pool_size is not equal to 50."
+    success_msg: "Test passed: pgbouncer_total_pool_size is equal to 50."
