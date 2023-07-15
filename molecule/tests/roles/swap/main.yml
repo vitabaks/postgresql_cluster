@@ -1,5 +1,5 @@
 ---
-- name: Molecule | Tests | Roles | Swap | Include all tests
+- name: Molecule.tests.roles.swap | Main | Include all tests
   run_once: true
   ansible.builtin.include_tasks: "{{ item }}"
   with_fileglob:
