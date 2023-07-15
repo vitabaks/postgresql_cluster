@@ -83,6 +83,7 @@
       notify: "restart confd"
 
     - name: Remove confd.toml, haproxy.toml, haproxy.tmpl files from localhost
+      become: false
       run_once: true
       ansible.builtin.file:
         path: "files/{{ item }}"

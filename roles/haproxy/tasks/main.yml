@@ -419,6 +419,7 @@
       notify: "restart haproxy"
 
     - name: Remove haproxy.cfg file from localhost
+      become: false
       run_once: true
       ansible.builtin.file:
         path: files/haproxy.cfg
