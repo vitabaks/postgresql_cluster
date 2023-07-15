@@ -3,18 +3,13 @@
 # 🎯 The objective is to ensure that the lines are correctly replaced
 
 # 📂 Ensure tmp directory exists
-- name: Molecule.tests.roles.confd.variables.lineinfile | Ensure tmp directory exists
+- name: Molecule.tests.roles.confd.variables.haproxy.tmpl | Ensure tmp directory exists
   ansible.builtin.file:
     path: "./tmp"
     state: directory
 
-# ========================================
-# 💻 Start lineinfile Operations and Tests
-# ========================================
-
 # 🔄 Define a dummy template file
-- name: Molecule.tests.roles.confd.variables.lineinfile | Set template file test data
-  run_once: true
+- name: Molecule.tests.roles.confd.variables.haproxy.tmpl | Set template file test data
   ansible.builtin.set_fact:
     haproxy_listen_port:
       stats: 8080
@@ -22,14 +17,17 @@
       replicas: 8082
       replicas_sync: 8083
       replicas_async: 8084
-    inventory_hostname: localhost
-    cluster_vip: 127.0.0.1
+    inventory_hostname: una.name
+    cluster_vip: fake.vip.url.com
 
-# 📝 Establishing test data for haproxy.tmpl
-- name: Molecule.tests.roles.confd.variables.lineinfile | Establish haproxy.tmpl Test Data
-  run_once: true
+# ===============================
+# 💻 Case cluster_vip is defined
+# ===============================
+
+# 📝 Establishing test data for haproxy.cluster_vip.defined.tmpl
+- name: Molecule.tests.roles.confd.variables.haproxy.tmpl | Establish haproxy.tmpl Test Data
   ansible.builtin.copy:
-    dest: "./tmp/haproxy.tmpl"
+    dest: "./tmp/haproxy.cluster_vip.defined.tmpl"
     content: |
       bind *:{{ haproxy_listen_port.stats }}
       bind *:{{ haproxy_listen_port.master }}
@@ -41,11 +39,11 @@
 # This task updates the 'haproxy.tmpl' file
 # replacing lines that start with 'bind' and include specific ports
 # The new lines will either bind to the inventory_hostname or the cluster_vip, depending on the specific port.
-- name: Molecule.tests.roles.confd.variables.lineinfile | Prepare haproxy.tmpl template file (replace "bind" for stats)
+- name: Molecule.tests.roles.confd.variables.haproxy.tmpl | Prepare haproxy.tmpl template file (replace "bind" for stats)
   ansible.builtin.lineinfile:
-    path: ./tmp/haproxy.tmpl
-    regexp: "{{ line_item.regexp }}"
-    line: "{{ line_item.line }}"
+    path: ./tmp/haproxy.cluster_vip.defined.tmpl
+    regexp: "{{ line_item_1.regexp }}"
+    line: "{{ line_item_1.line }}"
     backrefs: true
   loop:
     - regexp: '^.*bind.*:{{ haproxy_listen_port.stats }}$'
@@ -59,28 +57,88 @@
     - regexp: '^.*bind.*:{{ haproxy_listen_port.replicas_async }}$'
       line: '    bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas_async }}'
   loop_control:
-    loop_var: line_item
-    label: "{{ line_item.line }}"
+    loop_var: line_item_1
+    label: "{{ line_item_1.line }}"
 
 # 🖨️ Debugging the established haproxy.tmpl
-- name: Molecule.tests.roles.confd.variables.lineinfile | Debug haproxy.tmpl
+- name: Molecule.tests.roles.confd.variables.haproxy.tmpl | Debug haproxy.tmpl
   ansible.builtin.command:
-    cmd: cat ./tmp/haproxy.tmpl
+    cmd: cat ./tmp/haproxy.cluster_vip.defined.tmpl
   register: output
-- name: Molecule.tests.roles.confd.variables.lineinfile | Debug haproxy.tmpl content
+- name: Molecule.tests.roles.confd.variables.haproxy.tmpl | Debug haproxy.tmpl content
   ansible.builtin.debug:
     var: output.stdout_lines
 
 # ✅ Verifying the correctness of the established haproxy.tmpl
 # If the lines are not replaced correctly, the test fails and an error message is displayed
-- name: Molecule.tests.roles.confd.variables.lineinfile | Verify haproxy.tmpl
-  run_once: true
+- name: Molecule.tests.roles.confd.variables.haproxy.tmpl | Verify haproxy.tmpl
   ansible.builtin.assert:
     that:
-      - "output.stdout_lines[0] == '    bind localhost:8080'"
-      - "output.stdout_lines[1] == '    bind 127.0.0.1:8081'"
-      - "output.stdout_lines[2] == '    bind 127.0.0.1:8082'"
-      - "output.stdout_lines[3] == '    bind 127.0.0.1:8083'"
-      - "output.stdout_lines[4] == '    bind 127.0.0.1:8084'"
+      - "output.stdout_lines[0] == '    bind una.name:8080'"
+      - "output.stdout_lines[1] == '    bind fake.vip.url.com:8081'"
+      - "output.stdout_lines[2] == '    bind fake.vip.url.com:8082'"
+      - "output.stdout_lines[3] == '    bind fake.vip.url.com:8083'"
+      - "output.stdout_lines[4] == '    bind fake.vip.url.com:8084'"
     fail_msg: "Test failed: Lines are not replaced correctly in haproxy.tmpl."
     success_msg: "Test passed: Lines are replaced correctly in haproxy.tmpl."
+
+# ===================================
+# 💻 Case cluster_vip is not defined
+# ===================================
+
+# 📝 Establishing test data for haproxy.cluster_vip.not.defined.tmpl
+- name: Molecule.tests.roles.confd.variables.haproxy.tmpl | Establish haproxy.tmpl Test Data - 2nd round
+  ansible.builtin.copy:
+    dest: "./tmp/haproxy.cluster_vip.not.defined.tmpl"
+    content: |
+      bind *:{{ haproxy_listen_port.stats }}
+      bind *:{{ haproxy_listen_port.master }}
+      bind *:{{ haproxy_listen_port.replicas }}
+      bind *:{{ haproxy_listen_port.replicas_sync }}
+      bind *:{{ haproxy_listen_port.replicas_async }}
+
+# 🚀 Execute the new task here
+# This task updates the 'haproxy.tmpl' file again, this time replacing lines that start with 'bind' and include specific ports
+# The new lines will bind to the inventory_hostname.
+- name: Molecule.tests.roles.confd.variables.haproxy.tmpl | Prepare haproxy.tmpl template file (replace "bind" for stats - 2nd round)
+  ansible.builtin.lineinfile:
+    path: ./tmp/haproxy.cluster_vip.not.defined.tmpl
+    regexp: "{{ line_item_2.regexp }}"
+    line: "{{ line_item_2.line }}"
+    backrefs: true
+  loop:
+    - regexp: '^.*bind.*:{{ haproxy_listen_port.stats }}$'
+      line: '    bind {{ inventory_hostname }}:{{ haproxy_listen_port.stats }}'
+    - regexp: '^.*bind.*:{{ haproxy_listen_port.master }}$'
+      line: '    bind {{ inventory_hostname }}:{{ haproxy_listen_port.master }}'
+    - regexp: '^.*bind.*:{{ haproxy_listen_port.replicas }}$'
+      line: '    bind {{ inventory_hostname }}:{{ haproxy_listen_port.replicas }}'
+    - regexp: '^.*bind.*:{{ haproxy_listen_port.replicas_sync }}$'
+      line: '    bind {{ inventory_hostname }}:{{ haproxy_listen_port.replicas_sync }}'
+    - regexp: '^.*bind.*:{{ haproxy_listen_port.replicas_async }}$'
+      line: '    bind {{ inventory_hostname }}:{{ haproxy_listen_port.replicas_async }}'
+  loop_control:
+    loop_var: line_item_2
+    label: "{{ line_item_2.line }}"
+
+# 🖨️ Debugging the established haproxy.tmpl - 2nd round
+- name: Molecule.tests.roles.confd.variables.haproxy.tmpl | Debug haproxy.tmpl - 2nd round
+  ansible.builtin.command:
+    cmd: cat ./tmp/haproxy.cluster_vip.not.defined.tmpl
+  register: output_2
+- name: Molecule.tests.roles.confd.variables.haproxy.tmpl | Debug haproxy.tmpl content - 2nd round
+  ansible.builtin.debug:
+    var: output_2.stdout_lines
+
+# ✅ Verifying the correctness of the established haproxy.tmpl - 2nd round
+# If the lines are not replaced correctly, the test fails and an error message is displayed
+- name: Molecule.tests.roles.confd.variables.haproxy.tmpl | Verify haproxy.tmpl - 2nd round
+  ansible.builtin.assert:
+    that:
+      - "output_2.stdout_lines[0] == '    bind una.name:8080'"
+      - "output_2.stdout_lines[1] == '    bind una.name:8081'"
+      - "output_2.stdout_lines[2] == '    bind una.name:8082'"
+      - "output_2.stdout_lines[3] == '    bind una.name:8083'"
+      - "output_2.stdout_lines[4] == '    bind una.name:8084'"
+    fail_msg: "Test failed: Lines are not replaced correctly in haproxy.tmpl - 2nd round."
+    success_msg: "Test passed: Lines are replaced correctly in haproxy.tmpl - 2nd round."
