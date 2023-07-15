@@ -9,7 +9,7 @@
 
 # ✅ Validate wal_g_cron_jobs structure and content
 - name: Molecule.tests.variables.asserts.wal_g_cron_jobs | Common | Validate wal_g_cron_jobs Structure and Content
-  assert:
+  ansible.builtin.assert:
     that:
       - wal_g_cron_jobs | length == 2
       - wal_g_cron_jobs[0].name == "WAL-G: Create daily backup"
@@ -25,7 +25,7 @@
 
 # ✅ Validate wal_g_cron_create_job_parts and wal_g_cron_delete_job_parts content
 - name: Molecule.tests.variables.asserts.wal_g_cron_jobs | Common | Validate wal_g_cron_create_job_parts and wal_g_cron_delete_job_parts Content
-  assert:
+  ansible.builtin.assert:
     that:
       - wal_g_cron_create_job_parts[0] == "[ $(curl -s -o /dev/null -w '%{http_code}' http://{{ inventory_hostname }}:{{ patroni_restapi_port }}) = '200' ]"
       - wal_g_cron_create_job_parts[1] == " && wal-g backup-push {{ postgresql_data_dir }} > {{ postgresql_log_dir }}/walg_backup.log 2>&1"
@@ -50,12 +50,12 @@
 
 # 🖨️ Debug the first wal_g_cron job for Debian
 - name: Molecule.tests.variables.asserts.wal_g_cron_jobs | Debian | Debug First wal_g_cron Job
-  debug:
+  ansible.builtin.debug:
     var: wal_g_cron_jobs[0].job
 
 # ✅ Validate the first wal_g_cron job for Debian
 - name: Molecule.tests.variables.asserts.wal_g_cron_jobs | Debian | Validate First wal_g_cron Job
-  assert:
+  ansible.builtin.assert:
     that:
       - wal_g_cron_jobs[0].job == origin_wal_g_cron_jobs_create_job
     fail_msg: "Test failed: wal_g_cron_jobs[0].job is not as expected."
@@ -68,12 +68,12 @@
 
 # 🖨️ Debug the second wal_g_cron job for Debian
 - name: Molecule.tests.variables.asserts.wal_g_cron_jobs | Debian | Debug Second wal_g_cron Job
-  debug:
+  ansible.builtin.debug:
     var: wal_g_cron_jobs[1].job
 
 # ✅ Validate the second wal_g_cron job for Debian
 - name: Molecule.tests.variables.asserts.wal_g_cron_jobs | Debian | Validate Second wal_g_cron Job
-  assert:
+  ansible.builtin.assert:
     that:
       - wal_g_cron_jobs[1].job == origin_wal_g_cron_jobs_delete_job
     fail_msg: "Test failed: wal_g_cron_jobs[1].job is not as expected."
@@ -95,12 +95,12 @@
 
 # 🖨️ Debug the first wal_g_cron job for RedHat
 - name: Molecule.tests.variables.asserts.wal_g_cron_jobs | RedHat | Debug First wal_g_cron Job
-  debug:
+  ansible.builtin.debug:
     var: wal_g_cron_jobs[0].job
 
 # ✅ Validate the first wal_g_cron job for RedHat
 - name: Molecule.tests.variables.asserts.wal_g_cron_jobs | RedHat | Validate First wal_g_cron Job
-  assert:
+  ansible.builtin.assert:
     that:
       - wal_g_cron_jobs[0].job == origin_wal_g_cron_jobs_create_job
     fail_msg: "Test failed: wal_g_cron_jobs[0].job is not as expected."
@@ -113,12 +113,12 @@
 
 # 🖨️ Debug the second wal_g_cron job for RedHat
 - name: Molecule.tests.variables.asserts.wal_g_cron_jobs | RedHat | Debug Second wal_g_cron Job
-  debug:
+  ansible.builtin.debug:
     var: wal_g_cron_jobs[1].job
 
 # ✅ Validate the second wal_g_cron job for RedHat
 - name: Molecule.tests.variables.asserts.wal_g_cron_jobs | RedHat | Validate Second wal_g_cron Job
-  assert:
+  ansible.builtin.assert:
     that:
       - wal_g_cron_jobs[1].job == origin_wal_g_cron_jobs_delete_job
     fail_msg: "Test failed: wal_g_cron_jobs[1].job is not as expected."
