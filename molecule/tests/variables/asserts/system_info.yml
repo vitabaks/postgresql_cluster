@@ -6,7 +6,7 @@
 # 💻 Start CPU model Operations and Tests
 # ========================================
 
-# Define a valid CPU model
+# 🔄 Define a valid CPU model
 - name: Molecule.tests.variables.asserts.system_info | Set CPU Model Test Data (valid)
   run_once: true
   ansible.builtin.set_fact:
@@ -46,7 +46,7 @@
 # 💾 Start Disk space total Operations and Tests
 # ==================================================
 
-# Define a valid Disk space total
+# 🔄 Define a valid Disk space total
 - name: Molecule.tests.variables.asserts.system_info | Set Disk space total Test Data (valid)
   run_once: true
   ansible.builtin.set_fact:

@@ -2,6 +2,8 @@
 - name: Include asserts playbook for postgres
   ansible.builtin.import_playbook: "../tests/variables/main.yml"
 
+- name: Include tests for role confd
+  ansible.builtin.import_playbook: "../tests/roles/confd/main.yml"
 - name: Include tests for role swap
   ansible.builtin.import_playbook: "../tests/roles/swap/main.yml"
 - name: Include tests for role pre-checks

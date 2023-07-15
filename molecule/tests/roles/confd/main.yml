@@ -1,0 +1,10 @@
+---
+- name: Molecule.tests.roles.confd | Main
+  hosts: localhost
+  gather_facts: true
+
+  tasks:
+    - name: Molecule.tests.roles.confd | Main | Include all tests
+      ansible.builtin.include_tasks: "{{ item }}"
+      with_fileglob:
+        - variables/*.yml
