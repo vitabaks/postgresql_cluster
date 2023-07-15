@@ -7,7 +7,7 @@
 # ========================================
 
 # 🔄 Define a valid repo
-- name: Molecule.tests.variables.asserts.baseurl | Set repo Test Data (valid)
+- name: Molecule.tests.variables.asserts.apt_repository | Set repo Test Data (valid)
   run_once: true
   ansible.builtin.set_fact:
     postgrespro_minor_version: 12.4.1
@@ -15,7 +15,7 @@
     ansible_distribution_release: "stretch"
 
 # 📝 Establishing test data for repo
-- name: Molecule.tests.variables.asserts.baseurl | Establish repo Test Data
+- name: Molecule.tests.variables.asserts.apt_repository | Establish repo Test Data
   run_once: true
   ansible.builtin.set_fact:
     apt_repository:
@@ -25,14 +25,14 @@
         ' ' ~ ansible_distribution_release ~ ' main' }}
 
 # 🖨️ Debugging the established repo
-- name: Molecule.tests.variables.asserts.baseurl | Debug repo
+- name: Molecule.tests.variables.asserts.apt_repository | Debug repo
   run_once: true
   ansible.builtin.debug:
     var: apt_repository['repo']
 
 # ✅ Verifying the correctness of the established repo
 # If the repo is not set, the test fails and an error message is displayed
-- name: Molecule.tests.variables.asserts.baseurl | Verify repo
+- name: Molecule.tests.variables.asserts.apt_repository | Verify repo
   run_once: true
   ansible.builtin.assert:
     that:
