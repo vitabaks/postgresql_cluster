@@ -1,6 +1,6 @@
 ---
 # 🚀 This tasks are designed to calculate the total pool size for PgBouncer, a PostgreSQL connection pooler.
-# 🎯 The goal is to ensure that the total pool size does not exceed the maximum allowed connections.
+# 🎯 The goal is to make sure that the size of each pool is correctly defined and calculated
 
 # 📝 Set test data for PgBouncer pools
 # We are defining two databases, each with a pool size defined in the pool_parameters.
@@ -13,20 +13,29 @@
       - dbname: db2
         pool_parameters: "pool_size=20"
 
-# 🔄 Calculate the total pool size (origin_pgbouncer_pool_size)
+# 🔄 Calculate the total pool size (pgbouncer_pool_size)
 # For each database in pgbouncer_pools, we extract the pool size from pool_parameters and add it to the total.
 # If pool size is not defined, we use the default pool size (pgbouncer_default_pool_size), or 0 if that's also not defined.
-- name: Setting origin_pgbouncer_pool_size
+- name: Setting pgbouncer_pool_size
   ansible.builtin.set_fact:
-    origin_pgbouncer_pool_size: "{{ origin_pgbouncer_pool_size | default(0) | int + (pool_item.pool_parameters | regex_search('pool_size=(\\d+)', multiline=False) | regex_replace('[^0-9]', '') | default(pgbouncer_default_pool_size | default(0), true) | int) }}"
+    pgbouncer_pool_size: "{{
+        (pgbouncer_pool_size | default(0) | int)
+        +
+        (pool_item.pool_parameters
+         | regex_search('pool_size=(\\d+)', multiline=False)
+         | regex_replace('[^0-9]', '')
+         | default(pgbouncer_default_pool_size
+         | default(0), true)
+         | int)
+      }}"
   loop: "{{ pgbouncer_pools | default([]) }}"
   loop_control:
     loop_var: pool_item
 
-# 🖨️ Print the calculated total pool size
-- name: Debug origin_pgbouncer_pool_size
+# 🖨️ Prints the calculated total pool size for debugging purposes.
+- name: Debug pgbouncer_pool_size
   debug:
-    var: origin_pgbouncer_pool_size
+    var: pgbouncer_pool_size
 
 # ✅ Test if the calculated total pool size is correct
 # In this case, we expect the total pool size to be 30 (10 from db1 and 20 from db2).
@@ -35,6 +44,6 @@
   run_once: true
   ansible.builtin.assert:
     that:
-      - origin_pgbouncer_pool_size | int == 30
-    fail_msg: "Test failed: origin_pgbouncer_pool_size is not equal to 30."
-    success_msg: "Test passed: origin_pgbouncer_pool_size is equal to 30."
+      - pgbouncer_pool_size | int == 30
+    fail_msg: "Test failed: pgbouncer_pool_size is not equal to 30."
+    success_msg: "Test passed: pgbouncer_pool_size is equal to 30."
