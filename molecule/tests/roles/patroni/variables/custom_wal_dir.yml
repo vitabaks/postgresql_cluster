@@ -4,6 +4,7 @@
 
 # 🔄 Set postgresql_version for the first test scenario
 - name: Molecule.tests.roles.patroni.variables.custom_wal_dir | Define PG version as 11 for scenario 1
+  run_once: true
   ansible.builtin.set_fact:
     postgresql_version: 11
 
@@ -13,31 +14,37 @@
 
 # 🔄 Determine base pg_wal_dir name
 - name: Molecule.tests.roles.patroni.variables.custom_wal_dir | Set pg_wal_dir based on postgresql_version
+  run_once: true
   ansible.builtin.set_fact:
     pg_wal_dir: "{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }}"
 
 # 🔄 Determine the name based on postgresql_version
 - name: Molecule.tests.roles.patroni.variables.custom_wal_dir | Determine name for scenario 1
+  run_once: true
   ansible.builtin.set_fact:
     name_postgresql_version_11: "Rename {{ pg_wal_dir }} to {{ pg_wal_dir }}_old"
 
 # 🔄 Determine the mv command based on postgresql_version
 - name: Molecule.tests.roles.patroni.variables.custom_wal_dir | Determine mv command for 'pg_wal' or 'pg_xlog' for scenario 1
+  run_once: true
   ansible.builtin.set_fact:
     mv_command_postgresql_version_11: "mv {{ postgresql_data_dir }}/{{ pg_wal_dir }} {{ postgresql_data_dir }}/{{ pg_wal_dir }}_old"
 
 # 🚀 Display the name
 - name: Molecule.tests.roles.patroni.variables.custom_wal_dir | Display name for scenario 1
+  run_once: true
   ansible.builtin.debug:
     var: name_postgresql_version_11
 
 # 🚀 Display the command
 - name: Molecule.tests.roles.patroni.variables.custom_wal_dir | Display command for scenario 1
+  run_once: true
   ansible.builtin.debug:
     var: mv_command_postgresql_version_11
 
 # ✅ Verify if the name has been determined correctly
 - name: Molecule.tests.roles.patroni.variables.custom_wal_dir | Validate name for scenario 1
+  run_once: true
   ansible.builtin.assert:
     that:
       - name_postgresql_version_11 == 'Rename pg_wal to pg_wal_old'
@@ -46,6 +53,7 @@
 
 # ✅ Verify if the command has been determined correctly
 - name: Molecule.tests.roles.patroni.variables.custom_wal_dir | Validate command for scenario 1
+  run_once: true
   ansible.builtin.assert:
     that:
       - mv_command_postgresql_version_11 == 'mv /var/lib/pgsql/11/data/pg_wal /var/lib/pgsql/11/data/pg_wal_old'
@@ -58,36 +66,43 @@
 
 # 🔄 Set postgresql_version for the second test scenario
 - name: Molecule.tests.roles.patroni.variables.custom_wal_dir | Define PG version as 9 for scenario 2
+  run_once: true
   ansible.builtin.set_fact:
     postgresql_version: 9
 
 # 🔄 Determine base pg_wal_dir name
 - name: Molecule.tests.roles.patroni.variables.custom_wal_dir | Set pg_wal_dir based on postgresql_version
+  run_once: true
   ansible.builtin.set_fact:
     pg_wal_dir: "{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }}"
 
 # 🔄 Determine the name based on postgresql_version
 - name: Molecule.tests.roles.patroni.variables.custom_wal_dir | Determine name for scenario 2
+  run_once: true
   ansible.builtin.set_fact:
     name_postgresql_version_9: "Rename {{ pg_wal_dir }} to {{ pg_wal_dir }}_old"
 
 # 🔄 Determine the mv command based on postgresql_version
 - name: Molecule.tests.roles.patroni.variables.custom_wal_dir | Determine mv command for scenario 2
+  run_once: true
   ansible.builtin.set_fact:
     mv_command_postgresql_version_9: "mv {{ postgresql_data_dir }}/{{ pg_wal_dir }} {{ postgresql_data_dir }}/{{ pg_wal_dir }}_old"
 
 # 🚀 Display the name
 - name: Molecule.tests.roles.patroni.variables.custom_wal_dir | Display name for scenario 2
+  run_once: true
   ansible.builtin.debug:
     var: name_postgresql_version_9
 
 # 🚀 Display the command
 - name: Molecule.tests.roles.patroni.variables.custom_wal_dir | Display command for scenario 2
+  run_once: true
   ansible.builtin.debug:
     var: mv_command_postgresql_version_9
 
 # ✅ Verify if the name has been determined correctly
 - name: Molecule.tests.roles.patroni.variables.custom_wal_dir | Validate name for scenario 2
+  run_once: true
   ansible.builtin.assert:
     that:
       - name_postgresql_version_9 == 'Rename pg_xlog to pg_xlog_old'
@@ -96,6 +111,7 @@
 
 # ✅ Verify if the command has been determined correctly
 - name: Molecule.tests.roles.patroni.variables.custom_wal_dir | Validate command for scenario 2
+  run_once: true
   ansible.builtin.assert:
     that:
       - mv_command_postgresql_version_9 == 'mv /var/lib/pgsql/9/data/pg_xlog /var/lib/pgsql/9/data/pg_xlog_old'

@@ -1,10 +1,6 @@
 ---
-- name: Molecule | Tests | Roles | Pre-checks
-  hosts: localhost
-  gather_facts: true
-
-  tasks:
-    - name: Molecule | Tests | Roles | Pre-checks | Include all tests
-      ansible.builtin.include_tasks: "{{ item }}"
-      with_fileglob:
-        - variables/*.yml
+- name: Molecule | Tests | Roles | Pre-checks | Include all tests
+  run_once: true
+  ansible.builtin.include_tasks: "{{ item }}"
+  with_fileglob:
+    - variables/*.yml
