@@ -1,23 +1,34 @@
 ---
-# Red Hat
-- name: Include vars
-  ansible.builtin.include_vars:
-    file: ../../../../vars/RedHat.yml
+# 🚀 These tasks aim to define and verify 'vip_manager_package_repo' for different OS
+# 🎯 The objective is to ensure accurate url
 
-- name: Setting vip_manager_version
+# 🔄 Define the vip_manager_version
+- name: Molecule.tests.variables.asserts.vip_manager_package_repo| Common | Setting vip_manager_version
   ansible.builtin.set_fact:
     vip_manager_version: "1.0.0"
 
-- name: Setting origin_vip_manager_package_repo
-  ansible.builtin.set_fact: # yamllint disable rule:line-length
-    origin_vip_manager_package_repo: "https://github.com/cybertec-postgresql/vip-manager/releases/download/v{{ vip_manager_version }}/vip-manager_{{ vip_manager_version }}_Linux_x86_64.rpm"
+# ===============================================
+# 💾 Start Debian-specific operations and tests
+# ===============================================
 
-- name: Debug vip_manager_package_repo
-  debug:
+# 📁 Incorporate Debian-specific variables
+- name: Molecule.tests.variables.asserts.vip_manager_package_repo | Debian | Incorporate RedHat-specific Variables
+  ansible.builtin.include_vars:
+    file: ../../../../vars/Debian.yml
+
+# 🔄 Define the origin_vip_manager_package_repo for Debian
+- name: Molecule.tests.variables.asserts.vip_manager_package_repo | Debian | Define origin_vip_manager_package_repo
+  ansible.builtin.set_fact: # yamllint disable rule:line-length
+    origin_vip_manager_package_repo: "https://github.com/cybertec-postgresql/vip-manager/releases/download/v{{ vip_manager_version }}/vip-manager_{{ vip_manager_version }}_Linux_x86_64.deb"
+
+# 🖨️ Debug the vip_manager_package_repo for Debian
+- name: Molecule.tests.variables.asserts.vip_manager_package_repo | Debian | Debug vip_manager_package_repo
+  ansible.builtin.debug:
     var: vip_manager_package_repo
 
-- name: Assert vip_manager_package_repo
-  assert:
+# ✅ Validate the vip_manager_package_repo for Debian
+- name: Molecule.tests.variables.asserts.vip_manager_package_repo | Debian | Validate vip_manager_package_repo
+  ansible.builtin.assert:
     that:
       - vip_manager_package_repo == origin_vip_manager_package_repo
     fail_msg: >
@@ -25,25 +36,28 @@
       but expected "{{ origin_vip_manager_package_repo }}"
     success_msg: "vip_manager_package_repo is correct"
 
-# Debian
-- name: Include vars
+# ===============================================
+# 🚀 Start RedHat-specific operations and tests
+# ===============================================
+
+# 📁 Incorporate RedHat-specific variables
+- name: Molecule.tests.variables.asserts.vip_manager_package_repo | RedHat | Incorporate RedHat-specific Variables
   ansible.builtin.include_vars:
-    file: ../../../../vars/Debian.yml
+    file: ../../../../vars/RedHat.yml
 
-- name: Setting vip_manager_version
-  ansible.builtin.set_fact:
-    vip_manager_version: "1.0.0"
-
-- name: Setting origin_vip_manager_package_repo
+# 🔄 Define the origin_vip_manager_package_repo for RedHat
+- name: Molecule.tests.variables.asserts.vip_manager_package_repo | RedHat | Define origin_vip_manager_package_repo
   ansible.builtin.set_fact: # yamllint disable rule:line-length
-    origin_vip_manager_package_repo: "https://github.com/cybertec-postgresql/vip-manager/releases/download/v{{ vip_manager_version }}/vip-manager_{{ vip_manager_version }}_Linux_x86_64.deb"
+    origin_vip_manager_package_repo: "https://github.com/cybertec-postgresql/vip-manager/releases/download/v{{ vip_manager_version }}/vip-manager_{{ vip_manager_version }}_Linux_x86_64.rpm"
 
-- name: Debug vip_manager_package_repo
-  debug:
+# 🖨️ Debug the vip_manager_package_repo for RedHat
+- name: Molecule.tests.variables.asserts.vip_manager_package_repo | RedHat | Debug vip_manager_package_repo
+  ansible.builtin.debug:
     var: vip_manager_package_repo
 
-- name: Assert vip_manager_package_repo
-  assert:
+# ✅ Validate the vip_manager_package_repo for RedHat
+- name: Molecule.tests.variables.asserts.vip_manager_package_repo | RedHat | Validate vip_manager_package_repo
+  ansible.builtin.assert:
     that:
       - vip_manager_package_repo == origin_vip_manager_package_repo
     fail_msg: >
