@@ -68,7 +68,7 @@
             | map(attribute='size_total')
             | map('int')
             | sum / 1024 / 1024 / 1024
-          ) 
+          )
           | round(2) if ansible_mounts is defined else 'N/A'
         }} GB
 
