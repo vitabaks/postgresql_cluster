@@ -428,17 +428,23 @@
     - name: Prepare haproxy.cfg conf file (replace "bind")
       ansible.builtin.lineinfile:
         path: /etc/haproxy/haproxy.cfg
-        regexp: "{{ item.regexp }}"
-        line: "{{ item.line }}"
+        regexp: "{{ line_item.regexp }}"
+        line: "{{ line_item.line }}"
         backrefs: true
       loop:
-        - { regexp: '^.*bind.*:{{ haproxy_listen_port.stats }}$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:{{ haproxy_listen_port.stats }}' }
-        - { regexp: '^.*bind.*:{{ haproxy_listen_port.master }}$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:{{ haproxy_listen_port.master }}' }
-        - { regexp: '^.*bind.*:{{ haproxy_listen_port.replicas }}$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:{{ haproxy_listen_port.replicas }}' }
-        - { regexp: '^.*bind.*:{{ haproxy_listen_port.replicas_sync }}$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:{{ haproxy_listen_port.replicas_sync }}' }
-        - { regexp: '^.*bind.*:{{ haproxy_listen_port.replicas_async }}$', line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:{{ haproxy_listen_port.replicas_async }}' }
+        - regexp: '^.*bind.*:{{ haproxy_listen_port.stats }}$'
+          line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:{{ haproxy_listen_port.stats }}'
+        - regexp: '^.*bind.*:{{ haproxy_listen_port.master }}$'
+          line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:{{ haproxy_listen_port.master }}'
+        - regexp: '^.*bind.*:{{ haproxy_listen_port.replicas }}$'
+          line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:{{ haproxy_listen_port.replicas }}'
+        - regexp: '^.*bind.*:{{ haproxy_listen_port.replicas_sync }}$'
+          line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:{{ haproxy_listen_port.replicas_sync }}'
+        - regexp: '^.*bind.*:{{ haproxy_listen_port.replicas_async }}$'
+          line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:{{ haproxy_listen_port.replicas_async }}'
       loop_control:
-        label: "{{ item.line }}"
+        loop_var: line_item
+        label: "{{ line_item.line }}"
       notify: "restart haproxy"
       when: cluster_vip is not defined or cluster_vip | length < 1
 
