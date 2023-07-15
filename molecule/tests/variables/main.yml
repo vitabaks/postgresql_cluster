@@ -1,6 +1,7 @@
 ---
-- name: Molecule.tests.variables | Main | Include all tests
+- name: Molecule.tests.variables.main | Include asserts
   run_once: true
-  ansible.builtin.include_tasks: "{{ item }}"
-  with_fileglob:
-    - asserts/*.yml
+  ansible.builtin.include_tasks: "{{ molecule_tests_variables_main_file }}"
+  loop: "{{ lookup('fileglob', 'asserts/*.yml', wantlist=True) }}"
+  loop_control:
+    loop_var: molecule_tests_variables_main_file
