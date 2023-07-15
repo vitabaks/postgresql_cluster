@@ -41,6 +41,5 @@
 
 - name: Set fact list with custom configuration file
   ansible.builtin.set_fact:
-    managed_files: "{{ managed_files |default([]) }} + \
-      [ '{{ custom_config_win_path.results[0].stat.path }}' ]"
+    managed_files: "{{ managed_files | default([]) }} + [ '{{ custom_config_win_path.results[0].stat.path }}' ]"
   when: custom_config_win_path.stat.exists

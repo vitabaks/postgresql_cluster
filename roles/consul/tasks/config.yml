@@ -42,5 +42,4 @@
 
 - name: Set fact list with custom configuration file
   ansible.builtin.set_fact:
-    managed_files: "{{ managed_files |default([]) }} + \
-      [ '{{ consul_configd_path }}/50custom.json' ]"
+    managed_files: "{{ managed_files | default([]) }} + [ '{{ consul_configd_path }}/50custom.json' ]"

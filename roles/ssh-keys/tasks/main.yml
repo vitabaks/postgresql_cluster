@@ -26,7 +26,7 @@
       ansible.posix.authorized_key:
         user: "{{ ssh_key_user }}"
         state: "{{ ssh_key_state }}"
-        key: "{{ lookup('pipe','cat files/*id_rsa.pub') }}"
+        key: "{{ lookup('pipe', 'cat files/*id_rsa.pub') }}"
         exclusive: false
 
     # known_hosts

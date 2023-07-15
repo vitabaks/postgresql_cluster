@@ -46,7 +46,7 @@
       ansible.builtin.get_url:
         url: "{{ consul_zip_url }}"
         dest: "{{ consul_temp_dir.path }}/{{ consul_pkg }}"
-        checksum: "sha256:{{ consul_sha256.stdout.split(' ')|first }}"
+        checksum: "sha256:{{ consul_sha256.stdout.split(' ') | first }}"
         timeout: 42
       register: consul_download
       tags: installation

@@ -5,7 +5,7 @@
     # Then, append a new 'archive_command' item with the value of 'pgbackrest_archive_command'
     postgresql_parameters: >-
       {{ postgresql_parameters | rejectattr('option', 'equalto', 'archive_command') | list
-      + [{ 'option': 'archive_command', 'value': pgbackrest_archive_command }] }}
+      + [{'option': 'archive_command', 'value': pgbackrest_archive_command}] }}
   vars:
     # Find the last item in postgresql_parameters where the option is 'archive_command'
     archive_command_item: "{{ postgresql_parameters | selectattr('option', 'equalto', 'archive_command') | list | last }}"

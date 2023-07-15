@@ -20,7 +20,7 @@
     # Debian
     - name: Install the latest version of Patroni packages
       ansible.builtin.package:
-        name: "{{ patroni_packages| default('patroni')}}"
+        name: "{{ patroni_packages | default('patroni') }}"
         state: latest
       register: package_status
       until: package_status is success
@@ -31,7 +31,7 @@
     # RedHat
     - name: Install the latest version of Patroni packages
       ansible.builtin.package:
-        name: "{{ patroni_packages| default('patroni')}}"
+        name: "{{ patroni_packages | default('patroni') }}"
         state: latest
       register: package_status
       until: package_status is success
