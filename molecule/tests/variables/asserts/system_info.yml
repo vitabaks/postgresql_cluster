@@ -2,9 +2,9 @@
 # 🚀 These tasks aim to test the system_info variable
 # 🎯 The objective is to guarantee that the system informations are correctly set
 
-# ==================================================
-# 💾 Start CPU model Operations and Tests
-# ==================================================
+# ========================================
+# 💻 Start CPU model Operations and Tests
+# ========================================
 
 # Define a valid CPU model
 - name: Molecule.tests.variables.asserts.system_info | Set CPU Model Test Data (valid)
@@ -41,3 +41,43 @@
       - "system_info['CPU model'] == 'Intel(R) Core(TM) i7-8700 CPU @ 3.20GHz, count: 6, cores: 12'"
     fail_msg: "Test failed: CPU model is not set correctly in system_info."
     success_msg: "Test passed: CPU model is set correctly in system_info."
+
+
+# ==================================================
+# 💾 Start Disk space total Operations and Tests
+# ==================================================
+
+# Define a valid Disk space total
+- name: Molecule.tests.variables.asserts.system_info | Set Disk space total Test Data (valid)
+  run_once: true
+  ansible.builtin.set_fact:
+    ansible_mounts:
+      - mount: "/"
+        size_total: "53687091200"  # 50 GB
+      - mount: "/home"
+        size_total: "107374182400"  # 100 GB
+
+# 📝 Establishing test data for Disk space total
+- name: Molecule.tests.variables.asserts.system_info | Establish Disk space total Test Data
+  run_once: true
+  ansible.builtin.set_fact:
+    system_info:
+      Disk space total: "{{ (ansible_mounts | map(attribute='size_total') | map('int') | sum / 1024 / 1024 / 1024) | round(2) if ansible_mounts is defined else 'N/A' }} GB"
+
+# 🖨️ Debugging the established Disk space total
+- name: Molecule.tests.variables.asserts.system_info | Debug Disk space total
+  ansible.builtin.debug:
+    var: system_info['Disk space total']
+
+# ✅ Verifying the correctness of the established Disk space total
+# If the Disk space total is not set, the test fails and an error message is displayed
+- name: Molecule.tests.variables.asserts.system_info | Verify Disk space total
+  run_once: true
+  ansible.builtin.assert:
+    that:
+      - "'Disk space total' in system_info"
+      - "system_info['Disk space total'] is not none"
+      - "system_info['Disk space total'] != 'N/A'"
+      - "system_info['Disk space total'] == '150.0 GB'"
+    fail_msg: "Test failed: Disk space total is not set correctly in system_info."
+    success_msg: "Test passed: Disk space total is set correctly in system_info."
