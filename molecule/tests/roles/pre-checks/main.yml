@@ -1,6 +1,7 @@
 ---
-- name: Molecule.tests.roles.pre-checks | Main | Include all tests
+- name: Molecule.tests.roles.pre-checks.main | Include variables tests
   run_once: true
-  ansible.builtin.include_tasks: "{{ item }}"
-  with_fileglob:
-    - variables/*.yml
+  ansible.builtin.include_tasks: "{{ molecule_tests_roles_pre_checks_main_file }}"
+  loop: "{{ lookup('fileglob', 'variables/*.yml', wantlist=True) }}"
+  loop_control:
+    loop_var: molecule_tests_roles_pre_checks_main_file
