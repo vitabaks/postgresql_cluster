@@ -2,8 +2,6 @@
 - name: Include asserts playbook for postgres
   ansible.builtin.import_playbook: "../tests/variables/main.yml"
 
-- name: Include tests for role confd
-  ansible.builtin.import_playbook: "../tests/roles/confd/main.yml"
 - name: Include tests for role deploy-finish
   ansible.builtin.import_playbook: "../tests/roles/deploy-finish/main.yml"
 - name: Include tests for role haproxy
@@ -29,3 +27,4 @@
         - ../tests/etcd/*.yml
         - ../tests/patroni/*.yml
         - ../tests/postgres/*.yml
+        - ../tests/roles/confd/main.yml
