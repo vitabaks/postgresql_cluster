@@ -37,6 +37,7 @@
 
 # 🖨️ Debugging the calculated overall pool size
 - name: Molecule.tests.roles.pre-checks.variables.pgbouncer | Debug Overall Pool Size
+  run_once: true
   ansible.builtin.debug:
     var: pgbouncer_pool_size
 
@@ -57,7 +58,8 @@
 
 # 🖨️ Debugging test variables
 - name: Molecule.tests.roles.pre-checks.variables.pgbouncer | Debug Test Variables
-  debug:
+  run_once: true
+  ansible.builtin.debug:
     var: "{{ debug_item }}"
   loop:
     - postgresql_databases
@@ -93,7 +95,8 @@
 
 # 🖨️ Debugging the calculated overall pool size
 - name: Molecule.tests.roles.pre-checks.variables.pgbouncer | Debug Total Pool Size
-  debug:
+  run_once: true
+  ansible.builtin.debug:
     var: pgbouncer_total_pool_size
 
 # ✅ Verifying the correctness of the calculated overall pool size
