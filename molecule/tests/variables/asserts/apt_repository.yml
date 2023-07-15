@@ -1,0 +1,40 @@
+---
+# 🚀 These tasks aim to test the apt_repository variable
+# 🎯 The objective is to guarantee that the urls are correctly set
+
+# ========================================
+# 💻 Start repo Operations and Tests
+# ========================================
+
+# Define a valid repo
+- name: Molecule.tests.variables.asserts.baseurl | Set repo Test Data (valid)
+  run_once: true
+  ansible.builtin.set_fact:
+    postgrespro_minor_version: 12.4.1
+    ansible_distribution: Debian
+    ansible_distribution_release: "stretch"
+
+# 📝 Establishing test data for repo
+- name: Molecule.tests.variables.asserts.baseurl | Establish repo Test Data
+  run_once: true
+  ansible.builtin.set_fact:
+    apt_repository:
+      repo: "deb https://repo.postgrespro.ru//pgpro-archive/pgpro-{{ postgrespro_minor_version }}/{{ ansible_distribution | lower }}/ {{ ansible_distribution_release }} main"
+
+# 🖨️ Debugging the established repo
+- name: Molecule.tests.variables.asserts.baseurl | Debug repo
+  ansible.builtin.debug:
+    var: apt_repository['repo']
+
+# ✅ Verifying the correctness of the established repo
+# If the repo is not set, the test fails and an error message is displayed
+- name: Molecule.tests.variables.asserts.baseurl | Verify repo
+  run_once: true
+  ansible.builtin.assert:
+    that:
+      - "'repo' in apt_repository"
+      - "apt_repository['repo'] is not none"
+      - "apt_repository['repo'] != 'N/A'"
+      - "apt_repository['repo'] == 'deb https://repo.postgrespro.ru//pgpro-archive/pgpro-12.4.1/debian/ stretch main'"
+    fail_msg: "Test failed: repo is not set correctly in apt_repository."
+    success_msg: "Test passed: repo is set correctly in apt_repository."
