@@ -10,10 +10,10 @@
 - name: Molecule.tests.variables.asserts.haproxy_nodes | Establish haproxy_nodes Test Data
   ansible.builtin.set_fact:
     haproxy_nodes: >-
-      {{ 
-        groups['balancers'] 
-        | default([]) 
-        | map('extract', hostvars, 'inventory_hostname') 
+      {{
+        groups['balancers']
+        | default([])
+        | map('extract', hostvars, 'inventory_hostname')
         | join(',')
       }}
 
@@ -41,10 +41,10 @@
 - name: Molecule.tests.variables.asserts.haproxy_nodes | Establish postgres_cluster_nodes Test Data
   ansible.builtin.set_fact:
     postgres_cluster_nodes: >-
-      {{ 
-        groups['postgres_cluster'] 
-        | default([]) 
-        | map('extract', hostvars, 'inventory_hostname') 
+      {{
+        groups['postgres_cluster']
+        | default([])
+        | map('extract', hostvars, 'inventory_hostname')
         | join(',')
       }}
 
