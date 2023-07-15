@@ -1,11 +1,11 @@
 ---
 # Delete
-- name: Include vars
+- name: Molecule.tests.roles.swap.conditions.delete | Include vars
   run_once: true
   ansible.builtin.include_vars:
     file: ../../../../../vars/system.yml
 
-- name: Set swap_exists for testing
+- name: Molecule.tests.roles.swap.conditions.delete | Set swap_exists for testing
   run_once: true
   ansible.builtin.set_fact:
     swap_exists:
@@ -13,7 +13,7 @@
       stdout_lines:
         - "1048576"
 
-- name: Assert condition for deleting swap
+- name: Molecule.tests.roles.swap.conditions.delete | Assert condition for deleting swap
   run_once: true
   ansible.builtin.assert:
     that: (swap_exists.stdout is defined and swap_exists.stdout | length > 1) and

@@ -1,18 +1,18 @@
 ---
 # Create
-- name: Include vars
+- name: Molecule.tests.roles.swap.conditions.create | Include vars
   run_once: true
   ansible.builtin.include_vars:
     file: ../../../../../vars/system.yml
 
-- name: Set swap_exists for testing
+- name: Molecule.tests.roles.swap.conditions.create | Set swap_exists for testing
   run_once: true
   ansible.builtin.set_fact:
     swap_exists:
       stdout: ""
       stdout_lines: []
 
-- name: Assert condition for creating swap
+- name: Molecule.tests.roles.swap.conditions.create | Assert condition for creating swap
   run_once: true
   ansible.builtin.assert:
     that: >
