@@ -4,12 +4,15 @@
 
 # 📂 Ensure tmp directory exists
 - name: Molecule.tests.roles.confd.variables.haproxy.cfg | Ensure tmp directory exists
+  run_once: true
+  delegate_to: localhost
   ansible.builtin.file:
     path: "./tmp"
     state: directory
 
 # 🔄 Define a dummy template file
 - name: Molecule.tests.roles.confd.variables.haproxy.cfg | Set template file test data
+  run_once: true
   ansible.builtin.set_fact:
     haproxy_listen_port:
       stats: 8080
@@ -26,6 +29,8 @@
 
 # 📝 Establishing test data for haproxy.cluster_vip.defined.cfg
 - name: Molecule.tests.roles.confd.variables.haproxy.cfg | Establish haproxy.cfg Test Data
+  run_once: true
+  delegate_to: localhost
   ansible.builtin.copy:
     dest: "./tmp/haproxy.cluster_vip.defined.cfg"
     content: |
@@ -40,6 +45,8 @@
 # replacing lines that start with 'bind' and include specific ports
 # The new lines will either bind to the inventory_hostname or the cluster_vip, depending on the specific port.
 - name: Molecule.tests.roles.confd.variables.haproxy.cfg | Update haproxy.cfg (replace "bind" for stats)
+  run_once: true
+  delegate_to: localhost
   ansible.builtin.lineinfile:
     path: ./tmp/haproxy.cluster_vip.defined.cfg
     regexp: "{{ line_item_1.regexp }}"
@@ -62,16 +69,20 @@
 
 # 🖨️ Debugging the established haproxy.cfg
 - name: Molecule.tests.roles.confd.variables.haproxy.cfg | Debug haproxy.cfg
+  run_once: true
+  delegate_to: localhost
   ansible.builtin.command:
     cmd: cat ./tmp/haproxy.cluster_vip.defined.cfg
   register: output
 - name: Molecule.tests.roles.confd.variables.haproxy.cfg | Debug haproxy.cfg content
+  run_once: true
   ansible.builtin.debug:
     var: output.stdout_lines
 
 # ✅ Verifying the correctness of the established haproxy.cfg
 # If the lines are not replaced correctly, the test fails and an error message is displayed
 - name: Molecule.tests.roles.confd.variables.haproxy.cfg | Validate updated haproxy.cfg
+  run_once: true
   ansible.builtin.assert:
     that:
       - "output.stdout_lines[0] == '    bind una.name:8080'"
@@ -88,6 +99,8 @@
 
 # 📝 Establishing test data for haproxy.cluster_vip.not.defined.cfg
 - name: Molecule.tests.roles.confd.variables.haproxy.cfg | Establish haproxy.cfg Test Data - 2nd round
+  run_once: true
+  delegate_to: localhost
   ansible.builtin.copy:
     dest: "./tmp/haproxy.cluster_vip.not.defined.cfg"
     content: |
@@ -101,6 +114,8 @@
 # This task updates the 'haproxy.cfg' file again, this time replacing lines that start with 'bind' and include specific ports
 # The new lines will bind to the inventory_hostname.
 - name: Molecule.tests.roles.confd.variables.haproxy.cfg | Prepare haproxy.cfg template file (replace "bind" for stats - 2nd round)
+  run_once: true
+  delegate_to: localhost
   ansible.builtin.lineinfile:
     path: ./tmp/haproxy.cluster_vip.not.defined.cfg
     regexp: "{{ line_item_2.regexp }}"
@@ -123,16 +138,20 @@
 
 # 🖨️ Debugging the established haproxy.cfg - 2nd round
 - name: Molecule.tests.roles.confd.variables.haproxy.cfg | Debug haproxy.cfg - 2nd round
+  run_once: true
+  delegate_to: localhost
   ansible.builtin.command:
     cmd: cat ./tmp/haproxy.cluster_vip.not.defined.cfg
   register: output_2
 - name: Molecule.tests.roles.confd.variables.haproxy.cfg | Debug haproxy.cfg content - 2nd round
+  run_once: true
   ansible.builtin.debug:
     var: output_2.stdout_lines
 
 # ✅ Verifying the correctness of the established haproxy.cfg - 2nd round
 # If the lines are not replaced correctly, the test fails and an error message is displayed
 - name: Molecule.tests.roles.confd.variables.haproxy.cfg | Verify haproxy.cfg - 2nd round
+  run_once: true
   ansible.builtin.assert:
     that:
       - "output_2.stdout_lines[0] == '    bind una.name:8080'"
