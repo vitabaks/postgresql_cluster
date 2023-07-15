@@ -26,6 +26,8 @@
 
 # 📝 Establishing test data for haproxy.cluster_vip.defined.tmpl
 - name: Molecule.tests.roles.confd.variables.haproxy.tmpl | Establish haproxy.tmpl Test Data
+  run_once: true
+  delegate_to: localhost
   ansible.builtin.copy:
     dest: "./tmp/haproxy.cluster_vip.defined.tmpl"
     content: |
@@ -40,6 +42,8 @@
 # replacing lines that start with 'bind' and include specific ports
 # The new lines will either bind to the inventory_hostname or the cluster_vip, depending on the specific port.
 - name: Molecule.tests.roles.confd.variables.haproxy.tmpl | Update haproxy.tmpl (replace "bind" for stats)
+  run_once: true
+  delegate_to: localhost
   ansible.builtin.lineinfile:
     path: ./tmp/haproxy.cluster_vip.defined.tmpl
     regexp: "{{ line_item_1.regexp }}"
@@ -62,16 +66,20 @@
 
 # 🖨️ Debugging the established haproxy.tmpl
 - name: Molecule.tests.roles.confd.variables.haproxy.tmpl | Debug haproxy.tmpl
+  run_once: true
+  delegate_to: localhost
   ansible.builtin.command:
     cmd: cat ./tmp/haproxy.cluster_vip.defined.tmpl
   register: output
 - name: Molecule.tests.roles.confd.variables.haproxy.tmpl | Debug haproxy.tmpl content
+  run_once: true
   ansible.builtin.debug:
     var: output.stdout_lines
 
 # ✅ Verifying the correctness of the established haproxy.tmpl
 # If the lines are not replaced correctly, the test fails and an error message is displayed
 - name: Molecule.tests.roles.confd.variables.haproxy.tmpl | Validate updated haproxy.tmpl
+  run_once: true
   ansible.builtin.assert:
     that:
       - "output.stdout_lines[0] == '    bind una.name:8080'"
@@ -88,6 +96,8 @@
 
 # 📝 Establishing test data for haproxy.cluster_vip.not.defined.tmpl
 - name: Molecule.tests.roles.confd.variables.haproxy.tmpl | Establish haproxy.tmpl Test Data - 2nd round
+  run_once: true
+  delegate_to: localhost
   ansible.builtin.copy:
     dest: "./tmp/haproxy.cluster_vip.not.defined.tmpl"
     content: |
@@ -101,6 +111,8 @@
 # This task updates the 'haproxy.tmpl' file again, this time replacing lines that start with 'bind' and include specific ports
 # The new lines will bind to the inventory_hostname.
 - name: Molecule.tests.roles.confd.variables.haproxy.tmpl | Prepare haproxy.tmpl template file (replace "bind" for stats - 2nd round)
+  run_once: true
+  delegate_to: localhost
   ansible.builtin.lineinfile:
     path: ./tmp/haproxy.cluster_vip.not.defined.tmpl
     regexp: "{{ line_item_2.regexp }}"
@@ -123,16 +135,20 @@
 
 # 🖨️ Debugging the established haproxy.tmpl - 2nd round
 - name: Molecule.tests.roles.confd.variables.haproxy.tmpl | Debug haproxy.tmpl - 2nd round
+  run_once: true
+  delegate_to: localhost
   ansible.builtin.command:
     cmd: cat ./tmp/haproxy.cluster_vip.not.defined.tmpl
   register: output_2
 - name: Molecule.tests.roles.confd.variables.haproxy.tmpl | Debug haproxy.tmpl content - 2nd round
+  run_once: true
   ansible.builtin.debug:
     var: output_2.stdout_lines
 
 # ✅ Verifying the correctness of the established haproxy.tmpl - 2nd round
 # If the lines are not replaced correctly, the test fails and an error message is displayed
 - name: Molecule.tests.roles.confd.variables.haproxy.tmpl | Verify haproxy.tmpl - 2nd round
+  run_once: true
   ansible.builtin.assert:
     that:
       - "output_2.stdout_lines[0] == '    bind una.name:8080'"

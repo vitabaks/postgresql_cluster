@@ -1,10 +1,6 @@
 ---
-- name: Molecule.tests.roles.haproxy | Main
-  hosts: localhost
-  gather_facts: true
-
-  tasks:
-    - name: Molecule.tests.roles.haproxy | Main | Include all tests
-      ansible.builtin.include_tasks: "{{ item }}"
-      with_fileglob:
-        - variables/*.yml
+- name: Molecule.tests.roles.haproxy | Main | Include all tests
+  run_once: true
+  ansible.builtin.include_tasks: "{{ item }}"
+  with_fileglob:
+    - variables/*.yml
