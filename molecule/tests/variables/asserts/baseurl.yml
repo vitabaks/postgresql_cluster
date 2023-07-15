@@ -18,7 +18,10 @@
   run_once: true
   ansible.builtin.set_fact:
     _baseurl:
-      OracleLinux: "https://repo.postgrespro.ru//pgpro-archive/pgpro-{{ postgrespro_minor_version }}/oraclelinux/{{ ansible_distribution_major_version }}Server/os/x86_64/rpms/"
+      OracleLinux: >-
+        {{ 'https://repo.postgrespro.ru//pgpro-archive/pgpro-' ~
+        postgrespro_minor_version ~ '/oraclelinux/' ~
+        ansible_distribution_major_version ~ 'Server/os/x86_64/rpms/' }}
 
 # 🖨️ Debugging the established OracleLinux
 - name: Molecule.tests.variables.asserts.baseurl | Debug OracleLinux

@@ -13,7 +13,10 @@ postgresql_unix_socket_dir: "/tmp"
 _baseurl:
   CentOS: "https://repo.postgrespro.ru//pgpro-archive/pgpro-{{ postgrespro_minor_version }}/centos/{{ ansible_distribution_major_version }}/os/x86_64/rpms/"
   RedHat: "https://repo.postgrespro.ru//pgpro-archive/pgpro-{{ postgrespro_minor_version }}/rhel/{{ ansible_distribution_major_version }}Server/os/x86_64/rpms/"
-  OracleLinux: "https://repo.postgrespro.ru//pgpro-archive/pgpro-{{ postgrespro_minor_version }}/oraclelinux/{{ ansible_distribution_major_version }}Server/os/x86_64/rpms/"
+  OracleLinux: >-
+    {{ 'https://repo.postgrespro.ru//pgpro-archive/pgpro-' ~
+    postgrespro_minor_version ~ '/oraclelinux/' ~
+    ansible_distribution_major_version ~ 'Server/os/x86_64/rpms/' }}
 yum_repository:
   - name: "postgrespro-std"
     description: "Postgres Pro Standard repo"
