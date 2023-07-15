@@ -128,7 +128,13 @@
     - name: Create list of nodes
       run_once: true
       ansible.builtin.set_fact:
-        haproxy_nodes: "{% for host in groups['balancers'] | default([]) %}{{ hostvars[host]['inventory_hostname'] }}{% if not loop.last %},{% endif %}{% endfor %}"
+        haproxy_nodes: >-
+          {{ 
+            groups['balancers'] 
+            | default([]) 
+            | map('extract', hostvars, 'inventory_hostname') 
+            | join(',')
+          }}
         postgres_cluster_nodes: "{% for host in groups['postgres_cluster'] %}{{ hostvars[host]['inventory_hostname'] }}{% if not loop.last %},{% endif %}{% endfor %}"
 
     - name: PostgreSQL Cluster connection info
