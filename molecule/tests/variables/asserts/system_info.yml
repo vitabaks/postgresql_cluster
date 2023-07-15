@@ -42,7 +42,6 @@
     fail_msg: "Test failed: CPU model is not set correctly in system_info."
     success_msg: "Test passed: CPU model is set correctly in system_info."
 
-
 # ==================================================
 # 💾 Start Disk space total Operations and Tests
 # ==================================================
