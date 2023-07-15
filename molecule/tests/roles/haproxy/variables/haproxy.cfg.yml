@@ -18,15 +18,16 @@
       replicas_sync: 8083
       replicas_async: 8084
     inventory_hostname: una.name
+    cluster_vip: fake.vip.url.com
 
-# ===========================================
-# 💻 Start haproxy.cfg Operations and Tests
-# ===========================================
+# ===============================
+# 💻 Case cluster_vip is defined
+# ===============================
 
-# 📝 Establishing test data for haproxy.cluster_vip.defined.tmpl
+# 📝 Establishing test data for haproxy.cluster_vip.defined.cfg
 - name: Molecule.tests.roles.confd.variables.haproxy.cfg | Establish haproxy.cfg Test Data
   ansible.builtin.copy:
-    dest: "./tmp/haproxy.cluster_vip.defined.tmpl"
+    dest: "./tmp/haproxy.cluster_vip.defined.cfg"
     content: |
       bind *:{{ haproxy_listen_port.stats }}
       bind *:{{ haproxy_listen_port.master }}
@@ -40,9 +41,70 @@
 # The new lines will either bind to the inventory_hostname or the cluster_vip, depending on the specific port.
 - name: Molecule.tests.roles.confd.variables.haproxy.cfg | Update haproxy.cfg (replace "bind" for stats)
   ansible.builtin.lineinfile:
-    path: ./tmp/haproxy.cluster_vip.defined.tmpl
-    regexp: "{{ line_item.regexp }}"
-    line: "{{ line_item.line }}"
+    path: ./tmp/haproxy.cluster_vip.defined.cfg
+    regexp: "{{ line_item_1.regexp }}"
+    line: "{{ line_item_1.line }}"
+    backrefs: true
+  loop:
+    - regexp: '^.*bind.*:{{ haproxy_listen_port.stats }}$'
+      line: '    bind {{ inventory_hostname }}:{{ haproxy_listen_port.stats }}'
+    - regexp: '^.*bind.*:{{ haproxy_listen_port.master }}$'
+      line: '    bind {{ cluster_vip }}:{{ haproxy_listen_port.master }}'
+    - regexp: '^.*bind.*:{{ haproxy_listen_port.replicas }}$'
+      line: '    bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas }}'
+    - regexp: '^.*bind.*:{{ haproxy_listen_port.replicas_sync }}$'
+      line: '    bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas_sync }}'
+    - regexp: '^.*bind.*:{{ haproxy_listen_port.replicas_async }}$'
+      line: '    bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas_async }}'
+  loop_control:
+    loop_var: line_item_1
+    label: "{{ line_item_1.line }}"
+
+# 🖨️ Debugging the established haproxy.cfg
+- name: Molecule.tests.roles.confd.variables.haproxy.cfg | Debug haproxy.cfg
+  ansible.builtin.command:
+    cmd: cat ./tmp/haproxy.cluster_vip.defined.cfg
+  register: output
+- name: Molecule.tests.roles.confd.variables.haproxy.cfg | Debug haproxy.cfg content
+  ansible.builtin.debug:
+    var: output.stdout_lines
+
+# ✅ Verifying the correctness of the established haproxy.cfg
+# If the lines are not replaced correctly, the test fails and an error message is displayed
+- name: Molecule.tests.roles.confd.variables.haproxy.cfg | Validate updated haproxy.cfg
+  ansible.builtin.assert:
+    that:
+      - "output.stdout_lines[0] == '    bind una.name:8080'"
+      - "output.stdout_lines[1] == '    bind fake.vip.url.com:8081'"
+      - "output.stdout_lines[2] == '    bind fake.vip.url.com:8082'"
+      - "output.stdout_lines[3] == '    bind fake.vip.url.com:8083'"
+      - "output.stdout_lines[4] == '    bind fake.vip.url.com:8084'"
+    fail_msg: "Test failed: Lines are not replaced correctly in haproxy.cfg."
+    success_msg: "Test passed: Lines are replaced correctly in haproxy.cfg."
+
+# ===================================
+# 💻 Case cluster_vip is not defined
+# ===================================
+
+# 📝 Establishing test data for haproxy.cluster_vip.not.defined.cfg
+- name: Molecule.tests.roles.confd.variables.haproxy.cfg | Establish haproxy.cfg Test Data - 2nd round
+  ansible.builtin.copy:
+    dest: "./tmp/haproxy.cluster_vip.not.defined.cfg"
+    content: |
+      bind *:{{ haproxy_listen_port.stats }}
+      bind *:{{ haproxy_listen_port.master }}
+      bind *:{{ haproxy_listen_port.replicas }}
+      bind *:{{ haproxy_listen_port.replicas_sync }}
+      bind *:{{ haproxy_listen_port.replicas_async }}
+
+# 🚀 Execute the new task here
+# This task updates the 'haproxy.cfg' file again, this time replacing lines that start with 'bind' and include specific ports
+# The new lines will bind to the inventory_hostname.
+- name: Molecule.tests.roles.confd.variables.haproxy.cfg | Prepare haproxy.cfg template file (replace "bind" for stats - 2nd round)
+  ansible.builtin.lineinfile:
+    path: ./tmp/haproxy.cluster_vip.not.defined.cfg
+    regexp: "{{ line_item_2.regexp }}"
+    line: "{{ line_item_2.line }}"
     backrefs: true
   loop:
     - regexp: '^.*bind.*:{{ haproxy_listen_port.stats }}$'
@@ -56,27 +118,27 @@
     - regexp: '^.*bind.*:{{ haproxy_listen_port.replicas_async }}$'
       line: '    bind {{ inventory_hostname }}:{{ haproxy_listen_port.replicas_async }}'
   loop_control:
-    loop_var: line_item
-    label: "{{ line_item.line }}"
+    loop_var: line_item_2
+    label: "{{ line_item_2.line }}"
 
-# 🖨️ Debugging the established haproxy.cfg
-- name: Molecule.tests.roles.confd.variables.haproxy.cfg | Debug haproxy.cfg
+# 🖨️ Debugging the established haproxy.cfg - 2nd round
+- name: Molecule.tests.roles.confd.variables.haproxy.cfg | Debug haproxy.cfg - 2nd round
   ansible.builtin.command:
-    cmd: cat ./tmp/haproxy.cluster_vip.defined.tmpl
-  register: output
-- name: Molecule.tests.roles.confd.variables.haproxy.cfg | Debug haproxy.cfg content
+    cmd: cat ./tmp/haproxy.cluster_vip.not.defined.cfg
+  register: output_2
+- name: Molecule.tests.roles.confd.variables.haproxy.cfg | Debug haproxy.cfg content - 2nd round
   ansible.builtin.debug:
-    var: output.stdout_lines
+    var: output_2.stdout_lines
 
-# ✅ Verifying the correctness of the established haproxy.cfg
+# ✅ Verifying the correctness of the established haproxy.cfg - 2nd round
 # If the lines are not replaced correctly, the test fails and an error message is displayed
-- name: Molecule.tests.roles.confd.variables.haproxy.cfg | Validate updated haproxy.cfg
+- name: Molecule.tests.roles.confd.variables.haproxy.cfg | Verify haproxy.cfg - 2nd round
   ansible.builtin.assert:
     that:
-      - "output.stdout_lines[0] == '    bind una.name:8080'"
-      - "output.stdout_lines[1] == '    bind una.name:8081'"
-      - "output.stdout_lines[2] == '    bind una.name:8082'"
-      - "output.stdout_lines[3] == '    bind una.name:8083'"
-      - "output.stdout_lines[4] == '    bind una.name:8084'"
-    fail_msg: "Test failed: Lines are not replaced correctly in haproxy.cfg."
-    success_msg: "Test passed: Lines are replaced correctly in haproxy.cfg."
+      - "output_2.stdout_lines[0] == '    bind una.name:8080'"
+      - "output_2.stdout_lines[1] == '    bind una.name:8081'"
+      - "output_2.stdout_lines[2] == '    bind una.name:8082'"
+      - "output_2.stdout_lines[3] == '    bind una.name:8083'"
+      - "output_2.stdout_lines[4] == '    bind una.name:8084'"
+    fail_msg: "Test failed: Lines are not replaced correctly in haproxy.cfg - 2nd round."
+    success_msg: "Test passed: Lines are replaced correctly in haproxy.cfg - 2nd round."
