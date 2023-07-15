@@ -62,7 +62,15 @@
   run_once: true
   ansible.builtin.set_fact:
     system_info:
-      Disk space total: "{{ (ansible_mounts | map(attribute='size_total') | map('int') | sum / 1024 / 1024 / 1024) | round(2) if ansible_mounts is defined else 'N/A' }} GB"
+      Disk space total: >-
+        {{
+          (ansible_mounts
+            | map(attribute='size_total')
+            | map('int')
+            | sum / 1024 / 1024 / 1024
+          ) 
+          | round(2) if ansible_mounts is defined else 'N/A'
+        }} GB
 
 # 🖨️ Debugging the established Disk space total
 - name: Molecule.tests.variables.asserts.system_info | Debug Disk space total
