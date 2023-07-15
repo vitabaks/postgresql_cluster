@@ -135,7 +135,13 @@
             | map('extract', hostvars, 'inventory_hostname') 
             | join(',')
           }}
-        postgres_cluster_nodes: "{% for host in groups['postgres_cluster'] %}{{ hostvars[host]['inventory_hostname'] }}{% if not loop.last %},{% endif %}{% endfor %}"
+        postgres_cluster_nodes: >-
+          {{ 
+            groups['postgres_cluster'] 
+            | default([]) 
+            | map('extract', hostvars, 'inventory_hostname') 
+            | join(',')
+          }}
 
     - name: PostgreSQL Cluster connection info
       run_once: true

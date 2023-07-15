@@ -40,7 +40,13 @@
 # 📝 Establishing test data for postgres_cluster_nodes
 - name: Molecule.tests.variables.asserts.haproxy_nodes | Establish postgres_cluster_nodes Test Data
   ansible.builtin.set_fact:
-    postgres_cluster_nodes: "{% for host in groups['postgres_cluster'] %}{{ hostvars[host]['inventory_hostname'] }}{% if not loop.last %},{% endif %}{% endfor %}"
+    postgres_cluster_nodes: >-
+      {{ 
+        groups['postgres_cluster'] 
+        | default([]) 
+        | map('extract', hostvars, 'inventory_hostname') 
+        | join(',')
+      }}
 
 # 🖨️ Debugging the established postgres_cluster_nodes
 - name: Molecule.tests.variables.asserts.haproxy_nodes | Debug postgres_cluster_nodes
