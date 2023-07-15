@@ -1,5 +1,5 @@
 ---
-- name: Molecule | Tests | Variables | Include all tests
+- name: Molecule.tests.variables | Main | Include all tests
   run_once: true
   ansible.builtin.include_tasks: "{{ item }}"
   with_fileglob:
