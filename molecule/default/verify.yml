@@ -1,14 +1,14 @@
 ---
-- name: Molecule | Verify | All
+- name: Molecule.default.verify
   hosts: all
   gather_facts: true
 
   tasks:
-    - name: Include vars of vars/main.yml
+    - name: Molecule.default.verify | Include vars of vars/main.yml
       ansible.builtin.include_vars:
         file: ../../vars/main.yml
 
-    - name: Molecule | Verify | Include all tests
+    - name: Molecule.default.verify | Include all tests
       ansible.builtin.include_tasks: "{{ item }}"
       with_fileglob:
         - ../tests/variables/main.yml
