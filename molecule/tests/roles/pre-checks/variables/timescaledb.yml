@@ -1,9 +1,6 @@
 ---
-- name: Include vars
-  ansible.builtin.include_vars:
-    file: ../../../../vars/main.yml
-
 - name: TimescaleDB | Ensure 'timescaledb' is in 'shared_preload_libraries'
+  run_once: true
   ansible.builtin.set_fact:
     postgresql_parameters: >-
       {{ postgresql_parameters | rejectattr('option', 'equalto', 'shared_preload_libraries') | list
@@ -23,6 +20,7 @@
       }}
 
 - name: Set shared_preload_libraries_item as a fact
+  run_once: true
   ansible.builtin.set_fact:
     shared_preload_libraries_item: >-
           {{
@@ -32,6 +30,7 @@
           }}
 
 - name: Assert that 'timescaledb' is in 'shared_preload_libraries'
+  run_once: true
   ansible.builtin.assert:
     that:
       - "'timescaledb' in shared_preload_libraries_item.value.split(',')"
@@ -39,10 +38,12 @@
     success_msg: "'timescaledb' is in 'shared_preload_libraries'"
 
 - name: Set origin_shared_preload_libraries_item as a fact
+  run_once: true
   ansible.builtin.set_fact: # yamllint disable rule:line-length
     origin_shared_preload_libraries_item: "{{ postgresql_parameters | selectattr('option', 'equalto', 'shared_preload_libraries') | list | last | default({'value': ''}) }}"
 
 - name: Assert that new shared_preload_libraries_item equal origin_shared_preload_libraries_item
+  run_once: true
   ansible.builtin.assert:
     that:
       - shared_preload_libraries_item == origin_shared_preload_libraries_item
