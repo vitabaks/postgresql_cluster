@@ -19,7 +19,10 @@
   run_once: true
   ansible.builtin.set_fact:
     apt_repository:
-      repo: "deb https://repo.postgrespro.ru//pgpro-archive/pgpro-{{ postgrespro_minor_version }}/{{ ansible_distribution | lower }}/ {{ ansible_distribution_release }} main"
+      repo: >-
+        {{ 'deb https://repo.postgrespro.ru//pgpro-archive/pgpro-' ~
+        postgrespro_minor_version ~ '/' ~ (ansible_distribution | lower) ~ '/' ~
+        ' ' ~ ansible_distribution_release ~ ' main' }}
 
 # 🖨️ Debugging the established repo
 - name: Molecule.tests.variables.asserts.baseurl | Debug repo

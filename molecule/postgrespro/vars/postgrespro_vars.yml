@@ -28,7 +28,10 @@ yum_repository:
 apt_repository_keys:
   - key: "https://repo.postgrespro.ru/keys/GPG-KEY-POSTGRESPRO"
 apt_repository:
-  - repo: "deb https://repo.postgrespro.ru//pgpro-archive/pgpro-{{ postgrespro_minor_version }}/{{ ansible_distribution | lower }}/ {{ ansible_distribution_release }} main"
+  - repo: >-
+        {{ 'deb https://repo.postgrespro.ru//pgpro-archive/pgpro-' ~
+        postgrespro_minor_version ~ '/' ~ (ansible_distribution | lower) ~ '/' ~
+        ' ' ~ ansible_distribution_release ~ ' main' }}
 
 install_postgresql_repo: false
 
