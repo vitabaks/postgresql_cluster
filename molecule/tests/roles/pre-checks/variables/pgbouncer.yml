@@ -73,12 +73,13 @@
   ansible.builtin.set_fact:
     pgbouncer_total_pool_size: >-
       {{
-        (pgbouncer_pool_size|int)
-        if (postgresql_databases is not defined or postgresql_databases|default([]) == [])
-        else
-        ((pgbouncer_pool_size|int)
+        (pgbouncer_pool_size | int)
         +
-        (postgresql_databases|default([]) | rejectattr('db', 'in', pgbouncer_pools|map(attribute='dbname')|list)|length) * (pgbouncer_default_pool_size|default(0)|int))
+        (postgresql_databases
+          | default([])
+          | rejectattr('db', 'in', pgbouncer_pools | map(attribute='dbname') | list)
+          | length
+        ) * (pgbouncer_default_pool_size | default(0) | int)
       }}
   when: pgbouncer_pool_size is defined
 
@@ -100,3 +101,38 @@
       - pgbouncer_total_pool_size | int == 50
     fail_msg: "Test failed: pgbouncer_total_pool_size is not equal to 50."
     success_msg: "Test passed: pgbouncer_total_pool_size is equal to 50."
+
+# 📝 Overriding postgresql_databases to an empty list for the next test
+- name: Molecule | Tests | Roles | Pre-checks | Variables | Pgbouncer | Override postgresql_databases
+  run_once: true
+  ansible.builtin.set_fact:
+    postgresql_databases: []
+
+# 🔄 Compute the aggregate pool size (pgbouncer_total_pool_size) across all databases with postgresql_databases not defined.
+- name: Molecule | Tests | Roles | Pre-checks | Variables | Pgbouncer | Compute Total Pool Size (postgresql_databases not defined)
+  run_once: true
+  ansible.builtin.set_fact:
+    pgbouncer_total_pool_size: >-
+      {{
+        (pgbouncer_pool_size | int)
+        +
+        (postgresql_databases
+          | default([])
+          | rejectattr('db', 'in', pgbouncer_pools | map(attribute='dbname') | list)
+          | length
+        ) * (pgbouncer_default_pool_size | default(0) | int)
+      }}
+  when: pgbouncer_pool_size is defined
+
+# ✅ Test if the computed aggregate pool size is correct with postgresql_databases not defined.
+# In this case, we expect the aggregate pool size to be 30
+#   10 from db1
+#   20 from db2
+#   0 from db3 as postgresql_databases is not defined
+- name: Molecule | Tests | Roles | Pre-checks | Variables | Pgbouncer | Verify Total Pool Size Calculation (postgresql_databases not defined)
+  run_once: true
+  ansible.builtin.assert:
+    that:
+      - pgbouncer_total_pool_size | int == 30
+    fail_msg: "Test failed: pgbouncer_total_pool_size is not equal to 30."
+    success_msg: "Test passed: pgbouncer_total_pool_size is equal to 30."
