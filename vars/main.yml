@@ -385,7 +385,7 @@ basebackup:
   - { option: "max-rate", value: "100M" }
   - { option: "checkpoint", value: "fast" }
 pg_probackup:
-  - { option: "command", value: "{{ pg_probackup_command }}" }
+  - { option: "command", value: "{{ pg_probackup_restore_command }}" }
   - { option: "no_params", value: "true" }
 
 # "restore_command" written to recovery.conf when configuring follower (create replica)
@@ -412,7 +412,7 @@ pg_probackup_command_parts:
   - " --instance {{ pg_probackup_instance }}"
   - " -j {{ pg_probackup_threads }}"
   - " {{ pg_probackup_add_keys }}"
-pg_probackup_command: "{{ pg_probackup_command_parts | join('') }}"
+pg_probackup_restore_command: "{{ pg_probackup_command_parts | join('') }}"
 pg_probackup_patroni_cluster_bootstrap_command: "{{ pg_probackup_command_parts | join('') }}"
 
 # WAL-G
