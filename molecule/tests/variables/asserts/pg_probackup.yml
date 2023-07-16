@@ -1,16 +1,22 @@
 ---
-# pg_probackup[0].value
-- name: Molecule.tests.variables.asserts.pg_probackup | Setting origin_pg_probackup_command_value
+# 🚀 These tasks aim to validate the values of pg_probackup related variables
+# 🎯 The objective is to ensure that the values of these variables are correctly set
+
+# 📝 Setting the expected value for pg_probackup[0].value
+- name: Molecule.tests.variables.asserts.pg_probackup | Establish Expected Value for pg_probackup[0].value
   run_once: true
   ansible.builtin.set_fact: # yamllint disable rule:line-length
     origin_pg_probackup_command_value: "pg_probackup-{{ pg_probackup_version }} restore -B {{ pg_probackup_dir }} --instance {{ pg_probackup_instance }} -j {{ pg_probackup_threads }} {{ pg_probackup_add_keys }}"
 
-- name: Molecule.tests.variables.asserts.pg_probackup | Debug pg_probackup[0].value
+# 🖨️ Debugging the actual value of pg_probackup[0].value
+- name: Molecule.tests.variables.asserts.pg_probackup | Debug Actual Value of pg_probackup[0].value
   run_once: true
   ansible.builtin.debug:
     var: pg_probackup[0].value
 
-- name: Molecule.tests.variables.asserts.pg_probackup | Assert pg_probackup[0].value
+# ✅ Verifying the correctness of pg_probackup[0].value
+# If the actual value is not equal to the expected value, the test fails and an error message is displayed
+- name: Molecule.tests.variables.asserts.pg_probackup | Verify Value of pg_probackup[0].value
   run_once: true
   ansible.builtin.assert:
     that:
@@ -20,19 +26,21 @@
       but expected "{{ origin_pg_probackup_command_value}}"
     success_msg: "pg_probackup[0].value is correct"
 
-
-# pg_probackup_patroni_cluster_bootstrap_command
-- name: Molecule.tests.variables.asserts.pg_probackup | Setting host facts using complex arguments
+# 📝 Setting the expected value for pg_probackup_patroni_cluster_bootstrap_command
+- name: Molecule.tests.variables.asserts.pg_probackup | Establish Expected Value for pg_probackup_patroni_cluster_bootstrap_command
   run_once: true
   ansible.builtin.set_fact: # yamllint disable rule:line-length
     origin_pg_probackup_patroni_cluster_bootstrap_command: "pg_probackup-{{ pg_probackup_version }} restore -B {{ pg_probackup_dir }} --instance {{ pg_probackup_instance }} -j {{ pg_probackup_threads }} {{ pg_probackup_add_keys }}"
 
-- name: Molecule.tests.variables.asserts.pg_probackup | Debug pg_probackup_patroni_cluster_bootstrap_command
+# 🖨️ Debugging the actual value of pg_probackup_patroni_cluster_bootstrap_command
+- name: Molecule.tests.variables.asserts.pg_probackup | Debug Actual Value of pg_probackup_patroni_cluster_bootstrap_command
   run_once: true
   ansible.builtin.debug:
     var: pg_probackup_patroni_cluster_bootstrap_command
 
-- name: Molecule.tests.variables.asserts.pg_probackup | Assert pg_probackup_patroni_cluster_bootstrap_command
+# ✅ Verifying the correctness of pg_probackup_patroni_cluster_bootstrap_command
+# If the actual value is not equal to the expected value, the test fails and an error message is displayed
+- name: Molecule.tests.variables.asserts.pg_probackup | Verify Value of pg_probackup_patroni_cluster_bootstrap_command
   run_once: true
   ansible.builtin.assert:
     that:
