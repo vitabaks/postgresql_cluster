@@ -114,7 +114,7 @@
         loop_var: line_item
         label: "{{ line_item.line }}"
       notify: "restart confd"
-      when: cluster_vip is defined and cluster_vip | length > 0 hostvars[inventory_hostname].inventory_hostname
+      when: cluster_vip is defined and cluster_vip | length > 0
 
     - name: Prepare haproxy.tmpl template file (replace "bind" for stats)
       ansible.builtin.lineinfile:
