@@ -114,6 +114,6 @@
   run_once: true
   ansible.builtin.assert:
     that:
-      - mv_command_postgresql_version_9 == 'mv /var/lib/pgsql/9/data/pg_xlog /var/lib/pgsql/9/data/pg_xlog_old'
+      - mv_command_postgresql_version_9 == 'mv /var/lib/pgsql/9.6/data/pg_xlog /var/lib/pgsql/9.6/data/pg_xlog_old'
     fail_msg: "Test failed: The command has not been determined correctly."
     success_msg: "Test passed: The command has been determined correctly."
