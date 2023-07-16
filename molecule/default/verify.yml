@@ -8,6 +8,10 @@
       ansible.builtin.include_vars:
         file: ../../vars/main.yml
 
+    - name: Include OS-specific variables
+      ansible.builtin.include_vars:
+        file: "../../vars/{{ ansible_os_family }}.yml"
+
     - name: Molecule.default.verify | Include all tests
       ansible.builtin.include_tasks: "{{ item }}"
       with_fileglob:
