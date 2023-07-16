@@ -4,6 +4,8 @@
 
 # 📂 Ensure tmp directory exists
 - name: Molecule.tests.roles.confd.variables.haproxy.tmpl | Ensure tmp directory exists
+  run_once: true
+  delegate_to: localhost
   ansible.builtin.file:
     path: "./tmp"
     state: directory
