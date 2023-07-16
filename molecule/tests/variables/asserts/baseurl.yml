@@ -19,11 +19,8 @@
 - name: Molecule.tests.variables.asserts.baseurl | Construct Expected OracleLinux URL
   run_once: true
   ansible.builtin.set_fact:
-    _baseurl:
-      OracleLinux: >-
-        {{ 'https://repo.postgrespro.ru//pgpro-archive/pgpro-' ~
-        postgrespro_minor_version ~ '/oraclelinux/' ~
-        ansible_distribution_major_version ~ 'Server/os/x86_64/rpms/' }}
+    _baseurl: # yamllint disable rule:line-length
+      OracleLinux: "https://repo.postgrespro.ru//pgpro-archive/pgpro-{{ postgrespro_minor_version }}/oraclelinux/{{ ansible_distribution_major_version }}Server/os/x86_64/rpms/"
 
 # 🖨️ Displaying the constructed OracleLinux URL for debugging purposes
 - name: Molecule.tests.variables.asserts.baseurl | Debug Constructed OracleLinux URL
