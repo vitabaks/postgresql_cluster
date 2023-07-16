@@ -65,10 +65,10 @@
 # =====================================
 
 # 🔄 Set postgresql_version for the second test scenario
-- name: Molecule.tests.roles.patroni.variables.custom_wal_dir | Define PG version as 9 for scenario 2
+- name: Molecule.tests.roles.patroni.variables.custom_wal_dir | Define PG version as 9.6 for scenario 2
   run_once: true
   ansible.builtin.set_fact:
-    postgresql_version: 9
+    postgresql_version: 9.6
 
 # 🔄 Determine base pg_wal_dir name
 - name: Molecule.tests.roles.patroni.variables.custom_wal_dir | Set pg_wal_dir based on postgresql_version
