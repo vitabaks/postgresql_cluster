@@ -88,7 +88,7 @@
       ansible.builtin.replace:
         path: "{{ patroni_config_file }}"
         regexp: 'wal_keep_segments: ([0-9]+)'
-        replace: "wal_keep_size: {{ (wal_keep_segments_output.stdout|int * 16) | string + 'MB' }}"
+        replace: "wal_keep_size: {{ (wal_keep_segments_output.stdout | int * 16) | string + 'MB' }}"
       when: wal_keep_segments_output.stdout|int > 0
   when:
     - pg_old_version|int <= 12 and pg_new_version|int >= 13

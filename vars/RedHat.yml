@@ -70,11 +70,11 @@ glibc_langpack:
 #  - "glibc-langpack-de"
 
 postgresql_packages:
-  - postgresql{{ postgresql_version | replace('.', '')  }}
-  - postgresql{{ postgresql_version | replace('.', '')  }}-server
-  - postgresql{{ postgresql_version | replace('.', '')  }}-contrib
-  - postgresql{{ postgresql_version | replace('.', '')  }}-devel
-#  - pg_repack{{ postgresql_version | replace('.', '')  }}
+  - postgresql{{ postgresql_version | replace('.', '') }}
+  - postgresql{{ postgresql_version | replace('.', '') }}-server
+  - postgresql{{ postgresql_version | replace('.', '') }}-contrib
+  - postgresql{{ postgresql_version | replace('.', '') }}-devel
+#  - pg_repack{{ postgresql_version | replace('.', '') }}
 
 # Extra packages
 etcd_package_repo: "https://github.com/etcd-io/etcd/releases/download/v{{ etcd_version }}/etcd-v{{ etcd_version }}-linux-amd64.tar.gz"

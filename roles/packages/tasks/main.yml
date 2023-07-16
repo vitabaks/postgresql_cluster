@@ -154,7 +154,7 @@
   vars:
     timescaledb_package:
       - >
-        {% if postgresql_version|int >= 11 %}
+        {% if postgresql_version | int >= 11 %}
         timescaledb-2-postgresql-{{ postgresql_version }}
         {% else %}
         timescaledb-postgresql-{{ postgresql_version }}

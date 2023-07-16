@@ -34,7 +34,7 @@
   ansible.posix.authorized_key:
     user: "{{ ssh_key_user }}"
     state: present
-    key: "{{ lookup('pipe','cat files/*id_rsa.pub') }}"
+    key: "{{ lookup('pipe', 'cat files/*id_rsa.pub') }}"
     exclusive: false
 
 - name: Remove public SSH keys from localhost
