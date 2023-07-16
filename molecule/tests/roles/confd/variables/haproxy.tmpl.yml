@@ -48,8 +48,8 @@
   delegate_to: localhost
   ansible.builtin.lineinfile:
     path: ./tmp/haproxy.cluster_vip.defined.tmpl
-    regexp: "{{ line_item_1.regexp }}"
-    line: "{{ line_item_1.line }}"
+    regexp: "{{ bind_config_with_vip_item.regexp }}"
+    line: "{{ bind_config_with_vip_item.line }}"
     backrefs: true
   loop:
     - regexp: '^.*bind.*:{{ haproxy_listen_port.stats }}$'
@@ -63,8 +63,8 @@
     - regexp: '^.*bind.*:{{ haproxy_listen_port.replicas_async }}$'
       line: '    bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas_async }}'
   loop_control:
-    loop_var: line_item_1
-    label: "{{ line_item_1.line }}"
+    loop_var: bind_config_with_vip_item
+    label: "{{ bind_config_with_vip_item.line }}"
 
 # 🖨️ Debugging the established haproxy.tmpl
 - name: Molecule.tests.roles.confd.variables.haproxy.tmpl | Debug haproxy.tmpl
@@ -117,8 +117,8 @@
   delegate_to: localhost
   ansible.builtin.lineinfile:
     path: ./tmp/haproxy.cluster_vip.not.defined.tmpl
-    regexp: "{{ line_item_2.regexp }}"
-    line: "{{ line_item_2.line }}"
+    regexp: "{{ bind_config_without_vip_item.regexp }}"
+    line: "{{ bind_config_without_vip_item.line }}"
     backrefs: true
   loop:
     - regexp: '^.*bind.*:{{ haproxy_listen_port.stats }}$'
@@ -132,8 +132,8 @@
     - regexp: '^.*bind.*:{{ haproxy_listen_port.replicas_async }}$'
       line: '    bind {{ inventory_hostname }}:{{ haproxy_listen_port.replicas_async }}'
   loop_control:
-    loop_var: line_item_2
-    label: "{{ line_item_2.line }}"
+    loop_var: bind_config_without_vip_item
+    label: "{{ bind_config_without_vip_item.line }}"
 
 # 🖨️ Debugging the established haproxy.tmpl - 2nd round
 - name: Molecule.tests.roles.confd.variables.haproxy.tmpl | Debug haproxy.tmpl - 2nd round

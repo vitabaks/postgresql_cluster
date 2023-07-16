@@ -428,8 +428,8 @@
     - name: Prepare haproxy.cfg conf file (replace "bind")
       ansible.builtin.lineinfile:
         path: /etc/haproxy/haproxy.cfg
-        regexp: "{{ line_item_1.regexp }}"
-        line: "{{ line_item_1.line }}"
+        regexp: "{{ bind_config_without_vip_item.regexp }}"
+        line: "{{ bind_config_without_vip_item.line }}"
         backrefs: true
       loop:
         - regexp: '^.*bind.*:{{ haproxy_listen_port.stats }}$'
@@ -443,16 +443,16 @@
         - regexp: '^.*bind.*:{{ haproxy_listen_port.replicas_async }}$'
           line: '    bind {{ hostvars[inventory_hostname].inventory_hostname }}:{{ haproxy_listen_port.replicas_async }}'
       loop_control:
-        loop_var: line_item_1
-        label: "{{ line_item_1.line }}"
+        loop_var: bind_config_without_vip_item
+        label: "{{ bind_config_without_vip_item.line }}"
       notify: "restart haproxy"
       when: cluster_vip is not defined or cluster_vip | length < 1
 
     - name: Prepare haproxy.cfg conf file (replace "bind" for stats)
       ansible.builtin.lineinfile:
         path: /etc/haproxy/haproxy.cfg
-        regexp: "{{ line_item_2.regexp }}"
-        line: "{{ line_item_2.line }}"
+        regexp: "{{ bind_config_with_vip_item.regexp }}"
+        line: "{{ bind_config_with_vip_item.line }}"
         backrefs: true
       loop:
         - regexp: '^.*bind.*:{{ haproxy_listen_port.stats }}$'
@@ -466,8 +466,8 @@
         - regexp: '^.*bind.*:{{ haproxy_listen_port.replicas_async }}$'
           line: '    bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas_async }}'
       loop_control:
-        loop_var: line_item_2
-        label: "{{ line_item_2.line }}"
+        loop_var: bind_config_with_vip_item
+        label: "{{ bind_config_with_vip_item.line }}"
       notify: "restart haproxy"
       when: cluster_vip is defined and cluster_vip | length > 0
   when: add_balancer is defined and add_balancer|bool
