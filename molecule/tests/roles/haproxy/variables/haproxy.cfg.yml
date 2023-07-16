@@ -113,7 +113,7 @@
 # 🚀 Execute the new task here
 # This task updates the 'haproxy.cfg' file again, this time replacing lines that start with 'bind' and include specific ports
 # The new lines will bind to the inventory_hostname.
-- name: Molecule.tests.roles.confd.variables.haproxy.cfg | Prepare haproxy.cfg template file (replace "bind" for stats - 2nd round)
+- name: Molecule.tests.roles.confd.variables.haproxy.cfg | Prepare haproxy.cfg template file (replace "bind" - 2nd round)
   run_once: true
   delegate_to: localhost
   ansible.builtin.lineinfile:
