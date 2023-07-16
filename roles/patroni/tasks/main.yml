@@ -318,8 +318,8 @@
     - name: Prepare patroni.yml conf file (replace "name","listen","connect_address")
       ansible.builtin.lineinfile:
         path: /etc/patroni/patroni.yml
-        regexp: "{{ item.regexp }}"
-        line: "{{ item.line }}"
+        regexp: "{{ patroni_config_without_cluster_vip_item.regexp }}"
+        line: "{{ patroni_config_without_cluster_vip_item.line }}"
         backrefs: true
       loop:
         - regexp: '^name:'
@@ -333,14 +333,14 @@
         - regexp: '^  connect_address: ((?!{{ patroni_restapi_port }}).)*$'
           line: '  connect_address: {{ hostvars[inventory_hostname].inventory_hostname }}:{{ postgresql_port }}'
       loop_control:
-        label: "{{ item.line }}"
+        label: "{{ patroni_config_without_cluster_vip_item.line }}"
       when: with_haproxy_load_balancing|bool or pgbouncer_install|bool or (cluster_vip is not defined or cluster_vip | length < 1)
 
     - name: Prepare patroni.yml conf file (replace "name","listen","connect_address")
       ansible.builtin.lineinfile:
         path: /etc/patroni/patroni.yml
-        regexp: "{{ item.regexp }}"
-        line: "{{ item.line }}"
+        regexp: "{{ patroni_config_with_cluster_vip_item.regexp }}"
+        line: "{{ patroni_config_with_cluster_vip_item.line }}"
         backrefs: true
       loop:
         - regexp: '^name:'
@@ -354,7 +354,7 @@
         - regexp: '^  connect_address: ((?!{{ patroni_restapi_port }}).)*$'
           line: '  connect_address: {{ hostvars[inventory_hostname].inventory_hostname }}:{{ postgresql_port }}'
       loop_control:
-        label: "{{ item.line }}"
+        label: "{{ patroni_config_with_cluster_vip_item.line }}"
       when: not with_haproxy_load_balancing|bool and not pgbouncer_install|bool and (cluster_vip is defined and cluster_vip | length > 0)
   when: existing_pgcluster is defined and existing_pgcluster|bool
   tags: patroni, patroni_conf
