@@ -48,6 +48,17 @@
     - pg_ctl_status_new_result is defined
     - pg_ctl_status_new_result.rc == 0
 
+- name: Check if pg_control.old exists
+  ansible.builtin.stat:
+    path: "{{ pg_old_datadir }}/global/pg_control.old"
+  register: pg_control_old
+
+# if 'pg_control.old' exists
+# "To reuse the old cluster, remove the .old suffix from $PGDATA/global/pg_control"
+- name: Rename pg_control.old to pg_control
+  ansible.builtin.command: mv "{{ pg_old_datadir }}/global/pg_control.old" "{{ pg_old_datadir }}/global/pg_control"
+  when: pg_control_old.stat.exists
+
 - name: Check PostgreSQL version in pg_control
   ansible.builtin.shell: |
     set -o pipefail;
@@ -68,17 +79,6 @@
   when:
     - inventory_hostname in groups['primary']
     - pg_control_version.stdout == pg_new_version | replace('.', '')
-
-- name: Check if pg_control.old exists
-  ansible.builtin.stat:
-    path: "{{ pg_old_datadir }}/global/pg_control.old"
-  register: pg_control_old
-
-# if 'pg_control.old' exists
-# "To reuse the old cluster, remove the .old suffix from $PGDATA/global/pg_control"
-- name: Rename pg_control.old to pg_control
-  ansible.builtin.command: mv "{{ pg_old_datadir }}/global/pg_control.old" "{{ pg_old_datadir }}/global/pg_control"
-  when: pg_control_old.stat.exists
 
 # Revert the paths to the old PostgreSQL
 - name: Revert the paths to the old PostgreSQL in patroni.yml
