@@ -11,7 +11,7 @@
       - wal_g_cron_jobs[0].name == "WAL-G: Create daily backup"
       - wal_g_cron_jobs[0].user == "postgres"
       - wal_g_cron_jobs[0].file == "/etc/cron.d/walg"
-      - wal_g_cron_jobs[0].job == wal_g_cron_create_job_parts | join('')
+      - wal_g_cron_jobs[0].job == wal_g_backup_command | join('')
       - wal_g_cron_jobs[1].name == "WAL-G: Delete old backups"
       - wal_g_cron_jobs[1].user == "postgres"
       - wal_g_cron_jobs[1].file == "/etc/cron.d/walg"
@@ -19,17 +19,17 @@
     fail_msg: "Test failed: wal_g_cron_jobs does not have the expected structure or content."
     success_msg: "Test passed: wal_g_cron_jobs has the expected structure and content."
 
-# 📝 Validate the content of wal_g_cron_create_job_parts and wal_g_cron_delete_job_parts. We expect specific commands for each job.
-- name: Molecule.tests.variables.asserts.wal_g_cron_jobs | Validate Content of wal_g_cron_create_job_parts and wal_g_cron_delete_job_parts
+# 📝 Validate the content of wal_g_backup_command and wal_g_cron_delete_job_parts. We expect specific commands for each job.
+- name: Molecule.tests.variables.asserts.wal_g_cron_jobs | Validate Content of wal_g_backup_command and wal_g_cron_delete_job_parts
   run_once: true
   ansible.builtin.assert:
     that:
-      - wal_g_cron_create_job_parts[0] == "[ $(curl -s -o /dev/null -w '%{http_code}' http://{{ inventory_hostname }}:{{ patroni_restapi_port }}) = '200' ]"
-      - wal_g_cron_create_job_parts[1] == " && wal-g backup-push {{ postgresql_data_dir }} > {{ postgresql_log_dir }}/walg_backup.log 2>&1"
+      - wal_g_backup_command[0] == "[ $(curl -s -o /dev/null -w '%{http_code}' http://{{ inventory_hostname }}:{{ patroni_restapi_port }}) = '200' ]"
+      - wal_g_backup_command[1] == " && wal-g backup-push {{ postgresql_data_dir }} > {{ postgresql_log_dir }}/walg_backup.log 2>&1"
       - wal_g_cron_delete_job_parts[0] == "[ $(curl -s -o /dev/null -w '%{http_code}' http://{{ inventory_hostname }}:{{ patroni_restapi_port }}) = '200' ]"
       - wal_g_cron_delete_job_parts[1] == " && wal-g delete retain FULL 4 --confirm > {{ postgresql_log_dir }}/walg_delete.log 2>&1"
-    fail_msg: "Test failed: wal_g_cron_create_job_parts or wal_g_cron_delete_job_parts do not have the expected content."
-    success_msg: "Test passed: wal_g_cron_create_job_parts and wal_g_cron_delete_job_parts have the expected content."
+    fail_msg: "Test failed: wal_g_backup_command or wal_g_cron_delete_job_parts do not have the expected content."
+    success_msg: "Test passed: wal_g_backup_command and wal_g_cron_delete_job_parts have the expected content."
 
 # ==================================================
 # 💾 Start Debian-specific operations and tests
