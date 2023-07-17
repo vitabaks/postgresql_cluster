@@ -1,0 +1,13 @@
+---
+# 🚀 The purpose of this task is to incorporate a series of variable tests for HAProxy, a reliable, high performance TCP/HTTP load balancer
+# 🎯 The objective is to ensure that the variables used in the HAProxy configuration are correctly defined and functional
+
+# 🔄 Including variable tests for HAProxy
+# This task iterates over all the YAML files in the 'variables' directory, and includes each file's tasks in the current playbook
+# If a variable test fails, it will be immediately apparent, aiding in debugging and ensuring the robustness of the HAProxy configuration
+- name: Molecule.tests.roles.haproxy.main | Incorporate Variable Tests
+  run_once: true
+  ansible.builtin.include_tasks: "{{ molecule_tests_roles_haproxy_main_file }}"
+  loop: "{{ lookup('fileglob', 'variables/*.yml', wantlist=True) }}"
+  loop_control:
+    loop_var: molecule_tests_roles_haproxy_main_file

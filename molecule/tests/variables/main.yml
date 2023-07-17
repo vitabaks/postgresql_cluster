@@ -1,0 +1,13 @@
+---
+# 🚀 This task aims to include all assert tasks for the main variables in Molecule tests
+# 🎯 The objective is to ensure that all assert tasks are executed for comprehensive testing
+
+# 🔄 Including all assert tasks found in the 'asserts' directory
+# For each .yml file in the 'asserts' directory, we include the tasks defined in the file
+# This allows us to modularize our tests and keep our codebase organized
+- name: Molecule.tests.variables.main | Include All Assert Tasks for Comprehensive Testing
+  run_once: true
+  ansible.builtin.include_tasks: "{{ molecule_tests_variables_main_file }}"
+  loop: "{{ lookup('fileglob', 'asserts/*.yml', wantlist=True) }}"
+  loop_control:
+    loop_var: molecule_tests_variables_main_file

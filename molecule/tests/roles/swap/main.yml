@@ -1,0 +1,13 @@
+---
+# 🚀 This task aims to include variable tests for the main swap role in Molecule
+# 🎯 The objective is to ensure all conditions are tested by looping through each YAML file in the 'conditions' directory
+
+# 🔄 Including variable tests for the main swap role in Molecule
+# For each YAML file in the 'conditions' directory, we include its tasks in the current playbook
+# If a YAML file is not found or cannot be read, the playbook execution will fail at this point
+- name: Molecule.tests.roles.swap.main | Include Variable Tests from Conditions Directory
+  run_once: true
+  ansible.builtin.include_tasks: "{{ molecule_tests_roles_swap_main_file }}"
+  loop: "{{ lookup('fileglob', 'conditions/*.yml', wantlist=True) }}"
+  loop_control:
+    loop_var: molecule_tests_roles_swap_main_file

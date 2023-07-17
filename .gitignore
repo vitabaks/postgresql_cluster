@@ -3,3 +3,5 @@
 .venv
 .vscode/settings.json
 __pycache__/
+*.log
+molecule/**/tmp

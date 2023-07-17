@@ -1,0 +1,32 @@
+---
+# 🚀 These tasks aim to set up the conditions for creating a swap file
+# 🎯 The objective is to ensure that a swap file is created only if it does not already exist or if its size is not as expected
+
+# 📝 Loading system variables that may be needed for the swap file creation process
+- name: Molecule.tests.roles.swap.conditions.create | Load System Variables
+  run_once: true
+  ansible.builtin.include_vars:
+    file: ../../../../../vars/system.yml
+
+# 🔄 Setting up a test condition where no swap file exists
+# We initialize swap_exists with an empty stdout and stdout_lines
+- name: Molecule.tests.roles.swap.conditions.create | Establish Swap File Non-Existence Test Condition
+  run_once: true
+  ansible.builtin.set_fact:
+    swap_exists:
+      stdout: ""
+      stdout_lines: []
+
+# ✅ Verifying the condition for creating a swap file
+# A swap file should be created if either of the following is true:
+# 1. No swap file exists (indicated by an empty stdout in swap_exists)
+# 2. The total size of all swap files (calculated from stdout_lines in swap_exists) is not equal to the expected swap file size (swap_file_size_mb)
+- name: Molecule.tests.roles.swap.conditions.create | Verify Swap File Creation Condition
+  run_once: true
+  ansible.builtin.assert:
+    that: >
+      (swap_exists.stdout is defined and swap_exists.stdout | length < 1) or
+      (swap_exists.stdout_lines is defined and
+      (swap_exists.stdout_lines | map('trim') | map('int') | sum / 1024 / 1024) | round | int != swap_file_size_mb|int)
+    fail_msg: "Test failed: Condition for creating swap file is false."
+    success_msg: "Test passed: Condition for creating swap file is true."

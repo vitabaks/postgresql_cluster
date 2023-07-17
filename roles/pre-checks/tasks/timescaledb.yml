@@ -23,7 +23,12 @@
           + [{'option': 'shared_preload_libraries', 'value': new_value}] }}
       vars:
         # Find the last item in postgresql_parameters where the option is 'shared_preload_libraries'
-        shared_preload_libraries_item: "{{ postgresql_parameters | selectattr('option', 'equalto', 'shared_preload_libraries') | list | last | default({'value': ''}) }}"
+        shared_preload_libraries_item: >-
+          {{
+            postgresql_parameters
+            | selectattr('option', 'equalto', 'shared_preload_libraries')
+            | list | last | default({'value': ''})
+          }}
         # Determine the new value based on whether 'timescaledb' is already present
         new_value: >-
           {{

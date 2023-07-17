@@ -10,7 +10,7 @@ postgresql_bin_dir: "/opt/pgpro/std-{{ postgresql_version }}/bin"
 postgresql_unix_socket_dir: "/tmp"
 
 # YUM Repository
-_baseurl:
+_baseurl: # yamllint disable rule:line-length
   CentOS: "https://repo.postgrespro.ru//pgpro-archive/pgpro-{{ postgrespro_minor_version }}/centos/{{ ansible_distribution_major_version }}/os/x86_64/rpms/"
   RedHat: "https://repo.postgrespro.ru//pgpro-archive/pgpro-{{ postgrespro_minor_version }}/rhel/{{ ansible_distribution_major_version }}Server/os/x86_64/rpms/"
   OracleLinux: "https://repo.postgrespro.ru//pgpro-archive/pgpro-{{ postgrespro_minor_version }}/oraclelinux/{{ ansible_distribution_major_version }}Server/os/x86_64/rpms/"
@@ -25,7 +25,10 @@ yum_repository:
 apt_repository_keys:
   - key: "https://repo.postgrespro.ru/keys/GPG-KEY-POSTGRESPRO"
 apt_repository:
-  - repo: "deb https://repo.postgrespro.ru//pgpro-archive/pgpro-{{ postgrespro_minor_version }}/{{ ansible_distribution | lower }}/ {{ ansible_distribution_release }} main"
+  - repo: >-
+        {{ 'deb https://repo.postgrespro.ru//pgpro-archive/pgpro-' ~
+        postgrespro_minor_version ~ '/' ~ (ansible_distribution | lower) ~ '/' ~
+        ' ' ~ ansible_distribution_release ~ ' main' }}
 
 install_postgresql_repo: false
 

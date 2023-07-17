@@ -385,14 +385,17 @@ basebackup:
   - { option: "max-rate", value: "100M" }
   - { option: "checkpoint", value: "fast" }
 pg_probackup:
-  - { option: "command", value: "pg_probackup-{{ pg_probackup_version }} restore -B {{ pg_probackup_dir }} --instance {{ pg_probackup_instance }} -j {{ pg_probackup_threads }} {{ pg_probackup_add_keys }}" }
+  - { option: "command", value: "{{ pg_probackup_restore_command }}" }
   - { option: "no_params", value: "true" }
 
 # "restore_command" written to recovery.conf when configuring follower (create replica)
 postgresql_restore_command: ""
 # postgresql_restore_command: "wal-g wal-fetch %f %p"  # restore WAL-s using WAL-G
 # postgresql_restore_command: "pgbackrest --stanza={{ pgbackrest_stanza }} archive-get %f %p"  # restore WAL-s using pgbackrest
-# postgresql_restore_command: "pg_probackup-{{ pg_probackup_version }} archive-get -B {{ pg_probackup_dir }} --instance {{ pg_probackup_instance }} --wal-file-path=%p --wal-file-name=%f"  # restore WAL-s using pg_probackup
+
+# postgresql_restore_command: "pg_probackup-{{ pg_probackup_version }} archive-get -B
+# {{ pg_probackup_dir }} --instance {{ pg_probackup_instance }} --wal-file-path=%p
+# --wal-file-name=%f"  # restore WAL-s using pg_probackup
 
 # pg_probackup
 pg_probackup_install: false  # or 'true'
@@ -402,7 +405,15 @@ pg_probackup_instance: "pg_probackup_instance_name"
 pg_probackup_dir: "/mnt/backup_dir"
 pg_probackup_threads: "4"
 pg_probackup_add_keys: "--recovery-target=latest --skip-external-dirs --no-validate"
-pg_probackup_patroni_cluster_bootstrap_command: "pg_probackup-{{ pg_probackup_version }} restore -B {{ pg_probackup_dir }} --instance {{ pg_probackup_instance }} -j {{ pg_probackup_threads }} {{ pg_probackup_add_keys }}"
+# ⚠️ Ensure there is a space at the beginning of each part to prevent commands from concatenating.
+pg_probackup_command_parts:
+  - "pg_probackup-{{ pg_probackup_version }}"
+  - " restore -B {{ pg_probackup_dir }}"
+  - " --instance {{ pg_probackup_instance }}"
+  - " -j {{ pg_probackup_threads }}"
+  - " {{ pg_probackup_add_keys }}"
+pg_probackup_restore_command: "{{ pg_probackup_command_parts | join('') }}"
+pg_probackup_patroni_cluster_bootstrap_command: "{{ pg_probackup_command_parts | join('') }}"
 
 # WAL-G
 wal_g_install: false  # or 'true'
@@ -423,6 +434,15 @@ wal_g_json:  # config https://github.com/wal-g/wal-g#configuration
 wal_g_archive_command: "wal-g wal-push %p"
 wal_g_patroni_cluster_bootstrap_command: "wal-g backup-fetch {{ postgresql_data_dir }} LATEST"
 
+# Define job_parts outside of wal_g_cron_jobs
+# ⚠️ Ensure there is a space at the beginning of each part to prevent commands from concatenating.
+wal_g_backup_command:
+  - "[ $(curl -s -o /dev/null -w '%{http_code}' http://{{ inventory_hostname }}:{{ patroni_restapi_port }}) = '200' ]"
+  - " && wal-g backup-push {{ postgresql_data_dir }} > {{ postgresql_log_dir }}/walg_backup.log 2>&1"
+wal_g_delete_command:
+  - "[ $(curl -s -o /dev/null -w '%{http_code}' http://{{ inventory_hostname }}:{{ patroni_restapi_port }}) = '200' ]"
+  - " && wal-g delete retain FULL 4 --confirm > {{ postgresql_log_dir }}/walg_delete.log 2>&1"
+
 wal_g_cron_jobs:
   - name: "WAL-G: Create daily backup"
     user: "postgres"
@@ -432,7 +452,7 @@ wal_g_cron_jobs:
     day: "*"
     month: "*"
     weekday: "*"
-    job: "[ $(curl -s -o /dev/null -w '%{http_code}' http://{{ inventory_hostname }}:{{ patroni_restapi_port }}) = '200' ] && wal-g backup-push {{ postgresql_data_dir }} > {{ postgresql_log_dir }}/walg_backup.log 2>&1"
+    job: "{{ wal_g_backup_command | join('') }}"
   - name: "WAL-G: Delete old backups" # retain 4 full backups (adjust according to your company's backup retention policy)
     user: "postgres"
     file: /etc/cron.d/walg
@@ -441,7 +461,7 @@ wal_g_cron_jobs:
     day: "*"
     month: "*"
     weekday: "*"
-    job: "[ $(curl -s -o /dev/null -w '%{http_code}' http://{{ inventory_hostname }}:{{ patroni_restapi_port }}) = '200' ] && wal-g delete retain FULL 4 --confirm > {{ postgresql_log_dir }}/walg_delete.log 2>&1"
+    job: "{{ wal_g_delete_command | join('') }}"
 
 # pgBackRest
 pgbackrest_install: false  # or 'true'

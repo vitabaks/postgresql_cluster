@@ -1,0 +1,13 @@
+---
+# 🚀 The objective of this task is to include and execute variable tests for the main Patroni role
+# 🎯 This ensures that all variable tests are run, providing comprehensive coverage and validation of the role's variables
+
+# 🔄 Including and executing variable tests for the main Patroni role
+# We use a loop to iterate over all .yml files in the 'variables' directory
+# Each file is included and its tasks are executed
+- name: Molecule.tests.roles.patroni.main | Include and Execute Variable Tests
+  run_once: true
+  ansible.builtin.include_tasks: "{{ molecule_tests_roles_patroni_main_file }}"
+  loop: "{{ lookup('fileglob', 'variables/*.yml', wantlist=True) }}"
+  loop_control:
+    loop_var: molecule_tests_roles_patroni_main_file

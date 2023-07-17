@@ -15,7 +15,6 @@ skip_list:
   - package-latest
   - risky-file-permissions # TODO
   - role-name
-  - yaml[line-length]
 
 exclude_paths:
   - ../.venv

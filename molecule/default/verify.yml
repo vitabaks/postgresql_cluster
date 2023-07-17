@@ -1,15 +1,36 @@
 ---
-- name: Molecule | Verify | All
+# 🚀 This playbook is designed to verify the default Molecule configuration
+# 🎯 The objective is to ensure that all tasks and roles are correctly set up and functioning as expected
+
+- name: Molecule.default.verify
   hosts: all
+  gather_facts: true
 
   tasks:
-    - name: Include vars of vars/main.yml
+    # 📝 Including the main variables file for the Molecule default configuration
+    # This file contains all the necessary variables for the playbook
+    - name: Molecule.default.verify | Include Main Variables
       ansible.builtin.include_vars:
         file: ../../vars/main.yml
 
-    - name: Molecule | Verify | Include all tests
+    # 🔄 Including OS-specific variables
+    # These variables are specific to the operating system on which the playbook is running
+    - name: Molecule.default.verify | Include OS-Specific Variables
+      ansible.builtin.include_vars:
+        file: "../../vars/{{ ansible_os_family }}.yml"
+
+    # 🔄 Including all tests for the Molecule default configuration
+    # These tests ensure that all components of the configuration are functioning correctly
+    - name: Molecule.default.verify | Include All Tests
       ansible.builtin.include_tasks: "{{ item }}"
       with_fileglob:
+        - ../tests/variables/main.yml
         - ../tests/etcd/*.yml
         - ../tests/patroni/*.yml
         - ../tests/postgres/*.yml
+        - ../tests/roles/confd/main.yml
+        - ../tests/roles/deploy-finish/main.yml
+        - ../tests/roles/haproxy/main.yml
+        - ../tests/roles/patroni/main.yml
+        - ../tests/roles/pre-checks/main.yml
+        - ../tests/roles/swap/main.yml

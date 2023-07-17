@@ -1,0 +1,64 @@
+---
+# 📝 These tasks aim to ensure that 'timescaledb' is included in the 'shared_preload_libraries' of PostgreSQL parameters
+# 🎯 The objective is to guarantee that TimescaleDB, a time-series database built on PostgreSQL, is properly loaded and available
+
+# 🔄 Ensuring 'timescaledb' is included in 'shared_preload_libraries'
+# If 'timescaledb' is not already in 'shared_preload_libraries', it is added
+- name: Molecule.tests.roles.pre-checks.variables.timescaledb | Ensure 'timescaledb' is in 'shared_preload_libraries'
+  run_once: true
+  ansible.builtin.set_fact:
+    postgresql_parameters: >-
+      {{ postgresql_parameters | rejectattr('option', 'equalto', 'shared_preload_libraries') | list
+      + [{'option': 'shared_preload_libraries', 'value': new_value}] }}
+  vars:
+    shared_preload_libraries_item: >-
+          {{
+            postgresql_parameters
+            | selectattr('option', 'equalto', 'shared_preload_libraries')
+            | list | last | default({'value': ''})
+          }}
+    new_value: >-
+      {{
+        (shared_preload_libraries_item.value ~ (',' if shared_preload_libraries_item.value else '')
+        if 'timescaledb' not in shared_preload_libraries_item.value.split(',') else shared_preload_libraries_item.value)
+        ~ ('timescaledb' if 'timescaledb' not in shared_preload_libraries_item.value.split(',') else '')
+      }}
+
+# 📝 Setting 'shared_preload_libraries_item' as a fact for further use
+- name: Molecule.tests.roles.pre-checks.variables.timescaledb | Set 'shared_preload_libraries_item' as a fact
+  run_once: true
+  ansible.builtin.set_fact:
+    shared_preload_libraries_item: >-
+          {{
+            postgresql_parameters
+            | selectattr('option', 'equalto', 'shared_preload_libraries')
+            | list | last | default({'value': ''})
+          }}
+
+# ✅ Verifying that 'timescaledb' is included in 'shared_preload_libraries'
+# If 'timescaledb' is not included, the test fails and an error message is displayed
+- name: Molecule.tests.roles.pre-checks.variables.timescaledb | Assert that 'timescaledb' is in 'shared_preload_libraries'
+  run_once: true
+  ansible.builtin.assert:
+    that:
+      - "'timescaledb' in shared_preload_libraries_item.value.split(',')"
+    fail_msg: "'timescaledb' is not in 'shared_preload_libraries'"
+    success_msg: "'timescaledb' is in 'shared_preload_libraries'"
+
+# 📝 Setting 'origin_shared_preload_libraries_item' as a fact for further use
+- name: Molecule.tests.roles.pre-checks.variables.timescaledb | Set 'origin_shared_preload_libraries_item' as a fact
+  run_once: true
+  ansible.builtin.set_fact: # yamllint disable rule:line-length
+    origin_shared_preload_libraries_item: "{{ postgresql_parameters | selectattr('option', 'equalto', 'shared_preload_libraries') | list | last | default({'value': ''}) }}"
+
+# ✅ Verifying that the new 'shared_preload_libraries_item' equals 'origin_shared_preload_libraries_item'
+# If they are not equal, the test fails and an error message is displayed
+- name: Molecule.tests.roles.pre-checks.variables.timescaledb | Assert that new 'shared_preload_libraries_item' equals 'origin_shared_preload_libraries_item'
+  run_once: true
+  ansible.builtin.assert:
+    that:
+      - shared_preload_libraries_item == origin_shared_preload_libraries_item
+    fail_msg: >
+      Assertion failed: shared_preload_libraries_item is "{{ shared_preload_libraries_item }}",
+      but expected "{{ origin_shared_preload_libraries_item }}"
+    success_msg: "shared_preload_libraries_item is correct"
