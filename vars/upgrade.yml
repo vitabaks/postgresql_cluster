@@ -1,5 +1,5 @@
 ---
-# Variables for the upgrade_postgres.yml playbook
+# Variables for the pg_upgrade.yml playbook
 
 # Note:
 # There is no need to plan additional disk space, because when updating PostgreSQL, hard links are used instead of copying files.

@@ -75,4 +75,4 @@
   ansible.builtin.import_playbook: ../../deploy_pgcluster.yml
 
 - name: PostgreSQL upgrade test
-  ansible.builtin.import_playbook: ../../upgrade_postgres.yml
+  ansible.builtin.import_playbook: ../../pg_upgrade.yml
