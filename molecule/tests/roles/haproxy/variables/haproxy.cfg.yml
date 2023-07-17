@@ -15,11 +15,11 @@
   run_once: true
   ansible.builtin.set_fact:
     haproxy_listen_port:
-      stats: 5000
-      master: 5001
-      replicas: 5002
-      replicas_sync: 5003
-      replicas_async: 5004
+      master: 5000
+      replicas: 5001
+      replicas_sync: 5002
+      replicas_async: 5003
+      stats: 7000
     inventory_hostname: una.name
     cluster_vip: fake.vip.url.com
 
@@ -85,11 +85,11 @@
   run_once: true
   ansible.builtin.assert:
     that:
-      - "output.stdout_lines[0] == '    bind una.name:5000'"
-      - "output.stdout_lines[1] == '    bind fake.vip.url.com:5001'"
-      - "output.stdout_lines[2] == '    bind fake.vip.url.com:5002'"
-      - "output.stdout_lines[3] == '    bind fake.vip.url.com:5003'"
-      - "output.stdout_lines[4] == '    bind fake.vip.url.com:5004'"
+      - "output.stdout_lines[0] == '    bind una.name:7000'"
+      - "output.stdout_lines[1] == '    bind fake.vip.url.com:5000'"
+      - "output.stdout_lines[2] == '    bind fake.vip.url.com:5001'"
+      - "output.stdout_lines[3] == '    bind fake.vip.url.com:5002'"
+      - "output.stdout_lines[4] == '    bind fake.vip.url.com:5003'"
     fail_msg: "Test failed: Lines are not replaced correctly in haproxy.cfg."
     success_msg: "Test passed: Lines are replaced correctly in haproxy.cfg."
 
@@ -154,10 +154,10 @@
   run_once: true
   ansible.builtin.assert:
     that:
-      - "output_2.stdout_lines[0] == '    bind una.name:5000'"
-      - "output_2.stdout_lines[1] == '    bind una.name:5001'"
-      - "output_2.stdout_lines[2] == '    bind una.name:5002'"
-      - "output_2.stdout_lines[3] == '    bind una.name:5003'"
-      - "output_2.stdout_lines[4] == '    bind una.name:5004'"
+      - "output_2.stdout_lines[0] == '    bind una.name:7000'"
+      - "output_2.stdout_lines[1] == '    bind una.name:5000'"
+      - "output_2.stdout_lines[2] == '    bind una.name:5001'"
+      - "output_2.stdout_lines[3] == '    bind una.name:5002'"
+      - "output_2.stdout_lines[4] == '    bind una.name:5003'"
     fail_msg: "Test failed: Lines are not replaced correctly in haproxy.cfg - 2nd round."
     success_msg: "Test passed: Lines are replaced correctly in haproxy.cfg - 2nd round."
