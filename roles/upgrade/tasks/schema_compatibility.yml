@@ -59,7 +59,6 @@
     -h {{ postgresql_unix_socket_dir }} \
     -p {{ postgresql_port }} \
     -U {{ pg_install_user.stdout }} \
-    -d postgres \
     --schema-only | {{ pg_new_bindir }}/psql \
     -U {{ pg_install_user.stdout }} \
     -d postgres \
