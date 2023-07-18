@@ -43,8 +43,13 @@
         dest: "{{ postgresql_wal_dir }}/"
       delegate_to: "{{ inventory_hostname }}"
 
-    - name: "Rename {{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }} to {{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }}_old"
-      ansible.builtin.command: mv {{ postgresql_data_dir }}/{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }} {{ postgresql_data_dir }}/{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }}_old
+    # 🔄 Determine base pg_wal_dir name
+    - name: Roles.patroni.custom_wal_dir | Set pg_wal_dir based on postgresql_version
+      ansible.builtin.set_fact:
+        pg_wal_dir: "{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }}"
+
+    - name: "Rename {{ pg_wal_dir }} to {{ pg_wal_dir }}_old"
+      ansible.builtin.command: mv {{ postgresql_data_dir }}/{{ pg_wal_dir }} {{ postgresql_data_dir }}/{{ pg_wal_dir }}_old
       register: mv_result
   when: sym.stat.exists and not sym.stat.islnk|bool
 

@@ -78,12 +78,15 @@ postgresql_packages:
 
 # Extra packages
 etcd_package_repo: "https://github.com/etcd-io/etcd/releases/download/v{{ etcd_version }}/etcd-v{{ etcd_version }}-linux-amd64.tar.gz"
-vip_manager_package_repo: "https://github.com/cybertec-postgresql/vip-manager/releases/download/v{{ vip_manager_version }}/vip-manager_{{ vip_manager_version }}_Linux_x86_64.rpm"
+vip_manager_package_repo:
+  "https://github.com/cybertec-postgresql/vip-manager/releases/download/v{{ vip_manager_version }}/vip-manager_{{ vip_manager_version }}_Linux_x86_64.rpm"
+
 # (if with_haproxy_load_balancing: true)
 haproxy_installation_method: "rpm"  # (default)"rpm" or "src"
 haproxy_install_repo: true  # or 'false' # only for RedHat/CentOS version 7.
-# for RedHat/CentOS/OracleLinux 7 the haproxy version 1.8 (LTS) will be installed from the "rh-haproxy18" package from the Software Collections (SCL) repository.
-# you can preload the haproxy rpm packages to your YUM repository (in this case specify "haproxy_install_repo: false").
+# For RedHat/CentOS/OracleLinux 7 the haproxy version 1.8 (LTS)
+# will be installed from the "rh-haproxy18" package from the Software Collections (SCL) repository.
+# You can preload the haproxy rpm packages to your YUM repository (in this case specify "haproxy_install_repo: false").
 confd_package_repo: "https://github.com/kelseyhightower/confd/releases/download/v0.16.0/confd-0.16.0-linux-amd64"
 
 # (optional) if haproxy_installation_method: 'src'
@@ -180,8 +183,9 @@ patroni_pip_requirements_file:
 patroni_pip_package_file:
   - "patroni-1.6.0.tar.gz"  # https://pypi.org/project/patroni/#files
 
-#  ( if patroni_installation_type: "rpm" and installation_method: "file" )
-patroni_rpm_package_file: "patroni-2.1.4-1.rhel8.x86_64.rpm"  # (package for RHEL/CentOS 8) https://download.postgresql.org/pub/repos/yum/common/redhat/rhel-8-x86_64/
+# ( if patroni_installation_type: "rpm" and installation_method: "file" )
+# (package for RHEL/CentOS 8) https://download.postgresql.org/pub/repos/yum/common/redhat/rhel-8-x86_64/
+patroni_rpm_package_file: "patroni-2.1.4-1.rhel8.x86_64.rpm"
 
 # additional packages
 etcd_package_file: "etcd-v3.3.27-linux-amd64.tar.gz"  # https://github.com/etcd-io/etcd/releases

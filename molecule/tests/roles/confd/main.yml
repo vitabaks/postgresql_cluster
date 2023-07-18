@@ -1,0 +1,13 @@
+---
+# 🚀 This task is designed to include variable tests for the main role in the Confd molecule tests
+# 🎯 The goal is to ensure that all variable tests are executed in a systematic and organised manner
+
+# 🔄 Including variable tests for the main role in the Confd molecule tests
+# We use a loop to include all YAML files in the 'variables' directory
+# Each file is included as a task, ensuring that all variable tests are executed
+- name: Molecule.tests.roles.confd.main | Include Variable Tests
+  run_once: true
+  ansible.builtin.include_tasks: "{{ molecule_tests_roles_confd_main_file }}"
+  loop: "{{ lookup('fileglob', 'variables/*.yml', wantlist=True) }}"
+  loop_control:
+    loop_var: molecule_tests_roles_confd_main_file

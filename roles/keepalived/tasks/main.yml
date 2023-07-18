@@ -67,6 +67,7 @@
       notify: "restart keepalived"
 
     - name: Remove keepalived.conf file from localhost
+      become: false
       run_once: true
       ansible.builtin.file:
         path: files/keepalived.conf

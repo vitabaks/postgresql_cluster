@@ -1,0 +1,48 @@
+---
+# 🚀 These tasks aim to validate the apt_repository variable
+# 🎯 The objective is to ensure that the repository URLs are correctly defined
+
+# ========================================
+# 💻 Start Repository Operations and Tests
+# ========================================
+
+# 🔄 Setting up a valid repository for testing
+# We define a minor version of PostgreSQL Pro and the distribution details of the system
+- name: Molecule.tests.variables.asserts.apt_repository | Set Valid Repository Test Data
+  run_once: true
+  ansible.builtin.set_fact:
+    postgrespro_minor_version: 12.4.1
+    ansible_distribution: Debian
+    ansible_distribution_release: "stretch"
+
+# 📝 Constructing the repository URL for testing
+# The URL is constructed based on the minor version of PostgreSQL Pro and the system's distribution details
+- name: Molecule.tests.variables.asserts.apt_repository | Construct Repository URL Test Data
+  run_once: true
+  ansible.builtin.set_fact:
+    apt_repository:
+      repo: >-
+        {{ 'deb https://repo.postgrespro.ru//pgpro-archive/pgpro-' ~
+        postgrespro_minor_version ~ '/' ~ (ansible_distribution | lower) ~ '/' ~
+        ' ' ~ ansible_distribution_release ~ ' main' }}
+
+# 🖨️ Debugging the constructed repository URL
+# The constructed URL is printed for debugging purposes
+- name: Molecule.tests.variables.asserts.apt_repository | Debug Constructed Repository URL
+  run_once: true
+  ansible.builtin.debug:
+    var: apt_repository['repo']
+
+# ✅ Verifying the correctness of the constructed repository URL
+# The constructed URL is compared with the expected URL
+# If the URLs do not match, the test fails and an error message is displayed
+- name: Molecule.tests.variables.asserts.apt_repository | Verify Constructed Repository URL
+  run_once: true
+  ansible.builtin.assert:
+    that:
+      - "'repo' in apt_repository"
+      - "apt_repository['repo'] is not none"
+      - "apt_repository['repo'] != 'N/A'"
+      - "apt_repository['repo'] == 'deb https://repo.postgrespro.ru//pgpro-archive/pgpro-12.4.1/debian/ stretch main'"
+    fail_msg: "Test failed: The constructed repository URL does not match the expected URL."
+    success_msg: "Test passed: The constructed repository URL matches the expected URL."
