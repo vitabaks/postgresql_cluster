@@ -3,7 +3,6 @@
 # - custom WAL dir symlink (pg_new_wal_dir)
 # - tablespaces (rsync for replicas)
 # - patroni cluster state pre-check
-# - current_patroni_cluster_name
 # - pause pgbouncer pools (optional)
 # - update PGDATA in WAL-G config after upgrade
 # - copy files - FTS, etc (optional)

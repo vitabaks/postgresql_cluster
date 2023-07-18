@@ -18,6 +18,7 @@
 - name: Verify the two clusters are compatible (pg_upgrade --check)
   ansible.builtin.command: >
     {{ pg_new_bindir }}/pg_upgrade
+    --username={{ pg_install_user.stdout }}
     --old-bindir {{ pg_old_bindir }}
     --new-bindir {{ pg_new_bindir }}
     --old-datadir {{ pg_old_datadir }}

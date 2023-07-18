@@ -58,8 +58,10 @@
     {{ pg_new_bindir }}/pg_dumpall \
     -h {{ postgresql_unix_socket_dir }} \
     -p {{ postgresql_port }} \
-    -U postgres \
+    -U {{ pg_install_user.stdout }} \
+    -d postgres \
     --schema-only | {{ pg_new_bindir }}/psql \
+    -U {{ pg_install_user.stdout }} \
     -d postgres \
     -h /tmp \
     -p {{ (postgresql_port | int) + 1 }} \

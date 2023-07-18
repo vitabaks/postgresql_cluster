@@ -6,6 +6,7 @@
 - name: "Upgrade the PostgreSQL to version {{ pg_new_version }} on the Primary (using pg_upgrade --link)"
   ansible.builtin.command: >
     {{ pg_new_bindir }}/pg_upgrade
+    --username={{ pg_install_user.stdout }}
     --old-bindir {{ pg_old_bindir }}
     --new-bindir {{ pg_new_bindir }}
     --old-datadir {{ pg_old_datadir }}

@@ -24,14 +24,13 @@
 # if 'no pg_hba.conf entry'
 - block:
     # Add a temporary local access rule for pg_upgrade to allow the upgrade process to proceed without authentication issues.
-    # The rule grants the specified PostgreSQL user ("postgres") peer-based access to all databases locally.
     # This is necessary to ensure a smooth upgrade process and will be removed after the upgrade is complete.
-    - name: Add temporary local access rule for the "postgres" user (during the upgrade)
+    - name: Add temporary local access rule (during the upgrade)
       ansible.builtin.blockinfile:
         path: "{{ pg_old_confdir }}/pg_hba.conf"
         marker: "# {mark} ANSIBLE TEMPORARY pg_upgrade RULE"
         insertbefore: BOF
-        content: "local all postgres peer"
+        content: "local all all trust"
 
     - name: Update the PostgreSQL configuration
       ansible.builtin.command: "{{ pg_old_bindir }}/pg_ctl reload -D {{ pg_old_datadir }}"

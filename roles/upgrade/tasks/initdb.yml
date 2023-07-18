@@ -38,6 +38,13 @@
     - pgdata_initialized.stat.exists is defined
     - pgdata_initialized.stat.exists
 
+- name: Get the current install user
+  ansible.builtin.command: psql -tAXc "select rolname from pg_roles where oid = 10"
+  changed_when: false
+  register: pg_install_user
+  when:
+    - inventory_hostname in groups['primary']
+
 - name: Get the current encodig and data_checksums settings
   ansible.builtin.command: psql -tAXc "show {{ item }}"
   changed_when: false
@@ -59,6 +66,7 @@
 - name: Initialize new PostgreSQL data directory with default config files
   ansible.builtin.command: >
     /usr/bin/pg_createcluster {{ pg_new_version }} {{ postgresql_cluster_name }}
+    --user={{ hostvars[groups['primary'][0]].pg_install_user.stdout }}
     --datadir={{ pg_new_datadir }}
     --encoding={{ hostvars[groups['primary'][0]].pg_settings.results[0].stdout }}
     --lc-collate={{ hostvars[groups['primary'][0]].pg_settings.results[1].stdout }}
@@ -79,6 +87,7 @@
 - name: Initialize new PostgreSQL data directory on the Primary
   ansible.builtin.command: >
     {{ pg_new_bindir }}/initdb
+    --username={{ pg_install_user.stdout }}
     --pgdata={{ pg_new_datadir }}
     --encoding={{ pg_settings.results[0].stdout }}
     --lc-collate={{ pg_settings.results[1].stdout }}
