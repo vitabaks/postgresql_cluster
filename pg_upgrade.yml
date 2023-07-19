@@ -2,7 +2,6 @@
 # TODO:
 # - custom WAL dir symlink (pg_new_wal_dir)
 # - tablespaces (rsync for replicas)
-# - patroni cluster state pre-check
 # - pause pgbouncer pools (optional)
 # - update PGDATA in WAL-G config after upgrade
 # - copy files - FTS, etc (optional)
@@ -46,6 +45,13 @@
       register: patroni_leader_result
       changed_when: false
       failed_when: false
+
+    # Stop, if Patroni is unavailable
+    - name: The Patroni cluster is unhealthy
+      ansible.builtin.fail:
+        msg: "Patroni is unavailable on {{ ansible_hostname }}. Please check the cluster status."
+      changed_when: false
+      when: patroni_leader_result is undefined or patroni_leader_result.status == -1
 
     - name: '[Prepare] Add host to group "primary" (in-memory inventory)'
       ansible.builtin.add_host:
