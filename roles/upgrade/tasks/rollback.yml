@@ -15,13 +15,11 @@
 # If the cluster is already healthy, the process stops to avoid unnecessary actions.
 - name: Check Patroni cluster state
   ansible.builtin.uri:
-    url: http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/health
+    url: http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/cluster
     return_content: true
-  register: patroni_cluster_state
+  register: patroni_cluster_result
   failed_when: false
   changed_when: false
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['primary'] + groups['secondary'] }}"
   when:
     - inventory_hostname in groups['primary']
 
@@ -30,12 +28,12 @@
   ansible.builtin.fail:
     msg: "The Patroni cluster is already running. Stop rollback."
   vars:
-    healthy_nodes: "{{ patroni_cluster_state.results | map(attribute='status') | list | select('equalto', 200) | list | length }}"
+    cluster_members: "{{ patroni_cluster_result.json.members | length }}"
     total_nodes: "{{ groups['primary'] | length + groups['secondary'] | length }}"
   when:
     - inventory_hostname in groups['primary']
-    # Check if the number of 200 status codes equals the total number of nodes
-    - healthy_nodes == total_nodes
+    # Check if the cluster members equals the total number of nodes
+    - cluster_members == total_nodes
 
 - name: Make sure the new PostgreSQL is not running
   ansible.builtin.command: "{{ pg_new_bindir }}/pg_ctl status -D {{ pg_new_datadir }}"
@@ -125,6 +123,7 @@
     PATH: "{{ ansible_env.PATH }}:/usr/bin:/usr/local/bin"
   vars:
     ansible_python_interpreter: /usr/bin/python3
+  failed_when: false
 
 - name: Check Patroni is healthy on the Leader
   ansible.builtin.uri:
