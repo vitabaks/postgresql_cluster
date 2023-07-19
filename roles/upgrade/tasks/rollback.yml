@@ -28,11 +28,11 @@
   ansible.builtin.fail:
     msg: "The Patroni cluster is already running. Stop rollback."
   vars:
-    cluster_members: "{{ patroni_cluster_result.json.members | default([]) | length }}"
+    cluster_members: "{{ patroni_cluster_result.json.members | default([]) | rejectattr('state', 'equalto', 'stopped') | list | length }}"
     total_nodes: "{{ groups['primary'] | length + groups['secondary'] | length }}"
   when:
     - inventory_hostname in groups['primary']
-    # Check if the cluster members equals the total number of nodes
+    # Check if the cluster members (excluding 'stopped') equals the total number of nodes
     - cluster_members == total_nodes
 
 - name: Make sure the new PostgreSQL is not running
