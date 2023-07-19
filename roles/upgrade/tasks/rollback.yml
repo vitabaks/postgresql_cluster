@@ -6,9 +6,11 @@
 # If these checks pass, the playbook switches back to the old PostgreSQL paths and restarts the Patroni service.
 # Notes:
 # If pg_upgrade aborted before linking started, the old cluster was unmodified; it can be restarted.
-# If you did not start the new cluster, the old cluster was unmodified except that, when linking started, a .old suffix was appended to $PGDATA/global/pg_control.
+# If you did not start the new cluster, the old cluster was unmodified except that,
+# when linking started, a .old suffix was appended to $PGDATA/global/pg_control.
 # To reuse the old cluster, remove the .old suffix from $PGDATA/global/pg_control; you can then restart the old cluster.
-# If you did start the new cluster, it has written to shared files and it is unsafe to use the old cluster. The old cluster will need to be restored from backup in this case.
+# If you did start the new cluster, it has written to shared files and it is unsafe to use the old cluster.
+# The old cluster will need to be restored from backup in this case.
 
 # If the cluster is already healthy, the process stops to avoid unnecessary actions.
 - name: Check Patroni cluster state
@@ -27,10 +29,13 @@
 - name: Abort if the Patroni cluster is already running
   ansible.builtin.fail:
     msg: "The Patroni cluster is already running. Stop rollback."
+  vars:
+    healthy_nodes: "{{ patroni_cluster_state.results | map(attribute='status') | list | select('equalto', 200) | list | length }}"
+    total_nodes: "{{ groups['primary'] | length + groups['secondary'] | length }}"
   when:
     - inventory_hostname in groups['primary']
     # Check if the number of 200 status codes equals the total number of nodes
-    - patroni_cluster_state.results | map(attribute='status') | list | select('equalto', 200) | list | length == (groups['primary'] | length + groups['secondary'] | length)
+    - healthy_nodes == total_nodes
 
 - name: Make sure the new PostgreSQL is not running
   ansible.builtin.command: "{{ pg_new_bindir }}/pg_ctl status -D {{ pg_new_datadir }}"
