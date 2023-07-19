@@ -28,7 +28,7 @@
   ansible.builtin.fail:
     msg: "The Patroni cluster is already running. Stop rollback."
   vars:
-    cluster_members: "{{ patroni_cluster_result.json.members | length }}"
+    cluster_members: "{{ patroni_cluster_result.json.members | default([]) | length }}"
     total_nodes: "{{ groups['primary'] | length + groups['secondary'] | length }}"
   when:
     - inventory_hostname in groups['primary']
