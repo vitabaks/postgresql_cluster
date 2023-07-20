@@ -1,11 +1,28 @@
 ---
 
-- name: "Make sure {{ postgresql_data_dir }}/{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }} is symlink"
+# 🔄 Determine base pg_wal_dir name
+- name: Roles.patroni.custom_wal_dir | Set pg_wal_dir based on postgresql_version
+  ansible.builtin.set_fact:
+    pg_wal_dir: "{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }}"
+
+- name: "Make sure {{ postgresql_data_dir }}/{{ pg_wal_dir }} is symlink"
   ansible.builtin.stat:
-    path: "{{ postgresql_data_dir }}/{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }}"
+    path: "{{ postgresql_data_dir }}/{{ pg_wal_dir }}"
   register: sym
 
-- block:  # synchronize WAL`s if wal dir exist (and is not symlink)
+# Synchronize WAL`s (if wal dir is not symlink)
+- block:
+    - name: Make sure the custom WAL directory "{{ postgresql_wal_dir }}" exists and is empty
+      ansible.builtin.file:
+        path: "{{ postgresql_wal_dir }}"
+        state: "{{ item }}"
+        owner: postgres
+        group: postgres
+        mode: "0700"
+      loop:
+        - absent
+        - directory
+
     - name: Make sure rsync is installed (for synchronize wal dir)
       ansible.builtin.package:
         name:
@@ -18,11 +35,26 @@
       retries: 3
       environment: "{{ proxy_env | default({}) }}"
 
-    - name: Stop patroni service (for create symlink)
+    - name: Execute CHECKPOINT before stopping PostgreSQL
+      become: true
+      become_user: postgres
+      ansible.builtin.command: psql -tAXc "CHECKPOINT"
+
+    - name: Stop patroni service on the Replica (for create symlink)
+      become: true
+      become_user: root
       ansible.builtin.systemd:
         name: patroni
         state: stopped
-      register: patroni_stop_result
+      when: not is_master | bool
+
+    - name: Stop patroni service on the Leader (for create symlink)
+      become: true
+      become_user: root
+      ansible.builtin.systemd:
+        name: patroni
+        state: stopped
+      when: is_master | bool
 
     - name: Make sure PostgreSQL is stopped
       become: true
@@ -35,38 +67,32 @@
       retries: 100
       delay: 6
 
-    - name: "Synchronize {{ postgresql_data_dir }}/{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }} to {{ postgresql_wal_dir }}"
+    - name: "Synchronize {{ postgresql_data_dir }}/{{ pg_wal_dir }} to {{ postgresql_wal_dir }}"
       become: true
       become_user: postgres
       ansible.posix.synchronize:
-        src: "{{ postgresql_data_dir }}/{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }}/"
+        src: "{{ postgresql_data_dir }}/{{ pg_wal_dir }}/"
         dest: "{{ postgresql_wal_dir }}/"
       delegate_to: "{{ inventory_hostname }}"
 
-    # 🔄 Determine base pg_wal_dir name
-    - name: Roles.patroni.custom_wal_dir | Set pg_wal_dir based on postgresql_version
-      ansible.builtin.set_fact:
-        pg_wal_dir: "{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }}"
-
     - name: "Rename {{ pg_wal_dir }} to {{ pg_wal_dir }}_old"
       ansible.builtin.command: mv {{ postgresql_data_dir }}/{{ pg_wal_dir }} {{ postgresql_data_dir }}/{{ pg_wal_dir }}_old
-      register: mv_result
-  when: sym.stat.exists and not sym.stat.islnk|bool
 
-- name: "Create symlink {{ postgresql_data_dir }}/{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }} -> {{ postgresql_wal_dir }}"
-  become: true
-  become_user: postgres
-  ansible.builtin.file:
-    src: "{{ postgresql_wal_dir }}"
-    dest: "{{ postgresql_data_dir }}/{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }}"
-    state: link
-  when: sym.stat.islnk is not defined or not sym.stat.islnk|bool
+    - name: "Create symlink {{ postgresql_data_dir }}/{{ pg_wal_dir }} -> {{ postgresql_wal_dir }}"
+      become: true
+      become_user: postgres
+      ansible.builtin.file:
+        src: "{{ postgresql_wal_dir }}"
+        dest: "{{ postgresql_data_dir }}/{{ pg_wal_dir }}"
+        state: link
 
-- block:  # start patroni
-    - name: Start patroni service
+    - name: Start patroni service on the Leader
+      become: true
+      become_user: root
       ansible.builtin.systemd:
         name: patroni
         state: started
+      when: is_master | bool
 
     - name: "Wait for port {{ patroni_restapi_port }} to become open on the host"
       ansible.builtin.wait_for:
@@ -76,23 +102,50 @@
         timeout: 120
         delay: 10
       ignore_errors: false
+      when: is_master | bool
 
-    - name: Check that the patroni is healthy
+    - name: Check that the patroni is healthy (the leader with the lock)
+      ansible.builtin.uri:
+        url: "http://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ patroni_restapi_port }}/leader"
+        status_code: 200
+      register: patroni_result
+      until: patroni_result.status == 200
+      retries: 120
+      delay: 10
+      when: is_master | bool
+
+    - name: Start patroni service on the Replica
+      become: true
+      become_user: root
+      ansible.builtin.systemd:
+        name: patroni
+        state: started
+      when: not is_master | bool
+
+    - name: "Wait for port {{ patroni_restapi_port }} to become open on the host"
+      ansible.builtin.wait_for:
+        port: "{{ patroni_restapi_port }}"
+        host: "{{ hostvars[inventory_hostname]['inventory_hostname'] }}"
+        state: started
+        timeout: 120
+        delay: 10
+      ignore_errors: false
+      when: not is_master | bool
+
+    - name: Check that the patroni is healthy on the Replica
       ansible.builtin.uri:
         url: "http://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ patroni_restapi_port }}/health"
         status_code: 200
-      register: replica_result
-      until: replica_result.status == 200
+      register: patroni_result
+      until: patroni_result.status == 200
       retries: 120
       delay: 10
-  when: patroni_stop_result is changed
+      when: not is_master | bool
 
-- name: "Remove {{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }}_old directory"
-  ansible.builtin.file:
-    path: "{{ postgresql_data_dir }}/{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }}_old"
-    state: absent
-  when:
-    - replica_result.status is defined
-    - replica_result.status == 200
+    - name: "Remove {{ pg_wal_dir }}_old directory"
+      ansible.builtin.file:
+        path: "{{ postgresql_data_dir }}/{{ pg_wal_dir }}_old"
+        state: absent
+  when: sym.stat.exists and not sym.stat.islnk | bool
 
 ...

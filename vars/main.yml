@@ -384,6 +384,7 @@ wal_g:
 basebackup:
   - { option: "max-rate", value: "100M" }
   - { option: "checkpoint", value: "fast" }
+#  - { option: "waldir", value: "{{ postgresql_wal_dir }}" }
 pg_probackup:
   - { option: "command", value: "{{ pg_probackup_restore_command }}" }
   - { option: "no_params", value: "true" }

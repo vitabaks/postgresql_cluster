@@ -15,7 +15,13 @@
         with_haproxy_load_balancing: true
         consul_node_role: server # if dcs_type: "consul"
         consul_bootstrap_expect: true # if dcs_type: "consul"
+        postgresql_version: "15"
         cacheable: true
+
+    - name: Set variables for custom PostgreSQL data and WAL directory test
+      ansible.builtin.set_fact:
+        postgresql_data_dir: "/data/{{ postgresql_version }}/main"
+        postgresql_wal_dir: "/wal/{{ postgresql_version }}/pg_wal"
 
     - name: Set variables for TimescaleDB cluster deployment test
       ansible.builtin.set_fact:
