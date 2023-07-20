@@ -990,7 +990,7 @@
 # create symlink pg_xlog/pg_wal to custom WAL dir
 - ansible.builtin.import_tasks: custom_wal_dir.yml
   when: postgresql_wal_dir is defined and postgresql_wal_dir | length > 0
-  tags: patroni, custom_wal_dir
+  tags: patroni, custom_wal_dir, point_in_time_recovery
 
 # disable postgresql from autostart
 - block:  # "Debian"
