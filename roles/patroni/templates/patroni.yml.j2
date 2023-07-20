@@ -181,9 +181,6 @@ postgresql:
     {% for item in basebackup %}
     {{ item.option }}: '{{ item.value }}'
     {% endfor %}
-    {% if postgresql_version is version('10', '>=') and postgresql_wal_dir is defined and postgresql_wal_dir | length > 0 %}
-    waldir: {{ postgresql_wal_dir }}
-    {% endif %}
   {% endif %}
   {% if 'pg_probackup' in patroni_create_replica_methods %}
   pg_probackup:
