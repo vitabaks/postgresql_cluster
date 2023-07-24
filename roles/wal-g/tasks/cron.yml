@@ -1,4 +1,29 @@
 ---
+
+- name: Make sure that the cronie package is installed
+  ansible.builtin.package:
+    name: cronie
+    state: present
+  register: package_status
+  until: package_status is success
+  delay: 5
+  retries: 3
+  environment: "{{ proxy_env | default({}) }}"
+  when: ansible_os_family == "RedHat"
+  tags: wal_g_cron
+
+- name: Make sure that the cron package is installed
+  ansible.builtin.apt:
+    name: cron
+    state: present
+  register: apt_status
+  until: apt_status is success
+  delay: 5
+  retries: 3
+  environment: "{{ proxy_env | default({}) }}"
+  when: ansible_os_family == "Debian"
+  tags: wal_g_cron
+
 - name: Add WAL-G cron jobs
   ansible.builtin.cron:
     cron_file: "{{ item.file | default('') }}"
