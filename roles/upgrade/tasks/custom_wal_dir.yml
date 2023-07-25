@@ -8,6 +8,8 @@
 # Synchronize WAL`s (if wal dir is not symlink)
 - block:
     - name: Make sure the custom WAL directory "{{ pg_new_wal_dir }}" exists and is empty
+      become: true
+      become_user: root
       ansible.builtin.file:
         path: "{{ pg_new_wal_dir }}"
         state: "{{ item }}"
