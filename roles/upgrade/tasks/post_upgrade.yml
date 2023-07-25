@@ -29,7 +29,7 @@
     path: "{{ postgresql_wal_dir | regex_replace('(/$)', '') | regex_replace(postgresql_version, pg_old_version) }}"
     state: absent
   when:
-    - pg_new_wal_dir is defined
+    - postgresql_wal_dir | length > 0
     - pg_new_wal_dir | length > 0
 
 # RedHat based
