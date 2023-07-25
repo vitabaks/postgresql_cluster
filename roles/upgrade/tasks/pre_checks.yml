@@ -95,6 +95,16 @@
     - inventory_hostname in groups['primary']
     - pg_new_datadir == pg_current_datadir.stdout | trim
 
+# Stop, if the current WAL directory is the same as pg_new_wal_dir
+- name: "Pre-Check error. The current WAL directory is the same as new WAL directory"
+  ansible.builtin.fail:
+    msg:
+      - "The new WAL directory ({{ pg_new_wal_dir }}) must be different from the current one ({{ postgresql_wal_dir }})"
+      - "Please specify a different path for the 'pg_new_wal_dir' variable."
+  when:
+    - inventory_hostname in groups['primary']
+    - pg_new_wal_dir | length > 0 and pg_new_wal_dir == postgresql_wal_dir
+
 - name: '[Pre-Check] Make sure that physical replication is active'
   ansible.builtin.command: >-
     psql -tAXc "select count(*) from pg_stat_replication
