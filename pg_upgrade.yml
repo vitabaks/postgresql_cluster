@@ -1,6 +1,5 @@
 ---
 # TODO:
-# - custom WAL dir symlink (pg_new_wal_dir)
 # - tablespaces (rsync for replicas)
 # - pause pgbouncer pools (optional)
 # - update PGDATA in WAL-G config after upgrade

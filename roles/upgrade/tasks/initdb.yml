@@ -103,4 +103,11 @@
     - inventory_hostname in groups['primary']
     - pg_new_confdir == pg_new_datadir
 
+# if pg_new_wal_dir is defined
+- name: Create a symlink to the new WAL directory
+  ansible.builtin.include_tasks: "{{ role_path }}/tasks/custom_wal_dir.yml"
+  when:
+    - pg_new_wal_dir is defined
+    - pg_new_wal_dir | length > 0
+
 ...

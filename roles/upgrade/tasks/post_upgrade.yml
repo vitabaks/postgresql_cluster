@@ -23,6 +23,15 @@
     - pg_new_datadir == pg_current_datadir.stdout | trim
     - ansible_os_family == "Debian"
 
+# if pg_new_wal_dir is defined
+- name: Delete the old WAL directory
+  ansible.builtin.file:
+    path: "{{ postgresql_wal_dir | regex_replace('(/$)', '') | regex_replace(postgresql_version, pg_old_version) }}"
+    state: absent
+  when:
+    - pg_new_wal_dir is defined
+    - pg_new_wal_dir | length > 0
+
 # RedHat based
 - name: Remove old PostgreSQL packages
   become: true
