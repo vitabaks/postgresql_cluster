@@ -20,8 +20,8 @@
 
     - name: Set variables for custom PostgreSQL data and WAL directory test
       ansible.builtin.set_fact:
-        postgresql_data_dir: "/data/{{ postgresql_version }}/main"
-        postgresql_wal_dir: "/wal/{{ postgresql_version }}/pg_wal"
+        postgresql_data_dir: "/pgdata/{{ postgresql_version }}/main"
+        postgresql_wal_dir: "/pgwal/{{ postgresql_version }}/pg_wal"
 
     - name: Set variables for TimescaleDB cluster deployment test
       ansible.builtin.set_fact:
