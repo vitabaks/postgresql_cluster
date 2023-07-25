@@ -229,6 +229,13 @@
         name: upgrade
         tasks_from: upgrade_secondary
 
+    # if pg_new_wal_dir is defined
+    - name: Create WAL dir symlink
+      ansible.builtin.include_role:
+        name: upgrade
+        tasks_from: custom_wal_dir
+      when: pg_new_wal_dir | length > 0
+
     - name: Remove old cluster from DCS
       ansible.builtin.include_role:
         name: upgrade

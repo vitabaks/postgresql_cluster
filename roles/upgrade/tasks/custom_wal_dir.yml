@@ -1,6 +1,6 @@
 ---
 
-- name: "Make sure {{ pg_new_datadir }}/pg_wal is symlink"
+- name: "Make sure {{ pg_new_datadir }}/pg_wal is not symlink"
   ansible.builtin.stat:
     path: "{{ pg_new_datadir }}/pg_wal"
   register: sym
