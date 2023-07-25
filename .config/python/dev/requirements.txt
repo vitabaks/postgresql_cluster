@@ -5,7 +5,7 @@ attrs==23.1.0
 binaryornot==0.4.4
 black==23.3.0
 bracex==2.3.post1
-certifi==2023.5.7
+certifi==2023.7.22
 chardet==5.1.0
 charset-normalizer==3.1.0
 click==8.1.3
