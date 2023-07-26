@@ -1,5 +1,29 @@
 ---
 
+- name: Make sure that the cronie package is installed
+  ansible.builtin.package:
+    name: cronie
+    state: present
+  register: package_status
+  until: package_status is success
+  delay: 5
+  retries: 3
+  environment: "{{ proxy_env | default({}) }}"
+  when: ansible_os_family == "RedHat"
+  tags: pgbackrest_cron
+
+- name: Make sure that the cron package is installed
+  ansible.builtin.apt:
+    name: cron
+    state: present
+  register: apt_status
+  until: apt_status is success
+  delay: 5
+  retries: 3
+  environment: "{{ proxy_env | default({}) }}"
+  when: ansible_os_family == "Debian"
+  tags: pgbackrest_cron
+
 - name: Add pgbackrest cron jobs on database server
   ansible.builtin.cron:
     cron_file: "{{ item.file | default('') }}"
@@ -17,6 +41,7 @@
   when:
     - "'postgres_cluster' in group_names"
     - pgbackrest_repo_host | default('') | length < 1
+  tags: pgbackrest_cron
 
 # Dedicated pgbackrest server (if "repo_host" is set)
 - name: Add pgbackrest cron jobs on pgbackrest server
@@ -36,3 +61,4 @@
   when:
     - "'pgbackrest' in group_names"
     - pgbackrest_repo_host | default('') | length > 0
+  tags: pgbackrest_cron
