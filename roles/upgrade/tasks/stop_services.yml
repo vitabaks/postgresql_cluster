@@ -18,15 +18,14 @@
 - name: Wait until replication lag is 0 bytes
   ansible.builtin.command: >-
     psql -tAXc "select
-      pg_wal_lsn_diff(pg_current_wal_lsn(),replay_lsn) as pg_lag_bytes
-      from pg_stat_replication
-      order by pg_lag_bytes desc limit 1"
+      coalesce(max(pg_wal_lsn_diff(pg_current_wal_lsn(),replay_lsn)),1) as pg_lag_bytes
+      from pg_stat_replication"
   register: pg_lag_bytes
   until: pg_lag_bytes.stdout|int == 0
   retries: 60  # max duration 2 minutes
   delay: 2
   changed_when: false
-  ignore_errors: true
+  failed_when: false
   when:
     - inventory_hostname in groups['primary']
     - pg_old_version is version('10', '>=')
@@ -35,15 +34,14 @@
 - name: Wait until replication lag is 0 bytes
   ansible.builtin.command: >-
     psql -tAXc "select
-      pg_xlog_location_diff(pg_current_xlog_location(),replay_location) as pg_lag_bytes
-      from pg_stat_replication
-      order by pg_lag_bytes desc limit 1"
+      coalesce(max(pg_xlog_location_diff(pg_current_xlog_location(),replay_location)),1) as pg_lag_bytes
+      from pg_stat_replication"
   register: pg_lag_bytes
   until: pg_lag_bytes.stdout|int == 0
   retries: 60  # max duration 2 minutes
   delay: 2
   changed_when: false
-  ignore_errors: true
+  failed_when: false
   when:
     - inventory_hostname in groups['primary']
     - pg_old_version is version('10', '<')
