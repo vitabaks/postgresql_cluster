@@ -257,4 +257,23 @@
     path: /tmp/testrsync
     state: absent
 
+# Tablespaces
+- name: '[Pre-Check] Check if PostgreSQL tablespaces exist'
+  ansible.builtin.command: >-
+    psql -tAXc "select
+      pg_tablespace_location(oid) as tablespace_location
+      from pg_tablespace
+      where spcname not in ('pg_default','pg_global')"
+  register: tablespace_location
+  changed_when: false
+  when:
+    - inventory_hostname in groups['primary']
+
+- name: "Print tablespace location"
+  ansible.builtin.debug:
+    var: tablespace_location.stdout_lines
+  when:
+    - inventory_hostname in groups['primary']
+    - tablespace_location.stdout_lines | length > 0
+
 ...
