@@ -1,11 +1,12 @@
 ---
 # TODO:
 # - tablespaces (rsync for replicas)
-# - pause pgbouncer pools (optional)
 # - update PGDATA in WAL-G config after upgrade
 # - copy files - FTS, etc (optional)
+# - pause pgbouncer pools (optional)
 # - README
 # - - recommendation: update postgres/patroni/system and database extensions before upgrade (optional) << update_pgcluster.yml
+# - Citus support
 - name: "Upgrade PostgreSQL {{ pg_old_version }} to version {{ pg_new_version }} (PostgreSQL HA Cluster: {{ patroni_cluster_name }})"
   hosts: postgres_cluster
   gather_facts: true
