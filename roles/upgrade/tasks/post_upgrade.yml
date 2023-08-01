@@ -131,6 +131,24 @@
     - pgbackrest_install | bool
     - pgbackrest_repo_host | length > 0
 
+# WAL-G
+- block:
+    - name: "WAL-G | Update PostgreSQL data directory path in .walg.json"
+      ansible.builtin.replace:
+        path: "{{ postgresql_home_dir }}/.walg.json"
+        regexp: "{{ postgresql_data_dir | regex_replace(postgresql_version, pg_old_version) }}"
+        replace: "{{ postgresql_data_dir | regex_replace(postgresql_version, pg_new_version) }}"
+
+    - name: "WAL-G | Update PostgreSQL data directory path in cron jobs"
+      ansible.builtin.replace:
+        path: "{{ wal_g_cron_jobs[0].file | default('/etc/cron.d/walg') }}"
+        regexp: "{{ postgresql_data_dir | regex_replace(postgresql_version, pg_old_version) }}"
+        replace: "{{ postgresql_data_dir | regex_replace(postgresql_version, pg_new_version) }}"
+  become: true
+  become_user: root
+  ignore_errors: true
+  when: wal_g_install | bool
+
 - name: Check the Patroni cluster state
   run_once: true
   become: true

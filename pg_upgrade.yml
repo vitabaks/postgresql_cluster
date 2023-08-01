@@ -1,6 +1,5 @@
 ---
 # TODO:
-# - update PGDATA in WAL-G config after upgrade
 # - copy files - FTS, etc (optional)
 # - pause pgbouncer pools (optional)
 # - README
