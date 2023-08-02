@@ -1,6 +1,5 @@
 ---
 # TODO:
-# - copy files - FTS, etc (optional)
 # - pause pgbouncer pools (optional)
 # - README
 # - - recommendation: update postgres/patroni/system and database extensions before upgrade (optional) << update_pgcluster.yml
@@ -147,6 +146,12 @@
       ansible.builtin.include_role:
         name: upgrade
         tasks_from: initdb
+
+    # (optional) copy files specified in variable:
+    # 'copy_files_to_all_server'
+    - name: Copy files
+      ansible.builtin.include_role:
+        name: copy
 
     - name: Check Schema Compatibility
       ansible.builtin.import_role:

@@ -1,3 +1,4 @@
+# yamllint disable rule:line-length
 ---
 # Variables for the pg_upgrade.yml playbook
 
@@ -52,5 +53,13 @@ update_extensions: true  # if 'true', try to update extensions automatically
 # Do not perform an upgrade if
 max_replication_lag_bytes: 10485760  # 10 MiB - Maximum allowed replication lag in bytes
 max_transaction_sec: 15  # Maximum allowed duration for a transactions in seconds
+
+# (optional) Copy any files located in the "files" directory to all servers
+# example for Postgres Full-Text Search (FTS) files
+copy_files_to_all_server: []
+#  - { src: "files/numbers.syn", dest: "/usr/share/postgresql/{{ pg_new_version }}/tsearch_data/numbers.syn", owner: "root", group: "root", mode: "0644" }
+#  - { src: "files/part_of_speech_russian.stop", dest: "/usr/share/postgresql/{{ pg_new_version }}/tsearch_data/part_of_speech_russian.stop", owner: "root", group: "root", mode: "0644" }
+#  - { src: "files/ru_ru.affix", dest: "/usr/share/postgresql/{{ pg_new_version }}/tsearch_data/ru_ru.affix", owner: "root", group: "root", mode: "0644" }
+#  - { src: "files/ru_ru.dict", dest: "/usr/share/postgresql/{{ pg_new_version }}/tsearch_data/ru_ru.dict", owner: "root", group: "root", mode: "0644" }
 
 ...
