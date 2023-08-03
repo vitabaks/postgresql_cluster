@@ -14,6 +14,7 @@ unix_socket_dir = /var/run/postgresql
 auth_type = {{ pgbouncer_auth_type }}
 {% if pgbouncer_auth_user | bool %}
 auth_user = {{ pgbouncer_auth_username }}
+auth_dbname = {{ pgbouncer_auth_dbname }}
 auth_query = SELECT usename, passwd FROM user_search($1)
 {% else %} 
 auth_file = {{ pgbouncer_conf_dir }}/userlist.txt
