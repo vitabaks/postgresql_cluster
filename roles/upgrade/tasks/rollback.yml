@@ -197,7 +197,7 @@
     - name: Rollback completed
       ansible.builtin.debug:
         msg:
-          - "The rollback to the old PostgreSQL is complete."
+          - "Rollback to the old PostgreSQL is completed."
           - "Current version: {{ postgres_version.stdout }}"
   when: inventory_hostname in groups['primary']
 

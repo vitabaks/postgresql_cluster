@@ -59,6 +59,13 @@
     - pg_lag_bytes.stdout is defined
     - pg_lag_bytes.stdout|int != 0
 
+# if 'pgbouncer_install' is 'true' and 'pgbouncer_pool_pause' is 'true'
+- name: Perform PAUSE on all pgbouncers servers
+  ansible.builtin.include_tasks: pgbouncer_pause.yml
+  when:
+    - pgbouncer_install | bool
+    - pgbouncer_pool_pause | bool
+
 # Stop PostgreSQL (if replication lag is 0 bytes)
 - name: Stop PostgreSQL on the Leader
   ansible.builtin.command: >-

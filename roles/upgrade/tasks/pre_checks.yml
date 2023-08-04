@@ -276,4 +276,14 @@
     - inventory_hostname in groups['primary']
     - tablespace_location.stdout_lines | length > 0
 
+# PgBouncer (if 'pgbouncer_pool_pause' is 'true')
+# test access via localhost to be able to perform 'PAUSE' command
+- name: '[Pre-Check] Test PgBouncer access via localhost'
+  ansible.builtin.command: >
+    psql -h localhost -p {{ pgbouncer_listen_port }} -U {{ patroni_superuser_username }} -d pgbouncer -tAXc "SHOW POOLS"
+  changed_when: false
+  when:
+    - pgbouncer_install | bool
+    - pgbouncer_pool_pause | bool
+
 ...

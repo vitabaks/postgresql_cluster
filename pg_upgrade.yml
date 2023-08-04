@@ -1,6 +1,5 @@
 ---
 # TODO:
-# - pause pgbouncer pools (optional)
 # - README
 # - - recommendation: update postgres/patroni/system and database extensions before upgrade (optional) << update_pgcluster.yml
 # - Citus support

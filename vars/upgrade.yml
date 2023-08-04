@@ -62,4 +62,11 @@ copy_files_to_all_server: []
 #  - { src: "files/ru_ru.affix", dest: "/usr/share/postgresql/{{ pg_new_version }}/tsearch_data/ru_ru.affix", owner: "root", group: "root", mode: "0644" }
 #  - { src: "files/ru_ru.dict", dest: "/usr/share/postgresql/{{ pg_new_version }}/tsearch_data/ru_ru.dict", owner: "root", group: "root", mode: "0644" }
 
+# if 'pgbouncer_install' is 'true'
+pgbouncer_pool_pause: true  # or 'false' if you don't want to pause pgbouncer pools during upgrade.
+pgbouncer_pool_pause_terminate_after: 30  # the time (in seconds) after which instead of waiting for the completion of the active queries, the script terminates the slow active queries.
+pgbouncer_pool_pause_stop_after: 60  # the time (in seconds) after which the script exit with an error if it was not possible to pause all pgbouncer pools.
+pg_slow_active_query_treshold_to_analyse: 1000  # wait for the completion of active requests that are executed longer than the specified time (in milliseconds) before trying to pause the pool.
+pg_slow_active_query_treshold_to_terminate: 1000  # terminate active queries that longer than the specified time (in milliseconds) after reaching "pgbouncer_pool_pause_terminate_after" before trying to pause the pool.
+
 ...
