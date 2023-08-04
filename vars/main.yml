@@ -303,6 +303,7 @@ pgbouncer_auth_type: "{{ postgresql_password_encryption_algorithm }}"
 pgbouncer_auth_user: true # or 'false' if you want to manage the list of users for authentication in the database via userlist.txt
 pgbouncer_auth_username: pgbouncer # user who can query the database via the user_search function
 pgbouncer_auth_password: "pgbouncer-pass" # please change password
+pgbouncer_auth_dbname: "postgres"
 
 pgbouncer_pools:
   - { name: "postgres", dbname: "postgres", pool_parameters: "" }
