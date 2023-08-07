@@ -36,7 +36,7 @@
     set -o pipefail;
 
     pgb_pause_command="psql -h localhost -p {{ pgbouncer_listen_port }} -U {{ patroni_superuser_username }} -d pgbouncer -tAXc \"PAUSE\""
-    pgb_resume_command="kill -SIGUSR2 $(pidof pgbouncer)"
+    pgb_resume_command='kill -SIGUSR2 $(pidof pgbouncer)'
     pgb_servers="{{ (groups['primary'] + groups['secondary']) | join('\n') }}"
     pgb_count=$(echo -e "$pgb_servers" | wc -l)
     pg_server="{{ groups['primary'][0] }}"

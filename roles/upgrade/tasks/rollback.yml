@@ -167,8 +167,12 @@
     - inventory_hostname in groups['secondary']
 
 # if 'pgbouncer_install' is 'true' and 'pgbouncer_pool_pause' is 'true'
-- name: Perform RESUME PgBouncer pools (if paused)
-  ansible.builtin.include_tasks: pgbouncer_resume.yml
+- block:
+    - name: Disable maintenance mode
+      ansible.builtin.include_tasks: maintenance_disable.yml
+
+    - name: Perform RESUME PgBouncer pools (if paused)
+      ansible.builtin.include_tasks: pgbouncer_resume.yml
   when:
     - pgbouncer_install | bool
     - pgbouncer_pool_pause | bool

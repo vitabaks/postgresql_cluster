@@ -11,6 +11,36 @@
   when:
     - inventory_hostname in groups['primary']
 
+# Enable maintenance mode for HAProxy
+# if 'pgbouncer_install' is 'true' and 'pgbouncer_pool_pause' is 'true'
+# we temporarily disable http-checks in order to keep database connections after stopping the Patroni service
+# and then pause the pgbouncer pools.
+- block:
+    - name: Stop confd service
+      ansible.builtin.service:
+        name: confd
+        state: stopped
+
+    - name: Update conf file "/etc/haproxy/haproxy.cfg"
+      ansible.builtin.template:
+        src: templates/haproxy-no-http-checks.cfg.j2
+        dest: /etc/haproxy/haproxy.cfg
+        owner: haproxy
+        group: haproxy
+
+    - name: Reload haproxy service
+      ansible.builtin.systemd:
+        name: haproxy
+        state: reloaded
+  become: true
+  become_user: root
+  ignore_errors: true
+  when:
+    - with_haproxy_load_balancing | bool
+    - pgbouncer_install | bool
+    - pgbouncer_pool_pause | bool
+
+# Stop Patroni
 - name: Stop Patroni service
   become: true
   become_user: root

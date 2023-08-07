@@ -207,10 +207,10 @@
       ansible.builtin.include_vars: "vars/upgrade.yml"
       tags: always
   tasks:
-    - name: Pause Patroni
+    - name: Enable maintenance mode
       ansible.builtin.include_role:
         name: upgrade
-        tasks_from: pause_patroni
+        tasks_from: maintenance_enable
 
     - name: Stop Services
       ansible.builtin.include_role:
@@ -248,6 +248,11 @@
       ansible.builtin.include_role:
         name: upgrade
         tasks_from: start_services
+
+    - name: Disable maintenance mode
+      ansible.builtin.include_role:
+        name: upgrade
+        tasks_from: maintenance_disable
   tags:
     - upgrade
 
