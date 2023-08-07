@@ -69,7 +69,7 @@ pgbouncer_pool_pause_terminate_after: 30
 # the time (in seconds) after which the script exit with an error if it was not possible to pause all pgbouncer pools.
 pgbouncer_pool_pause_stop_after: 60
 # wait for the completion of active queries that are executed longer than the specified time (in milliseconds) before trying to pause the pool.
-pg_slow_active_query_treshold_to_analyse: 1000
+pg_slow_active_query_treshold: 1000
 # terminate active queries that longer than the specified time (in milliseconds) after reaching "pgbouncer_pool_pause_terminate_after" before trying to pause the pool.
 pg_slow_active_query_treshold_to_terminate: 100  # (0 = terminate all active backends)
 
