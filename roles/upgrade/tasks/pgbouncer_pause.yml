@@ -3,7 +3,7 @@
 # Perform PAUSE in parallel on all pgbouncers servers
 #
 # This script performs the following actions:
-# 1. Waits for active queries on the database server to complete.
+# 1. Waits for active queries on the database servers to complete.
 # 2. If there are no active queries, sends a PAUSE command to each pgbouncer server in the pgb_servers list (in parallel to all servers).
 # 3. If all pgbouncer are successfully paused, the script exits.
 # 4. If active queries do not complete within 30 seconds, the script forcibly terminates slow active queries using pg_slow_active_terminate_query.
@@ -35,13 +35,15 @@
   ansible.builtin.shell: |
     set -o pipefail;
 
-    pgb_pause_command="psql -h localhost -p {{ pgbouncer_listen_port }} -U {{ patroni_superuser_username }} -d pgbouncer -tAXc \"PAUSE\""
-    pgb_resume_command='kill -SIGUSR2 $(pidof pgbouncer)'
-    pgb_servers="{{ (groups['primary'] + groups['secondary']) | join('\n') }}"
-    pgb_count=$(echo -e "$pgb_servers" | wc -l)
-    pg_server="{{ groups['primary'][0] }}"
+    pg_servers="{{ (groups['primary'] + groups['secondary']) | join('\n') }}"
+    pg_count=$(echo -e "$pg_servers" | wc -l)
     pg_slow_active_count_query="{{ pg_slow_active_count_query }}"
     pg_slow_active_terminate_query="{{ pg_slow_active_terminate_query }}"
+    # it is assumed that pgbouncer is installed on database servers
+    pgb_servers="$pg_servers"
+    pgb_count="$pg_count"
+    pgb_pause_command="psql -h localhost -p {{ pgbouncer_listen_port }} -U {{ patroni_superuser_username }} -d pgbouncer -tAXc \"PAUSE\""
+    pgb_resume_command='kill -SIGUSR2 $(pidof pgbouncer)'
 
     start_time=$(date +%s)
     while true; do
@@ -49,11 +51,18 @@
       # initialize pgb_paused_count to 0 (we assume that all pgbouncers are not paused)
       pgb_paused_count=0
 
-      # wait for the active queries to complete on pg_server
-      pg_slow_active_count=$(ssh -o StrictHostKeyChecking=no "$pg_server" "psql -tAXc \"$pg_slow_active_count_query\"")
-      echo "$(date): pg_slow_active_count: $pg_slow_active_count"
+      # wait for the active queries to complete on pg_servers
+      IFS=$'\n' pg_slow_active_counts=($(echo -e "$pg_servers" | xargs -I {} -P "$pg_count" -n 1 ssh -o StrictHostKeyChecking=no {} "psql -tAXc \"$pg_slow_active_count_query\""))
 
-      if [[ "$pg_slow_active_count" == 0 ]]; then
+      # sum up all the values in the array
+      total_pg_slow_active_count=0
+      for count in "${pg_slow_active_counts[@]}"; do
+        total_pg_slow_active_count=$((total_pg_slow_active_count + count))
+      done
+
+      echo "$(date): total pg_slow_active_count: $total_pg_slow_active_count"
+
+      if [[ "$total_pg_slow_active_count" == 0 ]]; then
         # pause pgbouncer on all pgb_servers. We send via ssh to all pgbouncers in parallel and collect results from all (maximum wait time 2 seconds)
         IFS=$'\n' pause_results=($(echo -e "$pgb_servers" | xargs -I {} -P "$pgb_count" -n 1 ssh -o StrictHostKeyChecking=no {} "timeout 2 $pgb_pause_command 2>&1 || true"))
         echo "${pause_results[*]}"
@@ -71,9 +80,9 @@
         echo "${resume_results[*]}"
       fi
 
-      # after 30 seconds of waiting, terminate active sessions and try pausing again
+      # after 30 seconds of waiting, terminate active sessions on pg_servers and try pausing again
       if (( current_time - start_time >= {{ pgbouncer_pool_pause_terminate_after }} )); then
-        pg_terminate_result=$(ssh -o StrictHostKeyChecking=no "$pg_server" "psql -tAXc \"$pg_slow_active_terminate_query\"")
+        echo -e "$pg_servers" | xargs -I {} -P "$pg_count" -n 1 ssh -o StrictHostKeyChecking=no {} "psql -tAXc \"$pg_slow_active_terminate_query\""
         echo "$(date): terminate active queries"
       fi
 
@@ -90,17 +99,17 @@
   when: inventory_hostname in groups['primary']
 
 # Stop, if it was not possible to put the pools on pause
-- name: Perform rollback
-  ansible.builtin.include_tasks: rollback.yml
-  when: hostvars[groups['primary'][0]].pgbouncer_pool_pause_result is failed
+- block:
+    - name: Perform rollback
+      ansible.builtin.include_tasks: rollback.yml
 
-- name: "ERROR: PgBouncer pools cannot be paused"
-  ansible.builtin.fail:
-    msg:
-      - "PgBouncer pools could not be paused, please try again later."
-      - "The log is available on the path: /tmp/pgbouncer_pool_pause_{{ ansible_date_time.date }}.log"
-      - "on the {{ hostvars[groups['primary'][0]]['ansible_hostname'] }} server."
-  run_once: true
+    - name: "ERROR: PgBouncer pools cannot be paused"
+      ansible.builtin.fail:
+        msg:
+          - "PgBouncer pools could not be paused, please try again later."
+          - "The log is available on the path: /tmp/pgbouncer_pool_pause_{{ ansible_date_time.date }}.log"
+          - "on the {{ hostvars[groups['primary'][0]]['ansible_hostname'] }} server."
+      run_once: true
   when: hostvars[groups['primary'][0]].pgbouncer_pool_pause_result is failed
 
 ...
