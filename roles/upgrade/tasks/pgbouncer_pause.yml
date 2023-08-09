@@ -3,7 +3,7 @@
 # Perform PAUSE in parallel on all pgbouncers servers
 #
 # This script performs the following actions:
-# 1. Waits for active queries on the database servers to complete.
+# 1. Waits for active queries on the database servers to complete (with a runtime more than 'pg_slow_active_query_treshold').
 # 2. If there are no active queries, sends a PAUSE command to each pgbouncer server in the pgb_servers list (in parallel to all servers).
 # 3. If all pgbouncer are successfully paused, the script exits.
 # 4. If active queries do not complete within 30 seconds, the script forcibly terminates slow active queries using pg_slow_active_terminate_query.
