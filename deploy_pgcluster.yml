@@ -131,16 +131,6 @@
       ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
       tags: always
 
-    - name: Checking Linux distribution
-      ansible.builtin.fail:
-        msg: "{{ ansible_distribution }} is not supported"
-      when: ansible_distribution not in os_valid_distributions
-
-    - name: Checking version of OS Linux
-      ansible.builtin.fail:
-        msg: "{{ ansible_distribution_version }} of {{ ansible_distribution }} is not supported"
-      when: ansible_distribution_version is version_compare(os_minimum_versions[ansible_distribution], '<')
-
     - name: Build a firewall_ports_dynamic_var
       ansible.builtin.set_fact:
         firewall_ports_dynamic_var: "{{ firewall_ports_dynamic_var | default([]) + (firewall_allowed_tcp_ports_for[item] | default([])) }}"

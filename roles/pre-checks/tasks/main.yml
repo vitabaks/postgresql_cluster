@@ -7,6 +7,16 @@
   when:
     - ansible_version.full is version(minimal_ansible_version, '<')
 
+- name: Checking Linux distribution
+  ansible.builtin.fail:
+    msg: "{{ ansible_distribution }} is not supported"
+  when: ansible_distribution not in os_valid_distributions
+
+- name: Checking version of OS Linux
+  ansible.builtin.fail:
+    msg: "{{ ansible_distribution_version }} of {{ ansible_distribution }} is not supported"
+  when: ansible_distribution_version is version_compare(os_minimum_versions[ansible_distribution], '<')
+
 - name: Perform pre-checks for timescaledb
   ansible.builtin.import_tasks: timescaledb.yml
   when:
