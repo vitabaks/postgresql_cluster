@@ -203,9 +203,10 @@
       ansible.builtin.debug:
         msg: "{{ pg_long_transactions.stdout_lines }}"
 
-    - name: "Pre-Check error. Please try again later"
+    - name: "Pre-Check error. Long-running transactions detected"
       ansible.builtin.fail:
         msg: long-running transactions detected (more than {{ max_transaction_sec }} seconds), please try again later.
+      run_once: true
   when:
     - pg_long_transactions.stdout is defined
     - pg_long_transactions.stdout | length > 0
@@ -232,9 +233,10 @@
       ansible.builtin.debug:
         msg: "{{ pg_long_transactions_9x.stdout_lines }}"
 
-    - name: "Pre-Check error. Please try again later"
+    - name: "Pre-Check error. Long-running transactions detected"
       ansible.builtin.fail:
         msg: long-running transactions detected (more than {{ max_transaction_sec }} seconds), please try again later.
+      run_once: true
   when:
     - pg_long_transactions_9x.stdout is defined
     - pg_long_transactions_9x.stdout | length > 0
