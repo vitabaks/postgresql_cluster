@@ -2,7 +2,7 @@
 # Disable maintenance mode for HAProxy (Type A scheme)
 # if 'pgbouncer_install' is 'true' and 'pgbouncer_pool_pause' is 'true'
 - block:
-    - name: Update conf file "/etc/haproxy/haproxy.cfg"
+    - name: Update haproxy conf file "/etc/haproxy/haproxy.cfg"
       ansible.builtin.template:
         src: ../haproxy/templates/haproxy.cfg.j2 # use the haproxy role template
         dest: /etc/haproxy/haproxy.cfg
