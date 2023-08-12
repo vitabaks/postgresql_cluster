@@ -34,7 +34,7 @@
 - name: "Install PostgreSQL {{ pg_new_version }} packages"
   ansible.builtin.package:
     name: "{{ item }}"
-    state: present
+    state: latest
   loop: "{{ pg_new_packages }}"
   register: package_status
   until: package_status is success
@@ -45,7 +45,7 @@
 - name: Install TimescaleDB package for PostgreSQL {{ pg_new_version }}
   ansible.builtin.package:
     name: "{{ item }}"
-    state: present
+    state: latest
   loop: "{{ timescaledb_package }}"
   vars:
     timescaledb_package:
