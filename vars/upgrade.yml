@@ -7,18 +7,27 @@
 # However, it is required that the pg_old_datadir and pg_new_datadir are located within the same top-level directory (pg_upper_datadir).
 # https://www.postgresql.org/docs/current/pgupgrade.html
 
+# PostgreSQL versions
 pg_old_version: ""  # specify the current (old) version of PostgreSQL
-pg_new_version: ""  # specify the new version of PostgreSQL
+pg_new_version: ""  # specify the target version of PostgreSQL for the upgrade
 
+# Paths for old and new PostgreSQL versions
 # Adjust these variables if the paths are different from the default value.
+
+# Directory containing binaries for the old PostgreSQL version.
 pg_old_bindir: "{{ postgresql_bin_dir | regex_replace('(/$)', '') | regex_replace(postgresql_version, pg_old_version) }}"
+# Data directory path for the old PostgreSQL version.
 pg_old_datadir: "{{ postgresql_data_dir | regex_replace('(/$)', '') | regex_replace(postgresql_version, pg_old_version) }}"
+# Configuration directory path for the old PostgreSQL version.
 pg_old_confdir: "{{ postgresql_conf_dir | regex_replace('(/$)', '') | regex_replace(postgresql_version, pg_old_version) }}"
 
+# Directory containing binaries for the new PostgreSQL version.
 pg_new_bindir: "{{ postgresql_bin_dir | regex_replace('(/$)', '') | regex_replace(postgresql_version, pg_new_version) }}"
+# Data directory path for the new PostgreSQL version.
 pg_new_datadir: "{{ postgresql_data_dir | regex_replace('(/$)', '') | regex_replace(postgresql_version, pg_new_version) }}"
+# Configuration directory path for the new PostgreSQL version.
 pg_new_confdir: "{{ postgresql_conf_dir | regex_replace('(/$)', '') | regex_replace(postgresql_version, pg_new_version) }}"
-# custom WAL dir path (symlink will be created) [optional]
+# Custom WAL directory for the new PostgreSQL version (symlink will be created) [optional].
 pg_new_wal_dir: "{{ postgresql_wal_dir | regex_replace('(/$)', '') | regex_replace(postgresql_version, pg_new_version) }}"
 
 # pg_upper_datadir: Specifies the top-level directory containing both old and new PostgreSQL data directories.
@@ -27,7 +36,8 @@ pg_new_wal_dir: "{{ postgresql_wal_dir | regex_replace('(/$)', '') | regex_repla
 # Example: /var/lib/postgresql, /var/lib/pgsql, /pgdata
 pg_upper_datadir: "{{ pg_new_datadir | regex_replace('/$', '') | dirname | dirname }}"
 
-# Automatically update the package versions in the postgresql_packages variable
+# List of package names for the new PostgreSQL version to be installed.
+# automatically detects the list of packages based on the 'postgresql_packages' variable
 pg_new_packages: "{{ postgresql_packages | regex_replace(postgresql_version, pg_new_version) }}"
 
 # Alternatively, you can explicitly specify the list of new packages to install.
@@ -42,7 +52,10 @@ pg_new_packages: "{{ postgresql_packages | regex_replace(postgresql_version, pg_
 
 pg_old_packages_remove: true  # remove old postgresql packages after upgrade
 
+# Timeout (in seconds) to be used when starting/stopping PostgreSQL during the upgrade.
 pg_start_stop_timeout: 1800  # 30 minutes
+
+# Patroni configuration file path.
 patroni_config_file: /etc/patroni/patroni.yml
 
 schema_compatibility_check: true  # If 'true', a compatibility check of the database schema with the new PostgreSQL version will be performed before the upgrade.
