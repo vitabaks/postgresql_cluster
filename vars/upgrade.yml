@@ -45,8 +45,10 @@ pg_old_packages_remove: true  # remove old postgresql packages after upgrade
 pg_start_stop_timeout: 1800  # 30 minutes
 patroni_config_file: /etc/patroni/patroni.yml
 
-schema_compatibility_check: true  # if 'true', before the upgrade, check the compatibility of the database schema with the new PostgreSQL
-schema_compatibility_check_timeout: 3600  # seconds. The maximum check duration (pg_dumpall --schema-only)
+schema_compatibility_check: true  # If 'true', a compatibility check of the database schema with the new PostgreSQL version will be performed before the upgrade.
+schema_compatibility_check_port: "{{ (postgresql_port | int) + 1 }}"  # Port used to run a temporary PostgreSQL instance for schema compatibility checking.
+schema_compatibility_check_timeout: 3600  # Maximum duration (in seconds) for the compatibility check (using pg_dumpall --schema-only).
+
 vacuumdb_analyze_timeout: 3600  # seconds. The maximum duration of analyze command (soft limit, exceeding won't halt playbook)
 update_extensions: true  # if 'true', try to update extensions automatically
 

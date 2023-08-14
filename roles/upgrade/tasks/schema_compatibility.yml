@@ -23,10 +23,10 @@
   when:
     - inventory_hostname in groups['primary']
 
-- name: "Start new PostgreSQL on port {{ (postgresql_port | int) + 1 }} to check the schema compatibility"
+- name: "Start new PostgreSQL on port {{ schema_compatibility_check_port }} to check the schema compatibility"
   ansible.builtin.command: >
     {{ pg_new_bindir }}/pg_ctl -D {{ pg_new_datadir }}
-    -o "-p {{ (postgresql_port | int) + 1 }}
+    -o "-p {{ schema_compatibility_check_port }}
     -c unix_socket_directories='/tmp'
     -c shared_preload_libraries='{{ pg_shared_preload_libraries.stdout }}'
     {% if pg_cron_database_name.stdout | default('') | length > 0 %}
@@ -63,7 +63,7 @@
     -U {{ pg_install_user.stdout }} \
     -d postgres \
     -h /tmp \
-    -p {{ (postgresql_port | int) + 1 }} \
+    -p {{ schema_compatibility_check_port }} \
     > /tmp/pg_schema_compatibility_check.log 2>&1
   args:
     executable: /bin/bash
