@@ -1,4 +1,4 @@
-## Update PostgreSQL to the new major version
+## Upgrade PostgreSQL to the new major version
 
 This role is designed for in-place major upgrades of PostgreSQL, e.g., from version 14 to 15.
 
