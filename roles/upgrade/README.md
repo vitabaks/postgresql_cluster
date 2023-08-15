@@ -8,23 +8,23 @@ To minimize or even eliminate errors during database upgrades (depending on the 
 
 On average, the PgBouncer pause duration is approximately 30 seconds. However, for larger databases, this pause might be extended due to longer `pg_upgrade` and `rsync` procedures. The default maximum wait time for a request during a pause is set to 2 minutes (controlled by the `query_wait_timeout` pgbouncer parameter). If the pause exceeds this duration, connections will be terminated with a timeout error.
 
-#### Compatibility
+### Compatibility
 
 The upgrade is supported starting from PostgreSQL 9.3 and up to the latest PostgreSQL version.
 
-#### Requirements
+### Requirements
 
 There is no need to plan additional disk space, because when upgrading PostgreSQL using hard links instead of copying files. However, it is required that the `pg_old_datadir` and `pg_new_datadir` are located within the same top-level directory (`pg_upper_datadir` variable).
 
 Specify the current (old) version of PostgreSQL in the `pg_old_version` variable and target version of PostgreSQL for the upgrade in the `pg_new_version` variable.
 
-#### Usage
+### Usage
 
-```
+```bash
 ansible-playbook pg_upgrade.yml -e "pg_old_version=14 pg_new_version=15"
 ```
 
-#### Variables
+### Variables
 
 | Variable Name | Description | Default Value |
 |---------------|-------------|--------------:|
@@ -118,7 +118,7 @@ Please see the variable file vars/[upgrade.yml](../../vars/upgrade.yml)
     - Notes: for example, it may be necessary for Postgres Full-Text Search (FTS) files 
 - Schema compatibility check
   - Get the current `shared_preload_libraries` settings
-  - Get the current cron.database_name settings
+  - Get the current `cron.database_name` settings
     - Notes: if 'pg_cron' is defined in 'pg_shared_preload_libraries'
   - Start new PostgreSQL to check the schema compatibility
     - Note: on the port specified in the `schema_compatibility_check_port` variable
@@ -161,6 +161,75 @@ Please see the variable file vars/[upgrade.yml](../../vars/upgrade.yml)
   - Notes: to save pg_hba rules
 
 #### 5. UPGRADE: Upgrade PostgreSQL
+- **Enable maintenance mode for Patroni cluster** (pause)
+- **Enable maintenance mode for HAProxy (Type A scheme)**
+  - Notes: if 'pgbouncer_install' is 'true' and 'pgbouncer_pool_pause' is 'true'
+  - Stop confd service
+  - Update haproxy conf file
+    - Notes: Temporarily disable http-checks in order to keep database connections after stopping the Patroni service
+  - Reload haproxy service
+- **Enable maintenance mode for vip-manager (Type B scheme)**
+  - Notes: if 'pgbouncer_install' is 'true' and 'pgbouncer_pool_pause' is 'true'
+  - Update vip-manager service file (comment out 'ExecStopPost')
+    - Notes: Temporarily disable vip-manager service to keep database connections after stopping the Patroni service
+  - Stop vip-manager service
+    - Notes: This prevents the VIP from being removed when the Patroni leader is unavailable during maintenance
+  - Make sure that the cluster ip address (VIP) is running
+- **Stop Patroni service**
+  - Wait until the Patroni cluster is stopped
+- **Execute CHECKPOINT before stopping PostgreSQL**
+  - Wait for the CHECKPOINT to complete
+- **Wait until replication lag is less than `max_replication_lag_bytes`** (max wait time: 2 minutes)
+  - Stop, if replication lag is high
+  - Perform rollback
+  - Print error message: "There's a replication lag in the PostgreSQL Cluster. Please try again later"
+- **Perform PAUSE on all pgbouncers servers**
+  - Notes: if 'pgbouncer_install' is 'true' and 'pgbouncer_pool_pause' is 'true'
+- **Stop PostgreSQL** on the Leader and Replicas
+  - Check if old PostgreSQL is stopped
+  - Check if new PostgreSQL is stopped
+- **Get 'Latest checkpoint location'** on the Leader and Replicas
+  - Print 'Latest checkpoint location' for the Leader and Replicas
+- **Check if all 'Latest checkpoint location' values match**
+  - Stop, if 'Latest checkpoint location' doesn't match
+  - Perform rollback
+  - Print error message: "Latest checkpoint location' doesn't match on leader and its standbys. Please try again later"
+- **Upgrade the PostgreSQL on the Primary** (using pg_upgrade --link)
+  - Print the result of the pg_upgrade
+- **Make sure that the new data directory are empty on the Replica**
+- **Upgrade the PostgreSQL on the Replica** (using rsync --hard-links)
+  - Wait for the rsync to complete
+- **Upgrade the PostgreSQL tablespaces on the Replica** (using rsync --hard-links)
+  - Notes: if tablespaces exist
+  - Wait for the tablespaces rsync to complete
+- **Synchronize WAL directory** (if `pg_new_wal_dir` is defined) [optional]
+  - Make sure new pg_wal directory is not symlink
+  - Make sure the custom WAL directory exists and is empty
+  - Synchronize new pg_wal to 'pg_new_wal_dir' path
+  - Rename pg_wal to pg_wal_old
+  - Create symlink
+  - Remove 'pg_wal_old' directory
+- **Remove existing cluster from DCS**
+- **Start Patroni service on the Cluster Leader**
+  - Wait for patroni port to become open on the host
+  - Check Patroni is healthy on the Leader
+- **Perform RESUME PgBouncer pools on the Leader**
+  - Notes: if 'pgbouncer_install' is 'true' and 'pgbouncer_pool_pause' is 'true'
+- **Start Patroni service on the Cluster Replica**
+  - Wait for patroni port to become open on the host
+  - Check Patroni is healthy on the Replica
+- **Perform RESUME PgBouncer pools on the Replica**
+  - Notes: if 'pgbouncer_install' is 'true' and 'pgbouncer_pool_pause' is 'true'
+- **Check PostgreSQL is started and accepting connections**
+- **Disable maintenance mode for HAProxy (Type A scheme)**
+  - Update haproxy conf file "/etc/haproxy/haproxy.cfg"
+    - Notes: Enable http-checks
+  - Reload haproxy service
+  - Start confd service
+- **Disable maintenance mode for vip-manager (Type B scheme)**
+  - Update vip-manager service file (uncomment 'ExecStopPost')
+  - Start vip-manager service
+  - Make sure that the cluster ip address (VIP) is running
 
 #### 6. POST-UPGRADE: Perform Post-Checks and Update extensions
 
