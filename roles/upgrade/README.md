@@ -63,37 +63,38 @@ Please see the variable file vars/[upgrade.yml](../../vars/upgrade.yml)
 ### Upgrade Plan:
 
 #### 1. PRE-UPGRADE: Perform Pre-Checks
-- Make sure that the required variables `pg_old_version`, `pg_new_version` are specified
+- **Make sure that the required variables `pg_old_version`, `pg_new_version` are specified**
   - Stop, if one or more required variables have empty values.
-- Ensure pg_old and pg_new data and config dirs are not the same
+- **Ensure pg_old and pg_new data and config dirs are not the same**
   - Stop, if `pg_old_datadir` and `pg_new_datadir`, or `pg_old_confdir` and `pg_new_confdir` match.
-- Make sure the ansible required Python library 'pexpect' is installed
-- Test PostgreSQL database access using a unix socket
+- **Make sure the ansible required Python library is installed**
+  - pexpect
+- **Test PostgreSQL database access using a unix socket**
   - if there is an error (no pg_hba.conf entry), add temporary local access rule (during the upgrade)
-- Check the current version of PostgreSQL
+- **Check the current version of PostgreSQL**
   - Stop, if the current version does not match `pg_old_version`
   - Stop, if the current version greater than or equal to `pg_new_version` 
-- Ensure new data directory is different from the current one
+- **Ensure new data directory is different from the current one**
   - Stop, if the current data directory is the same as `pg_new_datadir`
   - Stop, if the current WAL directory is the same as `pg_new_wal_dir` (if a custom wal dir is used)
   - Note: This check is necessary to avoid the risk of deleting the current data directory
-- Make sure that physical replication is active
+- **Make sure that physical replication is active**
   - Stop, if there are no active replicas
-- Make sure there is no high replication lag
+- **Make sure there is no high replication lag**
   - Stop, if replication lag is high (more than `max_replication_lag_bytes`)
-- Make sure there are no long-running transactions
+- **Make sure there are no long-running transactions**
   - Stop, if long-running transactions detected (more than `max_transaction_sec`)
-- Make sure that SSH key-based authentication is configured between cluster nodes
+- **Make sure that SSH key-based authentication is configured between cluster nodes**
   - Create and copy ssh keys between database servers (if not configured)
-- Rsync Checks
+- **Perform Rsync Checks**
   - Make sure that the rsync package are installed
   - Create 'testrsync' file on Primary
   - Test rsync and ssh key access
   - Cleanup 'testrsync' file
-- Check if PostgreSQL tablespaces exist
+- **Check if PostgreSQL tablespaces exist**
   - Print tablespace location (if exists)
   - Note: If tablespaces are present they will be upgraded (step 5) on replicas using rsync
-- Test PgBouncer access via localhost 
+- **Test PgBouncer access via localhost**
   - test access via 'localhost' to be able to perform 'PAUSE' command
 
 #### 2. PRE-UPGRADE: Install new PostgreSQL packages
@@ -103,7 +104,7 @@ Please see the variable file vars/[upgrade.yml](../../vars/upgrade.yml)
   - Note: if 'enable_timescale' is 'true'
 
 #### 3. PRE-UPGRADE: Initialize new db, schema compatibility check, and pg_upgrade --check
-- Initialize new db
+- **Initialize new PostgreSQL**
   - Make sure new PostgreSQL data directory exists
   - Make sure new PostgreSQL data directory is not initialized
     - If already initialized:
@@ -116,7 +117,7 @@ Please see the variable file vars/[upgrade.yml](../../vars/upgrade.yml)
     - for RedHat based: on the Primary only
   - (optional) Copy files specified in the `copy_files_to_all_server` variable
     - Notes: for example, it may be necessary for Postgres Full-Text Search (FTS) files 
-- Schema compatibility check
+- **Schema compatibility check**
   - Get the current `shared_preload_libraries` settings
   - Get the current `cron.database_name` settings
     - Notes: if 'pg_cron' is defined in 'pg_shared_preload_libraries'
@@ -133,18 +134,18 @@ Please see the variable file vars/[upgrade.yml](../../vars/upgrade.yml)
   - Stop new PostgreSQL to re-initdb
   - Drop new PostgreSQL to re-initdb (perform pg_dropcluster for Debian based)
   - Reinitialize the database after checking schema compatibility
-- pg_upgrade check
+- **Perform pg_upgrade check**
   - Get the current `shared_preload_libraries` settings
   - Verify the two clusters are compatible (`pg_upgrade --check`)
   - Print the result of the pg_upgrade check
 
 #### 4. PRE-UPGRADE: Prepare the Patroni configuration
 - Edit patroni.yml
-  - Update parameters: `data_dir`, `bin_dir`, `config_dir`
-  - Check if the 'standby_cluster' parameter is specified
+  - **Update parameters**: `data_dir`, `bin_dir`, `config_dir`
+  - **Check if the 'standby_cluster' parameter is specified**
     - Remove parameters: `standby_cluster` (if exists)
     - Notes: To support upgrades in the Patroni Standby Cluster
-  - Prepare the parameters for PostgreSQL (removed or renamed parameters)
+  - **Prepare the PostgreSQL parameters** (removed or renamed parameters)
     - Check if the '`replacement_sort_tuples`' parameter is specified (removed in PG 11)
       - remove parameter: 'replacement_sort_tuples' (if exists)
     - Check if the '`default_with_oids`' parameter is specified (removed in PG 12)
@@ -157,18 +158,18 @@ Please see the variable file vars/[upgrade.yml](../../vars/upgrade.yml)
       - remove parameter: 'vacuum_cleanup_index_scale_factor' (if exists)
     - Check if the '`stats_temp_directory`' parameter is specified (removed in PG 15)
       - remove parameter: 'stats_temp_directory' (if exists)
-- Copy pg_hba.conf to `pg_new_confdir`
+- **Copy pg_hba.conf to `pg_new_confdir`**
   - Notes: to save pg_hba rules
 
 #### 5. UPGRADE: Upgrade PostgreSQL
 - **Enable maintenance mode for Patroni cluster** (pause)
-- **Enable maintenance mode for HAProxy (Type A scheme)**
+- **Enable maintenance mode for HAProxy** (for 'Type A' scheme)
   - Notes: if 'pgbouncer_install' is 'true' and 'pgbouncer_pool_pause' is 'true'
   - Stop confd service
   - Update haproxy conf file
     - Notes: Temporarily disable http-checks in order to keep database connections after stopping the Patroni service
   - Reload haproxy service
-- **Enable maintenance mode for vip-manager (Type B scheme)**
+- **Enable maintenance mode for vip-manager** (for 'Type B' scheme)
   - Notes: if 'pgbouncer_install' is 'true' and 'pgbouncer_pool_pause' is 'true'
   - Update vip-manager service file (comment out 'ExecStopPost')
     - Notes: Temporarily disable vip-manager service to keep database connections after stopping the Patroni service
@@ -221,16 +222,66 @@ Please see the variable file vars/[upgrade.yml](../../vars/upgrade.yml)
 - **Perform RESUME PgBouncer pools on the Replica**
   - Notes: if 'pgbouncer_install' is 'true' and 'pgbouncer_pool_pause' is 'true'
 - **Check PostgreSQL is started and accepting connections**
-- **Disable maintenance mode for HAProxy (Type A scheme)**
+- **Disable maintenance mode for HAProxy** (for 'Type A' scheme)
   - Update haproxy conf file "/etc/haproxy/haproxy.cfg"
     - Notes: Enable http-checks
   - Reload haproxy service
   - Start confd service
-- **Disable maintenance mode for vip-manager (Type B scheme)**
+- **Disable maintenance mode for vip-manager** (for 'Type B' scheme)
   - Update vip-manager service file (uncomment 'ExecStopPost')
   - Start vip-manager service
   - Make sure that the cluster ip address (VIP) is running
 
 #### 6. POST-UPGRADE: Perform Post-Checks and Update extensions
+- **Make sure that physical replication is active**
+  - if no active replication connections found, print error message:
+    - "No active replication connections found. Please check the replication status and PostgreSQL logs."
+- **Create a table "test_replication" with 10000 rows on the Primary**
+- **Wait until the PostgreSQL replica is synchronized**
+  - Notes: max wait time: 2 minutes
+- **Drop a table "test_replication"**
+- **Print the result of checking the number of records**
+  - if the number of rows does not match, print error message:
+    - "The number of records in the 'test_replication' table does not match the Primary. Please check the replication status and PostgreSQL logs."
+- **Get a list of databases**
+- **Update extensions in each database**
+  - Get list of installed PostgreSQL extensions
+  - Get list of old PostgreSQL extensions
+    - Update old PostgreSQL extensions
+      - Notes: excluding: 'pg_repack' and 'pg_stat_kcache' (is exists), as it requires re-creation to update
+    - Recreate old pg_stat_statements and pg_stat_kcache extensions to update
+      - Notes: if pg_stat_kcache is installed
+    - Recreate old pg_repack extension to update
+      - Notes: if pg_repack is installed
+    - Notes: if there are no old extensions, print message:
+      - "The extension versions are up-to-date for the database. No update is required."
 
 #### 7. POST-UPGRADE: Analyze a PostgreSQL database (update optimizer statistics) and Post-Upgrade tasks
+- **Run vacuumdb to analyze the PostgreSQL databases**
+  - Notes: parallel processes equal to the number of cpu cores are used
+  - Wait for the analyze to complete.
+    - Notes: max wait time: 1 hour (`vacuumdb_analyze_timeout` variable)
+- **Ensure the current data directory is the new data directory**
+  - Notes: to prevent the old directory from being deleted if it is used
+- **Delete the old PostgreSQL data directory**
+  - Notes: perform pg_dropcluster for Debian based
+- **Delete the old PostgreSQL WAL directory**
+  - Notes: if pg_new_wal_dir is defined
+- **Remove old PostgreSQL packages**
+- **pgBackRest**
+  - Notes: is 'pgbackrest_install' is 'true'
+  - Check pg-path option
+  - Update pg-path in pgbackrest.conf
+  - Upgrade stanza
+- **WAL-G**
+  - Notes: is 'wal_g_install' is 'true'
+  - Update PostgreSQL data directory path in .walg.json
+  - Update PostgreSQL data directory path in cron jobs
+- **Check the Patroni cluster state**
+- **Check the current PostgreSQL version**
+- **Remove temporary local access rule from pg_hba.conf**
+  - Notes: if it has been changed
+  - Update the PostgreSQL configuration
+- **Print info messages**
+  - List the Patroni cluster members
+  - Upgrade completed
