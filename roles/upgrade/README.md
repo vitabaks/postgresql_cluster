@@ -260,21 +260,19 @@ Please see the variable file vars/[upgrade.yml](../../vars/upgrade.yml)
 - **Run vacuumdb to analyze the PostgreSQL databases**
   - Notes: parallel processes equal to the number of cpu cores are used
   - Wait for the analyze to complete.
-    - Notes: max wait time: 1 hour (`vacuumdb_analyze_timeout` variable)
+    - Notes: max wait time: 1 hour ('vacuumdb_analyze_timeout' variable)
 - **Ensure the current data directory is the new data directory**
-  - Notes: to prevent the old directory from being deleted if it is used
+  - Notes: to prevent deletion the old directory if it is used
 - **Delete the old PostgreSQL data directory**
   - Notes: perform pg_dropcluster for Debian based
 - **Delete the old PostgreSQL WAL directory**
-  - Notes: if pg_new_wal_dir is defined
+  - Notes: if 'pg_new_wal_dir' is defined
 - **Remove old PostgreSQL packages**
-- **pgBackRest**
-  - Notes: is 'pgbackrest_install' is 'true'
+- **pgBackRest** (if 'pgbackrest_install' is 'true')
   - Check pg-path option
   - Update pg-path in pgbackrest.conf
   - Upgrade stanza
-- **WAL-G**
-  - Notes: is 'wal_g_install' is 'true'
+- **WAL-G** (if 'wal_g_install' is 'true')
   - Update PostgreSQL data directory path in .walg.json
   - Update PostgreSQL data directory path in cron jobs
 - **Check the Patroni cluster state**
