@@ -44,6 +44,7 @@ ansible-playbook pg_upgrade.yml -e "pg_old_version=14 pg_new_version=15"
 | `schema_compatibility_check` | Check database schema compatibility with the new PostgreSQL version before upgrading. | `true` |
 | `schema_compatibility_check_port` | Port for temporary PostgreSQL instance for schema compatibility checking. | Derived value |
 | `schema_compatibility_check_timeout` | Max duration for compatibility check (pg_dumpall --schema-only) in seconds. | `3600` |
+| `vacuumdb_parallel_jobs` | Execute the analyze command in parallel by running `njobs` commands simultaneously. This option may reduce the processing time but it also increases the load on the database server. | all CPU cores |
 | `vacuumdb_analyze_timeout` | Max duration of analyze command in seconds. | `3600` |
 | `update_extensions` | Automatically update all PostgreSQL extensions. | `true` |
 | `max_replication_lag_bytes` | Maximum allowed replication lag in bytes. | `10485760` |
