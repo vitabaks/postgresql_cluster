@@ -62,6 +62,7 @@ schema_compatibility_check: true  # If 'true', a compatibility check of the data
 schema_compatibility_check_port: "{{ (postgresql_port | int) + 1 }}"  # Port used to run a temporary PostgreSQL instance for schema compatibility checking.
 schema_compatibility_check_timeout: 3600  # Maximum duration (in seconds) for the compatibility check (using pg_dumpall --schema-only).
 
+vacuumdb_parallel_jobs: "{{ ansible_processor_vcpus }}"  # use all CPU cores
 vacuumdb_analyze_timeout: 3600  # seconds. The maximum duration of analyze command (soft limit, exceeding won't halt playbook)
 update_extensions: true  # if 'true', try to update extensions automatically
 

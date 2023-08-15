@@ -258,7 +258,7 @@ Please see the variable file vars/[upgrade.yml](../../vars/upgrade.yml)
 
 #### 7. POST-UPGRADE: Analyze a PostgreSQL database (update optimizer statistics) and Post-Upgrade tasks
 - **Run vacuumdb to analyze the PostgreSQL databases**
-  - Notes: parallel processes equal to the number of cpu cores are used
+  - Notes: Uses parallel processes equal to CPU cores ('vacuumdb_parallel_jobs' variable)
   - Wait for the analyze to complete.
     - Notes: max wait time: 1 hour ('vacuumdb_analyze_timeout' variable)
 - **Ensure the current data directory is the new data directory**
