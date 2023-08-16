@@ -2,17 +2,11 @@
 
 This role is designed for in-place major upgrades of PostgreSQL, e.g., from version 14 to 15.
 
-**Database Downtime Considerations:**
-
-To minimize or even eliminate errors during database upgrades (depending on the workload and timeouts), we pause the PgBouncer pools. From an application's perspective, this does not result in terminated database connections. Instead, applications might experience a temporary increase in query latency while the PgBouncer pools are paused.
-
-On average, the PgBouncer pause duration is approximately 30 seconds. However, for larger databases, this pause might be extended due to longer `pg_upgrade` and `rsync` procedures. The default maximum wait time for a request during a pause is set to 2 minutes (controlled by the `query_wait_timeout` pgbouncer parameter). If the pause exceeds this duration, connections will be terminated with a timeout error.
-
-### Compatibility
+#### Compatibility
 
 The upgrade is supported starting from PostgreSQL 9.3 and up to the latest PostgreSQL version.
 
-### Requirements
+#### Requirements
 
 There is no need to plan additional disk space, because when upgrading PostgreSQL using hard links instead of copying files. However, it is required that the `pg_old_datadir` and `pg_new_datadir` are located within the same top-level directory (`pg_upper_datadir` variable).
 
@@ -23,6 +17,12 @@ Specify the current (old) version of PostgreSQL in the `pg_old_version` variable
 ```bash
 ansible-playbook pg_upgrade.yml -e "pg_old_version=14 pg_new_version=15"
 ```
+
+#### Database Downtime Considerations
+
+To minimize or even eliminate errors during database upgrades (depending on the workload and timeouts), we pause the PgBouncer pools. From an application's perspective, this does not result in terminated database connections. Instead, applications might experience a temporary increase in query latency while the PgBouncer pools are paused.
+
+On average, the PgBouncer pause duration is approximately 30 seconds. However, for larger databases, this pause might be extended due to longer `pg_upgrade` and `rsync` procedures. The default maximum wait time for a request during a pause is set to 2 minutes (controlled by the `query_wait_timeout` pgbouncer parameter). If the pause exceeds this duration, connections will be terminated with a timeout error.
 
 ### Variables
 
@@ -100,6 +100,8 @@ Please see the variable file vars/[upgrade.yml](../../vars/upgrade.yml)
   - Note: If tablespaces are present they will be upgraded (step 5) on replicas using rsync
 - **Test PgBouncer access via localhost**
   - test access via 'localhost' to be able to perform 'PAUSE' command
+- **Make sure that the cluster ip address (VIP) is running**
+  - Notes: if 'cluster_vip' is defined
 
 #### 2. PRE-UPGRADE: Install new PostgreSQL packages
 - Clean yum/dnf cache (for RedHat based) or Update apt cache for (Debian based)

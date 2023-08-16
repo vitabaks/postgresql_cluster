@@ -332,4 +332,19 @@
     - pgbouncer_install | bool
     - pgbouncer_pool_pause | bool
 
+# Check the VIP address
+- name: Make sure that the cluster ip address (VIP) "{{ cluster_vip }}" is running
+  ansible.builtin.wait_for:
+    host: "{{ cluster_vip }}"
+    port: "{{ target_port }}"
+    state: started
+    timeout: 3
+    delay: 2
+  vars:
+    target_port: >-
+      {{ pgbouncer_listen_port if pgbouncer_install | bool
+      else (ansible_ssh_port | default(22)) }}
+  when:
+    - cluster_vip | length > 0
+
 ...
