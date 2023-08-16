@@ -64,21 +64,24 @@ Please see the variable file vars/[upgrade.yml](../../vars/upgrade.yml)
 ### Upgrade Plan:
 
 #### 1. PRE-UPGRADE: Perform Pre-Checks
-- **Make sure that the required variables `pg_old_version`, `pg_new_version` are specified**
+- **Make sure that the required variables are specified**
+  - Notes: `pg_old_version` and `pg_new_version` variables
   - Stop, if one or more required variables have empty values.
-- **Ensure pg_old and pg_new data and config dirs are not the same**
+- **Make sure that the old and new data and confg directories do not match**
   - Stop, if `pg_old_datadir` and `pg_new_datadir`, or `pg_old_confdir` and `pg_new_confdir` match.
 - **Make sure the ansible required Python library is installed**
-  - pexpect
+  - Notes: Install 'pexpect' package if missing
 - **Test PostgreSQL database access using a unix socket**
-  - if there is an error (no pg_hba.conf entry), add temporary local access rule (during the upgrade)
+  - if there is an error (no pg_hba.conf entry):
+    - Add temporary local access rule (during the upgrade)
+    - Update the PostgreSQL configuration
 - **Check the current version of PostgreSQL**
   - Stop, if the current version does not match `pg_old_version`
-  - Stop, if the current version greater than or equal to `pg_new_version` 
+  - Stop, if the current version greater than or equal to `pg_new_version`. No upgrade is needed.
 - **Ensure new data directory is different from the current one**
-  - Stop, if the current data directory is the same as `pg_new_datadir`
-  - Stop, if the current WAL directory is the same as `pg_new_wal_dir` (if a custom wal dir is used)
   - Note: This check is necessary to avoid the risk of deleting the current data directory
+  - Stop, if the current data directory is the same as `pg_new_datadir`.
+  - Stop, if the current WAL directory is the same as `pg_new_wal_dir` (if a custom wal dir is used).
 - **Make sure that physical replication is active**
   - Stop, if there are no active replicas
 - **Make sure there is no high replication lag**
@@ -116,7 +119,7 @@ Please see the variable file vars/[upgrade.yml](../../vars/upgrade.yml)
   - Initialize new PostgreSQL data directory
     - for Debain based: on all database servers to create default config files
     - for RedHat based: on the Primary only
-  - (optional) Copy files specified in the `copy_files_to_all_server` variable
+- **Copy files specified in the `copy_files_to_all_server` variable** (vars/upgrade.yml), [optional]
     - Notes: for example, it may be necessary for Postgres Full-Text Search (FTS) files 
 - **Schema compatibility check**
   - Get the current `shared_preload_libraries` settings
@@ -124,10 +127,10 @@ Please see the variable file vars/[upgrade.yml](../../vars/upgrade.yml)
     - Notes: if 'pg_cron' is defined in 'pg_shared_preload_libraries'
   - Start new PostgreSQL to check the schema compatibility
     - Note: on the port specified in the `schema_compatibility_check_port` variable
-  - Wait for PostgreSQL to start
+    - Wait for PostgreSQL to start
   - Check the compatibility of the database schema with the new PostgreSQL
     - Notes: used `pg_dumpall` with `--schema-only` options
-  - Wait for the schema compatibility check to complete
+    - Wait for the schema compatibility check to complete
   - Checking the result of the schema compatibility
     - Note: Checking for errors in `/tmp/pg_schema_compatibility_check.log`
     - Stop, if the scheme is not compatible (there are errors)
@@ -181,21 +184,34 @@ Please see the variable file vars/[upgrade.yml](../../vars/upgrade.yml)
   - Wait until the Patroni cluster is stopped
 - **Execute CHECKPOINT before stopping PostgreSQL**
   - Wait for the CHECKPOINT to complete
-- **Wait until replication lag is less than `max_replication_lag_bytes`** (max wait time: 2 minutes)
+- **Wait until replication lag is less than `max_replication_lag_bytes`**
+  - Notes: max wait time: 2 minutes
   - Stop, if replication lag is high
   - Perform rollback
   - Print error message: "There's a replication lag in the PostgreSQL Cluster. Please try again later"
 - **Perform PAUSE on all pgbouncers servers**
   - Notes: if 'pgbouncer_install' is 'true' and 'pgbouncer_pool_pause' is 'true'
+  - Notes: pgbouncer pause script (details in [pgbouncer_pause.yml](tasks/pgbouncer_pause.yml)) performs the following actions:
+    - Waits for active queries on the database servers to complete (with a runtime more than `pg_slow_active_query_treshold`).
+    - If there are no active queries, sends a `PAUSE` command to each pgbouncer servers in parallel (using `xargs` and ssh connections).
+    - If all pgbouncer are successfully paused, the script exits with code 0 (successful).
+    - If active queries do not complete within 30 seconds (`pgbouncer_pool_pause_terminate_after` variable), the script terminates slow active queries (longer than `pg_slow_active_query_treshold_to_terminate`).
+    - If after that it is still not possible to pause the pgbouncer servers within 60 seconds (`pgbouncer_pool_pause_stop_after` variable) from the start of the script, the script exits with an error.
+      - Perform rollback
+      - Print error message: "PgBouncer pools could not be paused, please try again later."
 - **Stop PostgreSQL** on the Leader and Replicas
   - Check if old PostgreSQL is stopped
   - Check if new PostgreSQL is stopped
 - **Get 'Latest checkpoint location'** on the Leader and Replicas
   - Print 'Latest checkpoint location' for the Leader and Replicas
 - **Check if all 'Latest checkpoint location' values match**
-  - Stop, if 'Latest checkpoint location' doesn't match
-  - Perform rollback
-  - Print error message: "Latest checkpoint location' doesn't match on leader and its standbys. Please try again later"
+  - if 'Latest checkpoint location' values match
+    - Print info message:
+      - "'Latest checkpoint location' is the same on the leader and its standbys"
+  - if 'Latest checkpoint location' values doesn't match
+    - Perform rollback
+    - Stop with error message:
+      - "Latest checkpoint location' doesn't match on leader and its standbys. Please try again later"
 - **Upgrade the PostgreSQL on the Primary** (using pg_upgrade --link)
   - Print the result of the pg_upgrade
 - **Make sure that the new data directory are empty on the Replica**
@@ -213,18 +229,18 @@ Please see the variable file vars/[upgrade.yml](../../vars/upgrade.yml)
   - Remove 'pg_wal_old' directory
 - **Remove existing cluster from DCS**
 - **Start Patroni service on the Cluster Leader**
-  - Wait for patroni port to become open on the host
+  - Wait for Patroni port to become open on the host
   - Check Patroni is healthy on the Leader
 - **Perform RESUME PgBouncer pools on the Leader**
   - Notes: if 'pgbouncer_install' is 'true' and 'pgbouncer_pool_pause' is 'true'
 - **Start Patroni service on the Cluster Replica**
-  - Wait for patroni port to become open on the host
+  - Wait for Patroni port to become open on the host
   - Check Patroni is healthy on the Replica
 - **Perform RESUME PgBouncer pools on the Replica**
   - Notes: if 'pgbouncer_install' is 'true' and 'pgbouncer_pool_pause' is 'true'
 - **Check PostgreSQL is started and accepting connections**
 - **Disable maintenance mode for HAProxy** (for 'Type A' scheme)
-  - Update haproxy conf file "/etc/haproxy/haproxy.cfg"
+  - Update haproxy conf file
     - Notes: Enable http-checks
   - Reload haproxy service
   - Start confd service
@@ -242,6 +258,8 @@ Please see the variable file vars/[upgrade.yml](../../vars/upgrade.yml)
   - Notes: max wait time: 2 minutes
 - **Drop a table "test_replication"**
 - **Print the result of checking the number of records**
+  - if the number of rows match, print info message:
+    - "The PostgreSQL Replication is OK. The number of records in the 'test_replication' table the same as the Primary."
   - if the number of rows does not match, print error message:
     - "The number of records in the 'test_replication' table does not match the Primary. Please check the replication status and PostgreSQL logs."
 - **Get a list of databases**
@@ -269,6 +287,7 @@ Please see the variable file vars/[upgrade.yml](../../vars/upgrade.yml)
 - **Delete the old PostgreSQL WAL directory**
   - Notes: if 'pg_new_wal_dir' is defined
 - **Remove old PostgreSQL packages**
+  - Notes: if 'pg_old_packages_remove' is 'true'
 - **pgBackRest** (if 'pgbackrest_install' is 'true')
   - Check pg-path option
   - Update pg-path in pgbackrest.conf

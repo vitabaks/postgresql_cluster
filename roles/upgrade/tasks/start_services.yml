@@ -9,7 +9,7 @@
   when:
     - inventory_hostname in groups['primary']
 
-- name: Wait for port "{{ patroni_restapi_port }}" to become open on the host
+- name: Wait for Patroni port "{{ patroni_restapi_port }}" to become open on the host
   ansible.builtin.wait_for:
     port: '{{ patroni_restapi_port }}'
     host: '{{ inventory_hostname }}'
@@ -47,7 +47,7 @@
   when:
     - inventory_hostname in groups['secondary']
 
-- name: Wait for port "{{ patroni_restapi_port }}" to become open on the host
+- name: Wait for Patroni port "{{ patroni_restapi_port }}" to become open on the host
   ansible.builtin.wait_for:
     port: '{{ patroni_restapi_port }}'
     host: '{{ inventory_hostname }}'
