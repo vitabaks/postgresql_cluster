@@ -81,4 +81,3 @@
 
 - name: PostgreSQL upgrade test
   ansible.builtin.import_playbook: ../../pg_upgrade.yml
-
