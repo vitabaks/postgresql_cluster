@@ -1,0 +1,72 @@
+---
+# ANALYZE: Update optimizer statistics
+#
+# When collecting statistics, if the autovacuum process starts and begins a transaction ID wraparound,
+# there's a risk that the 'ANALYZE' command might get blocked and it will wait for the lock to be released until the autovacuum process is completed.
+# For large tables, this waiting period can span from several minutes to hours.
+#
+# To prevent 'ANALYZE' from getting blocked, we execute the 'pg_terminator' script during statistics collection.
+
+- block:
+    # Monitor the locks and terminate the backend blocking the 'ANALYZE' query (for more than 15 seconds)
+    - name: "Start pg_terminator script: Monitor locks and terminate the 'ANALYZE' blockers"
+      ansible.builtin.shell: |
+        echo $$ > /tmp/pg_terminator.pid
+        for i in {1..{{ vacuumdb_analyze_timeout // 10 }}}; do
+          psql -tAXc "
+          with blocker_pids(pid) as (
+            select unnest(pg_blocking_pids(pid))
+            from pg_stat_activity
+            where
+              query ilike 'ANALYZE %'
+              and wait_event_type = 'Lock'
+          )
+          select
+            clock_timestamp(),
+            pg_terminate_backend(pid),
+            pid,
+            clock_timestamp() - xact_start as xact_age,
+            left(regexp_replace(query, E'[ \\t\\n\\r]+', ' ', 'g'),150) as query
+          from pg_stat_activity
+          where
+            pid in (select pid from blocker_pids)
+            and xact_start < clock_timestamp() - interval '15s';" >> /tmp/pg_terminator.log
+          sleep 10
+        done
+      args:
+        executable: /bin/bash
+      async: "{{ vacuumdb_analyze_timeout }}"  # run the command asynchronously with a maximum duration
+      poll: 0
+      register: pg_terminator_analyze
+      ignore_errors: true  # ignore errors if the task runs for over an 'vacuumdb_analyze_timeout'.
+      when: pg_new_version is version('9.6', '>=')
+
+    - name: "Run vacuumdb to analyze the PostgreSQL databases"
+      ansible.builtin.command: >
+        {{ pg_new_bindir }}/vacuumdb -p {{ postgresql_port }}
+        --all --analyze-in-stages --jobs={{ vacuumdb_parallel_jobs }}
+      async: "{{ vacuumdb_analyze_timeout }}"  # run the command asynchronously with a maximum duration
+      poll: 0
+      register: vacuumdb_analyze
+      ignore_errors: true  # ignore errors if the task runs for over an 'vacuumdb_analyze_timeout'.
+
+    - name: "Collecting statistics in progress. Wait for the analyze to complete."
+      ansible.builtin.async_status:
+        jid: "{{ vacuumdb_analyze.ansible_job_id }}"
+      register: vacuumdb_analyze_job_result
+      until: vacuumdb_analyze_job_result.finished
+      retries: "{{ (vacuumdb_analyze_timeout | int) // 10 }}"  # max wait time
+      delay: 10
+      ignore_errors: true  # ignore errors if the task runs for over an vacuumdb_analyze_timeout
+
+    - name: "Stop pg_terminator script"
+      ansible.builtin.shell: |
+        pid=$(cat /tmp/pg_terminator.pid)
+        ps -p $pid > /dev/null 2>&1 && kill -9 $pid
+      args:
+        executable: /bin/bash
+      ignore_errors: true
+      when: pg_terminator_analyze is changed
+  when: inventory_hostname in groups['primary']
+
+...

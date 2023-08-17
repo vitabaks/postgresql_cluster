@@ -1,0 +1,55 @@
+---
+# This playbook performs a rollback of a PostgreSQL upgrade.
+# It's designed to be used when a PostgreSQL upgrade hasn't been fully completed and the new version hasn't been started.
+# The rollback operation is performed by starting the Patroni cluster with the old version of PostgreSQL using the same PGDATA.
+# The playbook first checks the health of the current cluster, verifies the version of PostgreSQL, and ensures the new PostgreSQL is not running.
+# If these checks pass, the playbook switches back to the old PostgreSQL paths and restarts the Patroni service.
+
+- name: "Rollback PostgreSQL {{ pg_new_version }} to version {{ pg_old_version }} (PostgreSQL HA Cluster: {{ patroni_cluster_name }})"
+  hosts: postgres_cluster
+  gather_facts: true
+  any_errors_fatal: true
+  vars_files:
+    - vars/main.yml
+    - vars/upgrade.yml
+  tasks:
+    - name: '[Prepare] Add host to group "primary" (in-memory inventory)'
+      ansible.builtin.add_host:
+        name: "{{ item }}"
+        groups: primary
+      # As Primary we specify the host in the 'master' group in the inventory file.
+      loop: "{{ groups['master'] }}"
+      changed_when: false
+
+    - name: '[Prepare] Add hosts to group "secondary" (in-memory inventory)'
+      ansible.builtin.add_host:
+        name: "{{ item }}"
+        groups: secondary
+      # As Secondary we specify the hosts in the 'replica' group in the inventory file.
+      loop: "{{ groups['replica'] }}"
+      changed_when: false
+  tags:
+    - always
+
+- name: "Perform Rollback"
+  hosts: 'primary:secondary'
+  gather_facts: false
+  become: true
+  become_user: postgres
+  any_errors_fatal: true
+  vars_files:
+    - vars/main.yml
+  pre_tasks:
+    - name: Include OS-specific variables
+      ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
+      tags: always
+    - name: Include upgrade variables
+      ansible.builtin.include_vars: "vars/upgrade.yml"
+      tags: always
+  tasks:
+    - name: Running rollback.yml
+      ansible.builtin.include_role:
+        name: upgrade
+        tasks_from: rollback
+  tags:
+    - rollback

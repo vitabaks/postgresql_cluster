@@ -5,7 +5,7 @@
   failed_when: result.rc != 0
 
 - name: Check if PostgreSQL is listening on the default port
-  wait_for:
+  ansible.builtin.wait_for:
     port: 5432
     timeout: 5
   register: is_listening
@@ -13,6 +13,8 @@
 
 - name: Try to connect to PostgreSQL
   postgresql_ping:
+    login_host: "127.0.0.1"
+    login_port: "{{ postgresql_port }}"
     login_user: "{{ patroni_superuser_username }}"
     login_password: "{{ patroni_superuser_password }}"
-    db: template1
+    login_db: template1

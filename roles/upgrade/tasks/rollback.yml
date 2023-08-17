@@ -1,0 +1,215 @@
+---
+# This playbook performs a rollback of a PostgreSQL database cluster upgrade.
+# It's designed to be used when a PostgreSQL upgrade hasn't been fully completed and the new version hasn't been started.
+# The rollback operation is performed by starting the Patroni cluster with the old version of PostgreSQL using the same PGDATA.
+# The playbook first checks the health of the current cluster, verifies the version of PostgreSQL, and ensures the new PostgreSQL is not running.
+# If these checks pass, the playbook switches back to the old PostgreSQL paths and restarts the Patroni service.
+# Notes:
+# If pg_upgrade aborted before linking started, the old cluster was unmodified; it can be restarted.
+# If you did not start the new cluster, the old cluster was unmodified except that,
+# when linking started, a .old suffix was appended to $PGDATA/global/pg_control.
+# To reuse the old cluster, remove the .old suffix from $PGDATA/global/pg_control; you can then restart the old cluster.
+# If you did start the new cluster, it has written to shared files and it is unsafe to use the old cluster.
+# The old cluster will need to be restored from backup in this case.
+
+# If the cluster is already healthy, the process stops to avoid unnecessary actions.
+- name: '[Rollback] Check Patroni cluster state'
+  ansible.builtin.uri:
+    url: http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/cluster
+    return_content: true
+  register: patroni_cluster_result
+  failed_when: false
+  changed_when: false
+  when:
+    - inventory_hostname in groups['primary']
+
+# Stop, if the Patroni cluster is already healthy
+- name: '[Rollback] Abort if the Patroni cluster is already running'
+  ansible.builtin.fail:
+    msg: "The Patroni cluster is already running. Stop rollback."
+  vars:
+    cluster_members: "{{ patroni_cluster_result.json.members | default([]) | rejectattr('state', 'equalto', 'stopped') | list | length }}"
+    total_nodes: "{{ groups['primary'] | length + groups['secondary'] | length }}"
+  when:
+    - inventory_hostname in groups['primary']
+    # Check if the cluster members (excluding 'stopped') equals the total number of nodes
+    - cluster_members == total_nodes
+
+- name: '[Rollback] Make sure the new PostgreSQL is not running'
+  ansible.builtin.command: "{{ pg_new_bindir }}/pg_ctl status -D {{ pg_new_datadir }}"
+  register: pg_ctl_status_new_result
+  failed_when: false
+  changed_when: false
+
+# Stop, if new PostgreSQL is running
+# "If you did start the new cluster, it has written to shared files and it is unsafe to use the old cluster."
+- name: '[Rollback] Abort if the new PostgreSQL cluster is already running'
+  ansible.builtin.fail:
+    msg:
+      - "The PostgreSQL {{ pg_new_version }} is running on host {{ ansible_hostname }}. We can't rollback."
+  when:
+    - pg_ctl_status_new_result is defined
+    - pg_ctl_status_new_result.rc == 0
+
+- name: Check if pg_control.old exists
+  ansible.builtin.stat:
+    path: "{{ pg_old_datadir }}/global/pg_control.old"
+  register: pg_control_old
+
+# if 'pg_control.old' exists
+# "To reuse the old cluster, remove the .old suffix from $PGDATA/global/pg_control"
+- name: '[Rollback] Rename pg_control.old to pg_control'
+  ansible.builtin.command: mv "{{ pg_old_datadir }}/global/pg_control.old" "{{ pg_old_datadir }}/global/pg_control"
+  when: pg_control_old.stat.exists
+
+- name: '[Rollback] Check PostgreSQL version in pg_control'
+  ansible.builtin.shell: |
+    set -o pipefail;
+    {{ pg_old_bindir }}/pg_controldata {{ pg_old_datadir }} | grep 'pg_control version number' | awk '{print substr($4, 1, 2)}'
+  args:
+    executable: /bin/bash
+  changed_when: false
+  register: pg_control_version
+  when:
+    - inventory_hostname in groups['primary']
+
+# Stop, if 'pg_control version number' is equal to the new PostgreSQL version
+- name: '[Rollback] Abort if the PostgreSQL version does not match expected version'
+  ansible.builtin.fail:
+    msg:
+      - "The version in pg_control ({{ pg_control_version.stdout }}) is not equal to the PostgreSQL {{ pg_old_version }}. We can't rollback."
+      - "The old cluster will need to be restored from backup."
+  when:
+    - inventory_hostname in groups['primary']
+    - pg_control_version.stdout == pg_new_version | replace('.', '')
+
+# Revert the paths to the old PostgreSQL
+- name: '[Rollback] Revert the paths to the old PostgreSQL in patroni.yml'
+  ansible.builtin.replace:
+    path: "{{ patroni_config_file }}"
+    regexp: "{{ item.regexp }}"
+    replace: "{{ item.replace }}"
+  loop:
+    - { regexp: 'data_dir: {{ pg_new_datadir }}', replace: 'data_dir: {{ pg_old_datadir }}' }
+    - { regexp: 'bin_dir: {{ pg_new_bindir }}', replace: 'bin_dir: {{ pg_old_bindir }}' }
+    - { regexp: 'config_dir: {{ pg_new_confdir }}', replace: 'config_dir: {{ pg_old_confdir }}' }
+  loop_control:
+    label: '{{ item.replace }}'
+
+# Start Patroni cluster
+- name: '[Rollback] Start Patroni service on the Cluster Leader'
+  become: true
+  become_user: root
+  ansible.builtin.service:
+    name: patroni
+    state: started
+  when:
+    - inventory_hostname in groups['primary']
+
+- name: '[Rollback] Wait for port "{{ patroni_restapi_port }}" to become open on the host'
+  ansible.builtin.wait_for:
+    port: '{{ patroni_restapi_port }}'
+    host: '{{ inventory_hostname }}'
+    state: started
+    timeout: "{{ (pg_start_stop_timeout | int) // 2 }}"
+    delay: 2
+  when:
+    - inventory_hostname in groups['primary']
+
+- name: '[Rollback] Resume Patroni (disable maintenance mode)'
+  run_once: true
+  ansible.builtin.command: "patronictl -c {{ patroni_config_file }} resume --wait {{ patroni_cluster_name }}"
+  environment:
+    PATH: "{{ ansible_env.PATH }}:/usr/bin:/usr/local/bin"
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+  failed_when: false
+
+- name: '[Rollback] Check Patroni is healthy on the Leader'
+  ansible.builtin.uri:
+    url: http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/leader
+    status_code: 200
+  register: patroni_leader_result
+  until: patroni_leader_result.status == 200
+  retries: "{{ (pg_start_stop_timeout | int) // 2 }}"
+  delay: 2
+  when:
+    - inventory_hostname in groups['primary']
+
+- name: '[Rollback] Start Patroni service on the Cluster Replica'
+  become: true
+  become_user: root
+  ansible.builtin.service:
+    name: patroni
+    state: started
+  when:
+    - inventory_hostname in groups['secondary']
+
+- name: '[Rollback] Wait for port "{{ patroni_restapi_port }}" to become open on the host'
+  ansible.builtin.wait_for:
+    port: '{{ patroni_restapi_port }}'
+    host: '{{ inventory_hostname }}'
+    state: started
+    timeout: "{{ (pg_start_stop_timeout | int) // 2 }}"
+    delay: 2
+  when:
+    - inventory_hostname in groups['secondary']
+
+- name: '[Rollback] Check Patroni is healthy on the Replica'
+  ansible.builtin.uri:
+    url: http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/health
+    status_code: 200
+  register: patroni_replica_result
+  until: patroni_replica_result.status == 200
+  retries: "{{ (pg_start_stop_timeout | int) // 2 }}"
+  delay: 2
+  when:
+    - inventory_hostname in groups['secondary']
+
+# if 'pgbouncer_install' is 'true' and 'pgbouncer_pool_pause' is 'true'
+- block:
+    - name: '[Rollback] Disable maintenance mode'
+      ansible.builtin.include_tasks: maintenance_disable.yml
+
+    - name: '[Rollback] Perform RESUME PgBouncer pools (if paused)'
+      ansible.builtin.include_tasks: pgbouncer_resume.yml
+  when:
+    - pgbouncer_install | bool
+    - pgbouncer_pool_pause | bool
+
+- name: '[Rollback] Check PostgreSQL is started and accepting connections'
+  ansible.builtin.command: "{{ pg_old_bindir }}/pg_isready -p {{ postgresql_port }}"
+  register: pg_isready_result
+  until: pg_isready_result.rc == 0
+  retries: 300  # max duration 10 minutes
+  delay: 2
+  changed_when: false
+
+# Info
+- block:
+    - name: Check the PostgreSQL version
+      ansible.builtin.command: psql -tAXc "select current_setting('server_version')"
+      register: postgres_version
+      changed_when: false
+
+    - name: Get the Patroni cluster members
+      become: true
+      become_user: postgres
+      ansible.builtin.command: "patronictl -c {{ patroni_config_file }} list"
+      register: patronictl_result
+      changed_when: false
+      environment:
+        PATH: "{{ ansible_env.PATH }}:/usr/bin:/usr/local/bin"
+
+    - name: Print the Patroni cluster state
+      ansible.builtin.debug:
+        msg: "{{ patronictl_result.stdout_lines }}"
+
+    - name: Rollback completed
+      ansible.builtin.debug:
+        msg:
+          - "Rollback to the old PostgreSQL is completed."
+          - "Current version: {{ postgres_version.stdout }}"
+  when: inventory_hostname in groups['primary']
+
+...

@@ -1,0 +1,11 @@
+---
+# Perform RESUME pgbouncers server
+- name: RESUME PgBouncer pools
+  become: true
+  become_user: postgres
+  ansible.builtin.shell: kill -SIGUSR2 $(pidof pgbouncer)
+  args:
+    executable: /bin/bash
+  ignore_errors: true  # if there is an error, show the message and continue
+
+...

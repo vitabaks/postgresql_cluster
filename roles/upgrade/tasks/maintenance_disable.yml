@@ -1,0 +1,59 @@
+---
+# Disable maintenance mode for HAProxy (Type A scheme)
+# if 'pgbouncer_install' is 'true' and 'pgbouncer_pool_pause' is 'true'
+- block:
+    - name: Update haproxy conf file (enable http-checks)
+      ansible.builtin.template:
+        src: ../haproxy/templates/haproxy.cfg.j2 # use the haproxy role template
+        dest: /etc/haproxy/haproxy.cfg
+        owner: haproxy
+        group: haproxy
+
+    - name: Reload haproxy service
+      ansible.builtin.systemd:
+        name: haproxy
+        state: reloaded
+
+    - name: Start confd service
+      ansible.builtin.service:
+        name: confd
+        state: started
+  become: true
+  become_user: root
+  ignore_errors: true  # show the error and continue the playbook execution
+  when:
+    - with_haproxy_load_balancing | bool
+    - pgbouncer_install | bool
+    - pgbouncer_pool_pause | bool
+
+# Disable maintenance mode for vip-manager (Type B scheme)
+- block:
+    - name: Update vip-manager service file (uncomment 'ExecStopPost')
+      ansible.builtin.replace:
+        path: /etc/systemd/system/vip-manager.service
+        regexp: '#ExecStopPost=/sbin/ip addr del {{ vip_manager_ip }}/{{ vip_manager_mask }} dev {{ vip_manager_iface }}'
+        replace: "ExecStopPost=/sbin/ip addr del {{ vip_manager_ip }}/{{ vip_manager_mask }} dev {{ vip_manager_iface }}"
+
+    - name: Start vip-manager service
+      ansible.builtin.service:
+        name: vip-manager
+        daemon_reload: true
+        state: started
+
+    - name: Make sure that the cluster ip address (VIP) "{{ cluster_vip }}" is running
+      ansible.builtin.wait_for:
+        host: "{{ cluster_vip }}"
+        port: "{{ pgbouncer_listen_port }}"
+        state: started
+        timeout: 30
+        delay: 2
+  become: true
+  become_user: root
+  ignore_errors: true  # show the error and continue the playbook execution
+  when:
+    - not with_haproxy_load_balancing | bool
+    - cluster_vip | length > 0
+    - pgbouncer_install | bool
+    - pgbouncer_pool_pause | bool
+
+...

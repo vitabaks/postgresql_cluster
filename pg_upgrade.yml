@@ -1,0 +1,284 @@
+---
+# TODO:
+# - Citus support
+- name: "Upgrade PostgreSQL {{ pg_old_version }} to version {{ pg_new_version }} (PostgreSQL HA Cluster: {{ patroni_cluster_name }})"
+  hosts: postgres_cluster
+  gather_facts: true
+  become: true
+  become_user: postgres
+  any_errors_fatal: true
+  vars_files:
+    - vars/main.yml
+    - vars/upgrade.yml
+  pre_tasks:
+    - name: '[Prepare] Get Patroni Cluster Leader Node'
+      ansible.builtin.uri:
+        url: http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/leader
+        status_code: 200
+      register: patroni_leader_result
+      changed_when: false
+      failed_when: false
+
+    # Stop, if Patroni is unavailable
+    - name: The Patroni cluster is unhealthy
+      ansible.builtin.fail:
+        msg: "Patroni is unavailable on {{ ansible_hostname }}. Please check the cluster status."
+      changed_when: false
+      when: patroni_leader_result is undefined or patroni_leader_result.status == -1
+
+    - name: '[Prepare] Add host to group "primary" (in-memory inventory)'
+      ansible.builtin.add_host:
+        name: "{{ item }}"
+        groups: primary
+      when: hostvars[item]['patroni_leader_result']['status'] == 200
+      loop: "{{ groups['postgres_cluster'] }}"
+      changed_when: false
+
+    - name: '[Prepare] Add hosts to group "secondary" (in-memory inventory)'
+      ansible.builtin.add_host:
+        name: "{{ item }}"
+        groups: secondary
+      when: hostvars[item]['patroni_leader_result']['status'] != 200
+      loop: "{{ groups['postgres_cluster'] }}"
+      changed_when: false
+
+    - name: "Print Patroni Cluster info"
+      ansible.builtin.debug:
+        msg:
+          - "Cluster Name: {{ patroni_cluster_name }}"
+          - "Cluster Leader: {{ ansible_hostname }}"
+      when: inventory_hostname in groups['primary']
+  tags:
+    - always
+
+- name: "(1/7) PRE-UPGRADE: Perform Pre-Checks"
+  hosts: 'primary:secondary'
+  gather_facts: false
+  become: true
+  become_user: postgres
+  any_errors_fatal: true
+  environment: "{{ proxy_env | default({}) }}"
+  vars_files:
+    - vars/main.yml
+  pre_tasks:
+    - name: Include OS-specific variables
+      ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
+    - name: Include upgrade variables
+      ansible.builtin.include_vars: "vars/upgrade.yml"
+  tasks:
+    - name: Running Pre-Checks
+      ansible.builtin.include_role:
+        name: upgrade
+        tasks_from: pre_checks
+  tags:
+    - upgrade
+    - pre-checks
+
+- name: "(2/7) PRE-UPGRADE: Install new PostgreSQL packages"
+  hosts: 'primary:secondary'
+  gather_facts: false
+  become: true
+  become_user: root
+  any_errors_fatal: true
+  environment: "{{ proxy_env | default({}) }}"
+  vars_files:
+    - vars/main.yml
+  pre_tasks:
+    - name: Include OS-specific variables
+      ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
+    - name: Include upgrade variables
+      ansible.builtin.include_vars: "vars/upgrade.yml"
+  tasks:
+    - name: Install packages
+      ansible.builtin.include_role:
+        name: upgrade
+        tasks_from: packages
+  tags:
+    - upgrade
+    - upgrade-check
+    - packages
+
+- name: "(3/7) PRE-UPGRADE: Initialize new db, schema compatibility check, and pg_upgrade --check"
+  hosts: 'primary:secondary'
+  gather_facts: false
+  become: true
+  become_user: postgres
+  any_errors_fatal: true
+  vars_files:
+    - vars/main.yml
+  pre_tasks:
+    - name: Include OS-specific variables
+      ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
+    - name: Include upgrade variables
+      ansible.builtin.include_vars: "vars/upgrade.yml"
+  tasks:
+    - name: Create Data directory and initdb
+      ansible.builtin.include_role:
+        name: upgrade
+        tasks_from: initdb
+
+    # (optional) copy files specified in variable:
+    # 'copy_files_to_all_server'
+    - name: Copy files
+      ansible.builtin.include_role:
+        name: copy
+
+    - name: Check Schema Compatibility
+      ansible.builtin.import_role:
+        name: upgrade
+        tasks_from: schema_compatibility
+      when: schema_compatibility_check | bool
+
+    - name: Check pg_upgrade
+      ansible.builtin.import_role:
+        name: upgrade
+        tasks_from: upgrade_check
+  tags:
+    - upgrade
+    - upgrade-check
+    - schema-compatibility-check
+
+- name: "(4/7) PRE-UPGRADE: Prepare the Patroni configuration"
+  hosts: 'primary:secondary'
+  gather_facts: false
+  become: true
+  become_user: postgres
+  any_errors_fatal: true
+  vars_files:
+    - vars/main.yml
+  pre_tasks:
+    - name: Include OS-specific variables
+      ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
+    - name: Include upgrade variables
+      ansible.builtin.include_vars: "vars/upgrade.yml"
+  tasks:
+    - name: Patroni config
+      ansible.builtin.include_role:
+        name: upgrade
+        tasks_from: update_config
+  tags:
+    - upgrade
+    - update-config
+
+- name: "(5/7) UPGRADE: Upgrade PostgreSQL"
+  hosts: 'primary:secondary'
+  gather_facts: false
+  become: true
+  become_user: postgres
+  any_errors_fatal: true
+  vars_files:
+    - vars/main.yml
+  pre_tasks:
+    - name: Include OS-specific variables
+      ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
+    - name: Include upgrade variables
+      ansible.builtin.include_vars: "vars/upgrade.yml"
+  tasks:
+    - name: Enable maintenance mode
+      ansible.builtin.include_role:
+        name: upgrade
+        tasks_from: maintenance_enable
+
+    - name: Stop Services
+      ansible.builtin.include_role:
+        name: upgrade
+        tasks_from: stop_services
+
+    - name: Check 'Latest checkpoint location'
+      ansible.builtin.include_role:
+        name: upgrade
+        tasks_from: checkpoint_location
+
+    - name: Upgrade Primary
+      ansible.builtin.include_role:
+        name: upgrade
+        tasks_from: upgrade_primary
+
+    - name: Upgrade Secondary
+      ansible.builtin.include_role:
+        name: upgrade
+        tasks_from: upgrade_secondary
+
+    # if pg_new_wal_dir is defined
+    - name: Create WAL dir symlink
+      ansible.builtin.include_role:
+        name: upgrade
+        tasks_from: custom_wal_dir
+      when: pg_new_wal_dir | length > 0
+
+    - name: Remove old cluster from DCS
+      ansible.builtin.include_role:
+        name: upgrade
+        tasks_from: dcs_remove_cluster
+
+    - name: Start Services
+      ansible.builtin.include_role:
+        name: upgrade
+        tasks_from: start_services
+
+    - name: Disable maintenance mode
+      ansible.builtin.include_role:
+        name: upgrade
+        tasks_from: maintenance_disable
+  tags:
+    - upgrade
+
+- name: "(6/7) POST-UPGRADE: Perform Post-Checks and Update extensions"
+  hosts: 'primary:secondary'
+  gather_facts: false
+  become: true
+  become_user: postgres
+  any_errors_fatal: true
+  vars_files:
+    - vars/main.yml
+  pre_tasks:
+    - name: Include OS-specific variables
+      ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
+    - name: Include upgrade variables
+      ansible.builtin.include_vars: "vars/upgrade.yml"
+  tasks:
+    - name: Running Post-Checks
+      ansible.builtin.include_role:
+        name: upgrade
+        tasks_from: post_checks
+
+    - name: Update extensions
+      ansible.builtin.include_role:
+        name: upgrade
+        tasks_from: extensions
+      when: update_extensions | bool
+  tags:
+    - upgrade
+    - post-checks
+    - update-extensions
+
+- name: "(7/7) POST-UPGRADE: Analyze a PostgreSQL database (update optimizer statistics) and Post-Upgrade tasks"
+  hosts: 'primary:secondary'
+  gather_facts: false
+  become: true
+  become_user: postgres
+  any_errors_fatal: true
+  vars_files:
+    - vars/main.yml
+  pre_tasks:
+    - name: Include OS-specific variables
+      ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
+    - name: Include upgrade variables
+      ansible.builtin.include_vars: "vars/upgrade.yml"
+  tasks:
+    - name: Analyze database
+      ansible.builtin.include_role:
+        name: upgrade
+        tasks_from: statistics
+
+    - name: Running Post-Upgrade tasks
+      ansible.builtin.include_role:
+        name: upgrade
+        tasks_from: post_upgrade
+  tags:
+    - upgrade
+    - post-upgrade
+    - analyze
+    - statistics
+
+...

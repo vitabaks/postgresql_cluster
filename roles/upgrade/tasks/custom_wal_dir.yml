@@ -1,0 +1,48 @@
+---
+
+- name: "Make sure {{ pg_new_datadir }}/pg_wal is not symlink"
+  ansible.builtin.stat:
+    path: "{{ pg_new_datadir }}/pg_wal"
+  register: sym
+
+# Synchronize WAL`s (if wal dir is not symlink)
+- block:
+    - name: Make sure the custom WAL directory "{{ pg_new_wal_dir }}" exists and is empty
+      become: true
+      become_user: root
+      ansible.builtin.file:
+        path: "{{ pg_new_wal_dir }}"
+        state: "{{ item }}"
+        owner: postgres
+        group: postgres
+        mode: "0700"
+      loop:
+        - absent
+        - directory
+
+    - name: "Synchronize {{ pg_new_datadir }}/pg_wal to {{ pg_new_wal_dir }}"
+      become: true
+      become_user: postgres
+      ansible.posix.synchronize:
+        src: "{{ pg_new_datadir }}/pg_wal/"
+        dest: "{{ pg_new_wal_dir }}/"
+      delegate_to: "{{ inventory_hostname }}"
+
+    - name: "Rename pg_wal to pg_wal_old"
+      ansible.builtin.command: mv {{ pg_new_datadir }}/pg_wal {{ pg_new_datadir }}/pg_wal_old
+
+    - name: "Create symlink {{ pg_new_datadir }}/pg_wal -> {{ pg_new_wal_dir }}"
+      become: true
+      become_user: postgres
+      ansible.builtin.file:
+        src: "{{ pg_new_wal_dir }}"
+        dest: "{{ pg_new_datadir }}/pg_wal"
+        state: link
+
+    - name: "Remove pg_wal_old directory"
+      ansible.builtin.file:
+        path: "{{ pg_new_datadir }}/pg_wal_old"
+        state: absent
+  when: sym.stat.exists and not sym.stat.islnk | bool
+
+...

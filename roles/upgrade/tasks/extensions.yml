@@ -1,0 +1,19 @@
+---
+
+- name: Get a list of databases
+  ansible.builtin.command: psql -tAXc "select datname from pg_catalog.pg_database where datname <> 'template0'"
+  register: databases_list
+  changed_when: false
+  when:
+    - inventory_hostname in groups['primary']
+
+- name: Update extensions in each database
+  ansible.builtin.include_tasks: update_extensions.yml
+  loop: "{{ databases_list.stdout_lines }}"
+  loop_control:
+    loop_var: pg_target_dbname
+  when:
+    - databases_list.stdout_lines is defined
+    - databases_list.stdout_lines | length > 0
+
+...

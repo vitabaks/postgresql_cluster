@@ -1,0 +1,77 @@
+global
+    maxconn {{ haproxy_maxconn.global }}
+    log /dev/log    local0
+    log /dev/log    local1 notice
+    chroot /var/lib/haproxy
+    stats socket /run/haproxy/admin.sock mode 660 level admin expose-fd listeners
+    stats timeout 30s
+    user haproxy
+    group haproxy
+    daemon
+
+defaults
+    mode               tcp
+    log                global
+    retries            2
+    timeout queue      5s
+    timeout connect    5s
+    timeout client     {{ haproxy_timeout.client }}
+    timeout server     {{ haproxy_timeout.server }}
+    timeout check      15s
+
+listen stats
+    mode http
+    bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ haproxy_listen_port.stats }}
+    stats enable
+    stats uri /
+
+listen master
+{% if cluster_vip is defined and cluster_vip | length > 0 %}
+    bind {{ cluster_vip }}:{{ haproxy_listen_port.master }}
+{% else %}
+    bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ haproxy_listen_port.master }}
+{% endif %}
+    maxconn {{ haproxy_maxconn.master }}
+    option tcplog
+{% for host in groups['primary'] %}
+server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}:{{ pgbouncer_listen_port }}
+{% endfor %}
+
+listen replicas
+{% if cluster_vip is defined and cluster_vip | length > 0 %}
+    bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas }}
+{% else %}
+    bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ haproxy_listen_port.replicas }}
+{% endif %}
+    maxconn {{ haproxy_maxconn.replica }}
+    option tcplog
+    balance roundrobin
+{% for host in groups['secondary'] %}
+server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}:{{ pgbouncer_listen_port }}
+{% endfor %}
+
+listen replicas_sync
+{% if cluster_vip is defined and cluster_vip | length > 0 %}
+    bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas_sync }}
+{% else %}
+    bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ haproxy_listen_port.replicas_sync }}
+{% endif %}
+    maxconn {{ haproxy_maxconn.replica }}
+    option tcplog
+    balance roundrobin
+{% for host in groups['secondary'] %}
+server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}:{{ pgbouncer_listen_port }}
+{% endfor %}
+
+listen replicas_async
+{% if cluster_vip is defined and cluster_vip | length > 0 %}
+    bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas_async }}
+{% else %}
+    bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ haproxy_listen_port.replicas_async }}
+{% endif %}
+    maxconn {{ haproxy_maxconn.replica }}
+    option tcplog
+    balance roundrobin
+{% for host in groups['secondary'] %}
+server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}:{{ pgbouncer_listen_port }}
+{% endfor %}

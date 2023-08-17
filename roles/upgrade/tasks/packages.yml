@@ -1,0 +1,66 @@
+---
+
+- name: Clean yum cache
+  ansible.builtin.command: yum clean all
+  register: yum_status
+  until: yum_status is success
+  delay: 5
+  retries: 3
+  when:
+    - ansible_os_family == "RedHat"
+    - ansible_distribution_major_version == '7'
+
+- name: Clean dnf cache
+  ansible.builtin.command: dnf clean all
+  register: dnf_status
+  until: dnf_status is success
+  delay: 5
+  retries: 3
+  when:
+    - ansible_os_family == "RedHat"
+    - ansible_distribution_major_version is version('8', '>=')
+
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+  register: apt_status
+  until: apt_status is success
+  delay: 5
+  retries: 3
+  when:
+    - ansible_os_family == "Debian"
+
+- name: "Install PostgreSQL {{ pg_new_version }} packages"
+  ansible.builtin.package:
+    name: "{{ item }}"
+    state: latest
+  loop: "{{ pg_new_packages }}"
+  register: package_status
+  until: package_status is success
+  delay: 5
+  retries: 3
+
+# timescaledb (if enable_timescale is defined)
+- name: Install TimescaleDB package for PostgreSQL {{ pg_new_version }}
+  ansible.builtin.package:
+    name: "{{ item }}"
+    state: latest
+  loop: "{{ timescaledb_package }}"
+  vars:
+    timescaledb_package:
+      - >
+        {% if pg_new_version | int >= 11 %}
+        timescaledb-2-postgresql-{{ pg_new_version }}
+        {% else %}
+        timescaledb-postgresql-{{ pg_new_version }}
+        {% endif %}
+  register: package_status
+  until: package_status is success
+  delay: 5
+  retries: 3
+  when:
+    - enable_timescale is defined
+    - enable_timescale | bool
+
+...
