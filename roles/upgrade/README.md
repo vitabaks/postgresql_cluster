@@ -1,4 +1,4 @@
-## Upgrade PostgreSQL to the new major version
+## PostgreSQL in-place major upgrade
 
 This role is designed for in-place major upgrades of PostgreSQL, e.g., from version 14 to 15.
 
@@ -11,6 +11,24 @@ The upgrade is supported starting from PostgreSQL 9.3 and up to the latest Postg
 There is no need to plan additional disk space, because when upgrading PostgreSQL using hard links instead of copying files. However, it is required that the `pg_old_datadir` and `pg_new_datadir` are located within the same top-level directory (`pg_upper_datadir` variable).
 
 Specify the current (old) version of PostgreSQL in the `pg_old_version` variable and target version of PostgreSQL for the upgrade in the `pg_new_version` variable.
+
+#### Recommendations
+
+1. Before upgrading to a new major version, it's recommended to update PostgreSQL and its extensions. Additionally, consider updating Patroni and the entire system.
+
+    To achieve this, use the `update_pgcluster.yml` playbook. More details can be found [here](../update/README.md).
+
+2. Before moving forward, execute preliminary checks to ensure that your database schema is compatible with the upcoming PostgreSQL version and that the cluster is ready for the upgrade.
+   
+    To do this, run the `pg_upgrade.yml` playbook using the tags '`pre-checks,upgrade-check`'.
+
+    If any errors arise, such as schema object incompatibilities, address these issues and rerun the checks. 
+    
+    Once the playbook completes the pre-checks without any errors, you should see the following messages in the Ansible log: 
+    - "`The database schema is compatible with PostgreSQL <new_version>`"
+    - "`Clusters are compatible`"
+
+    Upon seeing these messages, proceed to run the playbook without any tags to initiate the upgrade.
 
 ### Usage
 

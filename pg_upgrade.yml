@@ -1,7 +1,5 @@
 ---
 # TODO:
-# - README
-# - - recommendation: update postgres/patroni/system and database extensions before upgrade (optional) << update_pgcluster.yml
 # - Citus support
 - name: "Upgrade PostgreSQL {{ pg_old_version }} to version {{ pg_new_version }} (PostgreSQL HA Cluster: {{ patroni_cluster_name }})"
   hosts: postgres_cluster
