@@ -22,11 +22,11 @@
               and wait_event_type = 'Lock'
           )
           select
-            now(),
+            clock_timestamp(),
             pg_terminate_backend(pid),
             pid,
-            clock_timestamp() - xact_start as xact_lasted,
-            query
+            clock_timestamp() - xact_start as xact_age,
+            left(regexp_replace(query, E'[ \\t\\n\\r]+', ' ', 'g'),150) as query
           from pg_stat_activity
           where
             pid in (select pid from blocker_pids)
