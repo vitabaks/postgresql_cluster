@@ -23,7 +23,7 @@
 
 - name: Grant roles to users
   community.postgresql.postgresql_membership:
-    group: "{{ item.role }}"
+    group: "{{ item.role | default('') }}"
     target_role: "{{ item.name }}"
     login_host: "127.0.0.1"
     login_port: "{{ postgresql_port }}"
