@@ -22,7 +22,7 @@ Specify the current (old) version of PostgreSQL in the `pg_old_version` variable
    
     To do this, run the `pg_upgrade.yml` playbook using the tags '`pre-checks,upgrade-check`'.
 
-    If any errors arise, such as schema object incompatibilities, address these issues and rerun the checks. 
+    If any errors arise, such as schema object incompatibilities, resolve these issues and repeat the checks.
     
     Once the playbook completes the pre-checks without any errors, you should see the following messages in the Ansible log: 
     - "`The database schema is compatible with PostgreSQL <new_version>`"
@@ -297,9 +297,10 @@ Please see the variable file vars/[upgrade.yml](../../vars/upgrade.yml)
 
 #### 7. POST-UPGRADE: Analyze a PostgreSQL database (update optimizer statistics) and Post-Upgrade tasks
 - **Run vacuumdb to analyze the PostgreSQL databases**
-  - Notes: Uses parallel processes equal to CPU cores ('vacuumdb_parallel_jobs' variable)
+  - Notes: Uses parallel processes equal to CPU cores ('`vacuumdb_parallel_jobs`' variable)
+  - Notes: Before collecting statistics, the 'pg_terminator' script is launched to monitor and terminate any 'ANALYZE' blockers. Once statistics collection is complete, the script is stopped.
   - Wait for the analyze to complete.
-    - Notes: max wait time: 1 hour ('vacuumdb_analyze_timeout' variable)
+    - Notes: max wait time: 1 hour ('`vacuumdb_analyze_timeout`' variable)
 - **Ensure the current data directory is the new data directory**
   - Notes: to prevent deletion the old directory if it is used
 - **Delete the old PostgreSQL data directory**
