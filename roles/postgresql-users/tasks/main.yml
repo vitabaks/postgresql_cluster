@@ -34,7 +34,10 @@
   loop: "{{ postgresql_users | flatten(1) }}"
   loop_control:
     label: "{{ item.name }}"
-  when: postgresql_users is defined and postgresql_users | length > 0
+  when:
+    - postgresql_users is defined
+    - postgresql_users | length > 0
+    - item.role | default('') | length > 0
   tags: postgresql_users
 
 ...
