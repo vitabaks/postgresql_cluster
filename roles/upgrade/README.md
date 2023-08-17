@@ -30,7 +30,7 @@ Specify the current (old) version of PostgreSQL in the `pg_old_version` variable
 
     Upon seeing these messages, proceed to run the playbook without any tags to initiate the upgrade.
 
-### Usage
+### Upgrade
 
 ```bash
 ansible-playbook pg_upgrade.yml -e "pg_old_version=14 pg_new_version=15"
@@ -41,6 +41,19 @@ ansible-playbook pg_upgrade.yml -e "pg_old_version=14 pg_new_version=15"
 To minimize or even eliminate errors during database upgrades (depending on the workload and timeouts), we pause the PgBouncer pools. From an application's perspective, this does not result in terminated database connections. Instead, applications might experience a temporary increase in query latency while the PgBouncer pools are paused.
 
 On average, the PgBouncer pause duration is approximately 30 seconds. However, for larger databases, this pause might be extended due to longer `pg_upgrade` and `rsync` procedures. The default maximum wait time for a request during a pause is set to 2 minutes (controlled by the `query_wait_timeout` pgbouncer parameter). If the pause exceeds this duration, connections will be terminated with a timeout error.
+
+### Rollback
+
+This playbook performs a rollback of a PostgreSQL upgrade.
+
+```bash
+ansible-playbook pg_upgrade_rollback.yml
+```
+
+It's designed to be used when a PostgreSQL upgrade hasn't been fully completed and the new version hasn't been started.
+The rollback operation is performed by starting the Patroni cluster with the old version of PostgreSQL using the same PGDATA.
+The playbook first checks the health of the current cluster, verifies the version of PostgreSQL, and ensures the new PostgreSQL is not running.
+If these checks pass, the playbook switches back to the old PostgreSQL paths and restarts the Patroni service.
 
 ### Variables
 
