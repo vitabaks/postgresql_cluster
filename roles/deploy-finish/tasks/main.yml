@@ -3,24 +3,26 @@
 - name: Make sure handlers are flushed immediately
   ansible.builtin.meta: flush_handlers
 
+# users info
 - block:
-    - name: Check postgresql cluster health
+    - name: Get postgresql users list
       run_once: true
       become: true
       become_user: postgres
-      ansible.builtin.command: patronictl -c /etc/patroni/patroni.yml list
-      register: patronictl_result
-      environment:
-        PATH: "{{ ansible_env.PATH }}:/usr/bin:/usr/local/bin"
+      ansible.builtin.command:
+        "{{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -c\"\\du\""
+      register: users_result
+      delegate_to: "{{ groups.master[0] }}"
       changed_when: false
 
-    - name: PostgreSQL Cluster health
+    - name: PostgreSQL list of users
       run_once: true
       ansible.builtin.debug:
-        var: patronictl_result.stdout_lines
+        var: users_result.stdout_lines
   ignore_errors: true
-  tags: patroni_status, cluster_info, cluster_status, point_in_time_recovery
+  tags: users, users_list, cluster_info, cluster_status, point_in_time_recovery
 
+# databases info
 - block:
     - name: Get postgresql database list
       run_once: true
@@ -59,24 +61,26 @@
   ignore_errors: true
   tags: databases, db_list, cluster_info, cluster_status, point_in_time_recovery
 
+# cluster info
 - block:
-    - name: Get postgresql users list
+    - name: Check postgresql cluster health
       run_once: true
       become: true
       become_user: postgres
-      ansible.builtin.command:
-        "{{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -c\"\\du\""
-      register: users_result
-      delegate_to: "{{ groups.master[0] }}"
+      ansible.builtin.command: patronictl -c /etc/patroni/patroni.yml list
+      register: patronictl_result
+      environment:
+        PATH: "{{ ansible_env.PATH }}:/usr/bin:/usr/local/bin"
       changed_when: false
 
-    - name: PostgreSQL list of users
+    - name: PostgreSQL Cluster health
       run_once: true
       ansible.builtin.debug:
-        var: users_result.stdout_lines
+        var: patronictl_result.stdout_lines
   ignore_errors: true
-  tags: users, users_list, cluster_info, cluster_status, point_in_time_recovery
+  tags: patroni_status, cluster_info, cluster_status, point_in_time_recovery
 
+# connection info
 - block:  # if cluster_vip is defined
     - name: PostgreSQL Cluster connection info
       run_once: true
