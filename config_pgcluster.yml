@@ -323,3 +323,17 @@
         - pg_pending_restart_settings | length > 0
   tags:
     - patroni_conf
+
+- name: config_pgcluster.yml | PostgreSQL Cluster Info
+  hosts: postgres_cluster
+  become: true
+  become_method: sudo
+  gather_facts: true
+  any_errors_fatal: true
+  vars_files:
+    - vars/main.yml
+    - vars/system.yml
+
+  roles:
+    # finish (info)
+    - role: deploy-finish
