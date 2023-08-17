@@ -49,7 +49,7 @@ vip_manager_mask: "24"  # netmask for the virtual ip
 
 # DCS (Distributed Consensus Store)
 dcs_exists: false  # or 'true' if you don't want to deploy a new etcd cluster
-dcs_type: "etcd"  # or 'consul'
+dcs_type: "consul"  # or 'consul'
 
 # if dcs_type: "etcd" and dcs_exists: false
 etcd_version: "3.5.9"  # version for deploy etcd cluster
