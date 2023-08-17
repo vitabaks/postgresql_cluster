@@ -45,6 +45,7 @@ In addition to deploying new clusters, this playbook also support the deployment
     - [Point-In-Time-Recovery:](#point-in-time-recovery)
 - [Maintenance](#maintenance)
     - [Update the PostgreSQL HA Cluster](#update-the-postgresql-ha-cluster)
+    - [PostgreSQL major upgrade](#postgresql-major-upgrade)
     - [Using Git for cluster configuration management](#using-git-for-cluster-configuration-management-iacgitops)
 - [Disaster Recovery](#disaster-recovery)
     - [etcd](#etcd)
@@ -490,7 +491,7 @@ I recommend that you study the following materials for further maintenance of th
 - [Patroni documentation](https://patroni.readthedocs.io/en/latest/)
 - [etcd operations guide](https://etcd.io/docs/v3.5/op-guide/)
 
-#### Update the PostgreSQL HA Cluster
+### Update the PostgreSQL HA Cluster
 
 Use the `update_pgcluster.yml` playbook for update the PostgreSQL HA Cluster to a new minor version (for example 15.1->15.2, and etc).
 
@@ -523,7 +524,22 @@ ansible-playbook update_pgcluster.yml -e target=system
 
 More details [here](roles/update/README.md)
 
-#### Using Git for cluster configuration management (IaC/GitOps)
+### PostgreSQL major upgrade
+
+Use the `pg_upgrade.yml` playbook to upgrade the PostgreSQL to a new major version (for example 14->15, and etc).
+
+<details><summary>Upgrade PostgreSQL</summary>
+
+```
+ansible-playbook pg_upgrade.yml -e "pg_old_version=14 pg_new_version=15"
+```
+
+</details>
+
+More details [here](roles/upgrade/README.md)
+
+
+### Using Git for cluster configuration management (IaC/GitOps)
 
 Infrastructure as Code (IaC) is the managing and provisioning of infrastructure through code instead of through manual processes. \
 GitOps automates infrastructure updates using a Git workflow with continuous integration (CI) and continuous delivery (CI/CD). When new code is merged, the CI/CD pipeline enacts the change in the environment. Any configuration drift, such as manual changes or errors, is overwritten by GitOps automation so the environment converges on the desired state defined in Git. 
