@@ -20,6 +20,30 @@
       when:
         - ansible_utils_result.stderr is search("unable to find")
 
+    - name: Make sure the unzip package are present on the control host
+      ansible.builtin.package:
+        name: unzip
+        state: present
+      register: package_status
+      until: package_status is success
+      delay: 5
+      retries: 3
+
+    - name: Make sure the python3-pip package are present on the control host
+      ansible.builtin.package:
+        name: python3-pip
+        state: present
+      register: package_status
+      until: package_status is success
+      delay: 5
+      retries: 3
+
+    - name: Install netaddr dependency on the control host
+      ansible.builtin.pip:
+        name: netaddr
+        executable: pip3
+      become: false
+
 - name: consul.yml | Configure Consul instances
   hosts: consul_instances
   become: true
@@ -66,18 +90,6 @@
       until: package_status is success
       delay: 5
       retries: 3
-
-    - name: Make sure the unzip package are present on the control host
-      run_once: true # noqa run-once
-      delegate_to: 127.0.0.1
-      ansible.builtin.package:
-        name: unzip
-        state: present
-      register: package_status
-      until: package_status is success
-      delay: 5
-      retries: 3
-      ignore_errors: true
 
     - name: Build a firewall_ports_dynamic_var
       ansible.builtin.set_fact:
