@@ -123,26 +123,33 @@
             ansible_distribution_major_version == '7')
       tags: install_scl_repo
 
-    # PowerTools repository (to install dependencies for postgresql<version>-devel package)
-    - name: Enable PowerTools repository
-      ansible.builtin.command: dnf config-manager --set-enabled "[Pp]ower[Tt]ools"
-      when:
-        - ansible_distribution_major_version is version('8', '==')
-        - ansible_distribution != "OracleLinux"
+    # Add repository to install dependencies for postgresql<version>-devel package
+    - block:
+        # PowerTools repository
+        - name: Enable PowerTools repository
+          ansible.builtin.command: dnf config-manager --set-enabled "[Pp]ower[Tt]ools"
+          when:
+            - ansible_distribution_major_version is version('8', '==')
+            - ansible_distribution != "OracleLinux"
+            - ansible_distribution != 'RedHat'
 
-    # CodeReady Linux Builder (crb) repository (to install dependencies for postgresql<version>-devel package)
-    - name: Enable CodeReady Linux Builder (crb) repository
-      ansible.builtin.command: dnf config-manager --set-enabled crb
-      when:
-        - ansible_distribution_major_version is version('9', '>=')
-        - ansible_distribution != "OracleLinux"
+        # CodeReady Linux Builder (crb) repository
+        - name: Enable CodeReady Linux Builder (crb) repository
+          ansible.builtin.command: dnf config-manager --set-enabled crb
+          when:
+            - ansible_distribution_major_version is version('9', '>=')
+            - ansible_distribution != "OracleLinux"
 
-    # CodeReady Builder repository for OracleLinux (to install dependencies for postgresql<version>-devel package)
-    - name: Enable CodeReady Builder repository
-      ansible.builtin.command: dnf config-manager --enable ol{{ ansible_distribution_major_version }}_codeready_builder
+        # CodeReady Builder repository for OracleLinux
+        - name: Enable CodeReady Builder repository
+          ansible.builtin.command: dnf config-manager --enable ol{{ ansible_distribution_major_version }}_codeready_builder
+          when:
+            - ansible_distribution == "OracleLinux"
+            - ansible_distribution_major_version is version('8', '>=')
+      vars:
+        pg_devel_package: "postgresql{{ postgresql_version | replace('.', '') }}-devel"
       when:
-        - ansible_distribution == "OracleLinux"
-        - ansible_distribution_major_version is version('8', '>=')
+        - pg_devel_package in postgresql_packages
 
     # Install PostgreSQL Repository
     - name: Get pgdg-redhat-repo-latest.noarch.rpm
