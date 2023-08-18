@@ -5,4 +5,4 @@
     return_content: true
   register: etcd_health_status
   failed_when: "(etcd_health_status.content | from_json).health != 'true'"
-  when: dcs_type = "etcd"
+  when: dcs_type == "etcd"
