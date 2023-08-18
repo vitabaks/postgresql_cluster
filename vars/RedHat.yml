@@ -75,7 +75,7 @@ postgresql_packages:
   - postgresql{{ postgresql_version | replace('.', '') }}
   - postgresql{{ postgresql_version | replace('.', '') }}-server
   - postgresql{{ postgresql_version | replace('.', '') }}-contrib
-  - postgresql{{ postgresql_version | replace('.', '') }}-devel
+#  - postgresql{{ postgresql_version | replace('.', '') }}-devel
 #  - pg_repack{{ postgresql_version | replace('.', '') }}
 
 # Extra packages
