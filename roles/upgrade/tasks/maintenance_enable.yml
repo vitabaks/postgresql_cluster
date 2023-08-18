@@ -1,0 +1,102 @@
+---
+# Disable auto failover – we need this to be able to stop leader before its standbys
+- name: Pause Patroni cluster (enable maintenance mode)
+  become: true
+  become_user: postgres
+  ansible.builtin.command: "patronictl -c {{ patroni_config_file }} pause --wait {{ patroni_cluster_name }}"
+  environment:
+    PATH: "{{ ansible_env.PATH }}:/usr/bin:/usr/local/bin"
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+  register: pause_result
+  failed_when: "'Cluster is already paused' not in pause_result.stderr and pause_result.rc != 0"
+  when:
+    - inventory_hostname in groups['primary']
+
+# Enable maintenance mode for HAProxy (Type A scheme)
+# if 'pgbouncer_install' is 'true' and 'pgbouncer_pool_pause' is 'true'
+# Temporarily disable http-checks in order to keep database connections after stopping the Patroni service
+# and then pause the pgbouncer pools.
+- block:
+    - name: Stop confd service
+      ansible.builtin.service:
+        name: confd
+        state: stopped
+
+    - name: Update haproxy conf file (disable http-checks)
+      ansible.builtin.template:
+        src: templates/haproxy-no-http-checks.cfg.j2
+        dest: /etc/haproxy/haproxy.cfg
+        owner: haproxy
+        group: haproxy
+
+    - name: Reload haproxy service
+      ansible.builtin.systemd:
+        name: haproxy
+        state: reloaded
+  become: true
+  become_user: root
+  when:
+    - with_haproxy_load_balancing | bool
+    - pgbouncer_install | bool
+    - pgbouncer_pool_pause | bool
+
+# Enable maintenance mode for vip-manager (Type B scheme)
+# if 'pgbouncer_install' is 'true' and 'pgbouncer_pool_pause' is 'true'
+# Temporarily disable vip-manager service to keep database connections after stopping the Patroni service
+# and then pause the pgbouncer pools.
+# This prevents the VIP from being removed when the Patroni leader is unavailable during maintenance.
+- block:
+    - name: Update vip-manager service file (comment out 'ExecStopPost')
+      ansible.builtin.replace:
+        path: /etc/systemd/system/vip-manager.service
+        regexp: 'ExecStopPost=/sbin/ip addr del {{ vip_manager_ip }}/{{ vip_manager_mask }} dev {{ vip_manager_iface }}'
+        replace: "#ExecStopPost=/sbin/ip addr del {{ vip_manager_ip }}/{{ vip_manager_mask }} dev {{ vip_manager_iface }}"
+
+    - name: Stop vip-manager service
+      ansible.builtin.service:
+        name: vip-manager
+        daemon_reload: true
+        state: stopped
+
+    - name: Make sure that the cluster ip address (VIP) "{{ cluster_vip }}" is running
+      ansible.builtin.wait_for:
+        host: "{{ cluster_vip }}"
+        port: "{{ pgbouncer_listen_port }}"
+        state: started
+        timeout: 30
+        delay: 2
+  become: true
+  become_user: root
+  when:
+    - not with_haproxy_load_balancing | bool
+    - cluster_vip | length > 0
+    - pgbouncer_install | bool
+    - pgbouncer_pool_pause | bool
+
+# Stop Patroni
+- name: Stop Patroni service
+  become: true
+  become_user: root
+  ansible.builtin.service:
+    name: patroni
+    state: stopped
+
+- name: Wait until the Patroni cluster is stopped
+  ansible.builtin.shell: |
+    set -o pipefail;
+    patronictl -c {{ patroni_config_file }} list -f json | grep -cv '^\[\]$'
+  args:
+    executable: /bin/bash
+  environment:
+    PATH: "{{ ansible_env.PATH }}:/usr/bin:/usr/local/bin"
+  register: patronictl_result
+  until: patronictl_result.stdout|int == 0
+  retries: 30  # max duration 5 minutes
+  delay: 10
+  changed_when: false
+  failed_when: false
+  when:
+    - inventory_hostname in groups['primary']
+
+...

@@ -1,0 +1,81 @@
+---
+name: Molecule pg_upgrade
+
+on:
+  schedule:
+    - cron: "0 0 * * 6"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - distro: debian12
+            tag: latest
+            namespace: geerlingguy
+          - distro: debian11
+            tag: latest
+            namespace: geerlingguy
+          - distro: debian10
+            tag: latest
+            namespace: geerlingguy
+          - distro: ubuntu2204
+            tag: latest
+            namespace: geerlingguy
+          - distro: ubuntu2004
+            tag: latest
+            namespace: geerlingguy
+          - distro: ubuntu1804
+            tag: latest
+            namespace: geerlingguy
+          - distro: rockylinux8
+            tag: latest
+            namespace: geerlingguy
+          - distro: rockylinux9
+            tag: latest
+            namespace: geerlingguy
+          - distro: almalinux8
+            tag: latest
+            namespace: glillico
+          - distro: almalinux9
+            tag: latest
+            namespace: glillico
+          - distro: oraclelinux8
+            tag: latest
+            namespace: glillico
+          - distro: oraclelinux9
+            tag: latest
+            namespace: glillico
+          - distro: centosstream9
+            tag: latest
+            namespace: glillico
+          - distro: centosstream8
+            tag: latest
+            namespace: glillico
+
+    steps:
+      - name: Set TERM environment variable
+        run: echo "TERM=xterm" >> $GITHUB_ENV
+
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: make bootstrap-dev
+
+      - name: Run Molecule tests for pg_upgrade
+        run: make molecule-test-scenario
+        env:
+          PY_COLORS: "1"
+          ANSIBLE_FORCE_COLOR: "1"
+          IMAGE_DISTRO: ${{ matrix.config.distro }}
+          IMAGE_TAG: ${{ matrix.config.tag }}
+          IMAGE_NAMESPACE: ${{ matrix.config.namespace }}
+          MOLECULE_SCENARIO: "pg_upgrade"

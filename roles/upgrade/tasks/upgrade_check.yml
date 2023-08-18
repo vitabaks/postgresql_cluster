@@ -1,0 +1,48 @@
+---
+
+- name: Get the current shared_preload_libraries settings
+  ansible.builtin.command: psql -tAXc "show shared_preload_libraries"
+  changed_when: false
+  register: pg_shared_preload_libraries_result
+  when:
+    - inventory_hostname in groups['primary']
+
+- name: 'Set the variable: pg_shared_preload_libraries_value'
+  ansible.builtin.set_fact:
+    pg_shared_preload_libraries_value: "{{ pg_shared_preload_libraries_result.stdout }}"
+  when:
+    - inventory_hostname in groups['primary']
+
+# In the --new-options argument, an inline if condition checks if 'timescaledb' is present in the pg_shared_preload_libraries_value.
+# If it is, it appends '-c timescaledb.restoring='on'' to the --new-options argument.
+- name: Verify the two clusters are compatible (pg_upgrade --check)
+  ansible.builtin.command: >
+    {{ pg_new_bindir }}/pg_upgrade
+    --username={{ pg_install_user.stdout }}
+    --old-bindir {{ pg_old_bindir }}
+    --new-bindir {{ pg_new_bindir }}
+    --old-datadir {{ pg_old_datadir }}
+    --new-datadir {{ pg_new_datadir }}
+    --old-options "-c config_file={{ pg_old_confdir }}/postgresql.conf"
+    --new-options "-c config_file={{ pg_new_confdir }}/postgresql.conf {{ shared_preload_libraries }} {{ timescaledb_restoring }}"
+    --jobs={{ ansible_processor_vcpus }}
+    --link
+    --check
+  args:
+    chdir: "{{ pg_upper_datadir }}"
+  vars:
+    shared_preload_libraries: "-c shared_preload_libraries='{{ pg_shared_preload_libraries_value }}'"
+    timescaledb_restoring: "{{ \"-c timescaledb.restoring='on'\" if 'timescaledb' in pg_shared_preload_libraries_value else '' }}"
+  failed_when: false
+  register: pg_upgrade_check_result
+  when:
+    - inventory_hostname in groups['primary']
+
+- name: Print the result of the pg_upgrade check
+  ansible.builtin.debug:
+    var: pg_upgrade_check_result.stdout_lines
+  failed_when: "'Clusters are compatible' not in pg_upgrade_check_result.stdout"
+  when:
+    - inventory_hostname in groups['primary']
+
+...

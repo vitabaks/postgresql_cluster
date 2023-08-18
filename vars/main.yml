@@ -281,6 +281,7 @@ postgresql_pg_ident: []
 # the password file (~/.pgpass)
 postgresql_pgpass:
   - "localhost:{{ postgresql_port }}:*:{{ patroni_superuser_username }}:{{ patroni_superuser_password }}"
+  - "localhost:{{ pgbouncer_listen_port }}:*:{{ patroni_superuser_username }}:{{ patroni_superuser_password }}"
   - "{{ inventory_hostname }}:{{ postgresql_port }}:*:{{ patroni_superuser_username }}:{{ patroni_superuser_password }}"
 #  - hostname:port:database:username:password
 

@@ -15,7 +15,7 @@
         with_haproxy_load_balancing: true
         consul_node_role: server # if dcs_type: "consul"
         consul_bootstrap_expect: true # if dcs_type: "consul"
-        postgresql_version: "15" # to test custom WAL dir
+        postgresql_version: "12" # redefine the version to install for the upgrade test
         cacheable: true
 
     - name: Set variables for custom PostgreSQL data and WAL directory test
@@ -29,6 +29,11 @@
       when:
         - not (ansible_distribution == 'Ubuntu' and ansible_distribution_version is version('20.04', '<'))
         - not (ansible_distribution == 'Debian' and ansible_distribution_version is version('11', '>')) # TODO Debian 12
+
+    - name: Set variables for PostgreSQL upgrade test
+      ansible.builtin.set_fact:
+        pg_old_version: "12"
+        pg_new_version: "15"
 
     - name: Clean yum cache (molecule containers)
       ansible.builtin.command: yum clean all
@@ -73,3 +78,6 @@
 
 - name: Deploy PostgreSQL Cluster
   ansible.builtin.import_playbook: ../../deploy_pgcluster.yml
+
+- name: PostgreSQL upgrade test
+  ansible.builtin.import_playbook: ../../pg_upgrade.yml

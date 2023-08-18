@@ -1,0 +1,162 @@
+---
+# Prepare the parameters for Patroni.
+# Update the directory path to a new version of PostgresSQL
+- name: "Edit patroni.yml | update parameters: data_dir, bin_dir, config_dir"
+  ansible.builtin.replace:
+    path: "{{ patroni_config_file }}"
+    regexp: "{{ item.regexp }}"
+    replace: "{{ item.replace }}"
+  loop:
+    - { regexp: 'data_dir: {{ pg_old_datadir }}', replace: 'data_dir: {{ pg_new_datadir }}' }
+    - { regexp: 'bin_dir: {{ pg_old_bindir }}', replace: 'bin_dir: {{ pg_new_bindir }}' }
+    - { regexp: 'config_dir: {{ pg_old_confdir }}', replace: 'config_dir: {{ pg_new_confdir }}' }
+  loop_control:
+    label: '{{ item.replace }}'
+
+# To support upgrades in the Patroni Standby Cluster.
+- block:  # standby_cluster
+    - name: "Edit patroni.yml | check if the 'standby_cluster' parameter is specified"
+      ansible.builtin.command: grep standby_cluster {{ patroni_config_file }}
+      register: standby_cluster_output
+      changed_when: false
+      failed_when: false
+
+    # The standby_cluster parameter will be removed from the bootstrap.dcs section (if exists)
+    # along with all the text between 'standby_cluster' and the next 'initdb' parameter
+    - name: "Edit patroni.yml | remove parameters: standby_cluster (if exists)"
+      ansible.builtin.replace:
+        path: "{{ patroni_config_file }}"
+        regexp: '^\s*standby_cluster:[^\n]*\n(.|\n)*?initdb:'
+        replace: '  initdb:'
+      when: standby_cluster_output.stdout | length > 0
+  when:
+    - patroni_standby_cluster.host is defined
+    - patroni_standby_cluster.host | length > 0
+
+# Prepare the parameters for PostgreSQL (removed or renamed parameters).
+
+- block:  # replacement_sort_tuples (removed in the PG 11)
+    # check if the replacement_sort_tuples parameter is specified in the patroni.yml
+    - name: "Edit patroni.yml | check if the 'replacement_sort_tuples' parameter is specified"
+      ansible.builtin.command: grep replacement_sort_tuples {{ patroni_config_file }}
+      register: replacement_sort_tuples_output
+      changed_when: false
+      failed_when: false
+
+    # if defined, remove the replacement_sort_tuples parameter from the patroni.yml
+    - name: "Edit patroni.yml | remove parameter: 'replacement_sort_tuples'"
+      ansible.builtin.lineinfile:
+        path: "{{ patroni_config_file }}"
+        regexp: '^(\s*)replacement_sort_tuples:.*'
+        state: absent
+      when: replacement_sort_tuples_output.stdout | length > 0
+  when:
+    - pg_old_version|int <= 10 and pg_new_version|int >= 11
+
+- block:  # default_with_oids (removed in the PG 12)
+    # check if the default_with_oids parameter is specified in the patroni.yml
+    - name: "Edit patroni.yml | check if the 'default_with_oids' parameter is specified"
+      ansible.builtin.command: grep default_with_oids {{ patroni_config_file }}
+      register: default_with_oids_output
+      changed_when: false
+      failed_when: false
+
+    # if defined, remove the default_with_oids parameter from the patroni.yml
+    - name: "Edit patroni.yml | remove parameter: 'default_with_oids'"
+      ansible.builtin.lineinfile:
+        path: "{{ patroni_config_file }}"
+        regexp: '^(\s*)default_with_oids:.*'
+        state: absent
+      when: default_with_oids_output.stdout | length > 0
+  when:
+    - pg_old_version|int <= 11 and pg_new_version|int >= 12
+
+- block:  # wal_keep_segments (removed in the PG 13)
+    # check if the wal_keep_segments parameter is specified in the patroni.yml
+    - name: "Edit patroni.yml | check if the 'wal_keep_segments' parameter is specified"
+      ansible.builtin.shell: >
+        set -o pipefail;
+        grep wal_keep_segments {{ patroni_config_file }} | awk '{print $2}' | tail -n 1
+      args:
+        executable: /bin/bash
+      register: wal_keep_segments_output
+      changed_when: false
+      failed_when: false
+
+    # if defined, replace it to wal_keep_size with a value in MB.
+    - name: "Edit patroni.yml | replace parameter: 'wal_keep_segments' to 'wal_keep_size'"
+      ansible.builtin.replace:
+        path: "{{ patroni_config_file }}"
+        regexp: 'wal_keep_segments: ([0-9]+)'
+        replace: "wal_keep_size: {{ (wal_keep_segments_output.stdout | int * 16) | string + 'MB' }}"
+      when: wal_keep_segments_output.stdout|int > 0
+  when:
+    - pg_old_version|int <= 12 and pg_new_version|int >= 13
+
+- block:  # operator_precedence_warning (removed in the PG 14)
+    # check if the operator_precedence_warning parameter is specified in the patroni.yml
+    - name: "Edit patroni.yml | check if the 'operator_precedence_warning' parameter is specified"
+      ansible.builtin.command: grep operator_precedence_warning {{ patroni_config_file }}
+      register: operator_precedence_warning_output
+      changed_when: false
+      failed_when: false
+
+    # if defined, remove the operator_precedence_warning parameter from the patroni.yml
+    - name: "Edit patroni.yml | remove parameter: 'operator_precedence_warning'"
+      ansible.builtin.lineinfile:
+        path: "{{ patroni_config_file }}"
+        regexp: '^(\s*)operator_precedence_warning:.*'
+        state: absent
+      when: operator_precedence_warning_output.stdout | length > 0
+  when:
+    - pg_old_version|int <= 13 and pg_new_version|int >= 14
+
+- block:  # vacuum_cleanup_index_scale_factor (removed in the PG 14)
+    # check if the vacuum_cleanup_index_scale_factor parameter is specified in the patroni.yml
+    - name: "Edit patroni.yml | check if the 'vacuum_cleanup_index_scale_factor' parameter is specified"
+      ansible.builtin.command: grep vacuum_cleanup_index_scale_factor {{ patroni_config_file }}
+      register: vacuum_cleanup_index_scale_factor_output
+      changed_when: false
+      failed_when: false
+
+    # if defined, remove the vacuum_cleanup_index_scale_factor parameter from the patroni.yml
+    - name: "Edit patroni.yml | remove parameter: 'vacuum_cleanup_index_scale_factor'"
+      ansible.builtin.lineinfile:
+        path: "{{ patroni_config_file }}"
+        regexp: '^(\s*)vacuum_cleanup_index_scale_factor:.*'
+        state: absent
+      when: vacuum_cleanup_index_scale_factor_output.stdout | length > 0
+  when:
+    - pg_old_version|int <= 13 and pg_new_version|int >= 14
+
+- block:  # stats_temp_directory (removed in the PG 15)
+    # check if the stats_temp_directory parameter is specified in the patroni.yml
+    - name: "Edit patroni.yml | check if the 'stats_temp_directory' parameter is specified"
+      ansible.builtin.command: grep stats_temp_directory {{ patroni_config_file }}
+      register: stats_temp_directory_output
+      changed_when: false
+      failed_when: false
+
+    # if defined, remove the stats_temp_directory parameter from the patroni.yml
+    - name: "Edit patroni.yml | remove parameter: 'stats_temp_directory'"
+      ansible.builtin.lineinfile:
+        path: "{{ patroni_config_file }}"
+        regexp: '^(\s*)stats_temp_directory:.*'
+        state: absent
+      when: stats_temp_directory_output.stdout | length > 0
+  when:
+    - pg_old_version|int <= 14 and pg_new_version|int >= 15
+
+# TODO: Prepare the parameters for PostgreSQL 16 and etc.
+
+# Copy the pg_hba.conf file to a new PostgreSQL to save pg_hba rules.
+- name: "Copy pg_hba.conf to {{ pg_new_confdir }}"
+  ansible.builtin.copy:
+    src: "{{ pg_old_confdir }}/pg_hba.conf"
+    dest: "{{ pg_new_confdir }}"
+    owner: postgres
+    mode: '0600'
+    force: true
+    remote_src: true
+
+...

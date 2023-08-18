@@ -150,8 +150,15 @@
   ansible.builtin.package:
     name: "{{ item }}"
     state: present
-  loop:
-    - timescaledb-2-postgresql-{{ postgresql_version }}
+  loop: "{{ timescaledb_package }}"
+  vars:
+    timescaledb_package:
+      - >
+        {% if postgresql_version | int >= 11 %}
+        timescaledb-2-postgresql-{{ postgresql_version }}
+        {% else %}
+        timescaledb-postgresql-{{ postgresql_version }}
+        {% endif %}
   register: package_status
   until: package_status is success
   delay: 5

@@ -1,0 +1,134 @@
+---
+# Upgrade with rsync (hard-links)
+
+# This task performs the upgrade of PostgreSQL on the replica servers using the RSync utility.
+# It follows these steps:
+# 1. Retrieve the list of target secondary servers from the inventory, which are the servers where the upgrade will be performed.
+# 2. Count the number of target secondary servers to determine the parallel execution limit.
+# 3. Use xargs to execute the RSync command in parallel for each target secondary server.
+
+- name: Make sure that the new data directory "{{ pg_new_datadir }}" are empty on the Replica
+  ansible.builtin.file:
+    path: "{{ pg_new_datadir }}"
+    state: "{{ item }}"
+    mode: "0700"
+    group: postgres
+    owner: postgres
+  loop:
+    - absent
+    - directory
+  when:
+    - inventory_hostname in groups['secondary']
+
+# If the source and target directories are inside versioned directories
+# (example: /pgdata/<pg_old_version>/main -> /pgdata/<pg_new_version>/main)
+- block:
+    - name: "Upgrade the PostgreSQL on the Replica (using rsync --hard-links)"
+      vars:
+        secondary_servers: "{{ groups['secondary'] | join('\n') }}"
+        secondary_count: "{{ groups['secondary'] | length }}"
+      ansible.builtin.shell: |
+        set -o pipefail;
+        echo -e "{{ secondary_servers }}" | xargs -I {} -P "{{ secondary_count }}" -n 1 \
+        rsync -e 'ssh -o StrictHostKeyChecking=no' --archive --delete --hard-links --size-only --no-inc-recursive \
+        {{ pg_upper_datadir }}/{{ pg_old_version }} {{ pg_upper_datadir }}/{{ pg_new_version }} {}:{{ pg_upper_datadir }}
+      args:
+        executable: /bin/bash
+      async: 3600  # run the command asynchronously with a maximum duration of 1 hour
+      poll: 0
+      register: rsync_result_1
+
+    - name: Wait for the rsync to complete.
+      ansible.builtin.async_status:
+        jid: "{{ rsync_result_1.ansible_job_id }}"
+      register: rsync_1_job_result
+      until: rsync_1_job_result.finished
+      retries: 1800
+      delay: 2
+  become: true
+  become_user: postgres
+  when:
+    - inventory_hostname in groups['primary']
+    - pg_old_datadir|dirname == pg_upper_datadir + '/' + pg_old_version
+    - pg_new_datadir|dirname == pg_upper_datadir + '/' + pg_new_version
+
+# If the source and target directories are non-versioned directories
+# (example: /pgdata/main -> /pgdata/main<pg_new_version>)
+- block:
+    - name: "Upgrade the PostgreSQL on the Replica (using rsync --hard-links)"
+      vars:
+        secondary_servers: "{{ groups['secondary'] | join('\n') }}"
+        secondary_count: "{{ groups['secondary'] | length }}"
+      ansible.builtin.shell: |
+        set -o pipefail;
+        echo -e "{{ secondary_servers }}" | xargs -I {} -P "{{ secondary_count }}" -n 1 \
+        rsync -e 'ssh -o StrictHostKeyChecking=no' --archive --delete --hard-links --size-only --no-inc-recursive \
+        {{ pg_old_datadir }} {{ pg_new_datadir }} {}:{{ pg_upper_datadir }}
+      args:
+        executable: /bin/bash
+      async: 3600  # run the command asynchronously with a maximum duration of 1 hour
+      poll: 0
+      register: rsync_result_2
+
+    - name: Wait for the rsync to complete.
+      ansible.builtin.async_status:
+        jid: "{{ rsync_result_2.ansible_job_id }}"
+      register: rsync_2_job_result
+      until: rsync_2_job_result.finished
+      retries: 1800
+      delay: 2
+  become: true
+  become_user: postgres
+  when:
+    - inventory_hostname in groups['primary']
+    - pg_old_datadir|dirname != pg_upper_datadir + '/' + pg_old_version
+    - pg_new_datadir|dirname != pg_upper_datadir + '/' + pg_new_version
+
+# Tablespaces (if exists)
+- block:
+    - name: "Upgrade the PostgreSQL tablespaces on the Replica (using rsync --hard-links)"
+      vars:
+        secondary_servers: "{{ groups['secondary'] | join('\n') }}"
+        secondary_count: "{{ groups['secondary'] | length }}"
+      ansible.builtin.shell: |
+        set -o pipefail;
+        for tablespace_location in {{ tablespace_location.stdout_lines | join(' ') }};
+        do
+          old_tablespace_dir_count=$(ls -d ${tablespace_location}/PG_{{ pg_old_version }}_* | wc -l)
+          new_tablespace_dir_count=$(ls -d ${tablespace_location}/PG_{{ pg_new_version }}_* | wc -l)
+
+          if [ $old_tablespace_dir_count -ne 1 ] || [ $new_tablespace_dir_count -ne 1 ]; then
+            echo "Expected exactly one matching directory for each version, \
+            but found $old_tablespace_dir_count for old version and $new_tablespace_dir_count for new version. \
+            Skipping rsync."
+            exit 1
+          fi
+
+          old_tablespace_dir=$(ls -d ${tablespace_location}/PG_{{ pg_old_version }}_*)
+          new_tablespace_dir=$(ls -d ${tablespace_location}/PG_{{ pg_new_version }}_*)
+
+          echo -e "{{ secondary_servers }}" | xargs -I {} -P "{{ secondary_count }}" -n 1 \
+          rsync -e 'ssh -o StrictHostKeyChecking=no' --archive --delete --hard-links --size-only --no-inc-recursive \
+          "${old_tablespace_dir}" "${new_tablespace_dir}" {}:"${tablespace_location}"
+        done
+      args:
+        executable: /bin/bash
+      async: 3600  # run the command asynchronously with a maximum duration of 1 hour
+      poll: 0
+      register: rsync_tablespace_result
+
+    - name: Wait for the tablespaces rsync to complete.
+      ansible.builtin.async_status:
+        jid: "{{ rsync_tablespace_result.ansible_job_id }}"
+      register: rsync_tablespace_job_result
+      until: rsync_tablespace_job_result.finished
+      retries: 1800
+      delay: 2
+  become: true
+  become_user: postgres
+  when:
+    - inventory_hostname in groups['primary']
+    - tablespace_location.stdout_lines is defined
+    - tablespace_location.stdout_lines | length > 0
+
+...

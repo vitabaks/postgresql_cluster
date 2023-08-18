@@ -2,8 +2,10 @@
 
 # PostgreSQL variables
 postgresql_cluster_name: "main"
-postgresql_data_dir: "/var/lib/postgresql/{{ postgresql_version }}/{{ postgresql_cluster_name }}"  # You can specify custom data dir path
-postgresql_wal_dir: ""  # custom WAL dir path (symlink will be created) [optional]
+# You can specify custom data dir path. Example: "/pgdata/{{ postgresql_version }}/main"
+postgresql_data_dir: "/var/lib/postgresql/{{ postgresql_version }}/{{ postgresql_cluster_name }}"
+# You can specify custom WAL dir path. Example: "/pgwal/{{ postgresql_version }}/pg_wal"
+postgresql_wal_dir: ""  # if defined, symlink will be created [optional]
 postgresql_conf_dir: "/etc/postgresql/{{ postgresql_version }}/{{ postgresql_cluster_name }}"
 postgresql_bin_dir: "/usr/lib/postgresql/{{ postgresql_version }}/bin"
 postgresql_log_dir: "/var/log/postgresql"
@@ -14,8 +16,6 @@ postgresql_home_dir: "/var/lib/postgresql"
 # if postgresql_version < 15
 postgresql_stats_temp_directory_path: "/var/lib/pgsql_stats_tmp"  # or 'none'
 postgresql_stats_temp_directory_size: "1024m"
-
-postgresql_version_terse: "{{ postgresql_version | replace('.', '') }}"
 
 # Repository
 apt_repository_keys:

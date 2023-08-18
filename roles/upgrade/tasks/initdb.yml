@@ -1,0 +1,106 @@
+---
+
+- name: Make sure new PostgreSQL data directory "{{ pg_new_datadir }}" exists
+  become: true
+  become_user: root
+  ansible.builtin.file:
+    path: "{{ pg_new_datadir }}"
+    state: directory
+    mode: "0700"
+    group: postgres
+    owner: postgres
+
+- name: Make sure new PostgreSQL data directory "{{ pg_new_datadir }}" is not initialized
+  ansible.builtin.stat:
+    path: "{{ pg_new_datadir }}/PG_VERSION"
+  register: pgdata_initialized
+
+- block:  # if already initialized
+    - name: Perform pg_dropcluster
+      ansible.builtin.command: >
+        /usr/bin/pg_dropcluster --stop {{ pg_new_version }} {{ postgresql_cluster_name }}
+      failed_when: false
+      when:
+        - ansible_os_family == "Debian"
+        - pg_new_confdir != pg_new_datadir
+
+    - name: Clear the new PostgreSQL data directory "{{ pg_new_datadir }}"
+      ansible.builtin.file:
+        path: "{{ pg_new_datadir }}"
+        state: "{{ item }}"
+        mode: "0700"
+        group: postgres
+        owner: postgres
+      loop:
+        - absent
+        - directory
+  when:
+    - pgdata_initialized.stat.exists is defined
+    - pgdata_initialized.stat.exists
+
+- name: Get the current install user
+  ansible.builtin.command: psql -tAXc "select rolname from pg_roles where oid = 10"
+  changed_when: false
+  register: pg_install_user
+  when:
+    - inventory_hostname in groups['primary']
+
+- name: Get the current encodig and data_checksums settings
+  ansible.builtin.command: psql -tAXc "show {{ item }}"
+  changed_when: false
+  register: pg_settings
+  loop:
+    - server_encoding
+    - lc_collate
+    - lc_ctype
+    - lc_messages
+    - lc_monetary
+    - lc_numeric
+    - lc_time
+    - data_checksums
+  when:
+    - inventory_hostname in groups['primary']
+
+# for Debian based use pg_createcluster, if the PostgreSQL configuration is not located in the data directory.
+# Note: Patroni failure is possible if the default postgresql config files are missing in the /etc/postgresql/...
+- name: Initialize new PostgreSQL data directory with default config files
+  ansible.builtin.command: >
+    /usr/bin/pg_createcluster {{ pg_new_version }} {{ postgresql_cluster_name }}
+    --user={{ hostvars[groups['primary'][0]].pg_install_user.stdout }}
+    --datadir={{ pg_new_datadir }}
+    --encoding={{ hostvars[groups['primary'][0]].pg_settings.results[0].stdout }}
+    --lc-collate={{ hostvars[groups['primary'][0]].pg_settings.results[1].stdout }}
+    --lc-ctype={{ hostvars[groups['primary'][0]].pg_settings.results[2].stdout }}
+    --lc-messages={{ hostvars[groups['primary'][0]].pg_settings.results[3].stdout }}
+    --lc-monetary={{ hostvars[groups['primary'][0]].pg_settings.results[4].stdout }}
+    --lc-numeric={{ hostvars[groups['primary'][0]].pg_settings.results[5].stdout }}
+    --lc-time={{ hostvars[groups['primary'][0]].pg_settings.results[6].stdout }}
+    --start-conf=manual
+    {% if hostvars[groups['primary'][0]].pg_settings.results[7].stdout == 'on' %}
+    -- --data-checksums
+    {% endif %}
+  when:
+    - ansible_os_family == "Debian"
+    - pg_new_confdir != pg_new_datadir
+
+# Use initdb, if the PostgreSQL configuration is located in the data directory.
+- name: Initialize new PostgreSQL data directory on the Primary
+  ansible.builtin.command: >
+    {{ pg_new_bindir }}/initdb
+    --username={{ pg_install_user.stdout }}
+    --pgdata={{ pg_new_datadir }}
+    --encoding={{ pg_settings.results[0].stdout }}
+    --lc-collate={{ pg_settings.results[1].stdout }}
+    --lc-ctype={{ pg_settings.results[2].stdout }}
+    --lc-messages={{ pg_settings.results[3].stdout }}
+    --lc-monetary={{ pg_settings.results[4].stdout }}
+    --lc-numeric={{ pg_settings.results[5].stdout }}
+    --lc-time={{ pg_settings.results[6].stdout }}
+    {% if pg_settings.results[7].stdout == 'on' %}
+    --data-checksums
+    {% endif %}
+  when:
+    - inventory_hostname in groups['primary']
+    - pg_new_confdir == pg_new_datadir
+
+...

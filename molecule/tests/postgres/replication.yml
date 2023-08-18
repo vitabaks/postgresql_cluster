@@ -1,10 +1,12 @@
 ---
 - name: Check PostgreSQL replication status
   postgresql_query:
-    db: postgres
+    query: "SELECT * FROM pg_stat_wal_receiver;"
+    login_host: "127.0.0.1"
+    login_port: "{{ postgresql_port }}"
     login_user: "{{ patroni_superuser_username }}"
     login_password: "{{ patroni_superuser_password }}"
-    query: "SELECT * FROM pg_stat_wal_receiver;"
+    login_db: template1
   register: pg_replication_status
   failed_when: "pg_replication_status.rowcount == 0"
   when: "'replica' in group_names"
