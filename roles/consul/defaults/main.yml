@@ -124,8 +124,8 @@ consul_cloud_autodiscovery_string: "provider={{ consul_cloud_autodiscovery_provi
 ### Addresses
 consul_bind_address: "\
   {% if ansible_system == 'FreeBSD' or ansible_system == 'Darwin' %}\
-    {{ lookup('env', 'CONSUL_BIND_ADDRESS') | default(hostvars[inventory_hostname]['ansible_' + consul_iface ]['ipv4'][0]['address'], true) }}\
-  {% elif ansible_os_family == 'Windows'  %}\
+    {{ lookup('env', 'CONSUL_BIND_ADDRESS') | default(hostvars[inventory_hostname]['ansible_' + consul_iface]['ipv4'][0]['address'], true) }}\
+  {% elif ansible_os_family == 'Windows' %}\
     {{ lookup('env', 'CONSUL_BIND_ADDRESS') | default(hostvars[inventory_hostname]['ansible_ip_addresses'][0], true) }}\
   {% else %}\
     {{ lookup('env', 'CONSUL_BIND_ADDRESS') | default(hostvars[inventory_hostname]['ansible_' + consul_iface | replace('-', '_')]['ipv4']['address'], true) }}\
@@ -164,7 +164,7 @@ consul_servers: "\
   {% set _consul_servers = [] %}\
   {% for host in groups[consul_group_name] %}\
     {% set _consul_node_role = hostvars[host]['consul_node_role'] | default('client', true) %}\
-    {% if ( _consul_node_role == 'server' or _consul_node_role == 'bootstrap') %}\
+    {% if (_consul_node_role == 'server' or _consul_node_role == 'bootstrap') %}\
       {% if _consul_servers.append(host) %}{% endif %}\
     {% endif %}\
   {% endfor %}\
