@@ -162,15 +162,15 @@ consul_ports:
 consul_group_name: "{{ lookup('env', 'CONSUL_GROUP_NAME') | default('consul_instances', true) }}"
 consul_join: []
 consul_join_wan: []
-consul_servers: >
-  {% set _consul_servers = [] %}
-  {% for host in groups[consul_group_name] %}
-    {% set _consul_node_role = hostvars[host]['consul_node_role'] | default('client', true) %}
-    {% if _consul_node_role in ['server', 'bootstrap'] %}
-      {% if _consul_servers.append(host) %}{% endif %}
-    {% endif %}
-  {% endfor %}
-  {{ _consul_servers }}
+consul_servers: "\
+  {% set _consul_servers = [] %}\
+  {% for host in groups[consul_group_name] %}\
+    {% set _consul_node_role = hostvars[host]['consul_node_role'] | default('client', true) %}\
+    {% if ( _consul_node_role == 'server' or _consul_node_role == 'bootstrap') %}\
+      {% if _consul_servers.append(host) %}{% endif %}\
+    {% endif %}\
+  {% endfor %}\
+  {{ _consul_servers }}"
 consul_gather_server_facts: false
 
 ## ACL
