@@ -130,6 +130,7 @@
         - ansible_distribution_major_version is version('8', '==')
         - ansible_distribution != "OracleLinux"
         - ansible_distribution != 'RedHat'
+        - ("postgresql{{ postgresql_version | replace('.', '') }}-devel" in postgresql_packages)
 
     # CodeReady Linux Builder (crb) repository (to install dependencies for postgresql<version>-devel package)
     - name: Enable CodeReady Linux Builder (crb) repository
@@ -137,6 +138,7 @@
       when:
         - ansible_distribution_major_version is version('9', '>=')
         - ansible_distribution != "OracleLinux"
+        - ("postgresql{{ postgresql_version | replace('.', '') }}-devel" in postgresql_packages)
 
     # CodeReady Builder repository for OracleLinux (to install dependencies for postgresql<version>-devel package)
     - name: Enable CodeReady Builder repository
@@ -144,6 +146,7 @@
       when:
         - ansible_distribution == "OracleLinux"
         - ansible_distribution_major_version is version('8', '>=')
+        - ("postgresql{{ postgresql_version | replace('.', '') }}-devel" in postgresql_packages)
 
     # Install PostgreSQL Repository
     - name: Get pgdg-redhat-repo-latest.noarch.rpm
