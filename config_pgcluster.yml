@@ -160,7 +160,7 @@
       tags: always
   roles:
     - role: pgbackrest
-      when: pgbackrest_install|bool
+      when: pgbackrest_install | bool
 
 - name: config_pgcluster.yml | Restart patroni on secondary after config settings if need
   hosts: secondary
