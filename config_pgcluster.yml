@@ -124,6 +124,9 @@
 
     - role: patroni/config
 
+    - role: pgbouncer/config
+      when: pgbouncer_install | bool
+
     - role: vip-manager
       when: not with_haproxy_load_balancing | bool and
         (cluster_vip is defined and cluster_vip | length > 0)
@@ -140,8 +143,24 @@
     - role: postgresql-extensions
       when: inventory_hostname in groups['primary']
 
-    - role: pgbouncer/config
-      when: pgbouncer_install | bool
+    - role: wal-g
+      when: wal_g_install | bool
+
+- name: config_pgcluster | Configure pgBackRest
+  hosts: pgbackrest:postgres_cluster
+  become: true
+  become_method: sudo
+  gather_facts: true
+  any_errors_fatal: true
+  vars_files:
+    - vars/main.yml
+  pre_tasks:
+    - name: Include OS-specific variables
+      ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
+      tags: always
+  roles:
+    - role: pgbackrest
+      when: pgbackrest_install|bool
 
 - name: config_pgcluster.yml | Restart patroni on secondary after config settings if need
   hosts: secondary
