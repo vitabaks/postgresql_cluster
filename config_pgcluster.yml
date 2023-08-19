@@ -6,6 +6,9 @@
     - vars/main.yml
     - vars/system.yml
   pre_tasks:
+    - name: Include OS-specific variables
+      ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
+
     - name: '[Prepare] Set maintenance variable'
       ansible.builtin.set_fact:
         postgresql_cluster_maintenance: true
