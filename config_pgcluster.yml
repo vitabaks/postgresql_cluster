@@ -63,11 +63,6 @@
   tags:
     - always
 
-- name: config_pgcluster.yml | Configure balancers
-  ansible.builtin.import_playbook: balancers.yml
-  when: with_haproxy_load_balancing | bool
-  tags: config_balancers, load_balancing, haproxy
-
 - name: config_pgcluster.yml | Configure Postgres Cluster
   hosts: 'primary:secondary'
   become: true
