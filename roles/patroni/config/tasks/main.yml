@@ -73,4 +73,28 @@
 - ansible.builtin.import_tasks: pg_hba.yml
   tags: patroni, patroni_conf, pg_hba, pg_hba_generate
 
+# pending_restart
+- block:
+    - name: "Check if there are any changed parameters that require a restart"
+      become_user: postgres
+      community.postgresql.postgresql_query:
+        login_host: "127.0.0.1"
+        login_port: "{{ postgresql_port }}"
+        login_user: "{{ patroni_superuser_username }}"
+        login_password: "{{ patroni_superuser_password }}"
+        login_db: "postgres"
+        query: "select name from pg_settings where pending_restart is true"
+      register: pending_restart_result
+
+    - name: "Set pg_pending_restart_settings variable"
+      ansible.builtin.set_fact:
+        pg_pending_restart_settings: "{{ pending_restart_result.query_result }}"
+
+    - name: "Display parameters requiring PostgreSQL restart"
+      ansible.builtin.debug:
+        msg:
+          - "On server {{ ansible_hostname }}, the following parameters have changed and require PostgreSQL to restart:"
+          - "{{ pg_pending_restart_settings | map(attribute='name') | list }}"
+      when: pg_pending_restart_settings | length > 0
+  tags: patroni, patroni_conf
 ...

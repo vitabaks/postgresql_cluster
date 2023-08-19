@@ -1,6 +1,6 @@
 ---
 - name: config_pgcluster.yml | Configuration PostgreSQL HA Cluster (based on "Patroni" and "{{ dcs_type }}")
-  hosts: all
+  hosts: postgres_cluster
   gather_facts: true
   vars_files:
     - vars/main.yml
@@ -8,65 +8,78 @@
   pre_tasks:
     - name: Include OS-specific variables
       ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
-      tags: always
 
-    - name: Set maintenance variable
+    - name: '[Prepare] Set maintenance variable'
       ansible.builtin.set_fact:
         postgresql_cluster_maintenance: true
-      tags: always
+
+    - name: '[Prepare] Get Patroni Cluster Leader Node'
+      ansible.builtin.uri:
+        url: http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/leader
+        status_code: 200
+      register: patroni_leader_result
+      changed_when: false
+      failed_when: false
+
+    # Stop, if Patroni is unavailable
+    - name: The Patroni cluster is unhealthy
+      ansible.builtin.fail:
+        msg: "Patroni is unavailable on {{ ansible_hostname }}. Please check the cluster status."
+      changed_when: false
+      when: patroni_leader_result is undefined or patroni_leader_result.status == -1
+
+    - name: '[Prepare] Add host to group "primary" (in-memory inventory)'
+      ansible.builtin.add_host:
+        name: "{{ item }}"
+        groups: primary
+        is_master: true
+        postgresql_exists: true
+      when: hostvars[item]['patroni_leader_result']['status'] == 200
+      loop: "{{ groups['postgres_cluster'] }}"
+      changed_when: false
+
+    - name: '[Prepare] Add hosts to group "secondary" (in-memory inventory)'
+      ansible.builtin.add_host:
+        name: "{{ item }}"
+        groups: secondary
+        is_master: false
+        postgresql_exists: true
+      when: hostvars[item]['patroni_leader_result']['status'] != 200
+      loop: "{{ groups['postgres_cluster'] }}"
+      changed_when: false
+
+    - name: "Print Patroni Cluster info"
+      ansible.builtin.debug:
+        msg:
+          - "Cluster Name: {{ patroni_cluster_name }}"
+          - "Cluster Leader: {{ ansible_hostname }}"
+      when: inventory_hostname in groups['primary']
 
   roles:
     - role: pre-checks
       vars:
         minimal_ansible_version: 2.11.0
         timescale_minimal_pg_version: 12 # if enable_timescale is defined
-      tags: always
-
-    - role: hostname
-    - role: resolv_conf
-    - role: etc_hosts
-    - role: timezone
+  tags:
+    - always
 
 - name: config_pgcluster.yml | Configure Postgres Cluster
-  hosts: postgres_cluster
+  hosts: 'primary:secondary'
   become: true
   become_method: sudo
   gather_facts: true
   any_errors_fatal: true
+  environment: "{{ proxy_env | default({}) }}"
+  handlers:
+    - ansible.builtin.import_tasks: roles/patroni/handlers/main.yml
+    - ansible.builtin.import_tasks: roles/pgbouncer/handlers/main.yml
   vars_files:
     - vars/main.yml
     - vars/system.yml
-
   pre_tasks:
     - name: Include OS-specific variables
       ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
       tags: always
-
-    - name: Update apt cache
-      ansible.builtin.apt:
-        update_cache: true
-        cache_valid_time: 3600
-      register: apt_status
-      until: apt_status is success
-      delay: 5
-      retries: 3
-      environment: "{{ proxy_env | default({}) }}"
-      when: ansible_os_family == "Debian" and installation_method == "repo"
-      tags: add_repo, install_packages, install_postgres
-
-    - name: Make sure the gnupg and apt-transport-https packages are present
-      ansible.builtin.apt:
-        pkg:
-          - gnupg
-          - apt-transport-https
-        state: present
-      register: apt_status
-      until: apt_status is success
-      delay: 5
-      retries: 3
-      environment: "{{ proxy_env | default({}) }}"
-      when: ansible_os_family == "Debian" and installation_method == "repo"
-      tags: add_repo, install_packages, install_postgres
 
     - name: Build a firewall_ports_dynamic_var
       ansible.builtin.set_fact:
@@ -84,13 +97,16 @@
 
   roles:
     - role: ansible-role-firewall
-      environment: "{{ proxy_env | default({}) }}"
       vars:
         firewall_allowed_tcp_ports: "{{ firewall_ports_dynamic_var | default([]) | unique }}"
         firewall_additional_rules: "{{ firewall_rules_dynamic_var | default([]) | unique }}"
-      when: firewall_enabled_at_boot|bool
+      when: firewall_enabled_at_boot | bool
       tags: firewall
 
+    - role: hostname
+    - role: resolv_conf
+    - role: etc_hosts
+    - role: timezone
     - role: add-repository
     - role: packages
     - role: sudo
@@ -103,120 +119,48 @@
     - role: ntp
     - role: ssh-keys
     - role: copy
-
-- name: config_pgcluster.yml | Configure HAProxy Load Balancing
-  ansible.builtin.import_playbook: balancers.yml
-  when: with_haproxy_load_balancing|bool
-  tags: config_balancers,load_balancing, haproxy
-
-- name: config_pgcluster.yml | Configure Postgres Cluster
-  hosts: postgres_cluster
-  become: true
-  become_method: sudo
-  gather_facts: true
-  any_errors_fatal: true
-  handlers:
-    - ansible.builtin.import_tasks: roles/patroni/handlers/main.yml
-    - ansible.builtin.import_tasks: roles/pgbouncer/handlers/main.yml
-  vars_files:
-    - vars/main.yml
-    - vars/system.yml
-
-  pre_tasks:
-    - name: Include OS-specific variables
-      ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
-      tags: always
-
-  roles:
     - role: pgpass
-
     - role: cron
 
     - role: patroni/config
 
+    - role: pgbouncer/config
+      when: pgbouncer_install | bool
+
     - role: vip-manager
-      when: not with_haproxy_load_balancing|bool and
+      when: not with_haproxy_load_balancing | bool and
         (cluster_vip is defined and cluster_vip | length > 0)
 
-    # optional
     - role: postgresql-users
-      when: is_master | bool and postgresql_users | length > 0
+      when: inventory_hostname in groups['primary']
 
     - role: postgresql-databases
-      when: is_master | bool and postgresql_databases | length > 0
+      when: inventory_hostname in groups['primary']
 
     - role: postgresql-schemas
-      when: is_master | bool and postgresql_schemas | length > 0
+      when: inventory_hostname in groups['primary']
 
     - role: postgresql-extensions
-      when: is_master | bool and postgresql_extensions | length > 0
+      when: inventory_hostname in groups['primary']
 
-    - role: pgbouncer/config
-      when: pgbouncer_install|bool
+    - role: wal-g
+      when: wal_g_install | bool
 
-- name: config_pgcluster.yml | Check needed restart cluster and prepare for it
-  hosts: postgres_cluster
-  gather_facts: true
+- name: config_pgcluster | Configure pgBackRest
+  hosts: pgbackrest:postgres_cluster
   become: true
   become_method: sudo
+  gather_facts: true
   any_errors_fatal: true
   vars_files:
     - vars/main.yml
-  tasks:
-    - name: "[Prepare] Get Patroni Cluster Leader Node"
-      ansible.builtin.uri:
-        url: http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/leader
-        status_code: 200
-      register: patroni_leader_result
-      changed_when: false
-      failed_when: false
-
-    - name: '[Prepare] Add host to group "primary" (in-memory inventory)'
-      ansible.builtin.add_host:
-        name: "{{ item }}"
-        groups: primary
-      when: hostvars[item]['patroni_leader_result']['status'] == 200
-      loop: "{{ groups['postgres_cluster'] }}"
-      changed_when: false
-
-    - name: '[Prepare] Add hosts to group "secondary" (in-memory inventory)'
-      ansible.builtin.add_host:
-        name: "{{ item }}"
-        groups: secondary
-      when: hostvars[item]['patroni_leader_result']['status'] != 200
-      loop: "{{ groups['postgres_cluster'] }}"
-      changed_when: false
-
-    - name: "Print Patroni Cluster info"
-      ansible.builtin.debug:
-        msg:
-          - "Cluster Name: {{ patroni_cluster_name }}"
-          - "Cluster Leader: {{ ansible_hostname }}"
-      when: inventory_hostname in groups['primary']
-
-    - name: "Check if there are any changed parameters that require a restart"
-      become_user: postgres
-      community.postgresql.postgresql_query:
-        login_host: "127.0.0.1"
-        login_port: "{{ postgresql_port }}"
-        login_user: "{{ patroni_superuser_username }}"
-        login_password: "{{ patroni_superuser_password }}"
-        login_db: "postgres"
-        query: "select name from pg_settings where pending_restart is true"
-      register: pending_restart_result
-
-    - name: "Set pg_pending_restart_settings variable"
-      ansible.builtin.set_fact:
-        pg_pending_restart_settings: "{{ pending_restart_result.query_result }}"
-
-    - name: "Display parameters requiring PostgreSQL restart"
-      ansible.builtin.debug:
-        msg:
-          - "On server {{ ansible_hostname }}, the following parameters have changed and require PostgreSQL to restart:"
-          - "{{ pg_pending_restart_settings | map(attribute='name') | list }}"
-      when: pg_pending_restart_settings | length > 0
-  tags:
-    - patroni_conf
+  pre_tasks:
+    - name: Include OS-specific variables
+      ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
+      tags: always
+  roles:
+    - role: pgbackrest
+      when: pgbackrest_install | bool
 
 - name: config_pgcluster.yml | Restart patroni on secondary after config settings if need
   hosts: secondary
@@ -325,7 +269,7 @@
     - patroni_conf
 
 - name: config_pgcluster.yml | PostgreSQL Cluster Info
-  hosts: postgres_cluster
+  hosts: primary
   become: true
   become_method: sudo
   gather_facts: true
@@ -333,7 +277,6 @@
   vars_files:
     - vars/main.yml
     - vars/system.yml
-
   roles:
     # finish (info)
     - role: deploy-finish
