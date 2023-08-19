@@ -54,9 +54,17 @@ system_packages:
 postgresql_packages:
   - postgresql-{{ postgresql_version }}
   - postgresql-client-{{ postgresql_version }}
-  - postgresql-server-dev-{{ postgresql_version }}
   - postgresql-contrib-{{ postgresql_version }}
-#  - postgresql-{{ postgresql_version }}-repack"
+  - postgresql-server-dev-{{ postgresql_version }}
+#  - postgresql-{{ postgresql_version }}-dbgsym
+#  - postgresql-{{ postgresql_version }}-repack
+#  - postgresql-{{ postgresql_version }}-cron
+#  - postgresql-{{ postgresql_version }}-pg-stat-kcache
+#  - postgresql-{{ postgresql_version }}-pg-wait-sampling
+#  - postgresql-{{ postgresql_version }}-postgis-3
+#  - postgresql-{{ postgresql_version }}-pgrouting
+#  - postgresql-{{ postgresql_version }}-pgvector
+#  - postgresql-{{ postgresql_version }}-pgaudit
 
 # Extra packages
 etcd_package_repo: "https://github.com/etcd-io/etcd/releases/download/v{{ etcd_version }}/etcd-v{{ etcd_version }}-linux-amd64.tar.gz"

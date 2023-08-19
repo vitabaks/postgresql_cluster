@@ -72,11 +72,18 @@ glibc_langpack:
 #  - "glibc-langpack-de"
 
 postgresql_packages:
-  - postgresql{{ postgresql_version | replace('.', '') }}
-  - postgresql{{ postgresql_version | replace('.', '') }}-server
-  - postgresql{{ postgresql_version | replace('.', '') }}-contrib
-#  - postgresql{{ postgresql_version | replace('.', '') }}-devel
-#  - pg_repack{{ postgresql_version | replace('.', '') }}
+  - postgresql{{ postgresql_version }}
+  - postgresql{{ postgresql_version }}-server
+  - postgresql{{ postgresql_version }}-contrib
+#  - postgresql{{ postgresql_version }}-devel
+#  - pg_repack_{{ postgresql_version }}
+#  - pg_cron_{{ postgresql_version }}
+#  - pg_stat_kcache_{{ postgresql_version }}
+#  - pg_wait_sampling_{{ postgresql_version }}
+#  - postgis33_{{ postgresql_version }}
+#  - pgrouting_{{ postgresql_version }}
+#  - pgvector_{{ postgresql_version }}
+#  - pgaudit17_{{ postgresql_version }}
 
 # Extra packages
 etcd_package_repo: "https://github.com/etcd-io/etcd/releases/download/v{{ etcd_version }}/etcd-v{{ etcd_version }}-linux-amd64.tar.gz"
