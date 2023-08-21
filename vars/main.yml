@@ -420,7 +420,7 @@ pg_probackup_restore_command: "{{ pg_probackup_command_parts | join('') }}"
 pg_probackup_patroni_cluster_bootstrap_command: "{{ pg_probackup_command_parts | join('') }}"
 
 # WAL-G
-wal_g_install: true  # or 'true'
+wal_g_install: false  # or 'true'
 wal_g_version: "2.0.1"
 wal_g_json:  # config https://github.com/wal-g/wal-g#configuration
   - { option: "AWS_ACCESS_KEY_ID", value: "{{ AWS_ACCESS_KEY_ID | default('') }}" }  # define values or pass via --extra-vars
