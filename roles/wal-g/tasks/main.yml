@@ -63,6 +63,7 @@
           - libbrotli-dev
           # - liblzo2-dev  # https://github.com/wal-g/wal-g/issues/1412
           - libsodium-dev
+          - make
           - cmake
           - git
         state: present
@@ -78,6 +79,7 @@
           - brotli-devel
           # - lzo-devel  # https://github.com/wal-g/wal-g/issues/1412
           - libsodium-devel
+          - make
           - cmake
           - gcc
           - git
