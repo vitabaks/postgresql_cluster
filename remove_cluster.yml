@@ -7,28 +7,29 @@
     - vars/{{ ansible_os_family }}.yml
   tasks:
     - block:
-      - name: Stop Patroni service
-        ansible.builtin.service:
-          name: patroni
-          state: stopped
-          enabled: false
-        ignore_errors: true
-      - name: Delete PostgreSQL database content
-        ansible.builtin.file:
-          path: "{{ postgresql_data_dir }}"
-          state: absent
+        - name: Stop Patroni service
+          ansible.builtin.service:
+            name: patroni
+            state: stopped
+            enabled: false
+        - name: Delete PostgreSQL database content
+          ansible.builtin.file:
+            path: "{{ postgresql_data_dir }}"
+            state: absent
       when: remove_postgres | default(false) | bool
+      ignore_errors: true
     - block:
-      - name: Delete PgBackRest repository
-        ansible.builtin.file:
-          # path: pgbackrest_conf global repo1-path
-          path: /var/lib/pgbackrest
-          state: absent
-      - name: Delete PgBackRest cron
-        ansible.builtin.file:
-          path: /etc/cron.d/pgbackrest
-          state: absent
+        - name: Delete PgBackRest repository
+          ansible.builtin.file:
+            # path: pgbackrest_conf global repo1-path
+            path: /var/lib/pgbackrest
+            state: absent
+        - name: Delete PgBackRest cron
+          ansible.builtin.file:
+            path: /etc/cron.d/pgbackrest
+            state: absent
       when: pgbackrest_install | default(false) | bool
+      ignore_errors: true
 
 - name: remove_cluster.yml | Consul Cluster Play
   hosts: consul_instances
@@ -37,21 +38,21 @@
     - vars/main.yml
   tasks:
     - block:
-      - name: Stop Consul service
-        ansible.builtin.service:
-          name: consul
-          state: stopped
-          enabled: false
-      - name: Delete Consul content
-        ansible.builtin.file:
-          path: "{{ consul_data_path }}"
-          state: absent
-      - name: Delete Consul serivce
-        ansible.builtin.file:
-          path: /lib/systemd/system/consul.service
-          state: absent
-        ignore_errors: true
+        - name: Stop Consul service
+          ansible.builtin.service:
+            name: consul
+            state: stopped
+            enabled: false
+        - name: Delete Consul content
+          ansible.builtin.file:
+            path: "{{ consul_data_path }}"
+            state: absent
+        - name: Delete Consul serivce
+          ansible.builtin.file:
+            path: /lib/systemd/system/consul.service
+            state: absent
       when: remove_consul | default(false) | bool
+      ignore_errors: true
 
 - name: remove_cluster.yml | Etcd Cluster Play
   hosts: etcd_cluster
@@ -60,13 +61,14 @@
     - vars/main.yml
   tasks:
     - block:
-      - name: Stop Etcd service
-        ansible.builtin.service:
-          name: etcd
-          state: stopped
-          enabled: false
-      - name: Delete Etcd content
-        ansible.builtin.file:
-          path: "{{ etcd_data_dir }}/member"
-          state: absent
+        - name: Stop Etcd service
+          ansible.builtin.service:
+            name: etcd
+            state: stopped
+            enabled: false
+        - name: Delete Etcd content
+          ansible.builtin.file:
+            path: "{{ etcd_data_dir }}/member"
+            state: absent
       when: remove_etcd | default(false) | bool
+      ignore_errors: true
