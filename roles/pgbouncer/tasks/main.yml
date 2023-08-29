@@ -43,7 +43,7 @@
     name: pgbouncer
     state: stopped
     enabled: false
-  when: 
+  when:
     - ansible_os_family == "Debian"
     - not pgbouncer_systemd_service.stat.exists
   tags: pgbouncer_service, pgbouncer
