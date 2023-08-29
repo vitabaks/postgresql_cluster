@@ -48,7 +48,7 @@
     - not pgbouncer_systemd_service.stat.exists
   tags: pgbouncer_service, pgbouncer
 
-- name: Configure systemd service file
+- name: Configure pgbouncer systemd service file
   ansible.builtin.template:
     src: templates/pgbouncer.service.j2
     dest: /etc/systemd/system/pgbouncer.service
@@ -56,6 +56,13 @@
     group: postgres
     mode: "0644"
   notify: "restart pgbouncer"
+  tags: pgbouncer_service, pgbouncer
+
+- name: Ensure pgbouncer service is enabled
+  ansible.builtin.systemd:
+    daemon_reload: true
+    name: pgbouncer
+    enabled: true
   tags: pgbouncer_service, pgbouncer
 
 - block:  # workaround for pgbouncer from postgrespro repo
