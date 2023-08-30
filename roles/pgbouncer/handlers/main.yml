@@ -2,7 +2,6 @@
 
 - name: Restart pgbouncer service
   ansible.builtin.systemd:
-    daemon_reload: true
     name: pgbouncer
     enabled: true
     state: restarted

@@ -32,15 +32,23 @@
     mode: "0750"
   tags: pgbouncer_conf, pgbouncer
 
+- name: Check if pgbouncer systemd service file exists
+  ansible.builtin.stat:
+    path: /etc/systemd/system/pgbouncer.service
+  register: pgbouncer_systemd_service
+  tags: pgbouncer_service, pgbouncer
+
 - name: Stop and disable standard init script
   ansible.builtin.service:
     name: pgbouncer
     state: stopped
     enabled: false
-  when: ansible_os_family == "Debian"
+  when:
+    - ansible_os_family == "Debian"
+    - not pgbouncer_systemd_service.stat.exists
   tags: pgbouncer_service, pgbouncer
 
-- name: Copy systemd service file
+- name: Configure pgbouncer systemd service file
   ansible.builtin.template:
     src: templates/pgbouncer.service.j2
     dest: /etc/systemd/system/pgbouncer.service
@@ -48,6 +56,13 @@
     group: postgres
     mode: "0644"
   notify: "restart pgbouncer"
+  tags: pgbouncer_service, pgbouncer
+
+- name: Ensure pgbouncer service is enabled
+  ansible.builtin.systemd:
+    daemon_reload: true
+    name: pgbouncer
+    enabled: true
   tags: pgbouncer_service, pgbouncer
 
 - block:  # workaround for pgbouncer from postgrespro repo
