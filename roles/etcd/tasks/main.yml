@@ -129,6 +129,7 @@
       delay: 10
       changed_when: false
       ignore_errors: false
+      check_mode: false
 
     - name: cluster health
       ansible.builtin.debug:

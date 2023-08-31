@@ -112,7 +112,7 @@
       until: patroni_result.status == 200
       retries: 120
       delay: 10
-      when: is_master | bool
+      when: is_master | bool and not ansible_check_mode
 
     - name: Start patroni service on the Replica
       become: true
@@ -140,7 +140,7 @@
       until: patroni_result.status == 200
       retries: 120
       delay: 10
-      when: not is_master | bool
+      when: not is_master | bool and not ansible_check_mode
 
     - name: "Remove {{ pg_wal_dir }}_old directory"
       ansible.builtin.file:
