@@ -20,6 +20,7 @@
       register: patroni_leader_result
       changed_when: false
       failed_when: false
+      check_mode: false
 
     # Stop, if Patroni is unavailable
     - name: The Patroni cluster is unhealthy
@@ -37,6 +38,7 @@
       when: hostvars[item]['patroni_leader_result']['status'] == 200
       loop: "{{ groups['postgres_cluster'] }}"
       changed_when: false
+      check_mode: false
 
     - name: '[Prepare] Add hosts to group "secondary" (in-memory inventory)'
       ansible.builtin.add_host:
@@ -47,6 +49,7 @@
       when: hostvars[item]['patroni_leader_result']['status'] != 200
       loop: "{{ groups['postgres_cluster'] }}"
       changed_when: false
+      check_mode: false
 
     - name: "Print Patroni Cluster info"
       ansible.builtin.debug:
