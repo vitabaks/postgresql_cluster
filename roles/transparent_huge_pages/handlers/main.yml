@@ -7,5 +7,6 @@
     state: restarted
     enabled: true
   listen: "restart disable-thp"
+  when: not ansible_check_mode
 
 ...
