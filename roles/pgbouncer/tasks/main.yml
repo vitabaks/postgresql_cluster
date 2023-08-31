@@ -3,6 +3,7 @@
 - name: Install pgbouncer package
   ansible.builtin.package:
     name: pgbouncer
+    state: latest
   register: package_status
   until: package_status is success
   delay: 5
@@ -17,6 +18,7 @@
 - name: Install pgbouncer package
   ansible.builtin.dnf:
     name: pgbouncer
+    state: latest
     disablerepo: AppStream
   environment: "{{ proxy_env | default({}) }}"
   when: ansible_os_family == "RedHat" and
