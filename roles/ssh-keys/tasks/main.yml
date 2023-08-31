@@ -46,8 +46,10 @@
       no_log: true
       loop: "{{ ssh_known_host_results.results }}"
   ignore_errors: true
-  when: enable_ssh_key_based_authentication is defined and
-        enable_ssh_key_based_authentication|bool
+  when:
+    - anable_ssh_key_based_authentication is defined
+    - enable_ssh_key_based_authentication | bool
+    - not ansible_check_mode
   tags: ssh_keys
 
 ...
