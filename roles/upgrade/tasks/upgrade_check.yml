@@ -1,7 +1,9 @@
 ---
 
 - name: Get the current shared_preload_libraries settings
-  ansible.builtin.command: psql -tAXc "show shared_preload_libraries"
+  ansible.builtin.command: >-
+    psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -tAXc
+    "show shared_preload_libraries"
   changed_when: false
   register: pg_shared_preload_libraries_result
   when:

@@ -2,7 +2,8 @@
 
 - name: Make sure that physical replication is active
   ansible.builtin.command: >-
-    psql -tAXc "select count(*) from pg_stat_replication
+    psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -tAXc
+    "select count(*) from pg_stat_replication
     where application_name != 'pg_basebackup'"
   register: pg_replication_state
   until: pg_replication_state.stdout | int > 0
@@ -27,14 +28,16 @@
 
 - name: Create a table "test_replication" with 10000 rows on the Primary
   ansible.builtin.command: >-
-    psql -tAXc "drop table IF EXISTS test_replication;
+    psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -tAXc
+    "drop table IF EXISTS test_replication;
     create table test_replication as select generate_series(1, 10000)"
   when:
     - inventory_hostname in groups['primary']
 
 - name: Wait until the PostgreSQL replica is synchronized
   ansible.builtin.command: >-
-    psql -tAXc "select count(*) from test_replication"
+    psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -tAXc
+    "select count(*) from test_replication"
   register: count_test
   until: count_test.stdout | int == 10000
   retries: 60  # max wait time: 2 minutes
@@ -46,7 +49,8 @@
 
 - name: Drop a table "test_replication"
   ansible.builtin.command: >-
-    psql -tAXc "drop table IF EXISTS test_replication"
+    psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -tAXc
+    "drop table IF EXISTS test_replication"
   when:
     - inventory_hostname in groups['primary']
 

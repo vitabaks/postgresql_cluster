@@ -39,14 +39,18 @@
     - pgdata_initialized.stat.exists
 
 - name: Get the current install user
-  ansible.builtin.command: psql -tAXc "select rolname from pg_roles where oid = 10"
+  ansible.builtin.command: >-
+    psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -tAXc
+    "select rolname from pg_roles where oid = 10"
   changed_when: false
   register: pg_install_user
   when:
     - inventory_hostname in groups['primary']
 
 - name: Get the current encodig and data_checksums settings
-  ansible.builtin.command: psql -tAXc "show {{ item }}"
+  ansible.builtin.command: >-
+    psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -tAXc
+    "show {{ item }}"
   changed_when: false
   register: pg_settings
   loop:
