@@ -570,7 +570,7 @@
       become: true
       become_user: postgres
       ansible.builtin.command: >
-        {{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -tAXc "CHECKPOINT"
+        {{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -tAXc "CHECKPOINT"
       register: checkpoint_result
       until: checkpoint_result.rc == 0
       retries: 300
@@ -707,7 +707,7 @@
 
         - name: Waiting for PostgreSQL Recovery to complete (WAL apply)
           ansible.builtin.command: >-
-            {{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -tAXc
+            {{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -tAXc
             "select pg_is_in_recovery()"
           register: pg_is_in_recovery
           until: pg_is_in_recovery.stdout != "t"
@@ -815,7 +815,7 @@
       become: true
       become_user: postgres
       ansible.builtin.command: >-
-        {{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -tAXc
+        {{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -tAXc
         "select pg_is_in_recovery()"
       register: pg_is_in_recovery
       until: pg_is_in_recovery.stdout == "f"
@@ -876,7 +876,7 @@
 - block:  # PITR (custom bootstrap) - password reset for PostgreSQL users
     - name: Make sure the Master is not in recovery mode
       ansible.builtin.command: >-
-        {{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -tAXc
+        {{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -tAXc
         "select pg_is_in_recovery()"
       register: pg_is_in_recovery
       until: pg_is_in_recovery.stdout != "t"

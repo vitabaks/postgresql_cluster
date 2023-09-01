@@ -31,7 +31,7 @@
   become: true
   become_user: postgres
   ansible.builtin.command: >-
-    psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -tAXc
+    psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -tAXc
     "select count(*)
     from pg_stat_activity
     where pid <> pg_backend_pid()
