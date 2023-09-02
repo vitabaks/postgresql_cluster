@@ -125,7 +125,7 @@
             cidr_ip: "{{ aws_security_group_cidr_ip }}"
 
     # Instance and volume
-    - name: "AWS: Create or modify EC2 instance '{{ server_name }}_{{ '%02d' % (idx + 1) }}'"
+    - name: "AWS: Create or modify EC2 instance"
       amazon.aws.ec2_instance:
         access_key: "{{ lookup('ansible.builtin.env', 'AWS_ACCESS_KEY_ID') }}"
         secret_key: "{{ lookup('ansible.builtin.env', 'AWS_SECRET_ACCESS_KEY') }}"
@@ -177,7 +177,9 @@
   loop: "{{ ec2.results }}"
   loop_control:
     label: "{{ item.instances[0].public_ip_address }}"
-  when: ec2.results is defined
+  when:
+    - ec2.results is defined
+    - item.instances is defined
 
 - name: Wait for EC2 instance to be available via SSH
   ansible.builtin.wait_for:
@@ -189,13 +191,15 @@
   loop: "{{ ec2.results }}"
   loop_control:
     label: "{{ item.instances[0].public_ip_address }}"
-  when: ec2.results is defined
+  when:
+    - ec2.results is defined
+    - item.instances is defined
 
 # Generate in-memory inventory
 ########################################################################################
 
 - block:
-    - name: Add host '{{ item.instances[0].public_ip_address }}' to "postgres_cluster" group (in-memory inventory)
+    - name: Add host to "postgres_cluster" group (in-memory inventory)
       ansible.builtin.add_host:
         name: "{{ item.instances[0].private_ip_address }}"
         groups:
@@ -207,7 +211,7 @@
         label: "{{ item.instances[0].public_ip_address }}"
       changed_when: false
 
-    - name: Add host '{{ item.instances[0].public_ip_address }}' to "postgres_cluster" group (in-memory inventory)
+    - name: Add host to "postgres_cluster" group (in-memory inventory)
       ansible.builtin.add_host:
         name: "{{ item.instances[0].private_ip_address }}"
         groups:
@@ -219,7 +223,7 @@
         label: "{{ item.instances[0].public_ip_address }}"
       changed_when: false
 
-    - name: Add host '{{ item.instances[0].public_ip_address }}' to "balancers" group (in-memory inventory)
+    - name: Add host to "balancers" group (in-memory inventory)
       ansible.builtin.add_host:
         name: "{{ item.instances[0].private_ip_address }}"
         group: balancers
@@ -230,7 +234,7 @@
       changed_when: false
       when: with_haproxy_load_balancing | bool
 
-    - name: Add host '{{ item.instances[0].public_ip_address }}' to "etcd_cluster" group (in-memory inventory)
+    - name: Add host to "etcd_cluster" group (in-memory inventory)
       ansible.builtin.add_host:
         name: "{{ item.instances[0].private_ip_address }}"
         group: etcd_cluster
@@ -241,7 +245,7 @@
       changed_when: false
       when: not dcs_exists | bool and dcs_type == "etcd"
 
-    - name: Add host '{{ item.instances[0].public_ip_address }}' to "consul_instances" group (in-memory inventory)
+    - name: Add host to "consul_instances" group (in-memory inventory)
       ansible.builtin.add_host:
         name: "{{ item.instances[0].private_ip_address }}"
         group: consul_instances
@@ -254,7 +258,9 @@
         label: "{{ item.instances[0].public_ip_address }}"
       changed_when: false
       when: dcs_type == "consul"
-  when: ec2.results is defined
+  when:
+    - ec2.results is defined
+    - item.instances is defined
 
 ########################################################################################
 
@@ -273,7 +279,7 @@
     - ssh_key_name == tmp_ssh_key_name
 
 # Delete (if state is absent)
-- name: "AWS: Delete EC2 instance '{{ server_name }}_{{ '%02d' % (idx + 1) }}'"
+- name: "AWS: Delete EC2 instance"
   amazon.aws.ec2_instance:
     access_key: "{{ lookup('ansible.builtin.env', 'AWS_ACCESS_KEY_ID') }}"
     secret_key: "{{ lookup('ansible.builtin.env', 'AWS_SECRET_ACCESS_KEY') }}"
