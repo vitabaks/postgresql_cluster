@@ -306,17 +306,24 @@
     - ssh_key_name == tmp_ssh_key_name
 
 # Delete (if state is absent)
-- name: "AWS: Delete EC2 instance"
-  amazon.aws.ec2_instance:
-    access_key: "{{ lookup('ansible.builtin.env', 'AWS_ACCESS_KEY_ID') }}"
-    secret_key: "{{ lookup('ansible.builtin.env', 'AWS_SECRET_ACCESS_KEY') }}"
-    name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
-    region: "{{ server_location }}"
-    state: absent
-  loop: "{{ range(0, servers_count | int) | list }}"
-  loop_control:
-    index_var: idx
-    label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
+- block:
+    - name: "AWS: Delete EC2 instance"
+      amazon.aws.ec2_instance:
+        access_key: "{{ lookup('ansible.builtin.env', 'AWS_ACCESS_KEY_ID') }}"
+        secret_key: "{{ lookup('ansible.builtin.env', 'AWS_SECRET_ACCESS_KEY') }}"
+        name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
+        region: "{{ server_location }}"
+        state: absent
+      loop: "{{ range(0, servers_count | int) | list }}"
+      loop_control:
+        index_var: idx
+        label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
+
+    - name: "AWS: Delete Security Group"
+      amazon.aws.ec2_security_group:
+        name: "{{ patroni_cluster_name }}-security-group"
+        state: absent
+        region: "{{ server_location }}"
   when: state == 'absent'
 
 ...
