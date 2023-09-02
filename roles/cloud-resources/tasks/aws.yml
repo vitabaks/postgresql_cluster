@@ -266,7 +266,7 @@
         name: "{{ item.instances[0].private_ip_address }}"
         group: etcd_cluster
         ansible_ssh_host: "{{ item.instances[0].public_ip_address }}"
-      loop: "{{ ec2.results }}"
+      loop: "{{ ec2.results[:7] }}" # no more than 7 servers for the etcd cluster
       loop_control:
         label: "{{ item.instances[0].public_ip_address | default('N/A') }}"
       changed_when: false
