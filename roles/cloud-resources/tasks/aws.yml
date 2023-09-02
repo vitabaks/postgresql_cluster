@@ -176,7 +176,7 @@
       - Private IP is {{ item.instances[0].private_ip_address }}
   loop: "{{ ec2.results }}"
   loop_control:
-    label: "{{ item.instances[0].public_ip_address }}"
+    label: "{{ item.instances[0].public_ip_address | default('N/A') }}"
   when:
     - ec2.results is defined
     - item.instances is defined
@@ -190,7 +190,7 @@
   become_user: ubuntu
   loop: "{{ ec2.results }}"
   loop_control:
-    label: "{{ item.instances[0].public_ip_address }}"
+    label: "{{ item.instances[0].public_ip_address | default('N/A') }}"
   when:
     - ec2.results is defined
     - item.instances is defined
@@ -208,7 +208,7 @@
         ansible_ssh_host: "{{ item.instances[0].public_ip_address }}"
       loop: "{{ ec2.results }}"
       loop_control:
-        label: "{{ item.instances[0].public_ip_address }}"
+        label: "{{ item.instances[0].public_ip_address | default('N/A') }}"
       changed_when: false
 
     - name: Add host to "postgres_cluster" group (in-memory inventory)
@@ -220,7 +220,7 @@
         ansible_ssh_host: "{{ item.instances[0].public_ip_address }}"
       loop: "{{ ec2.results }}"
       loop_control:
-        label: "{{ item.instances[0].public_ip_address }}"
+        label: "{{ item.instances[0].public_ip_address | default('N/A') }}"
       changed_when: false
 
     - name: Add host to "balancers" group (in-memory inventory)
@@ -230,7 +230,7 @@
         ansible_ssh_host: "{{ item.instances[0].public_ip_address }}"
       loop: "{{ ec2.results }}"
       loop_control:
-        label: "{{ item.instances[0].public_ip_address }}"
+        label: "{{ item.instances[0].public_ip_address | default('N/A') }}"
       changed_when: false
       when: with_haproxy_load_balancing | bool
 
@@ -241,7 +241,7 @@
         ansible_ssh_host: "{{ item.instances[0].public_ip_address }}"
       loop: "{{ ec2.results }}"
       loop_control:
-        label: "{{ item.instances[0].public_ip_address }}"
+        label: "{{ item.instances[0].public_ip_address | default('N/A') }}"
       changed_when: false
       when: not dcs_exists | bool and dcs_type == "etcd"
 
@@ -255,7 +255,7 @@
         consul_datacenter: "{{ server_location }}"
       loop: "{{ ec2.results }}"
       loop_control:
-        label: "{{ item.instances[0].public_ip_address }}"
+        label: "{{ item.instances[0].public_ip_address | default('N/A') }}"
       changed_when: false
       when: dcs_type == "consul"
   when:
