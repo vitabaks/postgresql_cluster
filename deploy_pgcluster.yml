@@ -1,4 +1,14 @@
 ---
+- name: Provision of cloud resources (virtual machine + disk) for PostgreSQL HA Cluster (on {{ provision | default('none') | upper }})
+  hosts: localhost
+  gather_facts: true
+  any_errors_fatal: true
+  vars_files:
+    - vars/main.yml
+  roles:
+    - role: cloud-resources
+      when: provision | lower != 'none'
+      tags: provision
 
 - name: Deploy PostgreSQL HA Cluster (based on "Patroni" and "{{ dcs_type }}")
   hosts: all
