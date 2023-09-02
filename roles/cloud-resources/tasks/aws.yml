@@ -207,7 +207,7 @@
           - master
         ansible_ssh_host: "{{ item.instances[0].public_ip_address }}"
         ansible_user: ubuntu
-      loop: "{{ ec2.results[0] }}" # add the first item in the list
+      loop: "{{ [ec2.results[0]] }}" # add the first item in the list
       loop_control:
         label: "{{ item.instances[0].public_ip_address | default('N/A') }}"
       changed_when: false
