@@ -1,6 +1,6 @@
 ---
 
-provision: none  # Platform for server creation. Available options: 'AWS', 'GCP', 'azure', 'digitalocean', 'hetzner'. Default: none (do not create).
+provision: none  # Platform for server creation. Available options: 'aws', 'gcp', 'azure', 'digitalocean', 'hetzner'. Default: none (do not create).
 state: present  # Set to 'present' to create a server, 'absent' to delete.
 
 servers_count: 3  # Number of servers in the cluster. Servers will be automatically named with suffixes 01, 02, 03, etc.
