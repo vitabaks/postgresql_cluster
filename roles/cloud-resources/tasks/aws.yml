@@ -116,8 +116,7 @@
           - proto: tcp
             ports:
               - "{{ ansible_ssh_port | default(22) }}"
-            rule_desc: allow public ssh access for deployment
-            cidr_ip: "0.0.0.0/0" # Public
+            cidr_ip: "0.0.0.0/0" # allow public ssh access for deployment
           - proto: tcp
             ports:
               - "{{ haproxy_listen_port.master }}"
@@ -149,7 +148,6 @@
               - "8302" # Consul
               - "8500" # Consul
               - "8600" # Consul
-            rule_desc: postgresql cluster ports
             cidr_ip: "{{ vpc_subnet_info.subnets[0].cidr_block }}" # Private subnet
 
     # Instance and volume
