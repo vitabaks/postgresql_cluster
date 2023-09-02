@@ -1,14 +1,18 @@
 ---
 
 - name: Get the current shared_preload_libraries settings
-  ansible.builtin.command: psql -tAXc "show shared_preload_libraries"
+  ansible.builtin.command: >-
+    psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -tAXc
+    "show shared_preload_libraries"
   changed_when: false
   register: pg_shared_preload_libraries
   when:
     - inventory_hostname in groups['primary']
 
 - name: Get the current cron.database_name settings
-  ansible.builtin.command: psql -tAXc "select current_setting('cron.database_name', true)"
+  ansible.builtin.command: >-
+    psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -tAXc
+    "select current_setting('cron.database_name', true)"
   changed_when: false
   register: pg_cron_database_name
   when:

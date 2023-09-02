@@ -1,7 +1,9 @@
 ---
 
 - name: Ensure the current data directory is the new data directory
-  ansible.builtin.command: psql -tAXc "show data_directory"
+  ansible.builtin.command: >-
+    psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -tAXc
+    "show data_directory"
   changed_when: false
   register: pg_current_datadir
 
@@ -162,7 +164,9 @@
 
 - name: Check the current PostgreSQL version
   run_once: true
-  ansible.builtin.command: psql -tAXc "select current_setting('server_version')"
+  ansible.builtin.command: >-
+    psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -tAXc
+    "select current_setting('server_version')"
   register: postgres_version
   changed_when: false
   when: inventory_hostname in groups['primary']
