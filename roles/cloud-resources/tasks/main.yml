@@ -46,25 +46,4 @@
   when: provision | lower == 'aws'
   tags: aws
 
-- name: Import tasks for GCP
-  ansible.builtin.import_tasks: gcp.yml
-  when: provision | lower == 'gcp'
-  tags: gcp
-
-- name: Import tasks for Azure
-  ansible.builtin.import_tasks: azure.yml
-  when: provision | lower == 'azure'
-  tags: azure
-
-- name: Import tasks for DigitalOcean
-  ansible.builtin.import_tasks: digitalocean.yml
-  when: provision | lower == 'digitalocean'
-        or provision | lower == 'do'
-  tags: digitalocean, do
-
-- name: Import tasks for Hetzner Cloud
-  ansible.builtin.import_tasks: hetzner.yml
-  when: provision | lower == 'hetzner'
-  tags: hetzner
-
 ...
