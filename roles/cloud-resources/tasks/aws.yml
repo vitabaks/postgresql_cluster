@@ -105,7 +105,7 @@
         - vpc_subnet_info.subnets[0].id is defined
 
     # Security Group
-    - name: "AWS: Create Security Group"
+    - name: "AWS: Create or modify Security Group"
       amazon.aws.ec2_security_group:
         name: postgresql_cluster_security_group
         state: present
@@ -116,13 +116,41 @@
           - proto: tcp
             ports:
               - "{{ ansible_ssh_port | default(22) }}"
+            rule_desc: allow public ssh access for deployment
+            cidr_ip: "0.0.0.0/0" # Public
+          - proto: tcp
+            ports:
               - "{{ haproxy_listen_port.master }}"
               - "{{ haproxy_listen_port.replicas }}"
               - "{{ haproxy_listen_port.replicas_sync }}"
               - "{{ haproxy_listen_port.replicas_async }}"
               - "{{ pgbouncer_listen_port }}"
-              - "19999" # Netdata
-            cidr_ip: "{{ aws_security_group_cidr_ip }}"
+              - "{{ postgresql_port }}"
+              - "{{ netdata_port | default('19999')}}"
+            cidr_ip: >
+              {{ '0.0.0.0/0' if database_public_access | bool 
+              else vpc_subnet_info.subnets[0].cidr_block }}
+          - proto: tcp
+            ports:
+              - "{{ ansible_ssh_port | default(22) }}"
+              - "{{ haproxy_listen_port.master }}"
+              - "{{ haproxy_listen_port.replicas }}"
+              - "{{ haproxy_listen_port.replicas_sync }}"
+              - "{{ haproxy_listen_port.replicas_async }}"
+              - "{{ haproxy_listen_port.stats }}"
+              - "{{ pgbouncer_listen_port }}"
+              - "{{ postgresql_port }}"
+              - "{{ patroni_restapi_port }}"
+              - "{{ netdata_port | default('19999')}}"
+              - "2379" # ETCD
+              - "2380" # ETCD
+              - "8300" # Consul
+              - "8301" # Consul
+              - "8302" # Consul
+              - "8500" # Consul
+              - "8600" # Consul
+            rule_desc: postgresql cluster ports
+            cidr_ip: "{{ vpc_subnet_info.subnets[0].cidr_block }}" # Private subnet
 
     # Instance and volume
     - name: "AWS: Create or modify EC2 instance"

@@ -19,6 +19,6 @@ ssh_key_name: ""  # Name of the SSH key to be added to the server.
 # Note: If not provided, all cloud available SSH keys will be added (applicable to DigitalOcean, Hetzner).
 ssh_key_content: ""  # (optional) If provided, the public key content will be added to the cloud (directly to the server for GCP).
 
-aws_security_group_cidr_ip: 0.0.0.0/0  # CIDR IP range for AWS security group. WARNING: Current default value allows access from all IPs.
+database_public_access: false  # Allow access to the database from the public network (applicable for AWS).
 
 ...
