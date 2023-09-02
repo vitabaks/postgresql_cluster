@@ -206,6 +206,7 @@
           - postgres_cluster
           - master
         ansible_ssh_host: "{{ item.instances[0].public_ip_address }}"
+        ansible_user: ubuntu
       loop: "{{ ec2.results[0] }}" # add the first item in the list
       loop_control:
         label: "{{ item.instances[0].public_ip_address | default('N/A') }}"
@@ -218,6 +219,7 @@
           - postgres_cluster
           - replica
         ansible_ssh_host: "{{ item.instances[0].public_ip_address }}"
+        ansible_user: ubuntu
       loop: "{{ ec2.results[1:] }}" # start with the 2nd item of the list
       loop_control:
         label: "{{ item.instances[0].public_ip_address | default('N/A') }}"
@@ -229,6 +231,7 @@
         name: "{{ item.instances[0].private_ip_address }}"
         group: balancers
         ansible_ssh_host: "{{ item.instances[0].public_ip_address }}"
+        ansible_user: ubuntu
       loop: "{{ ec2.results }}"
       loop_control:
         label: "{{ item.instances[0].public_ip_address | default('N/A') }}"
@@ -240,6 +243,7 @@
         name: "{{ item.instances[0].private_ip_address }}"
         group: etcd_cluster
         ansible_ssh_host: "{{ item.instances[0].public_ip_address }}"
+        ansible_user: ubuntu
       loop: "{{ ec2.results }}"
       loop_control:
         label: "{{ item.instances[0].public_ip_address | default('N/A') }}"
@@ -251,6 +255,7 @@
         name: "{{ item.instances[0].private_ip_address }}"
         group: consul_instances
         ansible_ssh_host: "{{ item.instances[0].public_ip_address }}"
+        ansible_user: ubuntu
         consul_node_role: "{{ not dcs_exists | ternary('server', 'client') }}"
         consul_bootstrap_expect: true
         consul_datacenter: "{{ server_location }}"
