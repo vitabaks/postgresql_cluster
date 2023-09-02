@@ -199,28 +199,26 @@
 ########################################################################################
 
 - block:
-    - name: Add host to "postgres_cluster" group (in-memory inventory)
+    - name: Add host to "postgres_cluster", "master" groups (in-memory inventory)
       ansible.builtin.add_host:
-        name: "{{ item.instances[0].private_ip_address }}"
+        name: "{{ ec2.results[0].instances[0].private_ip_address }}"
         groups:
           - postgres_cluster
           - master
-        ansible_ssh_host: "{{ item.instances[0].public_ip_address }}"
-      loop: "{{ ec2.results }}"
-      loop_control:
-        label: "{{ item.instances[0].public_ip_address | default('N/A') }}"
+        ansible_ssh_host: "{{ ec2.results[0].instances[0].public_ip_address }}"
       changed_when: false
 
-    - name: Add host to "postgres_cluster" group (in-memory inventory)
+    - name: Add host to "postgres_cluster", "replica" groups (in-memory inventory)
       ansible.builtin.add_host:
         name: "{{ item.instances[0].private_ip_address }}"
         groups:
           - postgres_cluster
           - replica
         ansible_ssh_host: "{{ item.instances[0].public_ip_address }}"
-      loop: "{{ ec2.results }}"
+      loop: "{{ ec2.results[1:] }}" # start with the 2nd item of the list
       loop_control:
         label: "{{ item.instances[0].public_ip_address | default('N/A') }}"
+      when: ec2.results | length > 1 # only if there is more than one item
       changed_when: false
 
     - name: Add host to "balancers" group (in-memory inventory)
