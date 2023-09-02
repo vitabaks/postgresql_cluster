@@ -205,6 +205,7 @@
       loop: "{{ ec2.results }}"
       loop_control:
         label: "{{ item.instances[0].public_ip_address }}"
+      changed_when: false
 
     - name: Add host '{{ item.instances[0].public_ip_address }}' to "postgres_cluster" group (in-memory inventory)
       ansible.builtin.add_host:
@@ -216,6 +217,7 @@
       loop: "{{ ec2.results }}"
       loop_control:
         label: "{{ item.instances[0].public_ip_address }}"
+      changed_when: false
 
     - name: Add host '{{ item.instances[0].public_ip_address }}' to "balancers" group (in-memory inventory)
       ansible.builtin.add_host:
@@ -225,6 +227,7 @@
       loop: "{{ ec2.results }}"
       loop_control:
         label: "{{ item.instances[0].public_ip_address }}"
+      changed_when: false
       when: with_haproxy_load_balancing | bool
 
     - name: Add host '{{ item.instances[0].public_ip_address }}' to "etcd_cluster" group (in-memory inventory)
@@ -235,6 +238,7 @@
       loop: "{{ ec2.results }}"
       loop_control:
         label: "{{ item.instances[0].public_ip_address }}"
+      changed_when: false
       when: not dcs_exists | bool and dcs_type == "etcd"
 
     - name: Add host '{{ item.instances[0].public_ip_address }}' to "consul_instances" group (in-memory inventory)
@@ -248,8 +252,8 @@
       loop: "{{ ec2.results }}"
       loop_control:
         label: "{{ item.instances[0].public_ip_address }}"
+      changed_when: false
       when: dcs_type == "consul"
-  changed_when: false
   when: ec2.results is defined
 
 ########################################################################################
