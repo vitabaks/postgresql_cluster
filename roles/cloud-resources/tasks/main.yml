@@ -44,6 +44,5 @@
 - name: Import tasks for AWS
   ansible.builtin.import_tasks: aws.yml
   when: provision | lower == 'aws'
-  tags: aws
 
 ...

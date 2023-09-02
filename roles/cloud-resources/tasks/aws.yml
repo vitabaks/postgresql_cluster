@@ -107,7 +107,7 @@
     # Security Group
     - name: "AWS: Create or modify Security Group"
       amazon.aws.ec2_security_group:
-        name: postgresql_cluster_security_group
+        name: "{{ patroni_cluster_name }}-security-group"
         state: present
         description: Enable ports for accessing the PostgreSQL cluster
         vpc_id: "{{ vpc_id }}"
@@ -161,7 +161,7 @@
         image_id: "{{ server_image }}"
         key_name: "{{ ssh_key_name }}"
         region: "{{ server_location }}"
-        security_group: postgresql_cluster_security_group
+        security_group: "{{ patroni_cluster_name }}-security-group"
         vpc_subnet_id: "{{ server_network }}"
         network:
           assign_public_ip: true
@@ -249,6 +249,7 @@
         label: "{{ item.instances[0].public_ip_address | default('N/A') }}"
       when: ec2.results | length > 1 # only if there is more than one item
       changed_when: false
+
     - name: Add host to "balancers" group (in-memory inventory)
       ansible.builtin.add_host:
         name: "{{ item.instances[0].private_ip_address }}"
