@@ -35,7 +35,7 @@ locale: "en_US.utf-8"
 # Configure swap space (if not already exists)
 swap_file_create: true  # or 'false'
 swap_file_path: /swapfile
-swap_file_size_mb: '2048'  # change this value for your system
+swap_file_size_mb: '4096'  # change this value for your system
 
 # Kernel parameters
 sysctl_set: true  # or 'false'
