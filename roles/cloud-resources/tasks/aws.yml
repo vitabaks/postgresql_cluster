@@ -126,9 +126,9 @@
               - "{{ haproxy_listen_port.replicas_async }}"
               - "{{ pgbouncer_listen_port }}"
               - "{{ postgresql_port }}"
-              - "{{ netdata_port | default('19999')}}"
-            cidr_ip: >
-              {{ '0.0.0.0/0' if database_public_access | bool 
+              - "{{ netdata_port | default('19999') }}"
+            cidr_ip: >-
+              {{ '0.0.0.0/0' if database_public_access | bool
               else vpc_subnet_info.subnets[0].cidr_block }}
           - proto: tcp
             ports:
@@ -141,7 +141,7 @@
               - "{{ pgbouncer_listen_port }}"
               - "{{ postgresql_port }}"
               - "{{ patroni_restapi_port }}"
-              - "{{ netdata_port | default('19999')}}"
+              - "{{ netdata_port | default('19999') }}"
               - "2379" # ETCD
               - "2380" # ETCD
               - "8300" # Consul
