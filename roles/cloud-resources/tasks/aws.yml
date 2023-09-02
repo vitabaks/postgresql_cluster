@@ -163,6 +163,20 @@
       delay: 10
   when: state == 'present'
 
+- name: Wait for EC2 instance to be available via SSH
+  ansible.builtin.wait_for:
+    host: "{{ item.instances[0].public_ip_address }}"
+    port: 22
+    delay: 5
+    timeout: 300
+  become_user: ubuntu
+  loop: "{{ ec2.results }}"
+  loop_control:
+    label: "{{ item.instances[0].public_ip_address | default('N/A') }}"
+  when:
+    - ec2.results is defined
+    - item.instances is defined
+
 # Info
 - name: Show EC2 instance info
   ansible.builtin.debug:
@@ -181,31 +195,20 @@
     - ec2.results is defined
     - item.instances is defined
 
-- name: Wait for EC2 instance to be available via SSH
-  ansible.builtin.wait_for:
-    host: "{{ item.instances[0].public_ip_address }}"
-    port: 22
-    delay: 5
-    timeout: 300
-  become_user: ubuntu
-  loop: "{{ ec2.results }}"
-  loop_control:
-    label: "{{ item.instances[0].public_ip_address | default('N/A') }}"
-  when:
-    - ec2.results is defined
-    - item.instances is defined
-
 # Generate in-memory inventory
 ########################################################################################
 
 - block:
     - name: Add host to "postgres_cluster", "master" groups (in-memory inventory)
       ansible.builtin.add_host:
-        name: "{{ ec2.results[0].instances[0].private_ip_address }}"
+        name: "{{ item.instances[0].private_ip_address }}"
         groups:
           - postgres_cluster
           - master
-        ansible_ssh_host: "{{ ec2.results[0].instances[0].public_ip_address }}"
+        ansible_ssh_host: "{{ item.instances[0].public_ip_address }}"
+      loop: "{{ ec2.results[0] }}" # add the first item in the list
+      loop_control:
+        label: "{{ item.instances[0].public_ip_address | default('N/A') }}"
       changed_when: false
 
     - name: Add host to "postgres_cluster", "replica" groups (in-memory inventory)
