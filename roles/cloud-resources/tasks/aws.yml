@@ -1,0 +1,285 @@
+---
+# Dependencies
+- name: Install Python dependencies
+  block:
+    - name: Ensure that 'python3-pip' package is present on controlling host
+      ansible.builtin.package:
+        name: python3-pip
+        state: present
+      register: package_status
+      until: package_status is success
+      delay: 10
+      retries: 3
+      delegate_to: 127.0.0.1
+      run_once: true
+      when: ansible_distribution != "MacOSX"
+
+    - name: Ensure that 'boto3' dependency is present on controlling host
+      ansible.builtin.pip:
+        name: boto3
+        extra_args: --user
+      delegate_to: 127.0.0.1
+      become: false
+      vars:
+        ansible_become: false
+      run_once: true
+
+# SSH key
+- block:
+    # Delete the temporary ssh key from the cloud (if exists)
+    - name: "AWS: Remove temporary SSH key '{{ ssh_key_name }}' from cloud (if any)"
+      amazon.aws.ec2_key:
+        access_key: "{{ lookup('ansible.builtin.env', 'AWS_ACCESS_KEY_ID') }}"
+        secret_key: "{{ lookup('ansible.builtin.env', 'AWS_SECRET_ACCESS_KEY') }}"
+        name: "{{ ssh_key_name }}"
+        region: "{{ server_location }}"
+        state: absent
+      when:
+        - ssh_key_name is defined
+        - tmp_ssh_key_name is defined
+        - ssh_key_name == tmp_ssh_key_name
+
+    # if ssh_key_name and ssh_key_content is specified, add this ssh key to the cloud
+    - name: "AWS: Add SSH key '{{ ssh_key_name }}' to cloud"
+      amazon.aws.ec2_key:
+        access_key: "{{ lookup('ansible.builtin.env', 'AWS_ACCESS_KEY_ID') }}"
+        secret_key: "{{ lookup('ansible.builtin.env', 'AWS_SECRET_ACCESS_KEY') }}"
+        name: "{{ ssh_key_name }}"
+        key_material: "{{ ssh_key_content }}"
+        region: "{{ server_location }}"
+        state: present
+      register: ssh_key_result
+      when:
+        - ssh_key_name | length > 0
+        - ssh_key_content | length > 0
+  when: state == 'present'
+
+# Create (if state is present)
+- block:
+    # if server_network is specified, get vpc id for this subnet
+    - name: "AWS: Gather information about VPC for '{{ server_network }}'"
+      amazon.aws.ec2_vpc_subnet_info:
+        region: "{{ server_location }}"
+        subnet_ids: "{{ server_network }}"
+      register: vpc_subnet_info
+      when: server_network | length > 0
+
+    - name: "Set variable: vpc_id"
+      ansible.builtin.set_fact:
+        vpc_id: "{{ vpc_subnet_info.subnets[0].vpc_id }}"
+      when:
+        - server_network | length > 0
+        - vpc_subnet_info.subnets[0].vpc_id is defined
+
+    # if server_network is not specified, use default vpc subnet
+    - name: "AWS: Gather information about default VPC"
+      amazon.aws.ec2_vpc_net_info:
+        region: "{{ server_location }}"
+        filters:
+          "is-default": true
+      register: vpc_info
+      when: server_network | length < 1
+
+    - name: "AWS: Gather information about VPC subnet for default VPC"
+      amazon.aws.ec2_vpc_subnet_info:
+        region: "{{ server_location }}"
+        filters:
+          vpc-id: "{{ vpc_info.vpcs[0].id }}"
+      register: vpc_subnet_info
+      when:
+        - server_network | length < 1
+        - vpc_info.vpcs[0].id is defined
+
+    - name: "Set variable: vpc_id"
+      ansible.builtin.set_fact:
+        vpc_id: "{{ vpc_info.vpcs[0].id }}"
+      when:
+        - server_network | length < 1
+        - vpc_info.vpcs[0].id is defined
+
+    - name: "Set variable: server_network"
+      ansible.builtin.set_fact:
+        server_network: "{{ vpc_subnet_info.subnets[0].id }}"
+      when:
+        - server_network | length < 1
+        - vpc_subnet_info.subnets[0].id is defined
+
+    # Security Group
+    - name: "AWS: Create Security Group"
+      amazon.aws.ec2_security_group:
+        name: postgresql_cluster_security_group
+        state: present
+        description: Enable ports for accessing the PostgreSQL cluster
+        vpc_id: "{{ vpc_id }}"
+        region: "{{ server_location }}"
+        rules:
+          - proto: tcp
+            ports:
+              - "{{ ansible_ssh_port | default(22) }}"
+              - "{{ haproxy_listen_port.master }}"
+              - "{{ haproxy_listen_port.replicas }}"
+              - "{{ haproxy_listen_port.replicas_sync }}"
+              - "{{ haproxy_listen_port.replicas_async }}"
+              - "{{ pgbouncer_listen_port }}"
+              - "19999" # Netdata
+            cidr_ip: "{{ aws_security_group_cidr_ip }}"
+
+    # Instance and volume
+    - name: "AWS: Create or modify EC2 instance '{{ server_name }}_{{ '%02d' % (idx + 1) }}'"
+      amazon.aws.ec2_instance:
+        access_key: "{{ lookup('ansible.builtin.env', 'AWS_ACCESS_KEY_ID') }}"
+        secret_key: "{{ lookup('ansible.builtin.env', 'AWS_SECRET_ACCESS_KEY') }}"
+        name: "{{ server_name | lower }}_{{ '%02d' % (idx + 1) }}"
+        state: present
+        instance_type: "{{ server_type }}"
+        image_id: "{{ server_image }}"
+        key_name: "{{ ssh_key_name }}"
+        region: "{{ server_location }}"
+        security_group: postgresql_cluster_security_group
+        vpc_subnet_id: "{{ server_network }}"
+        network:
+          assign_public_ip: true
+          delete_on_termination: true
+        volumes:
+          - device_name: /dev/sda1
+            ebs:
+              volume_type: "{{ volume_type | default('gp3') }}"
+              volume_size: "{{ system_volume_size | default('40') }}"  # system disk size
+              delete_on_termination: true
+          - device_name: /dev/sdb
+            ebs:
+              volume_type: "{{ volume_type | default('gp3') }}"
+              volume_size: "{{ volume_size | int }}"
+              delete_on_termination: true
+      loop: "{{ range(0, servers_count | int) | list }}"
+      loop_control:
+        index_var: idx
+        label: "{{ server_name | lower }}_{{ '%02d' % (idx + 1) }}"
+      register: ec2
+      until:
+        - ec2.instances[0].public_ip_address is defined
+        - ec2.instances[0].public_ip_address | length > 0
+      retries: 3
+      delay: 10
+  when: state == 'present'
+
+# Info
+- name: Show EC2 instance info
+  ansible.builtin.debug:
+    msg:
+      - instance ID is {{ item.instances[0].instance_id }}
+      - instance Image is {{ item.instances[0].image_id }}
+      - instance Name is {{ item.instances[0].tags.Name }}
+      - instance Type is {{ item.instances[0].instance_type }}
+      - Block Storage Size is {{ volume_size }} gigabytes
+      - Public IP is {{ item.instances[0].public_ip_address }}
+      - Private IP is {{ item.instances[0].private_ip_address }}
+  loop: "{{ ec2.results }}"
+  loop_control:
+    label: "{{ item.instances[0].public_ip_address }}"
+  when: ec2.results is defined
+
+- name: Wait for EC2 instance to be available via SSH
+  ansible.builtin.wait_for:
+    host: "{{ item.instances[0].public_ip_address }}"
+    port: 22
+    delay: 5
+    timeout: 300
+  become_user: ubuntu
+  loop: "{{ ec2.results }}"
+  loop_control:
+    label: "{{ item.instances[0].public_ip_address }}"
+  when: ec2.results is defined
+
+# Generate in-memory inventory
+########################################################################################
+
+- block:
+    - name: Add host '{{ item.instances[0].public_ip_address }}' to "postgres_cluster" group (in-memory inventory)
+      ansible.builtin.add_host:
+        name: "{{ item.instances[0].private_ip_address }}"
+        groups:
+          - postgres_cluster
+          - master
+        ansible_ssh_host: "{{ item.instances[0].public_ip_address }}"
+      loop: "{{ ec2.results }}"
+      loop_control:
+        label: "{{ item.instances[0].public_ip_address }}"
+
+    - name: Add host '{{ item.instances[0].public_ip_address }}' to "postgres_cluster" group (in-memory inventory)
+      ansible.builtin.add_host:
+        name: "{{ item.instances[0].private_ip_address }}"
+        groups:
+          - postgres_cluster
+          - replica
+        ansible_ssh_host: "{{ item.instances[0].public_ip_address }}"
+      loop: "{{ ec2.results }}"
+      loop_control:
+        label: "{{ item.instances[0].public_ip_address }}"
+
+    - name: Add host '{{ item.instances[0].public_ip_address }}' to "balancers" group (in-memory inventory)
+      ansible.builtin.add_host:
+        name: "{{ item.instances[0].private_ip_address }}"
+        group: balancers
+        ansible_ssh_host: "{{ item.instances[0].public_ip_address }}"
+      loop: "{{ ec2.results }}"
+      loop_control:
+        label: "{{ item.instances[0].public_ip_address }}"
+      when: with_haproxy_load_balancing | bool
+
+    - name: Add host '{{ item.instances[0].public_ip_address }}' to "etcd_cluster" group (in-memory inventory)
+      ansible.builtin.add_host:
+        name: "{{ item.instances[0].private_ip_address }}"
+        group: etcd_cluster
+        ansible_ssh_host: "{{ item.instances[0].public_ip_address }}"
+      loop: "{{ ec2.results }}"
+      loop_control:
+        label: "{{ item.instances[0].public_ip_address }}"
+      when: not dcs_exists | bool and dcs_type == "etcd"
+
+    - name: Add host '{{ item.instances[0].public_ip_address }}' to "consul_instances" group (in-memory inventory)
+      ansible.builtin.add_host:
+        name: "{{ item.instances[0].private_ip_address }}"
+        group: consul_instances
+        ansible_ssh_host: "{{ item.instances[0].public_ip_address }}"
+        consul_node_role: "{{ not dcs_exists | ternary('server', 'client') }}"
+        consul_bootstrap_expect: true
+        consul_datacenter: "{{ server_location }}"
+      loop: "{{ ec2.results }}"
+      loop_control:
+        label: "{{ item.instances[0].public_ip_address }}"
+      when: dcs_type == "consul"
+  changed_when: false
+  when: ec2.results is defined
+
+########################################################################################
+
+# Delete the temporary ssh key from the cloud after creating the EC2 instance
+- name: "AWS: Remove temporary SSH key '{{ ssh_key_name }}' from cloud"
+  amazon.aws.ec2_key:
+    access_key: "{{ lookup('ansible.builtin.env', 'AWS_ACCESS_KEY_ID') }}"
+    secret_key: "{{ lookup('ansible.builtin.env', 'AWS_SECRET_ACCESS_KEY') }}"
+    name: "{{ ssh_key_name }}"
+    region: "{{ server_location }}"
+    state: absent
+  register: ssh_key_result
+  when:
+    - ssh_key_name is defined
+    - tmp_ssh_key_name is defined
+    - ssh_key_name == tmp_ssh_key_name
+
+# Delete (if state is absent)
+- name: "AWS: Delete EC2 instance '{{ server_name }}_{{ '%02d' % (idx + 1) }}'"
+  amazon.aws.ec2_instance:
+    access_key: "{{ lookup('ansible.builtin.env', 'AWS_ACCESS_KEY_ID') }}"
+    secret_key: "{{ lookup('ansible.builtin.env', 'AWS_SECRET_ACCESS_KEY') }}"
+    name: "{{ server_name | lower }}_{{ '%02d' % (idx + 1) }}"
+    region: "{{ server_location }}"
+    state: absent
+  loop: "{{ range(0, servers_count | int) | list }}"
+  loop_control:
+    index_var: idx
+    label: "{{ server_name | lower }}_{{ '%02d' % (idx + 1) }}"
+  when: state == 'absent'
+
+...
