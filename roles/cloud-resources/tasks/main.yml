@@ -45,4 +45,8 @@
   ansible.builtin.import_tasks: aws.yml
   when: provision | lower == 'aws'
 
+- name: Import tasks for GCP
+  ansible.builtin.import_tasks: gcp.yml
+  when: provision | lower == 'gcp'
+
 ...
