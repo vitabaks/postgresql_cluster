@@ -195,7 +195,6 @@
     port: 22
     delay: 5
     timeout: 300
-  become_user: ubuntu
   loop: "{{ server_result.results }}"
   loop_control:
     label: "{{ item.instances[0].public_ip_address | default('N/A') }}"
@@ -229,7 +228,11 @@
 
     - name: "Inventory | Extract IP addresses"
       ansible.builtin.set_fact:
-        ip_addresses: "{{ ip_addresses + [{'public_ip': item.instances[0].public_ip_address, 'private_ip': item.instances[0].private_ip_address}] }}}"
+        ip_addresses: >-
+          {{ ip_addresses +
+            [{'public_ip': item.instances[0].public_ip_address,
+              'private_ip': item.instances[0].private_ip_address}]
+          }}
       loop: "{{ server_result.results | selectattr('instances', 'defined') }}"
       loop_control:
         label: "public_ip: {{ item.instances[0].public_ip_address }}, private_ip: {{ item.instances[0].private_ip_address }}"
