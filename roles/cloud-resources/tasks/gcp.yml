@@ -105,7 +105,6 @@
         network:
           selfLink: "global/networks/{{ gcp_network_name }}"
         state: present
-      when: not database_public_access | bool
 
     - name: "GCP: Create or modify instance"
       google.cloud.gcp_compute_instance:
