@@ -126,8 +126,8 @@
     - name: "Inventory | Extract IP addresses"
       ansible.builtin.set_fact:
         ip_addresses: >-
-          {{ ip_addresses + 
-            [{'public_ip': item.networkInterfaces[0].accessConfigs[0].natIP, 
+          {{ ip_addresses +
+            [{'public_ip': item.networkInterfaces[0].accessConfigs[0].natIP,
               'private_ip': item.networkInterfaces[0].networkIP}]
           }}
       loop: "{{ server_result.results | selectattr('networkInterfaces', 'defined') }}"
