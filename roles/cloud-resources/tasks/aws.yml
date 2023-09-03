@@ -224,12 +224,12 @@
 # Inventory
 - block:
     - name: "Inventory | Initialize ip_addresses variable"
-      set_fact:
+      ansible.builtin.set_fact:
         ip_addresses: []
 
     - name: "Inventory | Extract IP addresses"
-      set_fact:
-        ip_addresses: "{{ ip_addresses + [ {'public_ip': item.instances[0].public_ip_address, 'private_ip': item.instances[0].private_ip_address } ] }}"
+      ansible.builtin.set_fact:
+        ip_addresses: "{{ ip_addresses + [{'public_ip': item.instances[0].public_ip_address, 'private_ip': item.instances[0].private_ip_address}] }}}"
       loop: "{{ server_result.results | selectattr('instances', 'defined') }}"
       loop_control:
         label: "public_ip: {{ item.instances[0].public_ip_address }}, private_ip: {{ item.instances[0].private_ip_address }}"
