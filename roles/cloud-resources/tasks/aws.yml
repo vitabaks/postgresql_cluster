@@ -181,10 +181,10 @@
       loop_control:
         index_var: idx
         label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
-      register: ec2
+      register: server_result
       until:
-        - ec2.instances[0].public_ip_address is defined
-        - ec2.instances[0].public_ip_address | length > 0
+        - server_result.instances[0].public_ip_address is defined
+        - server_result.instances[0].public_ip_address | length > 0
       retries: 3
       delay: 10
   when: state == 'present'
@@ -196,11 +196,11 @@
     delay: 5
     timeout: 300
   become_user: ubuntu
-  loop: "{{ ec2.results }}"
+  loop: "{{ server_result.results }}"
   loop_control:
     label: "{{ item.instances[0].public_ip_address | default('N/A') }}"
   when:
-    - ec2.results is defined
+    - server_result.results is defined
     - item.instances is defined
 
 # Info
@@ -214,82 +214,31 @@
       - Block Storage Size is {{ volume_size }} gigabytes
       - Public IP is {{ item.instances[0].public_ip_address }}
       - Private IP is {{ item.instances[0].private_ip_address }}
-  loop: "{{ ec2.results }}"
+  loop: "{{ server_result.results }}"
   loop_control:
     label: "{{ item.instances[0].public_ip_address | default('N/A') }}"
   when:
-    - ec2.results is defined
+    - server_result.results is defined
     - item.instances is defined
 
-# Generate in-memory inventory
-########################################################################################
-
+# Inventory
 - block:
-    - name: Add host to "postgres_cluster", "master" groups (in-memory inventory)
-      ansible.builtin.add_host:
-        name: "{{ item.instances[0].private_ip_address }}"
-        groups:
-          - postgres_cluster
-          - master
-        ansible_ssh_host: "{{ item.instances[0].public_ip_address }}"
-      loop: "{{ [ec2.results[0]] }}" # add the first item in the list
-      loop_control:
-        label: "{{ item.instances[0].public_ip_address | default('N/A') }}"
-      changed_when: false
+    - name: "Inventory | Initialize ip_addresses variable"
+      set_fact:
+        ip_addresses: []
 
-    - name: Add host to "postgres_cluster", "replica" groups (in-memory inventory)
-      ansible.builtin.add_host:
-        name: "{{ item.instances[0].private_ip_address }}"
-        groups:
-          - postgres_cluster
-          - replica
-        ansible_ssh_host: "{{ item.instances[0].public_ip_address }}"
-      loop: "{{ ec2.results[1:] }}" # start with the 2nd item of the list
+    - name: "Inventory | Extract IP addresses"
+      set_fact:
+        ip_addresses: "{{ ip_addresses + [ {'public_ip': item.instances[0].public_ip_address, 'private_ip': item.instances[0].private_ip_address } ] }}"
+      loop: "{{ server_result.results | selectattr('instances', 'defined') }}"
       loop_control:
-        label: "{{ item.instances[0].public_ip_address | default('N/A') }}"
-      when: ec2.results | length > 1 # only if there is more than one item
-      changed_when: false
+        label: "public_ip: {{ item.instances[0].public_ip_address }}, private_ip: {{ item.instances[0].private_ip_address }}"
 
-    - name: Add host to "balancers" group (in-memory inventory)
-      ansible.builtin.add_host:
-        name: "{{ item.instances[0].private_ip_address }}"
-        group: balancers
-        ansible_ssh_host: "{{ item.instances[0].public_ip_address }}"
-      loop: "{{ ec2.results }}"
-      loop_control:
-        label: "{{ item.instances[0].public_ip_address | default('N/A') }}"
-      changed_when: false
-      when: with_haproxy_load_balancing | bool
-
-    - name: Add host to "etcd_cluster" group (in-memory inventory)
-      ansible.builtin.add_host:
-        name: "{{ item.instances[0].private_ip_address }}"
-        group: etcd_cluster
-        ansible_ssh_host: "{{ item.instances[0].public_ip_address }}"
-      loop: "{{ ec2.results[:7] }}" # no more than 7 servers for the etcd cluster
-      loop_control:
-        label: "{{ item.instances[0].public_ip_address | default('N/A') }}"
-      changed_when: false
-      when: not dcs_exists | bool and dcs_type == "etcd"
-
-    - name: Add host to "consul_instances" group (in-memory inventory)
-      ansible.builtin.add_host:
-        name: "{{ item.instances[0].private_ip_address }}"
-        group: consul_instances
-        ansible_ssh_host: "{{ item.instances[0].public_ip_address }}"
-        consul_node_role: "{{ not dcs_exists | ternary('server', 'client') }}"
-        consul_bootstrap_expect: true
-        consul_datacenter: "{{ server_location }}"
-      loop: "{{ ec2.results }}"
-      loop_control:
-        label: "{{ item.instances[0].public_ip_address | default('N/A') }}"
-      changed_when: false
-      when: dcs_type == "consul"
+    - name: "Inventory | Generate in-memory inventory"
+      ansible.builtin.import_tasks: inventory.yml
   when:
-    - ec2.results is defined
-    - item.instances is defined
-
-########################################################################################
+    - server_result.results is defined
+    - server_result.results | selectattr('instances', 'defined')
 
 # Delete the temporary ssh key from the cloud after creating the EC2 instance
 - name: "AWS: Remove temporary SSH key '{{ ssh_key_name }}' from cloud"
