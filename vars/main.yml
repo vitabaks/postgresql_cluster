@@ -35,8 +35,8 @@ dnscp:
   dnsserver: "" # Set FQDN or IP or empty (empty is recommended for automatically detect). Used for register DNS name.
   ttl: "1200" # DNS record TTL in seconds. TTL=1200 - default. Set TTL=30 for multi-site clusters (recommended).
   #Add to ADDS:
-  #sudo hostnamectl set-hostname pgsql-n1
-  #sudo astra-winbind -dc demo.ru -d demo.ru -g DEMO -u imamyshev@demo.ru -p StrongP@ssw0rd -y
+  #  sudo hostnamectl set-hostname pgsql-n1
+  #  sudo apt-get install astra-ad-sssd-client && astra-ad-sssd-client -d example.ru -u Administrator@example.ru -px
 
 # DCS (Distributed Consensus Store)
 dcs_exists: false # 'false' or 'true'. Use 'true' if you do not want to install and configure the etcd cluster
