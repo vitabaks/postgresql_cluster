@@ -57,6 +57,8 @@
         body_format: json
       loop: "{{ postgresql_parameters }}"
       when: item.value == "null"
+  environment:
+    no_proxy: "{{ inventory_hostname }}"
   when: is_master | bool
   tags: patroni, patroni_conf
 
