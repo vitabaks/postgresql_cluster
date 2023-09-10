@@ -170,7 +170,7 @@
       - "Name: {{ item.name }}"
       - "Image: {{ item.disks[0].licenses[0] | basename }}"
       - "Type: {{ item.machineType | basename }}"
-      - "Volume Size: {{ volume_size }} gigabytes"
+      - "Volume Size: {{ volume_size }} GB"
       - "Public IP: {{ item.networkInterfaces[0].accessConfigs[0].natIP }}"
       - "Private IP: {{ item.networkInterfaces[0].networkIP }}"
   loop: "{{ server_result.results }}"
