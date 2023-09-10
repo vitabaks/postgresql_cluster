@@ -206,13 +206,13 @@
 - name: Show EC2 instance info
   ansible.builtin.debug:
     msg:
-      - instance ID is {{ item.instances[0].instance_id }}
-      - instance Name is {{ item.instances[0].tags.Name }}
-      - instance Image is {{ item.instances[0].image_id }}
-      - instance Type is {{ item.instances[0].instance_type }}
-      - Block Storage Size is {{ volume_size }} gigabytes
-      - Public IP is {{ item.instances[0].public_ip_address }}
-      - Private IP is {{ item.instances[0].private_ip_address }}
+      - "ID: {{ item.instances[0].instance_id }}"
+      - "Name: {{ item.instances[0].tags.Name }}"
+      - "Image: {{ item.instances[0].image_id }}"
+      - "Type: {{ item.instances[0].instance_type }}"
+      - "Volume Size: {{ volume_size }} gigabytes"
+      - "Public IP: {{ item.instances[0].public_ip_address }}"
+      - "Private IP: {{ item.instances[0].private_ip_address }}"
   loop: "{{ server_result.results }}"
   loop_control:
     label: "{{ item.instances[0].public_ip_address | default('N/A') }}"
