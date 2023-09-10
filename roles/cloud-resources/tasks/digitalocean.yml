@@ -1,0 +1,510 @@
+---
+# Dependencies
+- name: Install Python dependencies
+  block:
+    - name: Ensure that 'python3-pip' package is present on controlling host
+      ansible.builtin.package:
+        name: python3-pip
+        state: present
+      register: package_status
+      until: package_status is success
+      delay: 10
+      retries: 3
+      delegate_to: 127.0.0.1
+      run_once: true
+      when: ansible_distribution != "MacOSX"
+
+    - name: Ensure that 'dopy' dependency is present on controlling host
+      ansible.builtin.pip:
+        name: dopy
+        extra_args: --user
+      delegate_to: 127.0.0.1
+      become: false
+      vars:
+        ansible_become: false
+      run_once: true
+
+# SSH key
+- block:
+    # Delete the temporary ssh key from the cloud (if exists)
+    - name: "DigitalOcean: Remove temporary SSH key '{{ ssh_key_name }}' from cloud (if any)"
+      community.digitalocean.digital_ocean_sshkey:
+        oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
+        name: "{{ ssh_key_name }}"
+        ssh_pub_key: "{{ ssh_key_content }}"
+        state: absent
+      when:
+        - ssh_key_name is defined
+        - tmp_ssh_key_name is defined
+        - ssh_key_name == tmp_ssh_key_name
+
+    # if ssh_key_name and ssh_key_content is specified, add this ssh key to the cloud
+    - name: "DigitalOcean: Add SSH key '{{ ssh_key_name }}' to cloud"
+      community.digitalocean.digital_ocean_sshkey:
+        oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
+        name: "{{ ssh_key_name }}"
+        ssh_pub_key: "{{ ssh_key_content }}"
+        state: present
+      when:
+        - ssh_key_name | length > 0
+        - ssh_key_content | length > 0
+
+    - name: "DigitalOcean: Gather information about SSH keys"
+      community.digitalocean.digital_ocean_sshkey_info:
+        oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
+      register: ssh_keys
+
+    # if ssh_key_name is specified, get the fingerprint of one ssh key
+    # or if tmp_ssh_key_name is used and ssh_public_keys is difined
+    - name: "DigitalOcean: Get Fingerprint for SSH key '{{ ssh_key_name }}'"
+      ansible.builtin.set_fact:
+        ssh_key_fingerprint: "{{ [item.fingerprint] }}"
+      loop: "{{ ssh_keys.data | lower }}"
+      loop_control:  # do not display the public key
+        label: "{{ item.name }}"
+      when:
+        - ((ssh_key_name | length > 0 and ssh_key_name != (tmp_ssh_key_name | default(''))) or
+          (ssh_key_name == (tmp_ssh_key_name | default('')) and ssh_public_keys | default('') | length > 0))
+        - item.name == ssh_key_name | lower
+
+    # Stop, if the ssh key is not found
+    - name: "DigitalOcean: Fail if SSH key '{{ ssh_key_name }}' is not found"
+      ansible.builtin.fail:
+        msg: "SSH key {{ ssh_key_name }} not found. Ensure that key has been added to DigitalOcean."
+      when:
+        - (ssh_key_name | length > 0 and ssh_key_name != (tmp_ssh_key_name | default('')))
+        - ssh_key_fingerprint is not defined
+
+    # if ssh_key_name is not specified, and ssh_public_keys is not defined
+    # get the fingerprint of all ssh keys
+    - name: "DigitalOcean: Get Fingerprint for all SSH keys"
+      ansible.builtin.set_fact:
+        ssh_key_fingerprint: "{{ ssh_key_fingerprint | default([]) + [item.fingerprint] }}"
+      loop: "{{ ssh_keys.data | lower }}"
+      loop_control:  # do not display the public key
+        label: "{{ item.name }}"
+      when:
+        - (ssh_key_name | length < 1 or ssh_key_name == (tmp_ssh_key_name | default('')))
+        - (ssh_public_keys is not defined or ssh_public_keys | length < 1)
+  when: state == 'present'
+
+# Create (if state or state is present)
+- block:
+    - name: "DigitalOcean: Gather information about VPC"
+      community.digitalocean.digital_ocean_vpc_info:
+        oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
+      register: vpc_info
+
+    # if server_network is not specified
+    - name: Extract ip_range from default VPC
+      ansible.builtin.set_fact:
+        default_ip_range: >-
+          {{
+            (vpc_info.data
+            | selectattr('region', 'equalto', server_location)
+            | selectattr('default', 'equalto', true)
+            | map(attribute='ip_range')
+            | list | first) | default('')
+          }}
+      when: server_network is not defined or server_network | length < 1
+
+    # if server_network is specified
+    - name: "Fail if no VPC found in the specified region"
+      ansible.builtin.fail:
+        msg: "No VPC found with name '{{ server_network }}' in region '{{ server_location }}'"
+      when:
+        - server_network | length > 0
+        - vpc_info.data | selectattr('region', 'equalto', server_location) | selectattr('name', 'equalto', server_network) | list | length == 0
+
+    - name: Extract ip_range from VPC "{{ server_network }}"
+      ansible.builtin.set_fact:
+        vpc_ip_range: >-
+          {{
+            (vpc_info.data
+            | selectattr('region', 'equalto', server_location)
+            | selectattr('name', 'equalto', server_network)
+            | map(attribute='ip_range')
+            | list | first) | default('')
+          }}
+      when: server_network | length > 0
+
+    - name: Extract id from VPC "{{ server_network }}"
+      ansible.builtin.set_fact:
+        vpc_id: >-
+          {{
+            vpc_info.data
+            | selectattr('region', 'equalto', server_location)
+            | selectattr('name', 'equalto', server_network)
+            | map(attribute='id')
+          }}
+      when: server_network | length > 0
+
+    - name: "DigitalOcean: Create a tag '{{ patroni_cluster_name }}'"
+      community.digitalocean.digital_ocean_tag:
+        oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
+        name: "{{ patroni_cluster_name }}"
+        state: present
+
+    # Firewall
+    - name: "DigitalOcean: Create or modify SSH firewall rule"
+      community.digitalocean.digital_ocean_firewall:
+        oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
+        state: "present"
+        name: "{{ patroni_cluster_name }}-public-ssh-firewall-rule"
+        inbound_rules:
+          - protocol: "tcp"
+            ports: "{{ ansible_ssh_port | default('22') }}"
+            sources:
+              addresses: ["0.0.0.0/0", "::/0"] # allow public ssh access for deployment
+        outbound_rules:
+          - protocol: "tcp"
+            ports: "1-65535"
+            destinations:
+              addresses: ["0.0.0.0/0", "::/0"]
+          - protocol: "udp"
+            ports: "1-65535"
+            destinations:
+              addresses: ["0.0.0.0/0", "::/0"]
+          - protocol: "icmp"
+            ports: "1-65535"
+            destinations:
+              addresses: ["0.0.0.0/0", "::/0"]
+        tags:
+          - "{{ patroni_cluster_name }}"
+      vars:
+        sources_addresses: "{{ (server_network | length > 0) | ternary(vpc_ip_range, default_ip_range) }}"
+      when: ssh_public_access | bool
+
+    # if 'database_public_access' is 'true'
+    - name: "DigitalOcean: Create or modify public firewall rule"
+      community.digitalocean.digital_ocean_firewall:
+        oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
+        state: "present"
+        name: "{{ patroni_cluster_name }}-public-database-firewall-rule"
+        inbound_rules:
+          - protocol: "tcp"
+            ports: "{{ haproxy_listen_port.master }}"
+            sources:
+              addresses: ["0.0.0.0/0", "::/0"]
+          - protocol: "tcp"
+            ports: "{{ haproxy_listen_port.replicas }}"
+            sources:
+              addresses: ["0.0.0.0/0", "::/0"]
+          - protocol: "tcp"
+            ports: "{{ haproxy_listen_port.replicas_sync }}"
+            sources:
+              addresses: ["0.0.0.0/0", "::/0"]
+          - protocol: "tcp"
+            ports: "{{ haproxy_listen_port.replicas_async }}"
+            sources:
+              addresses: ["0.0.0.0/0", "::/0"]
+          - protocol: "tcp"
+            ports: "{{ pgbouncer_listen_port }}"
+            sources:
+              addresses: ["0.0.0.0/0", "::/0"]
+          - protocol: "tcp"
+            ports: "{{ postgresql_port }}"
+            sources:
+              addresses: ["0.0.0.0/0", "::/0"]
+          - protocol: "tcp"
+            ports: "{{ netdata_port | default('19999') }}"
+            sources:
+              addresses: ["0.0.0.0/0", "::/0"]
+        outbound_rules:
+          - protocol: "tcp"
+            ports: "1-65535"
+            destinations:
+              addresses: ["0.0.0.0/0", "::/0"]
+          - protocol: "udp"
+            ports: "1-65535"
+            destinations:
+              addresses: ["0.0.0.0/0", "::/0"]
+          - protocol: "icmp"
+            ports: "1-65535"
+            destinations:
+              addresses: ["0.0.0.0/0", "::/0"]
+        tags:
+          - "{{ patroni_cluster_name }}"
+      vars:
+        sources_addresses: "{{ (server_network | length > 0) | ternary(vpc_ip_range, default_ip_range) }}"
+      when: database_public_access | bool
+
+    - name: "DigitalOcean: Create or modify private firewall rule"
+      community.digitalocean.digital_ocean_firewall:
+        oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
+        state: "present"
+        name: "{{ patroni_cluster_name }}-private-firewall-rule"
+        inbound_rules:
+          - protocol: "tcp"
+            ports: "{{ ansible_ssh_port | default('22') }}"
+            sources:
+              addresses: ["{{ sources_addresses }}"]
+          - protocol: "tcp"
+            ports: "{{ haproxy_listen_port.master }}"
+            sources:
+              addresses: ["{{ sources_addresses }}"]
+          - protocol: "tcp"
+            ports: "{{ haproxy_listen_port.replicas }}"
+            sources:
+              addresses: ["{{ sources_addresses }}"]
+          - protocol: "tcp"
+            ports: "{{ haproxy_listen_port.replicas_sync }}"
+            sources:
+              addresses: ["{{ sources_addresses }}"]
+          - protocol: "tcp"
+            ports: "{{ haproxy_listen_port.replicas_async }}"
+            sources:
+              addresses: ["{{ sources_addresses }}"]
+          - protocol: "tcp"
+            ports: "{{ haproxy_listen_port.stats }}"
+            sources:
+              addresses: ["{{ sources_addresses }}"]
+          - protocol: "tcp"
+            ports: "{{ pgbouncer_listen_port }}"
+            sources:
+              addresses: ["{{ sources_addresses }}"]
+          - protocol: "tcp"
+            ports: "{{ postgresql_port }}"
+            sources:
+              addresses: ["{{ sources_addresses }}"]
+          - protocol: "tcp"
+            ports: "{{ netdata_port | default('19999') }}"
+            sources:
+              addresses: ["{{ sources_addresses }}"]
+          - protocol: "tcp" # Patroni
+            ports: "{{ patroni_restapi_port }}"
+            sources:
+              addresses: ["{{ sources_addresses }}"]
+          - protocol: "tcp" # ETCD
+            ports: "2379-2380"
+            sources:
+              addresses: ["{{ sources_addresses }}"]
+          - protocol: "tcp" # Consul
+            ports: "8300-8302"
+            sources:
+              addresses: ["{{ sources_addresses }}"]
+          - protocol: "tcp" # Consul
+            ports: "8500"
+            sources:
+              addresses: ["{{ sources_addresses }}"]
+          - protocol: "tcp" # Consul
+            ports: "8600"
+            sources:
+              addresses: ["{{ sources_addresses }}"]
+        outbound_rules:
+          - protocol: "tcp"
+            ports: "1-65535"
+            destinations:
+              addresses: ["0.0.0.0/0", "::/0"]
+          - protocol: "udp"
+            ports: "1-65535"
+            destinations:
+              addresses: ["0.0.0.0/0", "::/0"]
+          - protocol: "icmp"
+            ports: "1-65535"
+            destinations:
+              addresses: ["0.0.0.0/0", "::/0"]
+        tags:
+          - "{{ patroni_cluster_name }}"
+      vars:
+        sources_addresses: "{{ (server_network | length > 0) | ternary(vpc_ip_range, default_ip_range) }}"
+
+    # if server_network is not specified, use default vpc
+    - name: "DigitalOcean: Create or modify Droplet"
+      community.digitalocean.digital_ocean_droplet:
+        oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
+        state: present
+        name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
+        unique_name: true
+        size: "{{ server_type }}"
+        region: "{{ server_location }}"
+        image: "{{ server_image }}"
+        ssh_keys: "{{ ssh_key_fingerprint }}"
+        wait_timeout: 500
+        tags:
+          - "{{ patroni_cluster_name }}"
+      loop: "{{ range(0, servers_count | int) | list }}"
+      loop_control:
+        index_var: idx
+        label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
+      register: droplet_result_default_vpc
+      when: server_network is not defined or server_network | length < 1
+
+    # if server_network is specified, get UUID for this vpc
+    - name: "DigitalOcean: Create or modify Droplet with VPC '{{ server_network }}'"
+      community.digitalocean.digital_ocean_droplet:
+        oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
+        state: present
+        name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
+        unique_name: true
+        size: "{{ server_type }}"
+        region: "{{ server_location }}"
+        image: "{{ server_image }}"
+        ssh_keys: "{{ ssh_key_fingerprint }}"
+        vpc_uuid: "{{ vpc_id }}"
+        wait_timeout: 500
+        tags:
+          - "{{ patroni_cluster_name }}"
+      loop: "{{ range(0, servers_count | int) | list }}"
+      loop_control:
+        index_var: idx
+        label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
+      register: droplet_result_with_vpc
+      when: server_network | length > 0
+
+    - name: "Set variable: droplet_result"
+      ansible.builtin.set_fact:
+        droplet_result: "{{ droplet_result_default_vpc
+                            if server_network | default([]) | length < 1
+                            else droplet_result_with_vpc }}"
+      when: droplet_result_default_vpc is defined or
+            droplet_result_with_vpc is defined
+
+    - name: "DigitalOcean: Create or modify Block Storage"
+      community.digitalocean.digital_ocean_block_storage:
+        oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
+        state: present
+        command: create
+        volume_name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-storage"
+        region: "{{ server_location }}"
+        block_size: "{{ volume_size | int }}"
+      loop: "{{ range(0, servers_count | int) | list }}"
+      loop_control:
+        index_var: idx
+        label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-storage"
+      register: block_storage_result
+
+    - name: "DigitalOcean: Attach Block Storage to Droplet"
+      community.digitalocean.digital_ocean_block_storage:
+        oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
+        state: present
+        command: attach
+        volume_name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-storage"
+        region: "{{ server_location }}"
+        droplet_id: "{{ item.data.droplet.id }}"
+      loop: "{{ droplet_result.results }}"
+      loop_control:
+        index_var: idx
+        label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-storage"
+      when: droplet_result.results is defined
+  when: state == 'present'
+
+- name: Wait for host to be available via SSH
+  ansible.builtin.wait_for:
+    host: "{{ (item.data.droplet.networks.v4 | selectattr('type', 'equalto', 'public')).0.ip_address }}"
+    port: 22
+    delay: 5
+    timeout: 300
+  loop: "{{ droplet_result.results }}"
+  loop_control:
+    label: "{{ (item.data.droplet.networks.v4 | selectattr('type', 'equalto', 'public')).0.ip_address | default('N/A') }}"
+  when:
+    - droplet_result.results is defined
+    - item.data.droplet.networks.v4
+
+# Info
+- name: Show Droplet info
+  ansible.builtin.debug:
+    msg:
+      - "ID: {{ item.data.droplet.id }}"
+      - "Name: {{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
+      - "Image: {{ item.data.droplet.image.description }}"
+      - "Type: {{ server_type }}"
+      - "Volume Size: {{ volume_size }} GB"
+      - "Public IP: {{ (item.data.droplet.networks.v4 | selectattr('type', 'equalto', 'public')).0.ip_address }}"
+      - "Private IP: {{ (item.data.droplet.networks.v4 | selectattr('type', 'equalto', 'private')).0.ip_address }}"
+  loop: "{{ droplet_result.results }}"
+  loop_control:
+    index_var: idx
+    label: "{{ (item.data.droplet.networks.v4 | selectattr('type', 'equalto', 'public')).0.ip_address | default('N/A') }}"
+  when:
+    - droplet_result.results is defined
+    - item.data.droplet.networks.v4
+
+# Inventory
+- block:
+    - name: "Inventory | Initialize ip_addresses variable"
+      ansible.builtin.set_fact:
+        ip_addresses: []
+
+    - name: "Inventory | Extract IP addresses"
+      ansible.builtin.set_fact:
+        ip_addresses: >-
+          {{ ip_addresses +
+            [{'public_ip': (item.data.droplet.networks.v4 | selectattr('type', 'equalto', 'public')).0.ip_address,
+              'private_ip': (item.data.droplet.networks.v4 | selectattr('type', 'equalto', 'private')).0.ip_address}]
+          }}
+      loop: "{{ droplet_result.results | selectattr('data', 'defined') }}"
+      loop_control:
+        label: >-
+          public_ip: {{ (item.data.droplet.networks.v4 | selectattr('type', 'equalto', 'public')).0.ip_address }},
+          private_ip: {{ (item.data.droplet.networks.v4 | selectattr('type', 'equalto', 'private')).0.ip_address }}
+
+    - name: "Inventory | Generate in-memory inventory"
+      ansible.builtin.import_tasks: inventory.yml
+  when:
+    - droplet_result.results is defined
+    - droplet_result.results | selectattr('data', 'defined')
+
+# Delete the temporary SSH key from the cloud after creating the droplet
+- name: "DigitalOcean: Remove temporary SSH key '{{ ssh_key_name }}' from cloud"
+  community.digitalocean.digital_ocean_sshkey:
+    oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
+    name: "{{ ssh_key_name }}"
+    ssh_pub_key: "{{ ssh_key_content }}"
+    state: absent
+  when:
+    - ssh_key_name is defined
+    - tmp_ssh_key_name is defined
+    - ssh_key_name == tmp_ssh_key_name
+
+# Delete (if state or state is absent)
+- block:
+    - name: "DigitalOcean: Delete Droplet"
+      community.digitalocean.digital_ocean_droplet:
+        oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
+        state: absent
+        name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
+        unique_name: true
+        region: "{{ server_location }}"
+      loop: "{{ range(0, servers_count | int) | list }}"
+      loop_control:
+        index_var: idx
+        label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
+      register: droplet_absent
+      until: not droplet_absent.failed
+      retries: 3
+      delay: 5
+
+    - name: "DigitalOcean: Delete Block Storage"
+      community.digitalocean.digital_ocean_block_storage:
+        oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
+        state: absent
+        command: create
+        volume_name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-storage"
+        region: "{{ server_location }}"
+      loop: "{{ range(0, servers_count | int) | list }}"
+      loop_control:
+        index_var: idx
+        label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-storage"
+      register: block_storage_absent
+      until: not block_storage_absent.failed
+      retries: 3
+      delay: 5
+
+    - name: "DigitalOcean: Delete public firewall rule"
+      community.digitalocean.digital_ocean_firewall:
+        oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
+        state: "absent"
+        name: "{{ patroni_cluster_name }}-public-firewall-rule"
+      when: database_public_access | bool
+
+    - name: "DigitalOcean: Delete private firewall rule"
+      community.digitalocean.digital_ocean_firewall:
+        oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
+        state: "absent"
+        name: "{{ patroni_cluster_name }}-private-firewall-rule"
+  ignore_errors: true
+  when: state == 'absent'
+
+...

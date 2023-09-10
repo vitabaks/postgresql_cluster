@@ -49,4 +49,8 @@
   ansible.builtin.import_tasks: gcp.yml
   when: provision | lower == 'gcp'
 
+- name: Import tasks for DigitalOcean
+  ansible.builtin.import_tasks: digitalocean.yml
+  when: provision | lower in ['digitalocean', 'do']
+
 ...
