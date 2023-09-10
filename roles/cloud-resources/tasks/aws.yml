@@ -104,7 +104,7 @@
         - server_network | length < 1
         - vpc_subnet_info.subnets[0].id is defined
 
-    # Security Group
+    # Security Group (Firewall)
     - name: "AWS: Create or modify Security Group"
       amazon.aws.ec2_security_group:
         name: "{{ patroni_cluster_name }}-security-group"
@@ -210,7 +210,7 @@
       - "Name: {{ item.instances[0].tags.Name }}"
       - "Image: {{ item.instances[0].image_id }}"
       - "Type: {{ item.instances[0].instance_type }}"
-      - "Volume Size: {{ volume_size }} gigabytes"
+      - "Volume Size: {{ volume_size }} GB"
       - "Public IP: {{ item.instances[0].public_ip_address }}"
       - "Private IP: {{ item.instances[0].private_ip_address }}"
   loop: "{{ server_result.results }}"
