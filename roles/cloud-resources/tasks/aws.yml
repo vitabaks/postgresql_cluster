@@ -207,8 +207,8 @@
   ansible.builtin.debug:
     msg:
       - instance ID is {{ item.instances[0].instance_id }}
-      - instance Image is {{ item.instances[0].image_id }}
       - instance Name is {{ item.instances[0].tags.Name }}
+      - instance Image is {{ item.instances[0].image_id }}
       - instance Type is {{ item.instances[0].instance_type }}
       - Block Storage Size is {{ volume_size }} gigabytes
       - Public IP is {{ item.instances[0].public_ip_address }}
