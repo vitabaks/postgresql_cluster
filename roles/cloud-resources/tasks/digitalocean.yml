@@ -496,7 +496,7 @@
       community.digitalocean.digital_ocean_firewall:
         oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
         state: "absent"
-        name: "{{ patroni_cluster_name }}-public-firewall-rule"
+        name: "{{ patroni_cluster_name }}-public-database-firewall-rule"
       when: database_public_access | bool
 
     - name: "DigitalOcean: Delete private firewall rule"
@@ -504,6 +504,13 @@
         oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
         state: "absent"
         name: "{{ patroni_cluster_name }}-private-firewall-rule"
+
+    - name: "DigitalOcean: Delete SSH firewall rule"
+      community.digitalocean.digital_ocean_firewall:
+        oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
+        state: "absent"
+        name: "{{ patroni_cluster_name }}-public-ssh-firewall-rule"
+      when: ssh_public_access | bool
   ignore_errors: true
   when: state == 'absent'
 
