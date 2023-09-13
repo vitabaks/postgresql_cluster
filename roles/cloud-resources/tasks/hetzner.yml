@@ -98,7 +98,6 @@
 
 # Create (if state is present)
 - block:
-    # if server_network is not specified, find an available subnet
     - name: "Hetzner Cloud: Gather information about network zones"
       ansible.builtin.uri:
         url: "https://api.hetzner.cloud/v1/locations"
@@ -107,6 +106,7 @@
           Authorization: "Bearer {{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
         return_content: true
       register: hetzner_locations_response
+      failed_when: hetzner_locations_response.status != 200
 
     - name: "Hetzner Cloud: Extract network zone for server_location"
       ansible.builtin.set_fact:
@@ -120,18 +120,53 @@
       hetzner.hcloud.hcloud_network_info:
         api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
       register: network_info
-      when: server_network | length < 1
 
+    # if server_network is specified, check if the network exists
+    - name: "Hetzner Cloud: Check if network '{{ server_network }}' exists for given location"
+      ansible.builtin.fail:
+        msg: "No network with name '{{ server_network }}' in location '{{ target_network_zone }}'"
+      when:
+        - server_network | length > 0
+        - not (network_info.hcloud_network_info
+            | selectattr("name", "equalto", server_network)
+            | selectattr("subnetworks", "defined")
+            | selectattr("subnetworks[0].network_zone", "equalto", target_network_zone)
+            | list | length > 0)
+
+    # if server_network is not specified, find an available network
     - name: "Hetzner Cloud: Check if network exists for given location"
       ansible.builtin.set_fact:
         server_network: "{{ item.name }}"
       loop: "{{ network_info.hcloud_network_info }}"
       when:
-        - network_info is defined
         - item.subnetworks is defined
         - item.subnetworks | selectattr("network_zone", "equalto", target_network_zone) | list | length > 0
       loop_control:
         label: "name: {{ item.name }}, ip_range: {{ item.ip_range }}"
+
+    # if there is no network, create a network and subnet
+    - block:
+        - name: "Hetzner Cloud: Create a network 'postgres-cluster-network'"
+          hetzner.hcloud.hcloud_network:
+            api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
+            name: "postgres-cluster-network"
+            ip_range: 10.0.0.0/16
+            state: present
+
+        - name: "Hetzner Cloud: Create a subnetwork in the network 'postgres-cluster-network'"
+          hetzner.hcloud.hcloud_subnetwork:
+            api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
+            network: "postgres-cluster-network"
+            ip_range: 10.0.1.0/24
+            network_zone: "{{ target_network_zone }}"
+            type: server
+            state: present
+          register: hcloud_subnetwork_result
+
+        - name: "Set variable: server_network"
+          ansible.builtin.set_fact:
+            server_network: "{{ hcloud_subnetwork_result.hcloud_subnetwork.network }}"
+      when: server_network | length < 1
 
     - name: "Hetzner Cloud: Create or modify server"
       hetzner.hcloud.hcloud_server:
