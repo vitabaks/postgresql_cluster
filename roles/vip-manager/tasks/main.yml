@@ -32,7 +32,11 @@
       delay: 5
       retries: 3
       when: ansible_os_family == "RedHat"
-  when: installation_method == "repo" and vip_manager_package_repo | length > 0
+  when:
+    - installation_method == "repo"
+    - vip_manager_package_repo | length > 0
+    - not ansible_check_mode
+    - not postgresql_cluster_maintenance | default(false) | bool
   tags: vip, vip_manager, vip_manager_install
 
 - block:  # install vip-manager package from file
@@ -62,7 +66,11 @@
       delay: 5
       retries: 3
       when: ansible_os_family == "RedHat"
-  when: installation_method == "file" and vip_manager_package_file | length > 0
+  when:
+    - installation_method == "file"
+    - vip_manager_package_file | length > 0
+    - not ansible_check_mode
+    - not postgresql_cluster_maintenance | default(false) | bool
   tags: vip, vip_manager, vip_manager_install
 
 - name: Make sure the conf directory "{{ vip_manager_conf | dirname }}" exist
