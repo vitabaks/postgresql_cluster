@@ -53,4 +53,8 @@
   ansible.builtin.import_tasks: digitalocean.yml
   when: provision | lower in ['digitalocean', 'do']
 
+- name: Import tasks for Hetzner Cloud
+  ansible.builtin.import_tasks: hetzner.yml
+  when: provision | lower == 'hetzner'
+
 ...

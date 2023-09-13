@@ -1,0 +1,271 @@
+---
+# Dependencies
+- name: Install python dependencies
+  block:
+    - name: Ensure that 'python3-pip' package is present on controlling host
+      ansible.builtin.package:
+        name: python3-pip
+        state: present
+      register: package_status
+      until: package_status is success
+      delay: 10
+      retries: 3
+      delegate_to: 127.0.0.1
+      run_once: true
+      when: ansible_distribution != "MacOSX"
+
+    - name: Ensure that 'hcloud' dependency is present on controlling host
+      ansible.builtin.pip:
+        name: hcloud
+        extra_args: --user
+      delegate_to: 127.0.0.1
+      become: false
+      vars:
+        ansible_become: false
+      run_once: true
+
+# SSH key
+- block:
+    # Delete the temporary ssh key from the cloud (if exists)
+    - name: "Hetzner Cloud: Remove temporary SSH key '{{ ssh_key_name }}' from cloud (if any)"
+      hetzner.hcloud.hcloud_ssh_key:
+        api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
+        name: "{{ ssh_key_name }}"
+        state: absent
+      when:
+        - ssh_key_name is defined
+        - tmp_ssh_key_name is defined
+        - ssh_key_name == tmp_ssh_key_name
+
+    # if ssh_key_name and ssh_key_content is specified, add this ssh key to the cloud
+    - name: "Hetzner Cloud: Add SSH key '{{ ssh_key_name }}' to cloud"
+      hetzner.hcloud.hcloud_ssh_key:
+        api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
+        name: "{{ ssh_key_name }}"
+        public_key: "{{ ssh_key_content }}"
+        state: present
+      when:
+        - ssh_key_name | length > 0
+        - ssh_key_content | length > 0
+
+    # if ssh_key_name is specified
+    - name: "Hetzner Cloud: Gather information about SSH key '{{ ssh_key_name }}'"
+      hetzner.hcloud.hcloud_ssh_key_info:
+        api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
+        name: "{{ ssh_key_name }}"
+      register: ssh_keys
+      when: ssh_key_name | length > 0
+
+    # Stop, if the ssh key is not found
+    - name: "Hetzner Cloud: Fail if SSH key is not found"
+      ansible.builtin.fail:
+        msg: "SSH key {{ ssh_key_name }} not found. Ensure that key has been added to Hetzner Cloud."
+      when:
+        - ssh_key_name | length > 0
+        - ssh_keys.hcloud_ssh_key_info is defined
+        - ssh_keys.hcloud_ssh_key_info | length < 1
+
+    - name: "Set variable: ssh_key_names"
+      ansible.builtin.set_fact:
+        ssh_key_names: "{{ ssh_key_names | default([]) + [item.name] }}"
+      loop: "{{ ssh_keys.hcloud_ssh_key_info }}"
+      no_log: true  # do not display the public key
+      when:
+        - ssh_key_name | length > 0
+        - ssh_keys.hcloud_ssh_key_info is defined
+        - ssh_keys.hcloud_ssh_key_info | length > 0
+
+    # if ssh_key_name is not specified, and ssh_public_keys is not defined
+    # get the names of all ssh keys
+    - name: "Hetzner Cloud: Gather information about SSH keys"
+      hetzner.hcloud.hcloud_ssh_key_info:
+        api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
+      register: ssh_keys
+      when:
+        - (ssh_key_name | length < 1 or ssh_key_name == (tmp_ssh_key_name | default('')))
+        - (ssh_public_keys is not defined or ssh_public_keys | length < 1)
+
+    - name: "Hetzner Cloud: Get names of all SSH keys"
+      ansible.builtin.set_fact:
+        ssh_key_names: "{{ ssh_key_names | default([]) + [item.name] }}"
+      loop: "{{ ssh_keys.hcloud_ssh_key_info }}"
+      loop_control:  # do not display the public key
+        label: "{{ item.name }}"
+      when:
+        - (ssh_key_name | length < 1 or ssh_key_name == (tmp_ssh_key_name | default('')))
+        - (ssh_public_keys is not defined or ssh_public_keys | length < 1)
+  when: state == 'present'
+
+# Create (if state is present)
+- block:
+    # if server_network is not specified, find an available subnet
+    - name: "Hetzner Cloud: Gather information about network zones"
+      uri:
+        url: "https://api.hetzner.cloud/v1/locations"
+        method: GET
+        headers:
+          Authorization: "Bearer {{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
+        return_content: yes
+      register: hetzner_locations_response
+
+    - name: "Hetzner Cloud: Extract network zone for server_location"
+      set_fact:
+        target_network_zone: "{{ item.network_zone }}"
+      loop: "{{ hetzner_locations_response.json.locations }}"
+      loop_control:
+        label: "network_zone: {{ item.network_zone }}"
+      when: item.name == server_location
+
+    - name: "Hetzner Cloud: Gather information about networks"
+      hetzner.hcloud.hcloud_network_info:
+        api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
+      register: network_info
+      when: server_network | length < 1
+
+    - name: "Hetzner Cloud: Check if network exists for given location"
+      ansible.builtin.set_fact:
+        server_network: "{{ item.name }}"
+      loop: "{{ network_info.hcloud_network_info }}"
+      when:
+        - network_info is defined
+        - item.subnetworks is defined
+        - item.subnetworks | selectattr("network_zone", "equalto", target_network_zone) | list | length > 0
+      loop_control:
+        label: "name: {{ item.name }}, ip_range: {{ item.ip_range }}"
+
+    - name: "Hetzner Cloud: Create or modify server"
+      hetzner.hcloud.hcloud_server:
+        api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
+        name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
+        state: present
+        server_type: "{{ server_type | lower }}"
+        image: "{{ server_image | lower }}"
+        ssh_keys: "{{ ssh_key_names }}"
+        location: "{{ server_location }}"
+        enable_ipv4: true
+        enable_ipv6: false
+        private_networks:
+          - "{{ server_network }}"
+      loop: "{{ range(0, servers_count | int) | list }}"
+      loop_control:
+        index_var: idx
+        label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
+      register: server_result
+
+    - name: "Hetzner Cloud: Add server to network '{{ server_network }}'"
+      hetzner.hcloud.hcloud_server_network:
+        api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
+        network: "{{ server_network }}"
+        server: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
+        state: present
+      loop: "{{ range(0, servers_count | int) | list }}"
+      loop_control:
+        index_var: idx
+        label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
+      when: server_network | length > 0
+
+    - name: "Hetzner Cloud: Create or modify volume"
+      hetzner.hcloud.hcloud_volume:
+        api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
+        name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-storage"
+        state: present
+        size: "{{ volume_size | int }}"
+        server: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
+      loop: "{{ range(0, servers_count | int) | list }}"
+      loop_control:
+        index_var: idx
+        label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-storage"
+  when: state == 'present'
+
+- name: Wait for host to be available via SSH
+  ansible.builtin.wait_for:
+    host: "{{ item.hcloud_server.ipv4_address }}"
+    port: 22
+    delay: 5
+    timeout: 300
+  loop: "{{ server_result.results }}"
+  loop_control:
+    label: "{{ item.hcloud_server.ipv4_address | default('N/A') }}"
+  when:
+    - server_result.results is defined
+    - item.hcloud_server is defined
+
+# Info
+- name: Show Server info
+  ansible.builtin.debug:
+    msg:
+      - "ID: {{ item.hcloud_server.id }}"
+      - "Name: {{ item.hcloud_server.name }}"
+      - "Image: {{ item.hcloud_server.image }}"
+      - "Type: {{ item.hcloud_server.server_type }}"
+      - "Volume Size: {{ volume_size }} GB"
+      - "Public IP: {{ item.hcloud_server.ipv4_address }}"
+      - "Private IP: {{ item.hcloud_server.private_networks_info[0].ip }}"
+  loop: "{{ server_result.results }}"
+  loop_control:
+    index_var: idx
+    label: "{{ item.hcloud_server.ipv4_address | default('N/A') }}"
+  when:
+    - server_result.results is defined
+    - item.hcloud_server is defined
+
+# Inventory
+- block:
+    - name: "Inventory | Initialize ip_addresses variable"
+      ansible.builtin.set_fact:
+        ip_addresses: []
+
+    - name: "Inventory | Extract IP addresses"
+      ansible.builtin.set_fact:
+        ip_addresses: >-
+          {{ ip_addresses +
+            [{'public_ip': item.hcloud_server.ipv4_address,
+              'private_ip': item.hcloud_server.private_networks_info[0].ip}]
+          }}
+      loop: "{{ server_result.results | selectattr('hcloud_server', 'defined') }}"
+      loop_control:
+        label: "public_ip: {{ item.hcloud_server.ipv4_address }}, private_ip: {{ item.hcloud_server.private_networks_info[0].ip }}"
+
+    - name: "Inventory | Generate in-memory inventory"
+      ansible.builtin.import_tasks: inventory.yml
+  when:
+    - server_result.results is defined
+    - server_result.results | selectattr('hcloud_server', 'defined')
+
+# Delete the temporary ssh key from the cloud after creating the server
+- name: "Hetzner Cloud: Remove temporary SSH key {{ ssh_key_name }} from cloud"
+  hetzner.hcloud.hcloud_ssh_key:
+    api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
+    name: "{{ ssh_key_name }}"
+    state: absent
+  when:
+    - ssh_key_name is defined
+    - tmp_ssh_key_name is defined
+    - ssh_key_name == tmp_ssh_key_name
+
+# Delete (if state is absent)
+- block:
+    - name: "Hetzner Cloud: Delete server"
+      hetzner.hcloud.hcloud_server:
+        api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
+        name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
+        state: absent
+        location: "{{ server_location }}"
+      loop: "{{ range(0, servers_count | int) | list }}"
+      loop_control:
+        index_var: idx
+        label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
+
+    - name: "Hetzner Cloud: Delete volume"
+      hetzner.hcloud.hcloud_volume:
+        api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
+        name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-storage"
+        state: absent
+        location: "{{ server_location }}"
+      loop: "{{ range(0, servers_count | int) | list }}"
+      loop_control:
+        index_var: idx
+        label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-storage"
+  when: state == 'absent'
+
+...
