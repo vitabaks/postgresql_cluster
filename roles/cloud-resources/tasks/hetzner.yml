@@ -100,16 +100,16 @@
 - block:
     # if server_network is not specified, find an available subnet
     - name: "Hetzner Cloud: Gather information about network zones"
-      uri:
+      ansible.builtin.uri:
         url: "https://api.hetzner.cloud/v1/locations"
         method: GET
         headers:
           Authorization: "Bearer {{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
-        return_content: yes
+        return_content: true
       register: hetzner_locations_response
 
     - name: "Hetzner Cloud: Extract network zone for server_location"
-      set_fact:
+      ansible.builtin.set_fact:
         target_network_zone: "{{ item.network_zone }}"
       loop: "{{ hetzner_locations_response.json.locations }}"
       loop_control:
