@@ -139,6 +139,7 @@
         server_network: "{{ item.name }}"
       loop: "{{ network_info.hcloud_network_info }}"
       when:
+        - server_network | length < 1
         - item.subnetworks is defined
         - item.subnetworks | selectattr("network_zone", "equalto", target_network_zone) | list | length > 0
       loop_control:
