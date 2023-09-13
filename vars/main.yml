@@ -533,7 +533,7 @@ pgbackrest_patroni_cluster_restore_command:
 # If 'repo_host' is defined, the cron jobs will be created on the pgbackrest server.
 pgbackrest_cron_jobs:
   - name: "pgBackRest: Full Backup"
-    file: /etc/cron.d/pgbackrest
+    file: "/etc/cron.d/pgbackrest-{{ patroni_cluster_name }}"
     user: "postgres"
     minute: "30"
     hour: "6"
@@ -543,7 +543,7 @@ pgbackrest_cron_jobs:
     job: "pgbackrest --type=full --stanza={{ pgbackrest_stanza }} backup"
     # job: "if [ $(psql -tAXc 'select pg_is_in_recovery()') = 'f' ]; then pgbackrest --type=full --stanza={{ pgbackrest_stanza }} backup; fi"
   - name: "pgBackRest: Diff Backup"
-    file: /etc/cron.d/pgbackrest
+    file: "/etc/cron.d/pgbackrest-{{ patroni_cluster_name }}"
     user: "postgres"
     minute: "30"
     hour: "6"
