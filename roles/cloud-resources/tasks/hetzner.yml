@@ -121,7 +121,7 @@
         api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
       register: network_info
 
-    # if server_network is specified, check if the network exists
+    # if server_network is specified
     - name: "Hetzner Cloud: Check if network '{{ server_network }}' exists for given location"
       ansible.builtin.fail:
         msg: "No network with name '{{ server_network }}' in location '{{ target_network_zone }}'"
@@ -130,65 +130,219 @@
         - not (network_info.hcloud_network_info
             | selectattr("name", "equalto", server_network)
             | selectattr("subnetworks", "defined")
-            | selectattr("subnetworks[0].network_zone", "equalto", target_network_zone)
+            | map(attribute='subnetworks')
+            | flatten
+            | selectattr("network_zone", "equalto", target_network_zone)
             | list | length > 0)
 
-    # if server_network is not specified, find an available network
-    - name: "Hetzner Cloud: Check if network exists for given location"
+    - name: "Hetzner Cloud: Get ip_range for network '{{ server_network }}'"
       ansible.builtin.set_fact:
-        server_network: "{{ item.name }}"
+        server_network_ip_range: "{{ item.ip_range }}"
       loop: "{{ network_info.hcloud_network_info }}"
       when:
-        - server_network | length < 1
-        - item.subnetworks is defined
-        - item.subnetworks | selectattr("network_zone", "equalto", target_network_zone) | list | length > 0
+        - server_network | length > 0
+        - item.name == server_network
       loop_control:
-        label: "name: {{ item.name }}, ip_range: {{ item.ip_range }}"
+        label: "{{ item.ip_range }}"
 
-    # if there is no network, create a network and subnet
+    # if server_network is not specified, create a network and subnet
     - block:
-        - name: "Hetzner Cloud: Gather list of used ip_ranges"
-          ansible.builtin.set_fact:
-            used_ip_ranges: >-
-              {{ network_info.hcloud_network_info 
-              | selectattr('subnetworks', 'defined') 
-              | map(attribute='ip_range') 
-              | list }}
-          when: network_info.hcloud_network_info is defined
-
-        - name: "Hetzner Cloud: Determine a free ip_range"
-          ansible.builtin.set_fact:
-            new_ip_range: "10.{{ range_item }}.0.0/16"
-          loop: "{{ range(0, 255) }}"
-          loop_control:
-            loop_var: range_item
-            label: "10.{{ range_item }}.0.0/16"
-          when: 
-            - new_ip_range is not defined
-            - ("10." + range_item|string + ".0.0/16") not in used_ip_ranges
-
         - name: "Hetzner Cloud: Create a network 'postgres-cluster-network'"
           hetzner.hcloud.hcloud_network:
             api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
             name: "postgres-cluster-network"
-            ip_range: "{{ new_ip_range }}"
+            ip_range: 10.0.0.0/16
             state: present
 
         - name: "Hetzner Cloud: Create a subnetwork in the network 'postgres-cluster-network'"
           hetzner.hcloud.hcloud_subnetwork:
             api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
             network: "postgres-cluster-network"
-            ip_range: "{{ new_ip_range | regex_replace('/16', '/24') }}"
+            ip_range: 10.0.1.0/24
             network_zone: "{{ target_network_zone }}"
             type: server
             state: present
-          register: hcloud_subnetwork_result
 
         - name: "Set variable: server_network"
           ansible.builtin.set_fact:
-            server_network: "{{ hcloud_subnetwork_result.hcloud_subnetwork.network }}"
+            server_network: "postgres-cluster-network"
+            server_network_ip_range: "10.0.0.0/16"
       when: server_network | length < 1
 
+    # Firewall
+    - name: "Hetzner Cloud: Create or modify SSH firewall"
+      hetzner.hcloud.hcloud_firewall:
+        api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
+        state: "present"
+        name: "{{ patroni_cluster_name }}-public-ssh-firewall-rule"
+        rules:
+          - direction: in
+            description: "ssh"
+            protocol: "tcp"
+            port: "{{ ansible_ssh_port | default('22') }}"
+            source_ips: ["0.0.0.0/0", "::/0"] # allow public ssh access for deployment
+      when:
+        - ssh_public_access | bool
+        - firewall | bool
+
+    # if 'database_public_access' is 'true'
+    - name: "Hetzner Cloud: Create or modify public firewall"
+      hetzner.hcloud.hcloud_firewall:
+        api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
+        state: "present"
+        name: "{{ patroni_cluster_name }}-public-database-firewall-rule"
+        rules:
+          - direction: in
+            description: "haproxy master"
+            protocol: "tcp"
+            port: "{{ haproxy_listen_port.master }}"
+            source_ips: ["0.0.0.0/0", "::/0"]
+          - direction: in
+            description: "haproxy replicas all"
+            protocol: "tcp"
+            port: "{{ haproxy_listen_port.replicas }}"
+            source_ips: ["0.0.0.0/0", "::/0"]
+          - direction: in
+            description: "haproxy replicas sync"
+            protocol: "tcp"
+            port: "{{ haproxy_listen_port.replicas_sync }}"
+            source_ips: ["0.0.0.0/0", "::/0"]
+          - direction: in
+            description: "haproxy replicas async"
+            protocol: "tcp"
+            port: "{{ haproxy_listen_port.replicas_async }}"
+            source_ips: ["0.0.0.0/0", "::/0"]
+          - direction: in
+            description: "pgbouncer"
+            protocol: "tcp"
+            port: "{{ pgbouncer_listen_port }}"
+            source_ips: ["0.0.0.0/0", "::/0"]
+          - direction: in
+            description: "postgresql"
+            protocol: "tcp"
+            port: "{{ postgresql_port }}"
+            source_ips: ["0.0.0.0/0", "::/0"]
+          - direction: in
+            description: "Netdata"
+            protocol: "tcp"
+            port: "{{ netdata_port | default('19999') }}"
+            source_ips: ["0.0.0.0/0", "::/0"]
+      when:
+        - database_public_access | bool
+        - firewall | bool
+
+    - name: "Hetzner Cloud: Create or modify private firewall"
+      hetzner.hcloud.hcloud_firewall:
+        api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
+        state: "present"
+        name: "{{ patroni_cluster_name }}-private-firewall-rule"
+        rules:
+          - direction: in
+            description: "ssh"
+            protocol: "tcp"
+            port: "{{ ansible_ssh_port | default('22') }}"
+            source_ips: ["{{ server_network_ip_range }}"]
+          - direction: in
+            description: "haproxy master"
+            protocol: "tcp"
+            port: "{{ haproxy_listen_port.master }}"
+            source_ips: ["{{ server_network_ip_range }}"]
+          - direction: in
+            description: "haproxy replicas all"
+            protocol: "tcp"
+            port: "{{ haproxy_listen_port.replicas }}"
+            source_ips: ["{{ server_network_ip_range }}"]
+          - direction: in
+            description: "haproxy replicas sync"
+            protocol: "tcp"
+            port: "{{ haproxy_listen_port.replicas_sync }}"
+            source_ips: ["{{ server_network_ip_range }}"]
+          - direction: in
+            description: "haproxy replicas async"
+            protocol: "tcp"
+            port: "{{ haproxy_listen_port.replicas_async }}"
+            source_ips: ["{{ server_network_ip_range }}"]
+          - direction: in
+            description: "haproxy stats"
+            protocol: "tcp"
+            port: "{{ haproxy_listen_port.stats }}"
+            source_ips: ["{{ server_network_ip_range }}"]
+          - direction: in
+            description: "pgbouncer"
+            protocol: "tcp"
+            port: "{{ pgbouncer_listen_port }}"
+            source_ips: ["{{ server_network_ip_range }}"]
+          - direction: in
+            description: "postgresql"
+            protocol: "tcp"
+            port: "{{ postgresql_port }}"
+            source_ips: ["{{ server_network_ip_range }}"]
+          - direction: in
+            description: "Netdata"
+            protocol: "tcp"
+            port: "{{ netdata_port | default('19999') }}"
+            source_ips: ["{{ server_network_ip_range }}"]
+          - direction: in
+            description: "Patroni"
+            protocol: "tcp"
+            port: "{{ patroni_restapi_port }}"
+            source_ips: ["{{ server_network_ip_range }}"]
+          - direction: in
+            description: "ETCD"
+            protocol: "tcp"
+            port: "2379"
+            source_ips: ["{{ server_network_ip_range }}"]
+          - direction: in
+            description: "ETCD"
+            protocol: "tcp"
+            port: "2380"
+            source_ips: ["{{ server_network_ip_range }}"]
+          - direction: in
+            description: "Consul"
+            protocol: "tcp"
+            port: "8300"
+            source_ips: ["{{ server_network_ip_range }}"]
+          - direction: in
+            description: "Consul"
+            protocol: "tcp"
+            port: "8301"
+            source_ips: ["{{ server_network_ip_range }}"]
+          - direction: in
+            description: "Consul"
+            protocol: "tcp"
+            port: "8302"
+            source_ips: ["{{ server_network_ip_range }}"]
+          - direction: in
+            description: "Consul"
+            protocol: "tcp"
+            port: "8500"
+            source_ips: ["{{ server_network_ip_range }}"]
+          - direction: in
+            description: "Consul"
+            protocol: "tcp"
+            port: "8600"
+            source_ips: ["{{ server_network_ip_range }}"]
+      when: firewall | bool
+
+    - name: "Hetzner Cloud: Gather information about firewalls"
+      ansible.builtin.uri:
+        url: "https://api.hetzner.cloud/v1/firewalls"
+        method: GET
+        headers:
+          Authorization: "Bearer {{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
+        return_content: true
+      register: hetzner_firewalls_response
+      failed_when: hetzner_firewalls_response.status != 200
+
+    - name: "Hetzner Cloud: Extract firewall names for '{{ patroni_cluster_name }}'"
+      ansible.builtin.set_fact:
+        firewall_names: >-
+          {{ hetzner_firewalls_response.json.firewalls 
+          | selectattr('name', 'search', patroni_cluster_name) 
+          | map(attribute='name') 
+          | list }}
+
+    # Server and volume
     - name: "Hetzner Cloud: Create or modify server"
       hetzner.hcloud.hcloud_server:
         api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
@@ -202,6 +356,7 @@
         enable_ipv6: false
         private_networks:
           - "{{ server_network }}"
+        firewalls: "{{ firewall_names }}"
       loop: "{{ range(0, servers_count | int) | list }}"
       loop_control:
         index_var: idx
@@ -322,6 +477,32 @@
       loop_control:
         index_var: idx
         label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-storage"
+
+    - name: "Hetzner Cloud: Delete SSH firewall"
+      hetzner.hcloud.hcloud_firewall:
+        api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
+        state: "absent"
+        name: "{{ patroni_cluster_name }}-public-ssh-firewall-rule"
+      when:
+        - ssh_public_access | bool
+        - firewall | bool
+
+    # if 'database_public_access' is 'true'
+    - name: "Hetzner Cloud: Delete public firewall"
+      hetzner.hcloud.hcloud_firewall:
+        api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
+        state: "absent"
+        name: "{{ patroni_cluster_name }}-public-database-firewall-rule"
+      when:
+        - database_public_access | bool
+        - firewall | bool
+
+    - name: "Hetzner Cloud: Delete private firewall"
+      hetzner.hcloud.hcloud_firewall:
+        api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
+        state: "absent"
+        name: "{{ patroni_cluster_name }}-private-firewall-rule"
+      when: firewall | bool
   when: state == 'absent'
 
 ...
