@@ -147,18 +147,38 @@
 
     # if there is no network, create a network and subnet
     - block:
+        - name: "Hetzner Cloud: Gather list of used ip_ranges"
+          ansible.builtin.set_fact:
+            used_ip_ranges: >-
+              {{ network_info.hcloud_network_info 
+              | selectattr('subnetworks', 'defined') 
+              | map(attribute='ip_range') 
+              | list }}
+          when: network_info.hcloud_network_info is defined
+
+        - name: "Hetzner Cloud: Determine a free ip_range"
+          ansible.builtin.set_fact:
+            new_ip_range: "10.{{ range_item }}.0.0/16"
+          loop: "{{ range(0, 255) }}"
+          loop_control:
+            loop_var: range_item
+            label: "10.{{ range_item }}.0.0/16"
+          when: 
+            - new_ip_range is not defined
+            - ("10." + range_item|string + ".0.0/16") not in used_ip_ranges
+
         - name: "Hetzner Cloud: Create a network 'postgres-cluster-network'"
           hetzner.hcloud.hcloud_network:
             api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
             name: "postgres-cluster-network"
-            ip_range: 10.0.0.0/16
+            ip_range: "{{ new_ip_range }}"
             state: present
 
         - name: "Hetzner Cloud: Create a subnetwork in the network 'postgres-cluster-network'"
           hetzner.hcloud.hcloud_subnetwork:
             api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
             network: "postgres-cluster-network"
-            ip_range: 10.0.1.0/24
+            ip_range: "{{ new_ip_range | regex_replace('/16', '/24') }}"
             network_zone: "{{ target_network_zone }}"
             type: server
             state: present
