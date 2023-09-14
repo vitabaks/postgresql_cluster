@@ -135,7 +135,7 @@
             | selectattr("network_zone", "equalto", target_network_zone)
             | list | length > 0)
 
-    - name: "Hetzner Cloud: Get ip_range for network '{{ server_network }}'"
+    - name: "Hetzner Cloud: Extract ip_range for network '{{ server_network }}'"
       ansible.builtin.set_fact:
         server_network_ip_range: "{{ item.ip_range }}"
       loop: "{{ network_info.hcloud_network_info }}"
@@ -337,9 +337,9 @@
     - name: "Hetzner Cloud: Extract firewall names for '{{ patroni_cluster_name }}'"
       ansible.builtin.set_fact:
         firewall_names: >-
-          {{ hetzner_firewalls_response.json.firewalls 
-          | selectattr('name', 'search', patroni_cluster_name) 
-          | map(attribute='name') 
+          {{ hetzner_firewalls_response.json.firewalls
+          | selectattr('name', 'search', patroni_cluster_name)
+          | map(attribute='name')
           | list }}
 
     # Server and volume
@@ -487,7 +487,6 @@
         - ssh_public_access | bool
         - firewall | bool
 
-    # if 'database_public_access' is 'true'
     - name: "Hetzner Cloud: Delete public firewall"
       hetzner.hcloud.hcloud_firewall:
         api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
