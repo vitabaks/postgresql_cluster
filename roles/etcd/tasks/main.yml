@@ -132,7 +132,9 @@
       environment:
         ETCDCTL_API: "3"
       register: etcd_health_result
-      until: "'is healthy' in etcd_health_result.stdout"
+      until: >
+        'is healthy' in etcd_health_result.stdout or 
+        'is healthy' in etcd_health_result.stderr
       retries: 10
       delay: 10
       changed_when: false
@@ -140,7 +142,10 @@
 
     - name: cluster health
       ansible.builtin.debug:
-        msg: "{{ etcd_health_result.stdout }}"
+        msg: >
+          {{ etcd_health_result.stdout
+          if etcd_health_result.stdout | length > 0
+          else etcd_health_result.stderr }}
   when: not ansible_check_mode
   tags: etcd, etcd_start, etcd_status
 
