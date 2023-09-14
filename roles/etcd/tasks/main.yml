@@ -135,11 +135,11 @@
       delay: 10
       changed_when: false
       ignore_errors: false
-      check_mode: false
 
     - name: cluster health
       ansible.builtin.debug:
         msg: "{{ etcd_health_result.stdout }}"
+  when: not ansible_check_mode
   tags: etcd, etcd_start, etcd_status
 
 ...
