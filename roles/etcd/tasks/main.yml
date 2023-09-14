@@ -44,7 +44,10 @@
       loop:
         - etcd
         - etcdctl
-  when: installation_method == "repo" and etcd_package_repo | length > 0
+  when:
+    - installation_method == "repo"
+    - etcd_package_repo | length > 0
+    - not ansible_check_mode
   tags: etcd, etcd_install
 
 - block:  # install etcd package from file
@@ -64,7 +67,10 @@
       loop:
         - etcd
         - etcdctl
-  when: installation_method == "file" and etcd_package_file | length > 0
+  when:
+    - installation_method == "file"
+    - etcd_package_file | length > 0
+    - not ansible_check_mode
   tags: etcd, etcd_install
 
 - name: Add etcd user
