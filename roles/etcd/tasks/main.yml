@@ -133,7 +133,7 @@
         ETCDCTL_API: "3"
       register: etcd_health_result
       until: >
-        'is healthy' in etcd_health_result.stdout or 
+        'is healthy' in etcd_health_result.stdout or
         'is healthy' in etcd_health_result.stderr
       retries: 10
       delay: 10
