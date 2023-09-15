@@ -19,16 +19,6 @@
     - vars/main.yml
     - vars/system.yml
   pre_tasks:
-      # if 'provision' and a temporary ssh key are used
-    - name: "Set variable: ansible_ssh_private_key_file"
-      ansible.builtin.set_fact:
-        ansible_ssh_private_key_file: "~{{ lookup('env', 'USER') }}/.ssh/{{ hostvars['localhost']['tmp_ssh_key_name'] }}"
-      when:
-        - provision | default('none') | lower != 'none'
-        - hostvars['localhost']['ssh_key_name'] is defined
-        - hostvars['localhost']['ssh_key_name'] == hostvars['localhost']['tmp_ssh_key_name']
-      tags: always
-
     - name: Include OS-specific variables
       ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
 
