@@ -1,5 +1,18 @@
 ---
 - name: config_pgcluster.yml | Configuration PostgreSQL HA Cluster (based on "Patroni" and "{{ dcs_type }}")
+  hosts: localhost
+  gather_facts: true
+  any_errors_fatal: true
+  vars_files:
+    - vars/main.yml
+  roles:
+    - role: cloud-resources
+      when: provision | lower != 'none'
+      tags: provision
+  tags:
+    - always
+
+- name: config_pgcluster.yml | Check the PostgreSQL cluster state and perform pre-checks
   hosts: postgres_cluster
   gather_facts: true
   vars_files:
@@ -66,7 +79,7 @@
   tags:
     - always
 
-- name: config_pgcluster.yml | Configure Postgres Cluster
+- name: config_pgcluster.yml | Configure PostgreSQL Cluster
   hosts: 'primary:secondary'
   become: true
   become_method: sudo
