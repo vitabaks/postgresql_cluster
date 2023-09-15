@@ -105,11 +105,11 @@
         - vpc_subnet_info.subnets[0].id is defined
 
     # Security Group (Firewall)
-    - name: "AWS: Create or modify Security Group"
+    - name: "AWS: Create or modify SSH Security Group"
       amazon.aws.ec2_security_group:
-        name: "{{ patroni_cluster_name }}-security-group"
+        name: "{{ patroni_cluster_name }}-public-ssh-security-group"
         state: present
-        description: Enable ports for accessing the PostgreSQL cluster
+        description: Allow public ssh access for deployment
         vpc_id: "{{ vpc_id }}"
         region: "{{ server_location }}"
         rules:
@@ -117,6 +117,18 @@
             ports:
               - "{{ ansible_ssh_port | default(22) }}"
             cidr_ip: "0.0.0.0/0" # allow public ssh access for deployment
+      when:
+        - ssh_public_access | bool
+        - firewall | bool
+
+    - name: "AWS: Create or modify public Security Group"
+      amazon.aws.ec2_security_group:
+        name: "{{ patroni_cluster_name }}-public-security-group"
+        state: present
+        description: Allow public database access
+        vpc_id: "{{ vpc_id }}"
+        region: "{{ server_location }}"
+        rules:
           - proto: tcp
             ports:
               - "{{ haproxy_listen_port.master }}"
@@ -126,9 +138,19 @@
               - "{{ pgbouncer_listen_port }}"
               - "{{ postgresql_port }}"
               - "{{ netdata_port | default('19999') }}"
-            cidr_ip: >-
-              {{ '0.0.0.0/0' if database_public_access | bool
-              else vpc_subnet_info.subnets[0].cidr_block }}
+            cidr_ip: "0.0.0.0/0" # Allow from any IP
+      when:
+        - database_public_access | bool
+        - firewall | bool
+
+    - name: "AWS: Create or modify Private Security Group"
+      amazon.aws.ec2_security_group:
+        name: "{{ patroni_cluster_name }}-private-security-group"
+        state: present
+        description: Enable ports for the PostgreSQL cluster
+        vpc_id: "{{ vpc_id }}"
+        region: "{{ server_location }}"
+        rules:
           - proto: tcp
             ports:
               - "{{ ansible_ssh_port | default(22) }}"
@@ -149,6 +171,7 @@
               - "8500" # Consul
               - "8600" # Consul
             cidr_ip: "{{ vpc_subnet_info.subnets[0].cidr_block }}" # Private subnet
+      when: firewall | bool
 
     # Instance and volume
     - name: "AWS: Create or modify EC2 instance"
@@ -161,7 +184,7 @@
         image_id: "{{ server_image }}"
         key_name: "{{ ssh_key_name }}"
         region: "{{ server_location }}"
-        security_group: "{{ patroni_cluster_name }}-security-group"
+        security_groups: "{{ security_groups_list }}"
         vpc_subnet_id: "{{ server_network }}"
         network:
           assign_public_ip: true
@@ -187,6 +210,13 @@
         - server_result.instances[0].public_ip_address | length > 0
       retries: 3
       delay: 10
+      vars:
+        security_groups_list: >-
+          {{
+            ([] if not ssh_public_access | bool else [patroni_cluster_name + '-public-ssh-security-group']) +
+            ([] if not database_public_access | bool else [patroni_cluster_name + '-public-security-group']) +
+            ([] if not firewall | bool else [patroni_cluster_name + '-private-security-group'])
+          }}
   when: state == 'present'
 
 - name: Wait for EC2 instance to be available via SSH
@@ -271,9 +301,23 @@
         index_var: idx
         label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
 
-    - name: "AWS: Delete Security Group"
+    - name: "AWS: Delete SSH Security Group"
       amazon.aws.ec2_security_group:
-        name: "{{ patroni_cluster_name }}-security-group"
+        name: "{{ patroni_cluster_name }}-public-ssh-security-group"
+        state: absent
+        region: "{{ server_location }}"
+      when: ssh_public_access | bool
+
+    - name: "AWS: Delete public Security Group"
+      amazon.aws.ec2_security_group:
+        name: "{{ patroni_cluster_name }}-public-security-group"
+        state: absent
+        region: "{{ server_location }}"
+      when: database_public_access | bool
+
+    - name: "AWS: Delete Private Security Group"
+      amazon.aws.ec2_security_group:
+        name: "{{ patroni_cluster_name }}-private-security-group"
         state: absent
         region: "{{ server_location }}"
   when: state == 'absent'
