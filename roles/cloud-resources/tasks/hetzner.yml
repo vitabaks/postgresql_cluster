@@ -483,25 +483,20 @@
         api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
         state: "absent"
         name: "{{ patroni_cluster_name }}-public-ssh-firewall-rule"
-      when:
-        - ssh_public_access | bool
-        - firewall | bool
+      when: ssh_public_access | bool
 
     - name: "Hetzner Cloud: Delete public firewall"
       hetzner.hcloud.hcloud_firewall:
         api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
         state: "absent"
         name: "{{ patroni_cluster_name }}-public-database-firewall-rule"
-      when:
-        - database_public_access | bool
-        - firewall | bool
+      when: database_public_access | bool
 
     - name: "Hetzner Cloud: Delete private firewall"
       hetzner.hcloud.hcloud_firewall:
         api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
         state: "absent"
         name: "{{ patroni_cluster_name }}-private-firewall-rule"
-      when: firewall | bool
   when: state == 'absent'
 
 ...
