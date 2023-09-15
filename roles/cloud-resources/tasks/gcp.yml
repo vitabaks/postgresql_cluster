@@ -70,7 +70,9 @@
         network:
           selfLink: "global/networks/{{ gcp_network_name }}"
         state: present
-      when: database_public_access | bool
+      when:
+        - database_public_access | bool
+        - firewall | bool
 
     - name: "GCP: Create or modify private firewall rule"
       google.cloud.gcp_compute_firewall:
@@ -105,6 +107,7 @@
         network:
           selfLink: "global/networks/{{ gcp_network_name }}"
         state: present
+      when: firewall | bool
 
     - name: "GCP: Create or modify instance"
       google.cloud.gcp_compute_instance:
