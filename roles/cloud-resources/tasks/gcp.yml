@@ -47,13 +47,13 @@
         gcp_network_name: "{{ server_network if server_network is defined and server_network | length > 0 else 'default' }}"
 
     - name: "GCP: Gather information about network"
-      gcp_compute_subnetwork_info:
+      google.cloud.gcp_compute_subnetwork_info:
         auth_kind: "serviceaccount"
         service_account_contents: "{{ lookup('ansible.builtin.env', 'GCP_SERVICE_ACCOUNT_CONTENTS') }}"
         project: "{{ gcp_project | default(project_info.resources[0].projectNumber) }}"
         region: "{{ server_location[:-2] if server_location[-2:] | regex_search('-[a-z]$') else server_location }}"
         filters:
-        - name = "{{ gcp_network_name }}"
+          - name = "{{ gcp_network_name }}"
       register: subnetwork_info
 
     - name: "GCP: Extract ip_range for network '{{ gcp_network_name }}'"
