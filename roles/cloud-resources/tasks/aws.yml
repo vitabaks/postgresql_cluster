@@ -306,14 +306,12 @@
         name: "{{ patroni_cluster_name }}-public-ssh-security-group"
         state: absent
         region: "{{ server_location }}"
-      when: ssh_public_access | bool
 
     - name: "AWS: Delete public Security Group"
       amazon.aws.ec2_security_group:
         name: "{{ patroni_cluster_name }}-public-security-group"
         state: absent
         region: "{{ server_location }}"
-      when: database_public_access | bool
 
     - name: "AWS: Delete Private Security Group"
       amazon.aws.ec2_security_group:

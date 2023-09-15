@@ -263,7 +263,6 @@
         project: "{{ gcp_project | default(project_info.resources[0].projectNumber) }}"
         name: "{{ patroni_cluster_name }}-public-ssh-firewall-rule"
         state: absent
-      when: ssh_public_access | bool
 
     - name: "GCP: Delete public firewall rule"
       google.cloud.gcp_compute_firewall:
@@ -272,7 +271,6 @@
         project: "{{ gcp_project | default(project_info.resources[0].projectNumber) }}"
         name: "{{ patroni_cluster_name }}-public-firewall-rule"
         state: absent
-      when: database_public_access | bool
 
     - name: "GCP: Delete private firewall rule"
       google.cloud.gcp_compute_firewall:
