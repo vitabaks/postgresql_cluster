@@ -173,7 +173,9 @@
           - "{{ patroni_cluster_name }}"
       vars:
         sources_addresses: "{{ (server_network | length > 0) | ternary(vpc_ip_range, default_ip_range) }}"
-      when: ssh_public_access | bool
+      when:
+        - ssh_public_access | bool
+        - firewall | bool
 
     # if 'database_public_access' is 'true'
     - name: "DigitalOcean: Create or modify public firewall rule"
@@ -227,7 +229,9 @@
           - "{{ patroni_cluster_name }}"
       vars:
         sources_addresses: "{{ (server_network | length > 0) | ternary(vpc_ip_range, default_ip_range) }}"
-      when: database_public_access | bool
+      when:
+        - database_public_access | bool
+        - firewall | bool
 
     - name: "DigitalOcean: Create or modify private firewall rule"
       community.digitalocean.digital_ocean_firewall:
@@ -308,6 +312,7 @@
           - "{{ patroni_cluster_name }}"
       vars:
         sources_addresses: "{{ (server_network | length > 0) | ternary(vpc_ip_range, default_ip_range) }}"
+      when: firewall | bool
 
     # if server_network is not specified, use default vpc
     - name: "DigitalOcean: Create or modify Droplet"
