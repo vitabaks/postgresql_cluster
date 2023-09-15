@@ -170,7 +170,7 @@
             destinations:
               addresses: ["0.0.0.0/0", "::/0"]
         tags:
-          - "{{ patroni_cluster_name }}"
+          - "{{ patroni_cluster_name }}" # Only VMs with this tag will be affected
       vars:
         sources_addresses: "{{ (server_network | length > 0) | ternary(vpc_ip_range, default_ip_range) }}"
       when:
@@ -226,7 +226,7 @@
             destinations:
               addresses: ["0.0.0.0/0", "::/0"]
         tags:
-          - "{{ patroni_cluster_name }}"
+          - "{{ patroni_cluster_name }}" # Only VMs with this tag will be affected
       vars:
         sources_addresses: "{{ (server_network | length > 0) | ternary(vpc_ip_range, default_ip_range) }}"
       when:
@@ -309,7 +309,7 @@
             destinations:
               addresses: ["0.0.0.0/0", "::/0"]
         tags:
-          - "{{ patroni_cluster_name }}"
+          - "{{ patroni_cluster_name }}" # Only VMs with this tag will be affected
       vars:
         sources_addresses: "{{ (server_network | length > 0) | ternary(vpc_ip_range, default_ip_range) }}"
       when: firewall | bool
