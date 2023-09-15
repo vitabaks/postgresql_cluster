@@ -56,7 +56,7 @@
 
     # if ssh_key_name is specified, get the fingerprint of one ssh key
     # or if tmp_ssh_key_name is used and ssh_public_keys is difined
-    - name: "DigitalOcean: Get Fingerprint for SSH key '{{ ssh_key_name }}'"
+    - name: "DigitalOcean: Get fingerprint for SSH key '{{ ssh_key_name }}'"
       ansible.builtin.set_fact:
         ssh_key_fingerprint: "{{ [item.fingerprint] }}"
       loop: "{{ ssh_keys.data | lower }}"
@@ -77,7 +77,7 @@
 
     # if ssh_key_name is not specified, and ssh_public_keys is not defined
     # get the fingerprint of all ssh keys
-    - name: "DigitalOcean: Get Fingerprint for all SSH keys"
+    - name: "DigitalOcean: Get fingerprint for all SSH keys"
       ansible.builtin.set_fact:
         ssh_key_fingerprint: "{{ ssh_key_fingerprint | default([]) + [item.fingerprint] }}"
       loop: "{{ ssh_keys.data | lower }}"
