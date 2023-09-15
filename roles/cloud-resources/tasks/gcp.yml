@@ -47,6 +47,27 @@
         gcp_network_name: "{{ server_network if server_network is defined and server_network | length > 0 else 'default' }}"
 
     # Firewall
+    - name: "GCP: Create or modify SSH firewall rule"
+      google.cloud.gcp_compute_firewall:
+        auth_kind: "serviceaccount"
+        service_account_contents: "{{ lookup('ansible.builtin.env', 'GCP_SERVICE_ACCOUNT_CONTENTS') }}"
+        project: "{{ gcp_project | default(project_info.resources[0].projectNumber) }}"
+        name: "{{ patroni_cluster_name }}-public-ssh-firewall-rule"
+        allowed:
+          - ip_protocol: tcp
+            ports:
+              - "{{ ansible_ssh_port | default(22) }}"
+        source_ranges:
+          - "0.0.0.0/0" # Allow from any IP
+        target_tags:
+          - "{{ patroni_cluster_name }}" # Only VMs with this tag will be affected
+        network:
+          selfLink: "global/networks/{{ gcp_network_name }}"
+        state: present
+      when:
+        - ssh_public_access | bool
+        - firewall | bool
+
     - name: "GCP: Create or modify public firewall rule"
       google.cloud.gcp_compute_firewall:
         auth_kind: "serviceaccount"
