@@ -27,5 +27,3 @@ ENV ANSIBLE_COLLECTIONS_PATHS=/usr/lib/python3/dist-packages/ansible_collections
 ENV USER=root
 
 WORKDIR /postgresql_cluster
-
-ENTRYPOINT ["ansible-playbook"]
