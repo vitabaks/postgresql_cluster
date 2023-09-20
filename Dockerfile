@@ -9,7 +9,7 @@ COPY . /postgresql_cluster
 RUN apt-get clean && rm -rf /var/lib/apt/lists/partial \
     && apt-get update -o Acquire::CompressionTypes::Order::=gz \
     && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
-       ca-certificates gnupg git python3 python3-pip keychain ssh-client \
+       ca-certificates gnupg git python3 python3-pip keychain ssh-client sshpass \
     && pip3 install --no-cache-dir \
        ansible==8.4.0 \
        boto3==1.28.49 \
