@@ -184,6 +184,7 @@
     - role: ntp
     - role: ssh-keys
     - role: copy
+    - role: mount
 
 - name: deploy_pgcluster.yml | Deploy balancers
   ansible.builtin.import_playbook: balancers.yml
