@@ -104,3 +104,4 @@
 - - pg_probackup_install
 - cron
 - netdata
+- ssh_public_keys

@@ -1,5 +1,5 @@
 ---
-- name: Provision of cloud resources (virtual machine + disk) for PostgreSQL HA Cluster (on {{ provision | default('none') | upper }})
+- name: Deploy PostgreSQL HA Cluster (based on "Patroni" and "{{ dcs_type }}")
   hosts: localhost
   gather_facts: true
   any_errors_fatal: true
@@ -10,7 +10,7 @@
       when: provision | lower != 'none'
       tags: provision
 
-- name: Deploy PostgreSQL HA Cluster (based on "Patroni" and "{{ dcs_type }}")
+- name: deploy_pgcluster.yml | Perform pre-checks
   hosts: all
   become: true
   become_method: sudo
@@ -54,6 +54,10 @@
       tags: always
 
   roles:
+    # (optional) if 'ssh_public_keys' is defined
+    - role: authorized-keys
+      tags: ssh_public_keys
+
     - role: pre-checks
       vars:
         minimal_ansible_version: 2.11.0
