@@ -11,7 +11,7 @@
         executable: /bin/bash
       register: lsblk_disk
       changed_when: false
-      when: provision | lower != 'none' and mount[0].src | length < 1
+      when: (provision is defined and provision | lower != 'none') and mount[0].src | length < 1
 
     # Show the error message, if empty volume is not detected
     - name: Empty volume is not detected
@@ -60,7 +60,7 @@
     - name: "Set variable: postgresql_data_dir"
       ansible.builtin.set_fact:
         postgresql_data_dir: "{{ pg_data_mount_path | default('/pgdata') }}/{{ postgresql_version }}/{{ patroni_cluster_name }}"
-      when: provision | lower != 'none' and lsblk_uuid.stdout is defined
+      when: (provision is defined and provision | lower != 'none') and lsblk_uuid.stdout is defined
   tags: mount
 
 ...
