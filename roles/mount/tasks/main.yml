@@ -49,7 +49,7 @@
     - name: Mount the filesystem
       ansible.posix.mount:
         path: "{{ item.path | default(pg_data_mount_path | default('/pgdata', true), true) }}"
-        src: "{{ item.src }}"
+        src: "UUID={{ item.src }}"
         fstype: "{{ item.fstype | default(pg_data_mount_fstype | default('ext4', true), true) }}"
         opts: "{{ item.opts | default('defaults,noatime') }}"
         state: "{{ item.state | default('mounted') }}"
