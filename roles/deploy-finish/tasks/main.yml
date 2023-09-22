@@ -87,11 +87,13 @@
       ansible.builtin.debug:
         msg:
           - +------------------------------------------------+
-          - address (VIP) {{ cluster_vip }}
-          - port {{ haproxy_listen_port.master }} (read/write) master
-          - port {{ haproxy_listen_port.replicas }} (read only)  all replicas
-          - port {{ haproxy_listen_port.replicas_sync }} (read only)  synchronous replica only
-          - port {{ haproxy_listen_port.replicas_async }} (read only)  asynchronous replicas only
+          - "address: (VIP) {{ cluster_vip }}"
+          - "port: {{ haproxy_listen_port.master }} (read/write) master"
+          - "port: {{ haproxy_listen_port.replicas }} (read only) all replicas"
+          - "port: {{ haproxy_listen_port.replicas_sync }} (read only) synchronous replica only"
+          - "port: {{ haproxy_listen_port.replicas_async }} (read only) asynchronous replicas only"
+          - "superuser: {{ patroni_superuser_username }}"
+          - "password: {% if mask_password | default(false) | bool %}'********'{% else %}{{ patroni_superuser_password }}{% endif %}"
           - +------------------------------------------------+
       when:
         - with_haproxy_load_balancing | bool
@@ -102,9 +104,11 @@
       ansible.builtin.debug:
         msg:
           - +------------------------------------------------+
-          - address (VIP) {{ cluster_vip }}
-          - port {{ haproxy_listen_port.master }} (read/write) master
-          - port {{ haproxy_listen_port.replicas }} (read only)  all replicas
+          - "address: (VIP) {{ cluster_vip }}"
+          - "port: {{ haproxy_listen_port.master }} (read/write) master"
+          - "port: {{ haproxy_listen_port.replicas }} (read only) all replicas"
+          - "superuser: {{ patroni_superuser_username }}"
+          - "password: {% if mask_password | default(false) | bool %}'********'{% else %}{{ patroni_superuser_password }}{% endif %}"
           - +------------------------------------------------+
       when:
         - with_haproxy_load_balancing | bool
@@ -115,8 +119,10 @@
       ansible.builtin.debug:
         msg:
           - +------------------------------------------------+
-          - address (VIP) {{ cluster_vip }}
-          - port {% if pgbouncer_install %}{{ pgbouncer_listen_port }} (pgbouncer){% else %}{{ postgresql_port }}{% endif %}
+          - "address: (VIP) {{ cluster_vip }}"
+          - "port: {% if pgbouncer_install %}{{ pgbouncer_listen_port }} (pgbouncer){% else %}{{ postgresql_port }}{% endif %}"
+          - "superuser: {{ patroni_superuser_username }}"
+          - "password: {% if mask_password | default(false) | bool %}'********'{% else %}{{ patroni_superuser_password }}{% endif %}"
           - +------------------------------------------------+
       when:
         - not with_haproxy_load_balancing | bool
@@ -170,11 +176,13 @@
       ansible.builtin.debug:
         msg:
           - +------------------------------------------------+
-          - address {{ haproxy_nodes }}
-          - port {{ haproxy_listen_port.master }} (read/write) master
-          - port {{ haproxy_listen_port.replicas }} (read only)  all replicas
-          - port {{ haproxy_listen_port.replicas_sync }} (read only)  synchronous replica only
-          - port {{ haproxy_listen_port.replicas_async }} (read only)  asynchronous replicas only
+          - "address: {{ haproxy_nodes }}"
+          - "port: {{ haproxy_listen_port.master }} (read/write) master"
+          - "port: {{ haproxy_listen_port.replicas }} (read only) all replicas"
+          - "port: {{ haproxy_listen_port.replicas_sync }} (read only) synchronous replica only"
+          - "port: {{ haproxy_listen_port.replicas_async }} (read only) asynchronous replicas only"
+          - "superuser: {{ patroni_superuser_username }}"
+          - "password: {% if mask_password | default(false) | bool %}'********'{% else %}{{ patroni_superuser_password }}{% endif %}"
           - +------------------------------------------------+
       when:
         - with_haproxy_load_balancing | bool
@@ -185,9 +193,11 @@
       ansible.builtin.debug:
         msg:
           - +------------------------------------------------+
-          - address {{ haproxy_nodes }}
-          - port {{ haproxy_listen_port.master }} (read/write) master
-          - port {{ haproxy_listen_port.replicas }} (read only)  all replicas
+          - "address: {{ haproxy_nodes }}"
+          - "port: {{ haproxy_listen_port.master }} (read/write) master"
+          - "port: {{ haproxy_listen_port.replicas }} (read only) all replicas"
+          - "superuser: {{ patroni_superuser_username }}"
+          - "password: {% if mask_password | default(false) | bool %}'********'{% else %}{{ patroni_superuser_password }}{% endif %}"
           - +------------------------------------------------+
       when:
         - with_haproxy_load_balancing | bool
@@ -198,8 +208,10 @@
       ansible.builtin.debug:
         msg:
           - +------------------------------------------------+
-          - address {{ postgres_cluster_nodes }}
-          - port {% if pgbouncer_install %}{{ pgbouncer_listen_port }} (pgbouncer){% else %}{{ postgresql_port }}{% endif %}
+          - "address: {{ postgres_cluster_nodes }}"
+          - "port: {% if pgbouncer_install %}{{ pgbouncer_listen_port }} (pgbouncer){% else %}{{ postgresql_port }}{% endif %}"
+          - "superuser: {{ patroni_superuser_username }}"
+          - "password: {% if mask_password | default(false) | bool %}'********'{% else %}{{ patroni_superuser_password }}{% endif %}"
           - +------------------------------------------------+
       when:
         - not with_haproxy_load_balancing | bool
@@ -219,7 +231,9 @@
           - "Client access point (DNS):"
           - " master.{{ patroni_cluster_name }}.service.consul "
           - " replica.{{ patroni_cluster_name }}.service.consul "
-          - port {% if pgbouncer_install %}{{ pgbouncer_listen_port }} (pgbouncer){% else %}{{ postgresql_port }}{% endif %}
+          - "port: {% if pgbouncer_install %}{{ pgbouncer_listen_port }} (pgbouncer){% else %}{{ postgresql_port }}{% endif %}"
+          - "superuser: {{ patroni_superuser_username }}"
+          - "password: {% if mask_password | default(false) | bool %}'********'{% else %}{{ patroni_superuser_password }}{% endif %}"
           - +------------------------------------------------+
       when: not synchronous_mode | bool
 
@@ -233,7 +247,9 @@
           - " replica.{{ patroni_cluster_name }}.service.consul "
           - " sync-replica.{{ patroni_cluster_name }}.service.consul "
           - " async-replica.{{ patroni_cluster_name }}.service.consul "
-          - port {% if pgbouncer_install %}{{ pgbouncer_listen_port }} (pgbouncer){% else %}{{ postgresql_port }}{% endif %}
+          - "port: {% if pgbouncer_install %}{{ pgbouncer_listen_port }} (pgbouncer){% else %}{{ postgresql_port }}{% endif %}"
+          - "superuser: {{ patroni_superuser_username }}"
+          - "password: {% if mask_password | default(false) | bool %}'********'{% else %}{{ patroni_superuser_password }}{% endif %}"
           - +------------------------------------------------+
       when: synchronous_mode | bool
   when: dcs_type == "consul"
