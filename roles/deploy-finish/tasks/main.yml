@@ -81,6 +81,7 @@
   tags: patroni_status, cluster_info, cluster_status, point_in_time_recovery
 
 # connection info
+# if the variable 'mask_password' is 'true', do not print the superuser password in connection info
 - block:  # if cluster_vip is defined
     - name: PostgreSQL Cluster connection info
       run_once: true
