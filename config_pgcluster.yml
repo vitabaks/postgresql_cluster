@@ -8,9 +8,7 @@
   roles:
     - role: cloud-resources
       when: provision | lower != 'none'
-      tags: provision
-  tags:
-    - always
+      tags: always
 
 - name: config_pgcluster.yml | Check the PostgreSQL cluster state and perform pre-checks
   hosts: postgres_cluster
