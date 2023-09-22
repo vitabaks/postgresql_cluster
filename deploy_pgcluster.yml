@@ -8,14 +8,13 @@
   roles:
     - role: cloud-resources
       when: provision | lower != 'none'
-      tags: provision
+      tags: always
 
 - name: deploy_pgcluster.yml | Perform pre-checks
   hosts: all
   become: true
   become_method: sudo
   gather_facts: true
-  tags: always
   any_errors_fatal: true
   vars_files:
     - vars/main.yml
