@@ -55,12 +55,6 @@
         state: "{{ item.state | default('mounted') }}"
       loop: "{{ mount }}"
       when: item.src | length > 0
-
-    # Set variable 'postgresql_data_dir' (if provision != 'none')
-    - name: "Set variable: postgresql_data_dir"
-      ansible.builtin.set_fact:
-        postgresql_data_dir: "{{ pg_data_mount_path | default('/pgdata') }}/{{ postgresql_version }}/{{ patroni_cluster_name }}"
-      when: (provision is defined and provision | lower != 'none') and lsblk_uuid.stdout is defined
   tags: mount
 
 ...
