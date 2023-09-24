@@ -147,7 +147,61 @@
   when:
     - pg_old_version|int <= 14 and pg_new_version|int >= 15
 
-# TODO: Prepare the parameters for PostgreSQL 16 and etc.
+- block:  # force_parallel_mode (removed in the PG 16)
+    # check if the force_parallel_mode parameter is specified in the patroni.yml
+    - name: "Edit patroni.yml | check if the 'force_parallel_mode' parameter is specified"
+      ansible.builtin.command: grep force_parallel_mode {{ patroni_config_file }}
+      register: force_parallel_mode_output
+      changed_when: false
+      failed_when: false
+
+    # if defined, remove the force_parallel_mode parameter from the patroni.yml
+    - name: "Edit patroni.yml | remove parameter: 'force_parallel_mode'"
+      ansible.builtin.lineinfile:
+        path: "{{ patroni_config_file }}"
+        regexp: '^(\s*)force_parallel_mode:.*'
+        state: absent
+      when: force_parallel_mode_output.stdout | length > 0
+  when:
+    - pg_old_version|int <= 15 and pg_new_version|int >= 16
+
+- block:  # promote_trigger_file (removed in the PG 16)
+    # check if the promote_trigger_file parameter is specified in the patroni.yml
+    - name: "Edit patroni.yml | check if the 'promote_trigger_file' parameter is specified"
+      ansible.builtin.command: grep promote_trigger_file {{ patroni_config_file }}
+      register: promote_trigger_file_output
+      changed_when: false
+      failed_when: false
+
+    # if defined, remove the promote_trigger_file parameter from the patroni.yml
+    - name: "Edit patroni.yml | remove parameter: 'promote_trigger_file'"
+      ansible.builtin.lineinfile:
+        path: "{{ patroni_config_file }}"
+        regexp: '^(\s*)promote_trigger_file:.*'
+        state: absent
+      when: promote_trigger_file_output.stdout | length > 0
+  when:
+    - pg_old_version|int <= 15 and pg_new_version|int >= 16
+
+- block:  # vacuum_defer_cleanup_age (removed in the PG 16)
+    # check if the vacuum_defer_cleanup_age parameter is specified in the patroni.yml
+    - name: "Edit patroni.yml | check if the 'vacuum_defer_cleanup_age' parameter is specified"
+      ansible.builtin.command: grep vacuum_defer_cleanup_age {{ patroni_config_file }}
+      register: vacuum_defer_cleanup_age_output
+      changed_when: false
+      failed_when: false
+
+    # if defined, remove the vacuum_defer_cleanup_age parameter from the patroni.yml
+    - name: "Edit patroni.yml | remove parameter: 'vacuum_defer_cleanup_age'"
+      ansible.builtin.lineinfile:
+        path: "{{ patroni_config_file }}"
+        regexp: '^(\s*)vacuum_defer_cleanup_age:.*'
+        state: absent
+      when: vacuum_defer_cleanup_age_output.stdout | length > 0
+  when:
+    - pg_old_version|int <= 15 and pg_new_version|int >= 16
+
+# TODO: Prepare the parameters for PostgreSQL 17 and etc.
 
 # Copy the pg_hba.conf file to a new PostgreSQL to save pg_hba rules.
 - name: "Copy pg_hba.conf to {{ pg_new_confdir }}"
