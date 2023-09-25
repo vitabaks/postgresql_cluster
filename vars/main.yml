@@ -66,9 +66,9 @@ patroni_etcd_hosts: []  # list of servers of an existing etcd cluster
 #  - { host: "10.128.64.142", port: "2379" }
 #  - { host: "10.128.64.143", port: "2379" }
 patroni_etcd_namespace: "/service/"  # (optional) etcd namespace for patroni cluster
-patroni_etcd_username:  "" # (optional) username for etcd authentication
-patroni_etcd_password:  "" # (optional) password for etcd authentication
-patroni_etcd_protocol:  "" # (optional) http or https, if not specified http is used
+patroni_etcd_username: "" # (optional) username for etcd authentication
+patroni_etcd_password: "" # (optional) password for etcd authentication
+patroni_etcd_protocol: "" # (optional) http or https, if not specified http is used
 
 # more options you can specify in the roles/patroni/templates/patroni.yml.j2
 # https://patroni.readthedocs.io/en/latest/SETTINGS.html#etcd
