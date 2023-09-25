@@ -217,6 +217,18 @@
             ([] if not database_public_access | bool else [patroni_cluster_name + '-public-security-group']) +
             ([] if not firewall | bool else [patroni_cluster_name + '-private-security-group'])
           }}
+
+    # S3 bucket
+    - name: "AWS: Create S3 bucket '{{ patroni_cluster_name }}'"
+      amazon.aws.s3_bucket:
+        access_key: "{{ lookup('ansible.builtin.env', 'AWS_ACCESS_KEY_ID') }}"
+        secret_key: "{{ lookup('ansible.builtin.env', 'AWS_SECRET_ACCESS_KEY') }}"
+        name: "{{ patroni_cluster_name }}"
+        region: "{{ server_location }}"
+        state: present
+        delete_public_access: true
+        object_lock_enabled: "{{ aws_s3_bucket_object_lock_enabled | default(false) }}"
+      when: (pgbackrest_install | bool) or (wal_g_install | bool)
   when: state == 'present'
 
 - name: Wait for EC2 instance to be available via SSH
@@ -318,6 +330,16 @@
         name: "{{ patroni_cluster_name }}-private-security-group"
         state: absent
         region: "{{ server_location }}"
+
+    - name: "AWS: Delete S3 bucket '{{ patroni_cluster_name }}'"
+      amazon.aws.s3_bucket:
+        access_key: "{{ lookup('ansible.builtin.env', 'AWS_ACCESS_KEY_ID') }}"
+        secret_key: "{{ lookup('ansible.builtin.env', 'AWS_SECRET_ACCESS_KEY') }}"
+        name: "{{ patroni_cluster_name }}"
+        region: "{{ server_location }}"
+        state: absent
+        force: true
+      when: (pgbackrest_install | bool) or (wal_g_install | bool)
   when: state == 'absent'
 
 ...

@@ -5,6 +5,7 @@
     - name: Get repo1-path value
       ansible.builtin.set_fact:
         repo1_path: "{{ pgbackrest_conf['global'] | selectattr('option', 'equalto', 'repo1-path') | map(attribute='value') | list | first }}"
+      when: pgbackrest_repo_type | lower == 'posix'
 
     - name: "Make sure the {{ repo1_path }} directory exists"
       ansible.builtin.file:
@@ -13,7 +14,7 @@
         owner: postgres
         group: postgres
         mode: "0755"
-      when: repo1_path | length > 0
+      when: repo1_path | default('') | length > 0
 
     - name: Create stanza "{{ pgbackrest_stanza }}"
       become: true
@@ -23,6 +24,7 @@
       changed_when:
         - stanza_create_result.rc == 0
         - stanza_create_result.stdout is not search("already exists")
+      when: is_master | bool
   when:
     - pgbackrest_repo_host | length < 1
     - "'postgres_cluster' in group_names"
@@ -38,6 +40,7 @@
       run_once: true
       ansible.builtin.set_fact:
         repo1_path: "{{ pgbackrest_server_conf['global'] | selectattr('option', 'equalto', 'repo1-path') | map(attribute='value') | list | first }}"
+      when: pgbackrest_repo_type | lower == 'posix'
 
     - name: "Make sure the {{ repo1_path }} directory exists"
       delegate_to: "{{ groups['pgbackrest'][0] }}"
@@ -48,7 +51,7 @@
         owner: "{{ pgbackrest_repo_user }}"
         group: "{{ pgbackrest_repo_user }}"
         mode: "0755"
-      when: repo1_path | length > 0
+      when: repo1_path | default('') | length > 0
 
     - name: Create stanza "{{ pgbackrest_stanza }}"
       become: true

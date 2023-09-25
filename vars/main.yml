@@ -15,7 +15,7 @@ vip_interface: "{{ ansible_default_ipv4.interface }}"  # interface name (e.g., "
 # - For the "Type B" scheme: Use libpq `target_session_attrs`, ensuring read/write connections go to the primary database, as an alternative to cluster_vip.
 
 patroni_cluster_name: "postgres-cluster"  # the cluster name (must be unique for each cluster)
-patroni_install_version: "latest"  # or specific version (example 1.5.6)
+patroni_install_version: "3.1.0"  # or 'latest'
 
 patroni_superuser_username: "postgres"
 patroni_superuser_password: ""  # Please specify a password. If not defined, will be generated automatically during deployment.
@@ -424,14 +424,14 @@ pg_probackup_restore_command: "{{ pg_probackup_command_parts | join('') }}"
 pg_probackup_patroni_cluster_bootstrap_command: "{{ pg_probackup_command_parts | join('') }}"
 
 # WAL-G
-wal_g_install: false  # or 'true'
+wal_g_install: false  # or 'true' to install and configure backups using WAL-G
 wal_g_version: "2.0.1"
 wal_g_json:  # config https://github.com/wal-g/wal-g#configuration
   - { option: "AWS_ACCESS_KEY_ID", value: "{{ AWS_ACCESS_KEY_ID | default('') }}" }  # define values or pass via --extra-vars
   - { option: "AWS_SECRET_ACCESS_KEY", value: "{{ AWS_SECRET_ACCESS_KEY | default('') }}" }  # define values or pass via --extra-vars
-  - { option: "WALG_S3_PREFIX", value: "{{ WALG_S3_PREFIX | default('') }}" } # define values or pass via --extra-vars
-  - { option: "WALG_COMPRESSION_METHOD", value: "brotli" }  # or "lz4", "lzma", "zstd"
-  - { option: "WALG_DELTA_MAX_STEPS", value: "6" }  # determines how many delta backups can be between full backups
+  - { option: "WALG_S3_PREFIX", value: "{{ WALG_S3_PREFIX | default('s3://' + patroni_cluster_name) }}" } # define values or pass via --extra-vars
+  - { option: "WALG_COMPRESSION_METHOD", value: "{{ WALG_COMPRESSION_METHOD | default('brotli') }}" }  # or "lz4", "lzma", "zstd"
+  - { option: "WALG_DELTA_MAX_STEPS", value: "{{ WALG_DELTA_MAX_STEPS | default('6') }}" }  # determines how many delta backups can be between full backups
   - { option: "PGDATA", value: "{{ postgresql_data_dir }}" }
   - { option: "PGHOST", value: "{{ postgresql_unix_socket_dir }}" }
   - { option: "PGPORT", value: "{{ postgresql_port }}" }
@@ -455,7 +455,7 @@ wal_g_cron_jobs:
   - name: "WAL-G: Create daily backup"
     user: "postgres"
     file: /etc/cron.d/walg
-    minute: "30"
+    minute: "00"
     hour: "3"
     day: "*"
     month: "*"
@@ -472,28 +472,36 @@ wal_g_cron_jobs:
     job: "{{ wal_g_delete_command | join('') }}"
 
 # pgBackRest
-pgbackrest_install: false  # or 'true'
+pgbackrest_install: false  # or 'true' to install and configure backups using pgBackRest
 pgbackrest_install_from_pgdg_repo: true  # or 'false'
 pgbackrest_stanza: "{{ patroni_cluster_name }}"  # specify your --stanza
-pgbackrest_repo_type: "posix"  # or "s3", "gcs", "azure"
+pgbackrest_repo_type: "s3"  # or "gcs", "azure", "posix"
 pgbackrest_repo_host: ""  # dedicated repository host (optional)
-pgbackrest_repo_user: "postgres"
+pgbackrest_repo_user: ""  # if "repo_host" is set (optional)
 pgbackrest_conf_file: "/etc/pgbackrest/pgbackrest.conf"
 # see more options https://pgbackrest.org/configuration.html
 pgbackrest_conf:
   global:  # [global] section
     - { option: "log-level-file", value: "detail" }
     - { option: "log-path", value: "/var/log/pgbackrest" }
-#    - { option: "repo1-host", value: "{{ pgbackrest_repo_host }}" }
+    - { option: "repo1-type", value: "{{ pgbackrest_repo_type | lower | default('s3') }}" }
+#    - { option: "repo1-host", value: "{{ pgbackrest_repo_host | default('postgres', true) }}" }
 #    - { option: "repo1-host-user", value: "{{ pgbackrest_repo_user }}" }
-    - { option: "repo1-type", value: "{{ pgbackrest_repo_type | lower }}" }
-    - { option: "repo1-path", value: "/var/lib/pgbackrest" }
+#    - { option: "repo1-path", value: "/var/lib/pgbackrest" }
+    - { option: "repo1-path", value: "/pgbackrest" } # for 's3', if you use 'posix' specify the full path
+    - { option: "repo1-s3-key", value: "{{ AWS_ACCESS_KEY_ID | default('') }}" }  # define values or pass via --extra-vars
+    - { option: "repo1-s3-key-secret", value: "{{ AWS_SECRET_ACCESS_KEY | default('') }}" }  # define values or pass via --extra-vars
+    - { option: "repo1-s3-bucket", value: "{{ AWS_S3_BUCKET | default(patroni_cluster_name) }}" }
+    - { option: "repo1-s3-endpoint", value: "{{ AWS_S3_ENDPOINT | default('s3.' ~ (server_location | default('us-east-1')) ~ '.amazonaws.com') }}" }
+    - { option: "repo1-s3-region", value: "{{ AWS_S3_REGION | default(server_location | default('us-east-1')) }}" }
     - { option: "repo1-retention-full", value: "4" }
     - { option: "repo1-retention-archive", value: "4" }
+    - { option: "repo1-bundle", value: "y" }
+    - { option: "repo1-block", value: "y" }
     - { option: "start-fast", value: "y" }
     - { option: "stop-auto", value: "y" }
-    - { option: "resume", value: "n" }
     - { option: "link-all", value: "y" }
+    - { option: "resume", value: "n" }
 #    - { option: "", value: "" }
   stanza:  # [stanza_name] section
     - { option: "pg1-path", value: "{{ postgresql_data_dir }}" }
@@ -535,8 +543,8 @@ pgbackrest_cron_jobs:
   - name: "pgBackRest: Full Backup"
     file: /etc/cron.d/pgbackrest
     user: "postgres"
-    minute: "30"
-    hour: "6"
+    minute: "00"
+    hour: "3"
     day: "*"
     month: "*"
     weekday: "0"
@@ -545,8 +553,8 @@ pgbackrest_cron_jobs:
   - name: "pgBackRest: Diff Backup"
     file: /etc/cron.d/pgbackrest
     user: "postgres"
-    minute: "30"
-    hour: "6"
+    minute: "00"
+    hour: "3"
     day: "*"
     month: "*"
     weekday: "1-6"
