@@ -3,7 +3,7 @@
 
 scope: {{ patroni_cluster_name }}
 name: {{ ansible_hostname }}
-namespace: {{ patroni_etcd_namespace | default("service") }}
+namespace: /{{ patroni_etcd_namespace | default("service") }}
 
 {% if patroni_log_destination == 'logfile' %}
 log:
