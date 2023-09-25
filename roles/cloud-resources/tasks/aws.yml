@@ -192,12 +192,12 @@
         volumes:
           - device_name: /dev/sda1
             ebs:
-              volume_type: "{{ volume_type | default('gp3') }}"
+              volume_type: "{{ volume_type | default('gp3', true) }}"
               volume_size: "{{ system_volume_size | default('40') }}"  # system disk size
               delete_on_termination: true
           - device_name: /dev/sdb
             ebs:
-              volume_type: "{{ volume_type | default('gp3') }}"
+              volume_type: "{{ volume_type | default('gp3', true) }}"
               volume_size: "{{ volume_size | int }}"
               delete_on_termination: true
       loop: "{{ range(0, servers_count | int) | list }}"
