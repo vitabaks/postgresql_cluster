@@ -156,14 +156,14 @@
           - device_name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-system"
             auto_delete: true
             boot: true
-            type: "{{ volume_type | default('pd-ssd') }}"
+            type: "{{ volume_type | default('pd-ssd', true) }}"
             initialize_params:
               disk_name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-system"
               source_image: "{{ server_image }}"
               disk_size_gb: "{{ system_volume_size | default('40') }}"  # system disk size
           - device_name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-storage"
             auto_delete: true
-            type: "{{ volume_type | default('pd-ssd') }}"
+            type: "{{ volume_type | default('pd-ssd', true) }}"
             initialize_params:
               disk_name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-storage"
               disk_size_gb: "{{ volume_size | int }}"
