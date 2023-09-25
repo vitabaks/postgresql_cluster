@@ -26,7 +26,7 @@ dcs-endpoints:
 {% if dcs_exists|bool and dcs_type == 'etcd' %}
 dcs-endpoints:
 {% for etcd_hosts in patroni_etcd_hosts %}
-  - {{ patroni_etcd_protocol | default('http') }}://{{ etcd_hosts.host }}:{{ etcd_hosts.port }}
+  - {{ patroni_etcd_protocol | default('') or 'http' }}://{{ etcd_hosts.host }}:{{ etcd_hosts.port }}
 {% endfor %}
 
 {% if patroni_etcd_username | default("") | length > 0 %}
