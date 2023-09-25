@@ -12,6 +12,8 @@
 
 - name: config_pgcluster.yml | Check the PostgreSQL cluster state and perform pre-checks
   hosts: postgres_cluster
+  become: true
+  become_method: sudo
   gather_facts: true
   vars_files:
     - vars/main.yml
