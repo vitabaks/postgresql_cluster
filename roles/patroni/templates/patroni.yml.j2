@@ -3,7 +3,7 @@
 
 scope: {{ patroni_cluster_name }}
 name: {{ ansible_hostname }}
-namespace: /{{ patroni_etcd_namespace | default("service") }}
+namespace: /{{ patroni_etcd_namespace | default('service') }}
 
 {% if patroni_log_destination == 'logfile' %}
 log:
@@ -36,13 +36,13 @@ etcd3:
 {% if dcs_exists|bool and dcs_type == 'etcd' %}
 etcd3:
   hosts: {% for etcd_hosts in patroni_etcd_hosts %}{{etcd_hosts.host}}:{{etcd_hosts.port}}{% if not loop.last %},{% endif %}{% endfor +%}
-  {% if patroni_etcd_username | default("") | length > 0 %}
-  username: {{ patroni_etcd_username | default("") }}
+  {% if patroni_etcd_username | default('') | length > 0 %}
+  username: {{ patroni_etcd_username | default('') }}
   {% endif %}
-  {% if patroni_etcd_password | default("") | length > 0 %}
+  {% if patroni_etcd_password | default('') | length > 0 %}
   password: {{ patroni_etcd_password }}
   {% endif %}
-  {% if patroni_etcd_protocol | default("") | length > 0 %}
+  {% if patroni_etcd_protocol | default('') | length > 0 %}
   protocol: {{ patroni_etcd_protocol }}
   {% endif %}
 {% endif %}
