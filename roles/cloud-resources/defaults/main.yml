@@ -13,7 +13,7 @@ server_network: ""  # (optional) If provided, the server will be added to this n
 
 volume_size: ""  # (required) Storage size for the data directory (in gigabytes).
 volume_type: ""  # (optional) Volume type. Defaults: 'gp3' for AWS, 'pd-ssd' for GCP, 'StandardSSD_LRS' for Azure.
-system_volume_size: "80"  # (optional) System disk size (in gigabytes). Applicable for AWS, GCP.
+system_volume_size: "80"  # (optional) System disk size (in gigabytes). Applicable for AWS, GCP, Azure.
 
 ssh_key_name: ""  # Name of the SSH key to be added to the server.
 # Note: If not provided, all cloud available SSH keys will be added (applicable to DigitalOcean, Hetzner).

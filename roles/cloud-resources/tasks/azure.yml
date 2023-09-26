@@ -1,0 +1,364 @@
+---
+# Dependencies
+- name: Install Python dependencies
+  block:
+    - name: Ensure that 'python3-pip' package is present on controlling host
+      ansible.builtin.package:
+        name: python3-pip
+        state: present
+      register: package_status
+      until: package_status is success
+      delay: 10
+      retries: 3
+      when: ansible_distribution != "MacOSX"
+
+    - name: Ensure that Azure collection is installed on controlling host
+      ansible.builtin.command: ansible-galaxy collection list azure.azcollection
+      changed_when: false
+      failed_when: false
+      register: azcollection_result
+
+    - name: Azure collection not installed
+      ansible.builtin.fail:
+        msg:
+          - "Please install Azure collection"
+          - "ansible-galaxy collection install azure.azcollection"
+      when:
+        - azcollection_result.stderr is search("unable to find")
+
+    - name: Get ansible_collections path
+      ansible.builtin.shell: >
+        set -o pipefail;
+        ansible-galaxy collection list | grep ansible_collections
+      args:
+        executable: /bin/bash
+      register: collections_path
+      changed_when: false
+
+    - name: Ensure that Azure collection requirements is present on controlling host
+      ansible.builtin.pip:
+        requirements: "{{ collections_path.stdout.split()[-1] }}/azure/azcollection/requirements-azure.txt"
+        executable: pip3
+        extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
+        umask: "0022"
+  delegate_to: 127.0.0.1
+  become: false
+  run_once: true
+
+# Create (if state is present)
+- block:
+    # if ssh_key_content is not defined, get the user public key from the system (if exists)
+    - name: "Set variable: ssh_key_content"
+      ansible.builtin.set_fact:
+        ssh_key_content: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+      no_log: true  # do not display the public key
+      when: ssh_key_content is not defined or
+            ssh_key_content | length < 1
+
+    - name: "Azure: Create resource group"
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ azure_resourcegroup | default('postgres-cluster-resource-group') }}"
+        location: "{{ server_location }}"
+
+    # if server_network is specified, get network prefixes
+    - name: "Azure: Gather information about network {{ server_network }}"
+      azure.azcollection.azure_rm_virtualnetwork_info:
+        name: "{{ server_network }}"
+      register: network_info
+      when: server_network | length > 0
+
+    # if server_network is not specified, create a network and subnet
+    - block:
+        - name: "Azure: Create virtual network"
+          azure.azcollection.azure_rm_virtualnetwork:
+            resource_group: "{{ azure_resourcegroup | default('postgres-cluster-resource-group') }}"
+            name: "{{ azure_virtualnetwork | default('postgres-cluster-network') }}"
+            address_prefixes_cidr: ["{{ azure_virtualnetwork_prefix | default('10.0.0.0/16') }}"]
+
+        - name: "Azure: Create subnet"
+          azure.azcollection.azure_rm_subnet:
+            resource_group: "{{ azure_resourcegroup | default('postgres-cluster-resource-group') }}"
+            name: "{{ azure_subnet | default('postgres-cluster-subnet') }}"
+            address_prefix_cidr: "{{ azure_subnet_prefix | default('10.0.1.0/24') }}"
+            virtual_network: "{{ azure_virtualnetwork | default('postgres-cluster-network') }}"
+      when: server_network | length < 1
+
+    - name: "Azure: Create public IP address"
+      azure.azcollection.azure_rm_publicipaddress:
+        resource_group: "{{ azure_resourcegroup | default('postgres-cluster-resource-group') }}"
+        name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-public-ip"
+        allocation_method: static
+      loop: "{{ range(0, servers_count | int) | list }}"
+      loop_control:
+        index_var: idx
+        label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-public-ip"
+
+    # Security Group (Firewall)
+    - name: "Azure: Create or modify Public Security Group"
+      azure.azcollection.azure_rm_securitygroup:
+        resource_group: "{{ azure_resourcegroup | default('postgres-cluster-resource-group') }}"
+        name: "{{ patroni_cluster_name }}-public-security-group"
+        rules:
+          - name: public-access
+            description: Allow public access
+            protocol: Tcp
+            destination_port_range: "{{ destination_port_list }}"
+            destination_address_prefix: "*"
+            access: Allow
+            priority: 1002
+            direction: Inbound
+      vars:
+        destination_port_list: >-
+          {{
+            ([ansible_ssh_port | default(22)] if ssh_public_access | bool else []) +
+            ([
+              haproxy_listen_port.master,
+              haproxy_listen_port.replicas,
+              haproxy_listen_port.replicas_sync,
+              haproxy_listen_port.replicas_async,
+              pgbouncer_listen_port,
+              postgresql_port,
+              netdata_port | default('19999')
+            ] if database_public_access | bool else [])
+          }}
+      when:
+        - (database_public_access | bool) or (ssh_public_access | bool)
+        - firewall | bool
+
+    - name: "Azure: Create or modify Private Security Group"
+      azure.azcollection.azure_rm_securitygroup:
+        resource_group: "{{ azure_resourcegroup | default('postgres-cluster-resource-group') }}"
+        name: "{{ patroni_cluster_name }}-private-security-group"
+        rules:
+          - name: postgres-cluster
+            description: Enable ports for the PostgreSQL cluster
+            protocol: Tcp
+            destination_port_range:
+              - "{{ ansible_ssh_port | default(22) }}"
+              - "{{ haproxy_listen_port.master }}"
+              - "{{ haproxy_listen_port.replicas }}"
+              - "{{ haproxy_listen_port.replicas_sync }}"
+              - "{{ haproxy_listen_port.replicas_async }}"
+              - "{{ haproxy_listen_port.stats }}"
+              - "{{ pgbouncer_listen_port }}"
+              - "{{ postgresql_port }}"
+              - "{{ patroni_restapi_port }}"
+              - "{{ netdata_port | default('19999') }}"
+              - "2379" # ETCD
+              - "2380" # ETCD
+              - "8300" # Consul
+              - "8301" # Consul
+              - "8302" # Consul
+              - "8500" # Consul
+              - "8600" # Consul
+            destination_address_prefix: >-
+                {{ network_info.virtualnetworks[0].address_prefixes |
+                    default(azure_virtualnetwork_prefix | default('10.0.0.0/16', true), true) }}
+            access: Allow
+            priority: 1003
+            direction: Inbound
+      when: firewall | bool
+
+    # Network interfaces
+    - name: "Azure: Create public network interface"
+      azure.azcollection.azure_rm_networkinterface:
+        resource_group: "{{ azure_resourcegroup | default('postgres-cluster-resource-group') }}"
+        name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-public-network-interface"
+        virtual_network: "{{ azure_virtualnetwork | default('postgres-cluster-network') }}"
+        subnet_name: "{{ azure_subnet | default('postgres-cluster-subnet') }}"
+        security_group: "{{ patroni_cluster_name }}-public-security-group"
+        ip_configurations:
+          - name: ipconfig1
+            public_ip_address_name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-public-ip"
+            primary: true
+        dns_servers:
+          - 8.8.8.8
+      loop: "{{ range(0, servers_count | int) | list }}"
+      loop_control:
+        index_var: idx
+        label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-public-network-interface"
+
+    - name: "Azure: Create private network interface"
+      azure.azcollection.azure_rm_networkinterface:
+        resource_group: "{{ azure_resourcegroup | default('postgres-cluster-resource-group') }}"
+        name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-private-network-interface"
+        virtual_network: "{{ azure_virtualnetwork | default('postgres-cluster-network') }}"
+        subnet_name: "{{ azure_subnet | default('postgres-cluster-subnet') }}"
+        security_group: "{{ patroni_cluster_name }}-private-security-group"
+        ip_configurations:
+          - name: ipconfig1
+            primary: false
+      loop: "{{ range(0, servers_count | int) | list }}"
+      loop_control:
+        index_var: idx
+        label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-private-network-interface"
+
+    # Virtual machine and volume
+    - name: "Azure: Create virtual machine"
+      azure.azcollection.azure_rm_virtualmachine:
+        resource_group: "{{ azure_resourcegroup | default('postgres-cluster-resource-group') }}"
+        name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
+        state: present
+        started: true
+        location: "{{ server_location }}"
+        vm_size: "{{ server_type }}"
+        admin_username: azureadmin
+        ssh_public_keys:
+          - path: /home/azureadmin/.ssh/authorized_keys
+            key_data: "{{ ssh_key_content }}"
+        ssh_password_enabled: false
+        image:
+          offer: "{{ azure_vm_image_offer | default('0001-com-ubuntu-server-jammy') }}"
+          publisher: "{{ azure_vm_image_publisher | default('Canonical') }}"
+          sku: "{{ azure_vm_image_sku | default('22_04-lts-gen2') }}"
+          version: "{{ azure_vm_image_version | default('latest') }}"
+        os_type: Linux
+        os_disk_size_gb: "{{ system_volume_size | default('40') }}"  # system disk size
+        managed_disk_type: "StandardSSD_LRS"
+        data_disks:
+          - lun: 0
+            disk_size_gb: "{{ volume_size | int }}"
+            managed_disk_type: "{{ volume_type | default('StandardSSD_LRS', true) }}"
+        network_interface_names:
+          - "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-public-network-interface"
+          - "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-private-network-interface"
+      loop: "{{ range(0, servers_count | int) | list }}"
+      loop_control:
+        index_var: idx
+        label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
+      register: server_result
+  when: state == 'present'
+
+# Info
+- name: Show Azure VM info
+  ansible.builtin.debug:
+    msg:
+      - "ID: {{ item.ansible_facts.azure_vm.id }}"
+      - "Name: {{ item.ansible_facts.azure_vm.name }}"
+      - "Image: {{ item.ansible_facts.azure_vm.properties.storageProfile.imageReference }}"
+      - "Type: {{ item.ansible_facts.azure_vm.properties.hardwareProfile.vmSize }}"
+      - "Volume Size: {{ item.ansible_facts.azure_vm.properties.storageProfile.dataDisks[0].diskSizeGB }} GB"
+      - "Volume Type: {{ item.ansible_facts.azure_vm.properties.storageProfile.dataDisks[0].managedDisk.storageAccountType }}"
+      - >-
+        Public IP: {{
+          item.ansible_facts.azure_vm.properties.networkProfile.networkInterfaces[0]
+          .properties.ipConfigurations[0].properties.publicIPAddress.properties.ipAddress
+        }}
+      - >-
+        Private IP: {{
+          item.ansible_facts.azure_vm.properties.networkProfile.networkInterfaces[1]
+          .properties.ipConfigurations[0].properties.privateIPAddress
+        }}
+  loop: "{{ server_result.results }}"
+  loop_control:
+    label: "{{ item.ansible_facts.azure_vm.name | default('N/A') }}"
+  when:
+    - server_result.results is defined
+    - item.ansible_facts is defined
+
+- name: "Wait for host to be available via SSH"
+  ansible.builtin.wait_for:
+    host: >-
+      {{
+        item.ansible_facts.azure_vm.properties.networkProfile.networkInterfaces[0]
+        .properties.ipConfigurations[0].properties.publicIPAddress.properties.ipAddress
+      }}
+    port: 22
+    delay: 5
+    timeout: 300
+  loop: "{{ server_result.results }}"
+  loop_control:
+    label: "{{ item.ansible_facts.azure_vm.name | default('N/A') }}"
+  when:
+    - server_result.results is defined
+    - item.ansible_facts.azure_vm is defined
+
+# Inventory
+- block:
+    - name: "Inventory | Initialize ip_addresses variable"
+      ansible.builtin.set_fact:
+        ip_addresses: []
+
+    - name: "Inventory | Extract IP addresses"
+      ansible.builtin.set_fact:
+        ip_addresses: >-
+          {{ ip_addresses +
+            [{'public_ip': item.ansible_facts.azure_vm.properties.networkProfile.networkInterfaces[1]
+              .properties.ipConfigurations[0].properties.publicIPAddress.properties.ipAddress,
+              'private_ip': item.ansible_facts.azure_vm.properties.networkProfile.networkInterfaces[0]
+              .properties.ipConfigurations[0].properties.privateIPAddress}]
+          }}
+      loop: "{{ server_result.results | selectattr('ansible_facts.azure_vm', 'defined') }}"
+      loop_control:
+        label: >-
+          public_ip: {{
+            item.ansible_facts.azure_vm.properties.networkProfile.networkInterfaces[0]
+            .properties.ipConfigurations[0].properties.publicIPAddress.properties.ipAddress
+          }},
+          private_ip: {{
+            item.ansible_facts.azure_vm.properties.networkProfile.networkInterfaces[1]
+            .properties.ipConfigurations[0].properties.privateIPAddress
+          }}
+
+    - name: "Inventory | Generate in-memory inventory"
+      ansible.builtin.import_tasks: inventory.yml
+  when:
+    - server_result.results is defined
+    - server_result.results | selectattr('ansible_facts.azure_vm', 'defined')
+
+# Delete (if state is absent)
+- block:
+    - name: "Azure: Delete virtual machine"
+      azure.azcollection.azure_rm_virtualmachine:
+        resource_group: "{{ azure_resourcegroup | default('postgres-cluster-resource-group') }}"
+        name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
+        state: absent
+      loop: "{{ range(0, servers_count | int) | list }}"
+      loop_control:
+        index_var: idx
+        label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
+
+    - name: "Azure: Delete private network interface"
+      azure.azcollection.azure_rm_networkinterface:
+        resource_group: "{{ azure_resourcegroup | default('postgres-cluster-resource-group') }}"
+        name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-private-network-interface"
+        state: absent
+      loop: "{{ range(0, servers_count | int) | list }}"
+      loop_control:
+        index_var: idx
+        label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-private-network-interface"
+
+    - name: "Azure: Delete public network interface"
+      azure.azcollection.azure_rm_networkinterface:
+        resource_group: "{{ azure_resourcegroup | default('postgres-cluster-resource-group') }}"
+        name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-public-network-interface"
+        state: absent
+      loop: "{{ range(0, servers_count | int) | list }}"
+      loop_control:
+        index_var: idx
+        label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-public-network-interface"
+
+    - name: "Azure: Delete public IP"
+      azure.azcollection.azure_rm_publicipaddress:
+        resource_group: "{{ azure_resourcegroup | default('postgres-cluster-resource-group') }}"
+        name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-public-ip"
+        state: absent
+      loop: "{{ range(0, servers_count | int) | list }}"
+      loop_control:
+        index_var: idx
+        label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-public-ip"
+
+    - name: "Azure: Delete Private Security Group"
+      azure.azcollection.azure_rm_securitygroup:
+        resource_group: "{{ azure_resourcegroup | default('postgres-cluster-resource-group') }}"
+        name: "{{ patroni_cluster_name }}-private-security-group"
+        state: absent
+
+    - name: "Azure: Delete Public Security Group"
+      azure.azcollection.azure_rm_securitygroup:
+        resource_group: "{{ azure_resourcegroup | default('postgres-cluster-resource-group') }}"
+        name: "{{ patroni_cluster_name }}-public-security-group"
+        state: absent
+  when: state == 'absent'
+
+...

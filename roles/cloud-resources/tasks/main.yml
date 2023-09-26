@@ -7,7 +7,7 @@
       - "Please specify value for variables: 'server_type', 'server_image', 'server_location', 'volume_size'."
   when: state == 'present' and
     (server_type | length < 1 or
-    server_image | length < 1 or
+    (server_image | length < 1 and provision != 'azure') or
     server_location | length < 1 or
     volume_size | length < 1)
 
@@ -48,6 +48,10 @@
 - name: Import tasks for GCP
   ansible.builtin.import_tasks: gcp.yml
   when: provision | lower == 'gcp'
+
+- name: Import tasks for Azure
+  ansible.builtin.import_tasks: azure.yml
+  when: provision | lower == 'azure'
 
 - name: Import tasks for DigitalOcean
   ansible.builtin.import_tasks: digitalocean.yml
