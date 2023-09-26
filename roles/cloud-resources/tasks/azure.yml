@@ -283,9 +283,9 @@
       ansible.builtin.set_fact:
         ip_addresses: >-
           {{ ip_addresses +
-            [{'public_ip': item.ansible_facts.azure_vm.properties.networkProfile.networkInterfaces[1]
+            [{'public_ip': item.ansible_facts.azure_vm.properties.networkProfile.networkInterfaces[0]
               .properties.ipConfigurations[0].properties.publicIPAddress.properties.ipAddress,
-              'private_ip': item.ansible_facts.azure_vm.properties.networkProfile.networkInterfaces[0]
+              'private_ip': item.ansible_facts.azure_vm.properties.networkProfile.networkInterfaces[1]
               .properties.ipConfigurations[0].properties.privateIPAddress}]
           }}
       loop: "{{ server_result.results | selectattr('ansible_facts.azure_vm', 'defined') }}"
