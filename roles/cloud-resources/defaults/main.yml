@@ -1,3 +1,4 @@
+# yamllint disable rule:line-length
 ---
 
 provision: none  # Platform for server creation. Available options: 'aws', 'gcp', 'azure', 'digitalocean', 'hetzner'. Default: none (do not create).
@@ -7,7 +8,7 @@ servers_count: 3  # Number of servers in the cluster. Servers will be automatica
 
 server_name: "{{ patroni_cluster_name }}-pgnode"  # (optional) If not provided, a name will be auto-generated.
 server_type: ""  # (required) Server type.
-server_image: ""  # (required) OS image for the server.
+server_image: ""  # (required) OS image for the server. For Azure, use variables 'azure_vm_image_offer', 'azure_vm_image_publisher', 'azure_vm_image_sku', 'azure_vm_image_version' instead of variable 'server_image'
 server_location: ""  # (required) Server location or region.
 server_network: ""  # (optional) If provided, the server will be added to this network (needs to be created beforehand).
 
