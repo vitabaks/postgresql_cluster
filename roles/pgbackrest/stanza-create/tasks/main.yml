@@ -24,7 +24,6 @@
       changed_when:
         - stanza_create_result.rc == 0
         - stanza_create_result.stdout is not search("already exists")
-      when: is_master | bool
   when:
     - pgbackrest_repo_host | length < 1
     - "'postgres_cluster' in group_names"
