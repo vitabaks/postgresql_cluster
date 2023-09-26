@@ -215,7 +215,9 @@
 
     - name: Check the current PostgreSQL version
       run_once: true # noqa run-once
-      ansible.builtin.command: psql -tAXc "select current_setting('server_version')"
+      ansible.builtin.command: >-
+        psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -tAXc
+        "select current_setting('server_version')"
       register: postgres_version
       changed_when: false
 

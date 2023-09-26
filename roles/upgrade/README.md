@@ -1,6 +1,6 @@
 ## PostgreSQL in-place major upgrade
 
-This role is designed for in-place major upgrades of PostgreSQL, e.g., from version 14 to 15.
+This role is designed for in-place major upgrades of PostgreSQL (e.g., from version 15 to 16).
 
 #### Compatibility
 

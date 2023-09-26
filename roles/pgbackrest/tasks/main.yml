@@ -166,6 +166,7 @@
     - pgbackrest_repo_type|lower == "posix"
     - pgbackrest_repo_host is defined
     - pgbackrest_repo_host | length > 0
+    - not ansible_check_mode
   tags: pgbackrest, pgbackrest_ssh_keys
 
 - ansible.builtin.import_tasks: cron.yml

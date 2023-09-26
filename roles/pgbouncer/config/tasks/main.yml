@@ -25,9 +25,9 @@
       run_once: true
       become: true
       become_user: postgres
-      ansible.builtin.command: >
-        {{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -Atq
-        -c "SELECT concat('\"', usename, '\" \"', passwd, '\"') FROM pg_shadow where usename != '{{ patroni_replication_username }}'"
+      ansible.builtin.command: >-
+        {{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -tAXcq
+        "SELECT concat('\"', usename, '\" \"', passwd, '\"') FROM pg_shadow where usename != '{{ patroni_replication_username }}'"
       register: pg_shadow_result
       changed_when: false
       delegate_to: "{{ groups.master[0] }}"
@@ -52,7 +52,7 @@
   become: true
   become_user: postgres
   ansible.builtin.shell: |
-    for db in $({{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -tAXc \
+    for db in $({{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -tAXc \
     "select datname from pg_catalog.pg_database where datname <> 'template0'"); do
       {{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d "$db" -tAXc '
         CREATE OR REPLACE FUNCTION user_search(uname TEXT) RETURNS TABLE (usename name, passwd text) AS

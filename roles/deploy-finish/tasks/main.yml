@@ -10,7 +10,7 @@
       become: true
       become_user: postgres
       ansible.builtin.command:
-        "{{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -c\"\\du\""
+        "{{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -Xc\"\\du\""
       register: users_result
       delegate_to: "{{ groups.master[0] }}"
       changed_when: false
@@ -29,7 +29,7 @@
       become: true
       become_user: postgres
       ansible.builtin.command:
-        "{{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -c
+        "{{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -Xc
         \"
           SELECT
           d.datname as name,

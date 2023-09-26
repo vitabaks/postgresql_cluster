@@ -527,9 +527,7 @@
         - name: Prepare PostgreSQL | reload for apply the pg_hba.conf
           become: true
           become_user: postgres
-          ansible.builtin.command: "{{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -c 'SELECT pg_reload_conf()'"
-          register: psql_reload_result
-          failed_when: psql_reload_result.rc != 0
+          ansible.builtin.command: "{{ postgresql_bin_dir }}/pg_ctl reload -D {{ postgresql_data_dir }}"
 
         - name: Prepare PostgreSQL | make sure the user "{{ patroni_superuser_username }}" are present, and password does not differ from the specified
           community.postgresql.postgresql_user:
@@ -571,7 +569,8 @@
     - name: Prepare PostgreSQL | waiting for CHECKPOINT to complete before stopping postgresql
       become: true
       become_user: postgres
-      ansible.builtin.command: "{{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -c 'CHECKPOINT'"
+      ansible.builtin.command: >
+        {{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -tAXc "CHECKPOINT"
       register: checkpoint_result
       until: checkpoint_result.rc == 0
       retries: 300
@@ -707,7 +706,9 @@
                 (not is_master | bool and 'pgbackrest' in patroni_create_replica_methods))
 
         - name: Waiting for PostgreSQL Recovery to complete (WAL apply)
-          ansible.builtin.command: "{{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -tAc 'SELECT pg_is_in_recovery()'"
+          ansible.builtin.command: >-
+            {{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -tAXc
+            "select pg_is_in_recovery()"
           register: pg_is_in_recovery
           until: pg_is_in_recovery.stdout != "t"
           retries: 1200  # timeout 10 hours
@@ -813,7 +814,9 @@
     - name: Wait for PostgreSQL Recovery to complete (WAL apply)
       become: true
       become_user: postgres
-      ansible.builtin.command: "{{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -tAc 'SELECT pg_is_in_recovery()'"
+      ansible.builtin.command: >-
+        {{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -tAXc
+        "select pg_is_in_recovery()"
       register: pg_is_in_recovery
       until: pg_is_in_recovery.stdout == "f"
       retries: 1200  # timeout 10 hours
@@ -862,17 +865,19 @@
     - name: Prepare PostgreSQL | reload for apply the pg_hba.conf
       become: true
       become_user: postgres
-      ansible.builtin.command: "{{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -c 'SELECT pg_reload_conf()'"
-      register: psql_reload_result
-      changed_when: psql_reload_result.rc == 0
-      failed_when: false  # exec pg_reload_conf on all running postgres (to re-run with --tag pg_hba).
+      ansible.builtin.command: "{{ postgresql_bin_dir }}/pg_ctl reload -D {{ postgresql_data_dir }}"
+      register: pg_ctl_reload_result
+      changed_when: pg_ctl_reload_result.rc == 0
+      failed_when: false  # exec 'reload' on all running postgres (to re-run with --tag pg_hba).
       when: generate_pg_hba is changed
   when: existing_pgcluster is not defined or not existing_pgcluster|bool
   tags: patroni, pg_hba, pg_hba_generate
 
 - block:  # PITR (custom bootstrap) - password reset for PostgreSQL users
     - name: Make sure the Master is not in recovery mode
-      ansible.builtin.command: "{{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -tAc 'SELECT pg_is_in_recovery()'"
+      ansible.builtin.command: >-
+        {{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -tAXc
+        "select pg_is_in_recovery()"
       register: pg_is_in_recovery
       until: pg_is_in_recovery.stdout != "t"
       retries: 1200  # timeout 10 hours

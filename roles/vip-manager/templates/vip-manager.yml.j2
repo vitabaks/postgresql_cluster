@@ -4,7 +4,7 @@
 interval: {{ vip_manager_interval }}
 
 # the etcd or consul key which vip-manager will regularly poll.
-trigger-key: "/service/{{ patroni_cluster_name }}/leader"
+trigger-key: "/{{ patroni_etcd_namespace | default('service') }}/{{ patroni_cluster_name }}/leader"
 # if the value of the above key matches the trigger-value (often the hostname of this host), vip-manager will try to add the virtual ip address to the interface specified in Iface
 trigger-value: "{{ ansible_hostname }}"
 
@@ -26,8 +26,15 @@ dcs-endpoints:
 {% if dcs_exists|bool and dcs_type == 'etcd' %}
 dcs-endpoints:
 {% for etcd_hosts in patroni_etcd_hosts %}
-  - http://{{ etcd_hosts.host }}:{{ etcd_hosts.port }}
+  - {{ patroni_etcd_protocol | default('http', true) }}://{{ etcd_hosts.host }}:{{ etcd_hosts.port }}
 {% endfor %}
+
+{% if patroni_etcd_username | default("") | length > 0 %}
+etcd-user: {{ patroni_etcd_username | default("") }}
+{% endif %}
+{% if patroni_etcd_password | default("") | length > 0 %}
+etcd-password: {{ patroni_etcd_password }}
+{% endif %}
 {% endif %}
 
   # consul will always only use the first entry from this list.

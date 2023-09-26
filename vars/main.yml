@@ -65,6 +65,10 @@ patroni_etcd_hosts: []  # list of servers of an existing etcd cluster
 #  - { host: "10.128.64.140", port: "2379" }
 #  - { host: "10.128.64.142", port: "2379" }
 #  - { host: "10.128.64.143", port: "2379" }
+patroni_etcd_namespace: "service"  # (optional) etcd namespace (prefix)
+patroni_etcd_username: "" # (optional) username for etcd authentication
+patroni_etcd_password: "" # (optional) password for etcd authentication
+patroni_etcd_protocol: "" # (optional) http or https, if not specified http is used
 
 # more options you can specify in the roles/patroni/templates/patroni.yml.j2
 # https://patroni.readthedocs.io/en/latest/SETTINGS.html#etcd
@@ -541,7 +545,7 @@ pgbackrest_patroni_cluster_restore_command:
 # If 'repo_host' is defined, the cron jobs will be created on the pgbackrest server.
 pgbackrest_cron_jobs:
   - name: "pgBackRest: Full Backup"
-    file: /etc/cron.d/pgbackrest
+    file: "/etc/cron.d/pgbackrest-{{ patroni_cluster_name }}"
     user: "postgres"
     minute: "00"
     hour: "3"
@@ -551,7 +555,7 @@ pgbackrest_cron_jobs:
     job: "pgbackrest --type=full --stanza={{ pgbackrest_stanza }} backup"
     # job: "if [ $(psql -tAXc 'select pg_is_in_recovery()') = 'f' ]; then pgbackrest --type=full --stanza={{ pgbackrest_stanza }} backup; fi"
   - name: "pgBackRest: Diff Backup"
-    file: /etc/cron.d/pgbackrest
+    file: "/etc/cron.d/pgbackrest-{{ patroni_cluster_name }}"
     user: "postgres"
     minute: "00"
     hour: "3"
