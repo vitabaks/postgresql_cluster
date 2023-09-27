@@ -70,8 +70,6 @@
       ansible.builtin.include_role:
         name: upgrade
         tasks_from: pre_checks
-    - ansible.builtin.include_role:
-        name: patroni/pre-checks
   tags:
     - upgrade
     - pre-checks
