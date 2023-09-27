@@ -46,6 +46,12 @@
         var: new_nodes
       tags: always
 
+    - name: "Patroni pre-checks"
+      ansible.builtin.include_role:
+        name: patroni/pre-checks
+      when:
+        - new_node | default(false) | bool
+
     - name: Add a new node to pg_hba.conf on existing cluster nodes
       ansible.builtin.include_role:
         name: patroni/config
