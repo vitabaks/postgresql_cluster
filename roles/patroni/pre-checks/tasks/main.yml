@@ -1,3 +1,4 @@
+---
 - block:
     - name: "Check all hosts of the etcd cluster"
       ansible.builtin.wait_for:
