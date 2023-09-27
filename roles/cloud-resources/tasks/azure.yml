@@ -102,8 +102,8 @@
           - name: public-access
             description: Enable ports for public access
             protocol: Tcp
-            destination_port_range: "{{ destination_port_list }}"
-            destination_address_prefix: "*"
+            destination_port_range: "{{ public_port_list }}"
+            source_address_prefix: "*"
             access: Allow
             priority: 1002
             direction: Inbound
@@ -128,14 +128,14 @@
               - "8302" # Consul
               - "8500" # Consul
               - "8600" # Consul
-            destination_address_prefix: >-
+            source_address_prefix: >-
                 {{ network_info.virtualnetworks[0].address_prefixes |
                     default(azure_virtualnetwork_prefix | default('10.0.0.0/16', true), true) }}
             access: Allow
             priority: 1003
             direction: Inbound
       vars:
-        destination_port_list: >-
+        public_port_list: >-
           {{
             ([ansible_ssh_port | default(22)] if ssh_public_access | bool else []) +
             ([
