@@ -1,6 +1,6 @@
 - block:
     - name: "Check all hosts of the etcd cluster"
-      wait_for:
+      ansible.builtin.wait_for:
         host: "{{ item.host }}"
         port: "{{ item.port }}"
         state: started
