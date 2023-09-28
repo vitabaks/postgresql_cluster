@@ -98,55 +98,86 @@
       azure.azcollection.azure_rm_securitygroup:
         resource_group: "{{ azure_resourcegroup | default('postgres-cluster-resource-group') }}"
         name: "{{ patroni_cluster_name }}-security-group"
-        rules:
-          - name: public-access
-            description: Enable ports for public access
-            protocol: Tcp
-            destination_port_range: "{{ public_port_list }}"
-            source_address_prefix: "*"
-            access: Allow
-            priority: 1002
-            direction: Inbound
-          - name: postgres-cluster
-            description: Enable ports for Postgres cluster
-            protocol: Tcp
-            destination_port_range:
-              - "{{ ansible_ssh_port | default(22) }}"
-              - "{{ haproxy_listen_port.master }}"
-              - "{{ haproxy_listen_port.replicas }}"
-              - "{{ haproxy_listen_port.replicas_sync }}"
-              - "{{ haproxy_listen_port.replicas_async }}"
-              - "{{ haproxy_listen_port.stats }}"
-              - "{{ pgbouncer_listen_port }}"
-              - "{{ postgresql_port }}"
-              - "{{ patroni_restapi_port }}"
-              - "{{ netdata_port | default('19999') }}"
-              - "2379" # ETCD
-              - "2380" # ETCD
-              - "8300" # Consul
-              - "8301" # Consul
-              - "8302" # Consul
-              - "8500" # Consul
-              - "8600" # Consul
-            source_address_prefix: >-
-                {{ network_info.virtualnetworks[0].address_prefixes |
-                    default(azure_virtualnetwork_prefix | default('10.0.0.0/16', true), true) }}
-            access: Allow
-            priority: 1003
-            direction: Inbound
+        rules: "{{ rules }}"
       vars:
-        public_port_list: >-
+        rules: >-
           {{
-            ([ansible_ssh_port | default(22)] if ssh_public_access | bool else []) +
-            ([
-              haproxy_listen_port.master,
-              haproxy_listen_port.replicas,
-              haproxy_listen_port.replicas_sync,
-              haproxy_listen_port.replicas_async,
-              pgbouncer_listen_port,
-              postgresql_port,
-              netdata_port | default('19999')
-            ] if database_public_access | bool else [])
+            ([] if not ssh_public_access | bool else
+            [{
+              'name': 'public-ssh-rule',
+              'description': 'Enable ports for SSH public access',
+              'protocol': 'Tcp',
+              'destination_port_range': [ansible_ssh_port | default(22)],
+              'source_address_prefix': '*',
+              'access': 'Allow',
+              'priority': 100,
+              'direction': 'Inbound'
+            }]) +
+            ([] if not database_public_access | bool else
+            [{
+              'name': 'public-database-rule',
+              'description': 'Enable ports for public database access',
+              'protocol': 'Tcp',
+              'destination_port_range': ([
+                  haproxy_listen_port.master | default('5000', true),
+                  haproxy_listen_port.replicas | default('5001', true),
+                  haproxy_listen_port.replicas_sync | default('5002', true),
+                  haproxy_listen_port.replicas_async | default('5003', true),
+                  haproxy_listen_port.stats | default('7000', true)
+                ] if with_haproxy_load_balancing | bool else []) +
+                ([pgbouncer_listen_port | default('6432', true)] if not with_haproxy_load_balancing | bool and pgbouncer_install | bool else []) +
+                ([postgresql_port | default('5432', true)] if not with_haproxy_load_balancing | bool and not pgbouncer_install | bool else []),
+              'source_address_prefix': '*',
+              'access': 'Allow',
+              'priority': 200,
+              'direction': 'Inbound'
+            }]) +
+            ([] if not netdata_install | bool else
+            [{
+              'name': 'public-netdata-rule',
+              'description': 'Enable ports for Netdata',
+              'protocol': 'Tcp',
+              'destination_port_range': [netdata_port | default('19999', true)],
+              'source_address_prefix': '*',
+              'access': 'Allow',
+              'priority': 300,
+              'direction': 'Inbound'
+            }]) +
+            [{
+              'name': 'private-postgres-cluster-rule',
+              'description': 'Enable ports for Postgres cluster',
+              'protocol': 'Tcp',
+              'destination_port_range': ([
+                  haproxy_listen_port.master | default('5000', true),
+                  haproxy_listen_port.replicas | default('5001', true),
+                  haproxy_listen_port.replicas_sync | default('5002', true),
+                  haproxy_listen_port.replicas_async | default('5003', true),
+                  haproxy_listen_port.stats | default('7000', true)
+                ] if with_haproxy_load_balancing | bool else []) +
+                ([pgbouncer_listen_port | default('6432', true)] if pgbouncer_install | bool else []) +
+                [
+                  postgresql_port | default('5432', true),
+                  patroni_restapi_port | default('8008', true),
+                ] +
+                ([
+                  etcd_client_port | default('2379', true),
+                  etcd_peer_port | default('2380', true),
+                ] if dcs_type == 'etcd' else []) +
+                ([
+                  consul_ports_dns | default('8600', true),
+                  consul_ports_http | default('8500', true),
+                  consul_ports_rpc | default('8400', true),
+                  consul_ports_serf_lan | default('8301', true),
+                  consul_ports_serf_wan | default('8302', true),
+                  consul_ports_server | default('8300', true)
+                ] if dcs_type == 'consul' else []) +
+                ([netdata_port | default('19999', true)] if netdata_install | bool else []),
+              'source_address_prefix': network_info.virtualnetworks[0].address_prefixes |
+                                      default(azure_virtualnetwork_prefix | default('10.0.0.0/16', true), true),
+              'access': 'Allow',
+              'priority': 400,
+              'direction': 'Inbound'
+            }]
           }}
       when: firewall | bool
 
