@@ -4,7 +4,7 @@
   gather_facts: true
 
   tasks:
-    - name: Set variables for Patroni cluster deployment test
+    - name: Set variables for PostgreSQL Cluster deployment test
       ansible.builtin.set_fact:
         firewall_enabled_at_boot: false
         firewall_enable_ipv6: false # Added to prevent test failures in CI.
@@ -30,7 +30,7 @@
         - not (ansible_distribution == 'Ubuntu' and ansible_distribution_version is version('20.04', '<'))
         - not (ansible_distribution == 'Debian' and ansible_distribution_version is version('11', '>')) # TODO Debian 12
 
-    - name: Set variables for Patroni update test
+    - name: Set variables for PostgreSQL Cluster update test
       ansible.builtin.set_fact:
         target: system # includes updates to Postgres, Patroni, and all system packages
 
