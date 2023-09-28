@@ -71,5 +71,8 @@
         path: /run/nologin
         state: absent
 
-- name: Deploy PostgreSQL Cluster
+- name: Deploy PostgreSQL Cluster test
   ansible.builtin.import_playbook: ../../deploy_pgcluster.yml
+
+- name: Config PostgreSQL Cluster test
+  ansible.builtin.import_playbook: ../../config_pgcluster.yml
