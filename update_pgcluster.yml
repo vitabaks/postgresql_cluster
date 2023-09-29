@@ -49,6 +49,8 @@
   become: true
   become_user: postgres
   any_errors_fatal: true
+  vars_files:
+    - vars/main.yml
   vars:
     max_replication_lag_bytes: 10485760 # 10 MiB
     max_transaction_sec: 15 # seconds

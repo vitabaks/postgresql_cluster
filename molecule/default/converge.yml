@@ -4,7 +4,7 @@
   gather_facts: true
 
   tasks:
-    - name: Set variables for Patroni cluster deployment test
+    - name: Set variables for PostgreSQL Cluster deployment test
       ansible.builtin.set_fact:
         firewall_enabled_at_boot: false
         firewall_enable_ipv6: false # Added to prevent test failures in CI.
@@ -29,6 +29,10 @@
       when:
         - not (ansible_distribution == 'Ubuntu' and ansible_distribution_version is version('20.04', '<'))
         - not (ansible_distribution == 'Debian' and ansible_distribution_version is version('11', '>')) # TODO Debian 12
+
+    - name: Set variables for PostgreSQL Cluster update test
+      ansible.builtin.set_fact:
+        target: system # includes updates to Postgres, Patroni, and all system packages
 
     - name: Clean yum cache (molecule containers)
       ansible.builtin.command: yum clean all
@@ -71,5 +75,11 @@
         path: /run/nologin
         state: absent
 
-- name: Deploy PostgreSQL Cluster
+- name: Deploy PostgreSQL Cluster test
   ansible.builtin.import_playbook: ../../deploy_pgcluster.yml
+
+- name: Config PostgreSQL Cluster test
+  ansible.builtin.import_playbook: ../../config_pgcluster.yml
+
+- name: Update PostgreSQL Cluster test
+  ansible.builtin.import_playbook: ../../update_pgcluster.yml

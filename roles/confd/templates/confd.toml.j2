@@ -15,9 +15,8 @@ nodes = [
 ]
 {% if dcs_exists|bool and dcs_type == 'etcd' %}
 {% if patroni_etcd_username | default('') | length > 0 %}
+basic_auth = true
 username = "{{ patroni_etcd_username | default('') }}"
-{% endif %}
-{% if patroni_etcd_password | default('') | length > 0 %}
-password = "{{ patroni_etcd_password }}"
+password = "{{ patroni_etcd_password | default('') }}"
 {% endif %}
 {% endif %}
