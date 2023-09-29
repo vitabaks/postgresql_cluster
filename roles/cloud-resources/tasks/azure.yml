@@ -102,21 +102,19 @@
       vars:
         rules: >-
           {{
-            ([] if not ssh_public_access | bool else
             [{
               'name': 'public-ssh-rule',
-              'description': 'Enable ports for SSH public access',
+              'description': 'Ports for SSH public access',
               'protocol': 'Tcp',
               'destination_port_range': [ansible_ssh_port | default(22)],
               'source_address_prefix': '*',
-              'access': 'Allow',
-              'priority': 100,
+              'access': (ssh_public_access | bool) | ternary('Allow', 'Deny'),
+              'priority': 200,
               'direction': 'Inbound'
-            }]) +
-            ([] if not database_public_access | bool else
+            }] +
             [{
               'name': 'public-database-rule',
-              'description': 'Enable ports for public database access',
+              'description': 'Ports for public database access',
               'protocol': 'Tcp',
               'destination_port_range': ([
                   haproxy_listen_port.master | default('5000', true),
@@ -128,10 +126,10 @@
                 ([pgbouncer_listen_port | default('6432', true)] if not with_haproxy_load_balancing | bool and pgbouncer_install | bool else []) +
                 ([postgresql_port | default('5432', true)] if not with_haproxy_load_balancing | bool and not pgbouncer_install | bool else []),
               'source_address_prefix': '*',
-              'access': 'Allow',
-              'priority': 200,
+              'access': (database_public_access | bool) | ternary('Allow', 'Deny'),
+              'priority': 300,
               'direction': 'Inbound'
-            }]) +
+            }] +
             ([] if not netdata_install | bool else
             [{
               'name': 'public-netdata-rule',
@@ -139,15 +137,16 @@
               'protocol': 'Tcp',
               'destination_port_range': [netdata_port | default('19999', true)],
               'source_address_prefix': '*',
-              'access': 'Allow',
-              'priority': 300,
+              'access': (netdata_public_access | bool) | ternary('Allow', 'Deny'),
+              'priority': 400,
               'direction': 'Inbound'
             }]) +
             [{
               'name': 'private-postgres-cluster-rule',
               'description': 'Enable ports for Postgres cluster',
               'protocol': 'Tcp',
-              'destination_port_range': ([
+              'destination_port_range': [ansible_ssh_port | default(22)] +
+                ([
                   haproxy_listen_port.master | default('5000', true),
                   haproxy_listen_port.replicas | default('5001', true),
                   haproxy_listen_port.replicas_sync | default('5002', true),
@@ -175,7 +174,7 @@
               'source_address_prefix': network_info.virtualnetworks[0].address_prefixes |
                                       default(azure_virtualnetwork_prefix | default('10.0.0.0/16', true), true),
               'access': 'Allow',
-              'priority': 400,
+              'priority': 100,
               'direction': 'Inbound'
             }]
           }}
