@@ -17,6 +17,15 @@ jobs:
       - name: Set TERM environment variable
         run: echo "TERM=xterm" >> $GITHUB_ENV
 
+      - name: Extract branch name
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF##*/}" == "master" ]]; then
+            echo "TAG=latest" >> $GITHUB_ENV
+          else
+            echo "TAG=${GITHUB_REF##*/}" >> $GITHUB_ENV
+          fi
+
       - name: Checkout
         uses: actions/checkout@v3
 
@@ -28,5 +37,17 @@ jobs:
       - name: Install dependencies
         run: make bootstrap-dev
 
-      - name: Run Docker tests
-        run: make docker-tests
+      - name: Run Docker lint
+        run: make docker-lint
+
+      - name: Run Docker build
+        run: make docker-build
+        env:
+          TAG: ${{ env.TAG }}
+  
+      - name: Run Docker push
+        run: make docker-push
+        env:
+          TAG: ${{ env.TAG }}
+          DOCKER_REGISTRY_USER: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_REGISTRY_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
