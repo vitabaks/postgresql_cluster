@@ -120,8 +120,7 @@
                   haproxy_listen_port.master | default('5000', true),
                   haproxy_listen_port.replicas | default('5001', true),
                   haproxy_listen_port.replicas_sync | default('5002', true),
-                  haproxy_listen_port.replicas_async | default('5003', true),
-                  haproxy_listen_port.stats | default('7000', true)
+                  haproxy_listen_port.replicas_async | default('5003', true)
                 ] if with_haproxy_load_balancing | bool else []) +
                 ([pgbouncer_listen_port | default('6432', true)] if not with_haproxy_load_balancing | bool and pgbouncer_install | bool else []) +
                 ([postgresql_port | default('5432', true)] if not with_haproxy_load_balancing | bool and not pgbouncer_install | bool else []),
