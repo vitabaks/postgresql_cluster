@@ -147,26 +147,26 @@
 
     # if server_network is not specified, create a network and subnet
     - block:
-        - name: "Hetzner Cloud: Create a network 'postgres-cluster-network-{{ target_network_zone }}'"
+        - name: "Hetzner Cloud: Create a network '{{ hcloud_network_name | default('postgres-cluster-network-' + target_network_zone) }}'"
           hetzner.hcloud.hcloud_network:
             api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
-            name: "postgres-cluster-network-{{ target_network_zone }}"
-            ip_range: 10.0.0.0/16
+            name: "{{ hcloud_network_name | default('postgres-cluster-network-' + target_network_zone) }}"
+            ip_range: "{{ hcloud_network_ip_range | default('10.0.0.0/16') }}"
             state: present
 
-        - name: "Hetzner Cloud: Create a subnetwork in network 'postgres-cluster-network-{{ target_network_zone }}'"
+        - name: "Hetzner Cloud: Create a subnetwork in network '{{ hcloud_network_name | default('postgres-cluster-network-' + target_network_zone) }}'"
           hetzner.hcloud.hcloud_subnetwork:
             api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
-            network: "postgres-cluster-network-{{ target_network_zone }}"
-            ip_range: 10.0.1.0/24
+            network: "{{ hcloud_network_name | default('postgres-cluster-network-' + target_network_zone) }}"
+            ip_range: "{{ hcloud_subnetwork_ip_range | default('10.0.1.0/24') }}"
             network_zone: "{{ target_network_zone }}"
             type: server
             state: present
 
         - name: "Set variable: server_network"
           ansible.builtin.set_fact:
-            server_network: "postgres-cluster-network-{{ target_network_zone }}"
-            server_network_ip_range: "10.0.0.0/16"
+            server_network: "{{ hcloud_network_name | default('postgres-cluster-network-' + target_network_zone) }}"
+            server_network_ip_range: "{{ hcloud_network_ip_range | default('10.0.0.0/16') }}"
       when: server_network | length < 1
 
     # Firewall
