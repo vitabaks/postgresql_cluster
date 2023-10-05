@@ -33,8 +33,8 @@ yum_repository: []
 #    gpgkey: "https://my-repo-key.url"
 #    gpgcheck: "yes"
 
-install_epel_repo: true  # or 'false' (installed from the package "epel-release-latest.noarch.rpm")
 install_postgresql_repo: true  # or 'false' (installed from the package "pgdg-redhat-repo-latest.noarch.rpm")
+install_epel_repo: true  # or 'false' (installed from the package "epel-release-latest.noarch.rpm")
 install_scl_repo: true  # or 'false' (Redhat 7 family only)
 
 # Packages (for yum repo)
@@ -72,6 +72,7 @@ system_packages:
   - iptables
   - acl
   - bind-utils
+  - perf
 
 # The glibc-langpack package includes the basic information required to support the language in your applications.
 # for RHEL version 8 (only)
@@ -84,7 +85,8 @@ postgresql_packages:
   - postgresql{{ postgresql_version }}
   - postgresql{{ postgresql_version }}-server
   - postgresql{{ postgresql_version }}-contrib
-#  - postgresql{{ postgresql_version }}-devel
+  - postgresql{{ postgresql_version }}-devel
+  - postgresql{{ postgresql_version }}-debuginfo
 #  - pg_repack_{{ postgresql_version }}
 #  - pg_cron_{{ postgresql_version }}
 #  - pg_stat_kcache_{{ postgresql_version }}

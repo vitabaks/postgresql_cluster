@@ -58,13 +58,14 @@ system_packages:
   - iptables
   - acl
   - dnsutils
+  - "{{ 'linux-tools-common' if ansible_distribution == 'Ubuntu' else 'linux-perf' }}" # perf
 
 postgresql_packages:
   - postgresql-{{ postgresql_version }}
   - postgresql-client-{{ postgresql_version }}
   - postgresql-contrib-{{ postgresql_version }}
   - postgresql-server-dev-{{ postgresql_version }}
-#  - postgresql-{{ postgresql_version }}-dbgsym
+  - postgresql-{{ postgresql_version }}-dbgsym
 #  - postgresql-{{ postgresql_version }}-repack
 #  - postgresql-{{ postgresql_version }}-cron
 #  - postgresql-{{ postgresql_version }}-pg-stat-kcache

@@ -25,8 +25,9 @@
         name: "{{ item.name }}"
         description: "{{ item.description }}"
         baseurl: "{{ item.baseurl }}"
-        gpgkey: "{{ item.gpgkey }}"
-        gpgcheck: "{{ item.gpgcheck }}"
+        gpgkey: "{{ item.gpgkey | default(omit) }}"
+        gpgcheck: "{{ item.gpgcheck | default(true) }}"
+        enabled: "{{ item.enabled | default(true) }}"
       loop: "{{ yum_repository | flatten(1) }}"
       when: yum_repository | length > 0
 
@@ -172,6 +173,42 @@
       retries: 3
       when: install_postgresql_repo|bool
       tags: install_postgresql_repo
+
+    # Enable Debuginfo repository
+    - block:
+        - name: Enable PostgreSQL debuginfo repository
+          ansible.builtin.shell: |
+            set -o pipefail;
+            sed -i '/\[pgdg[0-9]*-debuginfo\]/,/^$/ s/enabled=0/enabled=1/' {{ pgdg_redhat_repo_path }}
+            sed -i '/\[pgdg[0-9]*-debuginfo\]/,/^$/ s/gpgcheck=1/gpgcheck=0/' {{ pgdg_redhat_repo_path }}
+          vars:
+            pgdg_redhat_repo_path: "/etc/yum.repos.d/pgdg-redhat-all.repo"
+
+        # Check if the repository entry exists in the file
+        - name: Check if pgdg{{ postgresql_version }}-debuginfo exists in repo file
+          ansible.builtin.lineinfile:
+            path: "{{ pgdg_redhat_repo_path }}"
+            regexp: '^\[pgdg{{ postgresql_version }}-debuginfo\]'
+            state: absent
+          check_mode: true
+          changed_when: false
+          register: repo_check
+          vars:
+            pgdg_redhat_repo_path: "/etc/yum.repos.d/pgdg-redhat-all.repo"
+
+        # If the entry does not exist, try to add the repository
+        - name: Add pgdg{{ postgresql_version }}-debuginfo repo if not present
+          ansible.builtin.yum_repository:
+            name: "pgdg{{ postgresql_version }}-debuginfo"
+            description: "PostgreSQL {{ postgresql_version }} for RHEL {{ ansible_distribution_major_version }} - x86_64 - Debuginfo"
+            baseurl: "https://download.postgresql.org/pub/repos/yum/debug/{{ postgresql_version }}/redhat/rhel-{{ ansible_distribution_major_version }}-x86_64/"
+            gpgcheck: false
+            enabled: true
+          when: repo_check.found == 0
+      when: debuginfo_package in postgresql_packages
+      vars:
+        debuginfo_package: "postgresql{{ postgresql_version }}-debuginfo"
+      tags: install_postgresql_repo, debuginfo
   environment: "{{ proxy_env | default({}) }}"
   when: installation_method == "repo" and ansible_os_family == "RedHat"
   tags: add_repo
