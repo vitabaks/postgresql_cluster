@@ -43,7 +43,7 @@ six==1.16.0
 subprocess-tee==0.4.1
 text-unidecode==1.3
 tomli==2.0.1
-urllib3==1.26.15
+urllib3==1.26.17
 wcmatch==8.4.1
 websocket-client==1.5.2
 yamllint==1.31.0
