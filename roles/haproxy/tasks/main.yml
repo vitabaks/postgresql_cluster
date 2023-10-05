@@ -5,6 +5,7 @@
   delegate_to: "{{ item }}"
   delegate_facts: true
   loop: "{{ groups['postgres_cluster'] }}"
+  when: hostvars[groups['postgres_cluster'][0]].ansible_hostname is not defined
 
 # Install HAProxy from rpm/deb packages
 # from repo
