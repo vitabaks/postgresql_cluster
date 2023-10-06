@@ -1,0 +1,35 @@
+---
+# Extension Auto-Setup: repository
+
+# TimescaleDB (if 'enable_timescale' is 'true')
+- block:
+    # Debian based
+    - name: Add TimescaleDB repository apt-key
+      ansible.builtin.apt_key:
+        url: "https://packagecloud.io/timescale/timescaledb/gpgkey"
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Add TimescaleDB repository
+      ansible.builtin.apt_repository:
+        repo: "deb https://packagecloud.io/timescale/timescaledb/{{ ansible_distribution | lower }}/ {{ ansible_distribution_release }} main"
+        state: present
+        update_cache: true
+      when: ansible_os_family == "Debian"
+
+    # RedHat based
+    - name: Add TimescaleDB repository
+      ansible.builtin.yum_repository:
+        name: "timescale_timescaledb"
+        description: "timescaledb repo"
+        baseurl: "https://packagecloud.io/timescale/timescaledb/el/{{ ansible_distribution_major_version }}/x86_64"
+        gpgkey: "https://packagecloud.io/timescale/timescaledb/gpgkey"
+        gpgcheck: "no"
+      when: ansible_os_family == "RedHat"
+  environment: "{{ proxy_env | default({}) }}"
+  when:
+    - installation_method == "repo"
+    - (enable_timescale | default(false)| bool) or (enable_timescaledb | default(false)| bool)
+  tags: add_repo, timescaledb, timescale
+
+...

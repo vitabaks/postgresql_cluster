@@ -31,6 +31,7 @@
     - name: Set variables for Extansions test
       ansible.builtin.set_fact:
         enable_pg_repack: true
+        enable_pg_cron: true
 
     - name: Set variables for PostgreSQL Cluster update test
       ansible.builtin.set_fact:
