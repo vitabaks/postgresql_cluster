@@ -115,4 +115,20 @@
     - perf_result.rc != 0
   tags: perf
 
+# FlameGraph
+- block:
+    - name: Make sure the git are present
+      ansible.builtin.package:
+        name: git
+        state: present
+
+    - name: "Download 'FlameGraph' to /var/opt/FlameGraph"
+      ansible.builtin.git:
+        repo: https://github.com/brendangregg/FlameGraph.git
+        dest: "/var/opt/FlameGraph"
+        single_branch: true
+        version: master
+        update: false
+  tags: flamegraph
+
 ...

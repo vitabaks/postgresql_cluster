@@ -106,4 +106,4 @@
 - netdata
 - ssh_public_keys
 - mount
-- perf
+- perf, flamegraph
