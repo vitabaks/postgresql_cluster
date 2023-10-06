@@ -85,4 +85,24 @@
           (postgresql_version is version('10', '<=') or postgresql_version is version('16', '>=')))
   tags: pgaudit
 
+# pgvector (if 'enable_pgvector' is 'true')
+- name: Install pgvector package
+  ansible.builtin.package:
+    name: >-
+      {% if ansible_os_family == 'Debian' %}
+      postgresql-{{ postgresql_version }}-pgvector
+      {% else %}
+      pgvector_{{ postgresql_version }}
+      {% endif %}
+    state: present
+  register: package_status
+  until: package_status is success
+  delay: 5
+  retries: 3
+  when:
+    - enable_pgvector | default(false)| bool
+    - (ansible_os_family == 'Debian' and postgresql_version is version('11', '>='))
+    - (ansible_os_family == 'RedHat' and postgresql_version is version('12', '>='))
+  tags: pgvector
+
 ...
