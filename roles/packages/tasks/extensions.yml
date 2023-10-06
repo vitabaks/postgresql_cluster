@@ -32,7 +32,10 @@
   until: package_status is success
   delay: 5
   retries: 3
-  when: enable_pg_repack | default(false)| bool
+  when:
+    - enable_pg_repack | default(false)| bool
+    - not (ansible_os_family == 'RedHat' and
+          (postgresql_version is version('10', '<=') or postgresql_version is version('16', '>=')))
   tags: pg_repack
 
 # pg_cron (if 'enable_pg_cron' is 'true')
@@ -49,7 +52,37 @@
   until: package_status is success
   delay: 5
   retries: 3
-  when: enable_pg_cron | default(false)| bool
+  when:
+    - enable_pg_cron | default(false)| bool
+    - not (ansible_os_family == 'RedHat' and postgresql_version is version('10', '<='))
   tags: pg_cron
+
+# pgaudit (if 'enable_pgaudit' is 'true')
+- name: Install pgaudit package
+  ansible.builtin.package:
+    name: >-
+      {% if ansible_os_family == 'Debian' %}
+        postgresql-{{ postgresql_version }}-pgaudit
+      {% elif ansible_os_family == 'RedHat' and postgresql_version == "15" %}
+        pgaudit17_{{ postgresql_version }}
+      {% elif ansible_os_family == 'RedHat' and postgresql_version == "14" %}
+        pgaudit16_{{ postgresql_version }}
+      {% elif ansible_os_family == 'RedHat' and postgresql_version == "13" %}
+        pgaudit15_{{ postgresql_version }}
+      {% elif ansible_os_family == 'RedHat' and postgresql_version == "12" %}
+        pgaudit14_{{ postgresql_version }}
+      {% elif ansible_os_family == 'RedHat' and postgresql_version == "11" %}
+        pgaudit13_{{ postgresql_version }}
+      {% endif %}
+    state: present
+  register: package_status
+  until: package_status is success
+  delay: 5
+  retries: 3
+  when:
+    - enable_pgaudit | default(false)| bool
+    - not (ansible_os_family == 'RedHat' and
+          (postgresql_version is version('10', '<=') or postgresql_version is version('16', '>=')))
+  tags: pgaudit
 
 ...

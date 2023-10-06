@@ -23,15 +23,12 @@
         postgresql_data_dir: "/pgdata/{{ postgresql_version }}/main"
         postgresql_wal_dir: "/pgwal/{{ postgresql_version }}/pg_wal"
 
-    - name: Set variables for TimescaleDB cluster deployment test
-      ansible.builtin.set_fact:
-        enable_timescale: true
-      when: not (ansible_distribution == 'Ubuntu' and ansible_distribution_version is version('20.04', '<'))
-
     - name: Set variables for Extansions test
       ansible.builtin.set_fact:
+        enable_timescale: true
         enable_pg_repack: true
         enable_pg_cron: true
+        enable_pgaudit: true
 
     - name: Set variables for PostgreSQL Cluster update test
       ansible.builtin.set_fact:
