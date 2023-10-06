@@ -1,0 +1,94 @@
+---
+# Check if perf is installed correctly, or build a perf from the source code
+
+- name: Check if perf is installed
+  ansible.builtin.command: perf --version
+  register: perf_result
+  failed_when: false
+  changed_when: false
+  tags: perf
+
+# Build perf from source (if perf is not installed)
+- block:
+    - name: Extract kernel version
+      ansible.builtin.set_fact:
+        kernel_version: "{{ ansible_kernel.split('-')[0] }}"
+        kernel_major_version: "{{ ansible_kernel.split('.')[0] }}"
+
+    - name: Install basic build tools
+      ansible.builtin.package:
+        name:
+          - make
+          - gcc
+          - flex
+          - bison
+        state: present
+
+    - name: Install required libraries
+      ansible.builtin.package:
+        name:
+          - libdwarf-dev
+          - libdw-dev
+          - binutils-dev
+          - libcap-dev
+          - libelf-dev
+          - libnuma-dev
+          - python3-dev
+          - libssl-dev
+          - libunwind-dev
+          - zlib1g-dev
+          - liblzma-dev
+          - libaio-dev
+          - libzstd-dev
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Install required libraries
+      ansible.builtin.package:
+        name:
+          - libdwarf-devel
+          - elfutils-libelf-devel
+          - binutils-devel
+          - libcap-devel
+          - numactl-devel
+          - python3-devel
+          - openssl-devel
+          - libunwind-devel
+          - zlib-devel
+          - xz-devel
+          - libaio-devel
+          - libzstd-devel
+        state: present
+      when: ansible_os_family == "RedHat"
+
+    - name: Download kernel source
+      ansible.builtin.get_url:
+        url: "https://mirrors.edge.kernel.org/pub/linux/kernel/v{{ kernel_major_version }}.x/linux-{{ kernel_version }}.tar.gz"
+        dest: "/tmp/linux-source-{{ kernel_version }}.tar.gz"
+
+    - name: Extract kernel source
+      ansible.builtin.unarchive:
+        src: "/tmp/linux-source-{{ kernel_version }}.tar.gz"
+        dest: /tmp/
+        remote_src: true
+
+    - name: Build perf from source
+      become: true
+      become_user: root
+      community.general.make:
+        chdir: "/tmp/linux-{{ kernel_version }}/tools/perf"
+        jobs: "{{ ansible_processor_vcpus }}"  # use all CPU cores
+
+    - name: Copy perf to /usr/local/bin
+      ansible.builtin.copy:
+        src: "/tmp/linux-{{ kernel_version }}/tools/perf/perf"
+        dest: "/usr/local/bin/perf"
+        mode: '0755'
+        remote_src: true
+  ignore_errors: true  # do not stop the playbook if perf could not be installed
+  when:
+    - perf_result.rc is defined
+    - perf_result.rc != 0
+  tags: perf
+
+...

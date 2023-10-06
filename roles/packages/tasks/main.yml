@@ -170,4 +170,13 @@
     - enable_timescale | bool
   tags: install_packages, install_postgres, install_timescaledb
 
+# Build perf from source code
+# if it was not installed from packages or if the 'build_perf' variable is 'true'.
+- name: Perf
+  ansible.builtin.import_tasks: perf.yml
+  when:
+    - ((['linux-tools-common', 'linux-perf', 'perf'] | intersect(system_packages)) | length > 0)
+      or (build_perf | default(false) | bool)
+  tags: install_packages, install_perf, perf
+
 ...
