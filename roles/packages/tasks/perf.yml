@@ -12,8 +12,26 @@
 - block:
     - name: Extract kernel version
       ansible.builtin.set_fact:
-        kernel_version: "{{ ansible_kernel.split('-')[0] }}"
+        kernel_version: >-
+          {{ ansible_kernel.split('-')[0]
+          if not ansible_kernel.split('-')[0].endswith('.0')
+          else ansible_kernel.split('-')[0][:-2] }}
         kernel_major_version: "{{ ansible_kernel.split('.')[0] }}"
+
+    - name: Download kernel source
+      ansible.builtin.get_url:
+        url: "https://mirrors.edge.kernel.org/pub/linux/kernel/v{{ kernel_major_version }}.x/linux-{{ kernel_version }}.tar.gz"
+        dest: "/tmp/linux-source-{{ kernel_version }}.tar.gz"
+      register: get_url_result
+
+    - name: Extract kernel source
+      ansible.builtin.unarchive:
+        src: "/tmp/linux-source-{{ kernel_version }}.tar.gz"
+        dest: /tmp/
+        remote_src: true
+      when:
+        - get_url_result is defined
+        - get_url_result is success
 
     - name: Install basic build tools
       ansible.builtin.package:
@@ -23,6 +41,10 @@
           - flex
           - bison
         state: present
+      register: build_tools_result
+      when:
+        - get_url_result is defined
+        - get_url_result is success
 
     - name: Install required libraries
       ansible.builtin.package:
@@ -41,7 +63,10 @@
           - libaio-dev
           - libzstd-dev
         state: present
-      when: ansible_os_family == "Debian"
+      when:
+        - ansible_os_family == "Debian"
+        - build_tools_result is defined
+        - build_tools_result is success
 
     - name: Install required libraries
       ansible.builtin.package:
@@ -59,18 +84,10 @@
           - libaio-devel
           - libzstd-devel
         state: present
-      when: ansible_os_family == "RedHat"
-
-    - name: Download kernel source
-      ansible.builtin.get_url:
-        url: "https://mirrors.edge.kernel.org/pub/linux/kernel/v{{ kernel_major_version }}.x/linux-{{ kernel_version }}.tar.gz"
-        dest: "/tmp/linux-source-{{ kernel_version }}.tar.gz"
-
-    - name: Extract kernel source
-      ansible.builtin.unarchive:
-        src: "/tmp/linux-source-{{ kernel_version }}.tar.gz"
-        dest: /tmp/
-        remote_src: true
+      when:
+        - ansible_os_family == "RedHat"
+        - build_tools_result is defined
+        - build_tools_result is success
 
     - name: Build perf from source
       become: true
@@ -78,6 +95,10 @@
       community.general.make:
         chdir: "/tmp/linux-{{ kernel_version }}/tools/perf"
         jobs: "{{ ansible_processor_vcpus }}"  # use all CPU cores
+      register: build_perf_result
+      when:
+        - build_tools_result is defined
+        - build_tools_result is success
 
     - name: Copy perf to /usr/local/bin
       ansible.builtin.copy:
@@ -85,6 +106,9 @@
         dest: "/usr/local/bin/perf"
         mode: '0755'
         remote_src: true
+      when:
+        - build_perf_result is defined
+        - build_perf_result is success
   ignore_errors: true  # do not stop the playbook if perf could not be installed
   when:
     - perf_result.rc is defined
