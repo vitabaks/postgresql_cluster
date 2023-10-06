@@ -138,6 +138,7 @@
   vars_files:
     - vars/main.yml
     - vars/system.yml
+  environment: "{{ proxy_env | default({}) }}"
 
   pre_tasks:
     - name: Include OS-specific variables
@@ -160,7 +161,6 @@
 
   roles:
     - role: ansible-role-firewall
-      environment: "{{ proxy_env | default({}) }}"
       vars:
         firewall_allowed_tcp_ports: "{{ firewall_ports_dynamic_var | default([]) | unique }}"
         firewall_additional_rules: "{{ firewall_rules_dynamic_var | default([]) | unique }}"
