@@ -241,8 +241,7 @@
   environment: "{{ proxy_env | default({}) }}"
   when:
     - installation_method == "repo"
-    - enable_timescale is defined
-    - enable_timescale | bool
-  tags: add_repo
+    - (enable_timescale | default(false)| bool) or (enable_timescaledb | default(false)| bool)
+  tags: add_repo, timescaledb, timescale
 
 ...

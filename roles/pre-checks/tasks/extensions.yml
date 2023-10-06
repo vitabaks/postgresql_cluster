@@ -1,15 +1,15 @@
 ---
 
-- name: TimescaleDB | Checking PostgreSQL version
-  run_once: true
-  ansible.builtin.fail:
-    msg:
-      - "The current PostgreSQL version ({{ postgresql_version }}) is not supported by the TimescaleDB."
-      - "PostgreSQL version must be {{ timescale_minimal_pg_version }} or higher."
-  when:
-    - postgresql_version|string is version(timescale_minimal_pg_version|string, '<')
-
+# TimescaleDB (if enable_timescale is defined)
 - block:
+    - name: TimescaleDB | Checking PostgreSQL version
+      run_once: true
+      ansible.builtin.fail:
+        msg:
+          - "The current PostgreSQL version ({{ postgresql_version }}) is not supported by the TimescaleDB."
+          - "PostgreSQL version must be {{ timescale_minimal_pg_version }} or higher."
+      when: postgresql_version|string is version(timescale_minimal_pg_version|string, '<')
+
     - name: TimescaleDB | Ensure 'timescaledb' is in 'shared_preload_libraries'
       ansible.builtin.set_fact:
         # This complex line does several things:
@@ -36,6 +36,5 @@
             if 'timescaledb' not in shared_preload_libraries_item.value.split(',') else shared_preload_libraries_item.value)
             ~ ('timescaledb' if 'timescaledb' not in shared_preload_libraries_item.value.split(',') else '')
           }}
-  when:
-    - enable_timescale is defined
-    - enable_timescale | bool
+  when: (enable_timescale | default(false)| bool) or (enable_timescaledb | default(false)| bool)
+  tags: timescaledb, timescale

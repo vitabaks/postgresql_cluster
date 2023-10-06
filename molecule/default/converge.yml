@@ -26,9 +26,11 @@
     - name: Set variables for TimescaleDB cluster deployment test
       ansible.builtin.set_fact:
         enable_timescale: true
-      when:
-        - not (ansible_distribution == 'Ubuntu' and ansible_distribution_version is version('20.04', '<'))
-        - not (ansible_distribution == 'Debian' and ansible_distribution_version is version('11', '>')) # TODO Debian 12
+      when: not (ansible_distribution == 'Ubuntu' and ansible_distribution_version is version('20.04', '<'))
+
+    - name: Set variables for Extansions test
+      ansible.builtin.set_fact:
+        enable_pg_repack: true
 
     - name: Set variables for PostgreSQL Cluster update test
       ansible.builtin.set_fact:

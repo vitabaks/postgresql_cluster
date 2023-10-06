@@ -17,13 +17,6 @@
     msg: "{{ ansible_distribution_version }} of {{ ansible_distribution }} is not supported"
   when: ansible_distribution_version is version_compare(os_minimum_versions[ansible_distribution], '<')
 
-- name: Perform pre-checks for timescaledb
-  ansible.builtin.import_tasks: timescaledb.yml
-  when:
-    - enable_timescale is defined
-    - enable_timescale | bool
-    - inventory_hostname in groups['postgres_cluster']
-
 - name: Perform pre-checks for pgbouncer
   ansible.builtin.import_tasks: pgbouncer.yml
   when:
@@ -49,6 +42,10 @@
     - wal_g_install is defined
     - wal_g_install | bool
     - inventory_hostname in groups['postgres_cluster']
+
+- name: Perform pre-checks for extensions
+  ansible.builtin.import_tasks: extensions.yml
+  when: inventory_hostname in groups['postgres_cluster']
 
 - name: Generate passwords
   ansible.builtin.import_tasks: passwords.yml
