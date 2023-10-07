@@ -11,6 +11,17 @@
   when: postgresql_version|string is version(timescale_minimal_pg_version|string, '<')
 
 # Extension Auto-Setup: shared_preload_libraries
+- name: Create a list of extensions
+  run_once: true
+  ansible.builtin.set_fact:
+    extensions: >-
+      {{ (extensions | default([]))
+      + (['timescaledb'] if (enable_timescale | default(false) | bool) or (enable_timescaledb | default(false) | bool) else [])
+      + (['pg_cron'] if (enable_pg_cron | default(false) | bool) and not (ansible_os_family == 'RedHat' and postgresql_version is version('10', '<=')) else [])
+      + (['pgaudit'] if (enable_pgaudit | default(false) | bool) and not (ansible_os_family == 'RedHat' and (postgresql_version is version('10', '<=') or postgresql_version is version('16', '>='))) else [])
+      }}
+
+# Extension Auto-Setup: shared_preload_libraries
 - name: Make sure that the required extensions are added to 'shared_preload_libraries'
   run_once: true
   ansible.builtin.set_fact:
@@ -35,20 +46,10 @@
     new_value: >-
       {{
         (shared_preload_libraries_item.value ~ (',' if shared_preload_libraries_item.value else '')
-        if item.extension not in shared_preload_libraries_item.value.split(',') else shared_preload_libraries_item.value)
-        ~ (item.extension if item.extension not in shared_preload_libraries_item.value.split(',') else '')
+        if item not in shared_preload_libraries_item.value.split(',') else shared_preload_libraries_item.value)
+        ~ (item if item not in shared_preload_libraries_item.value.split(',') else '')
       }}
-  # List of extensions to be added to 'shared_preload_libraries' if it is enabled
-  loop:
-    - extension: "timescaledb"
-      enabled: (enable_timescale | default(false) | bool) or (enable_timescaledb | default(false) | bool)
-    - extension: "pg_cron"
-      enabled: (enable_pg_cron | default(false) | bool) and not (ansible_os_family == 'RedHat' and postgresql_version is version('10', '<='))
-    - extension: "pgaudit"
-      enabled: (enable_pgaudit | default(false) | bool) and not (ansible_os_family == 'RedHat' and (postgresql_version is version('10', '<=') or postgresql_version is version('16', '>=')))
-  loop_control:
-    loop_var: item
-    label: "{{ item.extension }} (if enabled)"
-  when: item.enabled
+  loop: "{{ extensions }}"
+  when: extensions | default([]) | length > 0
 
 ...
