@@ -45,12 +45,7 @@
 
 - name: Perform pre-checks for extensions
   ansible.builtin.import_tasks: extensions.yml
-  when:
-    - inventory_hostname in groups['postgres_cluster']
-    - ((enable_timescale | default(false) | bool)
-      or (enable_timescaledb | default(false) | bool)
-      or (enable_pg_cron | default(false) | bool)
-      or (enable_pgaudit | default(false) | bool))
+  when: inventory_hostname in groups['postgres_cluster']
 
 - name: Generate passwords
   ansible.builtin.import_tasks: passwords.yml
