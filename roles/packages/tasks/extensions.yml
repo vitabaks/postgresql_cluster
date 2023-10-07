@@ -101,8 +101,8 @@
   retries: 3
   when:
     - enable_pgvector | default(false)| bool
-    - (ansible_os_family == 'Debian' and postgresql_version is version('11', '>='))
-    - (ansible_os_family == 'RedHat' and postgresql_version is version('12', '>='))
+    - (ansible_os_family == 'Debian' and postgresql_version is version('11', '>=')) or
+      (ansible_os_family == 'RedHat' and postgresql_version is version('12', '>='))
   tags: pgvector
 
 ...
