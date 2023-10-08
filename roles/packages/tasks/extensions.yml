@@ -124,4 +124,21 @@
   when: enable_postgis | default(false) | bool
   tags: postgis
 
+# pgrouting (if 'enable_pgrouting' is 'true')
+- name: Install pgrouting package
+  ansible.builtin.package:
+    name: >-
+      {% if ansible_os_family == 'Debian' %}
+      postgresql-{{ postgresql_version }}-pgrouting-3
+      {% else %}
+      pgrouting_{{ postgresql_version }}
+      {% endif %}
+    state: present
+  register: package_status
+  until: package_status is success
+  delay: 5
+  retries: 3
+  when: enable_pgrouting | default(false) | bool
+  tags: pgrouting
+
 ...

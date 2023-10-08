@@ -31,6 +31,7 @@
         enable_pgaudit: true
         enable_pgvector: true
         enable_postgis: true
+        enable_pgrouting: true
 
     - name: Set variables for PostgreSQL Cluster update test
       ansible.builtin.set_fact:
