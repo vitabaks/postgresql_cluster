@@ -129,7 +129,7 @@
   ansible.builtin.package:
     name: >-
       {% if ansible_os_family == 'Debian' %}
-      postgresql-{{ postgresql_version }}-pgrouting-3
+      postgresql-{{ postgresql_version }}-pgrouting
       {% else %}
       pgrouting_{{ postgresql_version }}
       {% endif %}
