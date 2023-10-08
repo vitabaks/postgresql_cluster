@@ -49,7 +49,7 @@
         if item not in shared_preload_libraries_item.value.split(',') else shared_preload_libraries_item.value)
         ~ (item if item not in shared_preload_libraries_item.value.split(',') else '')
       }}
-  loop: "{{ extensions }}"
+  loop: "{{ extensions | default([]) | unique }}"
   when: extensions | default([]) | length > 0
 
 ...

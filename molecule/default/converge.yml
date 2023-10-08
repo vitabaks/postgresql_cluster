@@ -30,6 +30,7 @@
         enable_pg_cron: true
         enable_pgaudit: true
         enable_pgvector: true
+        enable_postgis: true
 
     - name: Set variables for PostgreSQL Cluster update test
       ansible.builtin.set_fact:

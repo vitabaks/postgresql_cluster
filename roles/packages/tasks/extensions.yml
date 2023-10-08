@@ -15,7 +15,7 @@
   until: package_status is success
   delay: 5
   retries: 3
-  when: (enable_timescale | default(false)| bool) or (enable_timescaledb | default(false)| bool)
+  when: (enable_timescale | default(false) | bool) or (enable_timescaledb | default(false) | bool)
   tags: timescaledb, timescale
 
 # pg_repack (if 'enable_pg_repack' is 'true')
@@ -33,7 +33,7 @@
   delay: 5
   retries: 3
   when:
-    - enable_pg_repack | default(false)| bool
+    - enable_pg_repack | default(false) | bool
     - not (ansible_os_family == 'RedHat' and
           (postgresql_version is version('10', '<=') or postgresql_version is version('16', '>=')))
   tags: pg_repack
@@ -53,7 +53,7 @@
   delay: 5
   retries: 3
   when:
-    - enable_pg_cron | default(false)| bool
+    - enable_pg_cron | default(false) | bool
     - not (ansible_os_family == 'RedHat' and postgresql_version is version('10', '<='))
   tags: pg_cron
 
@@ -80,7 +80,7 @@
   delay: 5
   retries: 3
   when:
-    - enable_pgaudit | default(false)| bool
+    - enable_pgaudit | default(false) | bool
     - not (ansible_os_family == 'RedHat' and
           (postgresql_version is version('10', '<=') or postgresql_version is version('16', '>=')))
   tags: pgaudit
@@ -104,5 +104,24 @@
     - (ansible_os_family == 'Debian' and postgresql_version is version('11', '>=')) or
       (ansible_os_family == 'RedHat' and postgresql_version is version('12', '>='))
   tags: pgvector
+
+# postgis (if 'enable_postgis' is 'true')
+- name: Install postgis package
+  ansible.builtin.package:
+    name: >-
+      {% if ansible_os_family == 'Debian' %}
+      postgresql-{{ postgresql_version }}-postgis-3
+      {% elif ansible_os_family == 'RedHat' and postgresql_version == "16" %}
+      postgis34_{{ postgresql_version }}
+      {% else %}
+      postgis33_{{ postgresql_version }}
+      {% endif %}
+    state: present
+  register: package_status
+  until: package_status is success
+  delay: 5
+  retries: 3
+  when: enable_postgis | default(false) | bool
+  tags: postgis
 
 ...
