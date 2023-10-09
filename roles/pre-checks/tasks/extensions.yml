@@ -16,7 +16,7 @@
   ansible.builtin.set_fact:
     extensions: >-
       {{ (extensions | default([]))
-      + (['timescaledb'] if (enable_timescale | default(false) | bool) or (enable_timescaledb | default(false) | bool) else [])
+      + (['timescaledb'] if ((enable_timescale | default(false) | bool) or (enable_timescaledb | default(false) | bool)) and (postgresql_version is version('15', '<=')) else [])
       + (['pg_cron'] if (enable_pg_cron | default(false) | bool) else [])
       + (['pgaudit'] if (enable_pgaudit | default(false) | bool) else [])
       + (['pg_stat_statements'] if (enable_pg_stat_kcache | default(false) | bool) else [])
