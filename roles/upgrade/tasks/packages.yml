@@ -44,23 +44,14 @@
 # timescaledb (if enable_timescale is defined)
 - name: Install TimescaleDB package for PostgreSQL {{ pg_new_version }}
   ansible.builtin.package:
-    name: "{{ item }}"
+    name: timescaledb-2-postgresql-{{ pg_new_version }}
     state: latest
-  loop: "{{ timescaledb_package }}"
-  vars:
-    timescaledb_package:
-      - >
-        {% if pg_new_version | int >= 11 %}
-        timescaledb-2-postgresql-{{ pg_new_version }}
-        {% else %}
-        timescaledb-postgresql-{{ pg_new_version }}
-        {% endif %}
   register: package_status
   until: package_status is success
   delay: 5
   retries: 3
   when:
-    - enable_timescale is defined
-    - enable_timescale | bool
+    - ((enable_timescale | default(false) | bool) or (enable_timescaledb | default(false) | bool))
+    - (postgresql_version is version('12', '>=') and postgresql_version is version('15', '<=')) # TODO (PG16)
 
 ...
