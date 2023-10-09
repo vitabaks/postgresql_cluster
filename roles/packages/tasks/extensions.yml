@@ -63,6 +63,8 @@
     name: >-
       {% if ansible_os_family == 'Debian' %}
         postgresql-{{ postgresql_version }}-pgaudit
+      {% elif ansible_os_family == 'RedHat' and postgresql_version >= "16" %}
+        pgaudit_{{ postgresql_version }}
       {% elif ansible_os_family == 'RedHat' and postgresql_version == "15" %}
         pgaudit17_{{ postgresql_version }}
       {% elif ansible_os_family == 'RedHat' and postgresql_version == "14" %}
@@ -79,10 +81,7 @@
   until: package_status is success
   delay: 5
   retries: 3
-  when:
-    - enable_pgaudit | default(false) | bool
-    - not (ansible_os_family == 'RedHat' and
-          (postgresql_version is version('10', '<=') or postgresql_version is version('16', '>=')))
+  when: enable_pgaudit | default(false) | bool
   tags: pgaudit
 
 # pgvector (if 'enable_pgvector' is 'true')
