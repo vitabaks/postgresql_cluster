@@ -15,6 +15,32 @@
     - (postgresql_version is version('12', '>=') and postgresql_version is version('15', '<=')) # TODO (PG16)
   tags: timescaledb, timescale
 
+# citus (if 'enable_citus' is 'true')
+- name: Install Citus package
+  ansible.builtin.package:
+    name: >-
+      {% if ansible_os_family == 'Debian' and postgresql_version >= "14" %}
+      postgresql-{{ postgresql_version }}-citus-12.1
+      {% elif ansible_os_family == 'Debian' and postgresql_version == "13" %}
+      postgresql-{{ postgresql_version }}-citus-11.3
+      {% elif ansible_os_family == 'Debian' and postgresql_version == "12" %}
+      postgresql-{{ postgresql_version }}-citus-10.2
+      {% elif ansible_os_family == 'Debian' and postgresql_version == "11" %}
+      postgresql-{{ postgresql_version }}-citus-10.0
+      {% else %}
+      citus_{{ postgresql_version }}
+      {% endif %}
+    state: present
+  register: package_status
+  until: package_status is success
+  delay: 5
+  retries: 3
+  when:
+    - enable_citus | default(false) | bool
+    - (ansible_os_family == 'Debian' and postgresql_version is version('11', '>=')) or
+      (ansible_os_family == 'RedHat' and postgresql_version is version('12', '>='))
+  tags: citus
+
 # pg_repack (if 'enable_pg_repack' is 'true')
 - name: Install pg_repack package
   ansible.builtin.package:

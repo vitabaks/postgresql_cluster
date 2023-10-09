@@ -215,5 +215,6 @@
 
 - name: Extensions repository
   ansible.builtin.import_tasks: extensions.yml
+  when: installation_method == "repo"
 
 ...

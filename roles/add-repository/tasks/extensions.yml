@@ -4,7 +4,7 @@
 # TimescaleDB (if 'enable_timescale' is 'true')
 - block:
     # Debian based
-    - name: Add TimescaleDB repository apt-key
+    - name: Add TimescaleDB repository key
       ansible.builtin.apt_key:
         url: "https://packagecloud.io/timescale/timescaledb/gpgkey"
         state: present
@@ -28,8 +28,28 @@
       when: ansible_os_family == "RedHat"
   environment: "{{ proxy_env | default({}) }}"
   when:
-    - installation_method == "repo"
-    - (enable_timescale | default(false)| bool) or (enable_timescaledb | default(false)| bool)
+    - ((enable_timescale | default(false) | bool) or (enable_timescaledb | default(false) | bool))
+    - (postgresql_version is version('12', '>=') and postgresql_version is version('15', '<=')) # TODO (PG16)
   tags: add_repo, timescaledb, timescale
+
+# Citus (if 'enable_citus' is 'true')
+- block:
+    # Debian based
+    - name: Add Citus repository key
+      ansible.builtin.apt_key:
+        url: "https://repos.citusdata.com/community/gpgkey"
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Add Citus repository
+      ansible.builtin.apt_repository:
+        repo: "deb https://repos.citusdata.com/community/{{ ansible_distribution | lower }}/ {{ ansible_distribution_release }} main"
+        state: present
+        update_cache: true
+      when: ansible_os_family == "Debian"
+  when:
+    - enable_citus | default(false) | bool
+    - postgresql_version is version('11', '>=')
+  tags: add_repo, citus
 
 ...
