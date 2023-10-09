@@ -34,6 +34,7 @@
         enable_pgrouting: true
         enable_pg_stat_kcache: true
         enable_pg_wait_sampling: true
+        enable_pg_partman: true
 
     - name: Set variables for PostgreSQL Cluster update test
       ansible.builtin.set_fact:

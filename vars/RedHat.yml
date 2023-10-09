@@ -95,6 +95,7 @@ postgresql_packages:
 #  - pgrouting_{{ postgresql_version }}
 #  - pgvector_{{ postgresql_version }}
 #  - pgaudit17_{{ postgresql_version }}
+#  - pg_partman_{{ postgresql_version }}
 
 # Extra packages
 etcd_package_repo: "https://github.com/etcd-io/etcd/releases/download/v{{ etcd_version }}/etcd-v{{ etcd_version }}-linux-amd64.tar.gz"

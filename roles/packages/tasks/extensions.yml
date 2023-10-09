@@ -170,4 +170,21 @@
     - not (ansible_os_family == 'RedHat' and postgresql_version == '16') # TODO (no package yet)
   tags: pg_wait_sampling
 
+# pg_partman (if 'enable_pg_partman' is 'true')
+- name: Install pg_partman package
+  ansible.builtin.package:
+    name: >-
+      {% if ansible_os_family == 'Debian' %}
+      postgresql-{{ postgresql_version }}-partman
+      {% else %}
+      pg_partman_{{ postgresql_version }}
+      {% endif %}
+    state: present
+  register: package_status
+  until: package_status is success
+  delay: 5
+  retries: 3
+  when: enable_pg_partman | default(false) | bool
+  tags: pg_partman
+
 ...

@@ -22,6 +22,7 @@
       + (['pg_stat_statements'] if (enable_pg_stat_kcache | default(false) | bool) else [])
       + (['pg_stat_kcache'] if (enable_pg_stat_kcache | default(false) | bool) else [])
       + (['pg_wait_sampling'] if (pg_wait_sampling | default(false) | bool) else [])
+      + (['pg_partman_bgw'] if (enable_pg_partman | default(false) | bool) else [])
       }}
 
 - name: Make sure that the required extensions are added to 'shared_preload_libraries'
