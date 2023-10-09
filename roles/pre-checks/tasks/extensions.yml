@@ -19,10 +19,11 @@
       + (['timescaledb'] if (enable_timescale | default(false) | bool) or (enable_timescaledb | default(false) | bool) else [])
       + (['pg_cron'] if (enable_pg_cron | default(false) | bool) and not (ansible_os_family == 'RedHat' and postgresql_version is version('10', '<=')) else [])
       + (['pgaudit'] if (enable_pgaudit | default(false) | bool) and not (ansible_os_family == 'RedHat' and (postgresql_version is version('10', '<=') or postgresql_version is version('16', '>='))) else [])
+      + (['pg_stat_statements'] if (enable_pg_stat_kcache | default(false) | bool) else [])
       + (['pg_stat_kcache'] if (enable_pg_stat_kcache | default(false) | bool) else [])
+      + (['pg_wait_sampling'] if (pg_wait_sampling | default(false) | bool) else [])
       }}
 
-# Extension Auto-Setup: shared_preload_libraries
 - name: Make sure that the required extensions are added to 'shared_preload_libraries'
   run_once: true
   ansible.builtin.set_fact:
