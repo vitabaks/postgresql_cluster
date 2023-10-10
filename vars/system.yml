@@ -215,9 +215,9 @@ ssh_public_keys: ""  # These SSH public keys will be added to the server's  ~/.s
 # (optional) Configure mount points in /etc/fstab and mount the file system (if 'mount.src' is defined)
 mount:
   - path: "/pgdata"
-    src: "" # UUID
-    fstype: ext4
-    opts: defaults,noatime
+    src: ""  # device UUID or path.
+    fstype: ext4  # if 'zfs' is specified a ZFS pool will be created
+    opts: defaults,noatime  # not applicable to 'zfs'
     state: mounted
 #  - path: "/pgwal"
 #    src: ""

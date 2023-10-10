@@ -105,5 +105,5 @@
 - cron
 - netdata
 - ssh_public_keys
-- mount
+- mount, zpool
 - perf, flamegraph
