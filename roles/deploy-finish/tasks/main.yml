@@ -1,89 +1,73 @@
+# yamllint disable rule:line-length
 ---
 
 - name: Make sure handlers are flushed immediately
   ansible.builtin.meta: flush_handlers
 
-# users info
-- block:
-    - name: Get postgresql users list
-      run_once: true
-      become: true
-      become_user: postgres
-      ansible.builtin.command:
-        "{{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -Xc\"\\du\""
-      register: users_result
-      delegate_to: "{{ groups.master[0] }}"
-      changed_when: false
-
-    - name: PostgreSQL list of users
-      run_once: true
-      ansible.builtin.debug:
-        var: users_result.stdout_lines
+# Get info
+- name: Get Postgres users
+  run_once: true
+  become: true
+  become_user: postgres
+  ansible.builtin.command:
+    "{{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -Xc '\\du'"
+  register: users_result
+  delegate_to: "{{ groups.master[0] }}"
+  changed_when: false
   ignore_errors: true
   tags: users, users_list, cluster_info, cluster_status, point_in_time_recovery
 
-# databases info
-- block:
-    - name: Get postgresql database list
-      run_once: true
-      become: true
-      become_user: postgres
-      ansible.builtin.command:
-        "{{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -Xc
-        \"
-          SELECT
-          d.datname as name,
-          pg_get_userbyid(d.datdba) as owner,
-          pg_encoding_to_char(d.encoding) as encoding,
-          d.datcollate as collate,
-          d.datctype as ctype,
-          CASE
-          WHEN has_database_privilege(d.datname, 'CONNECT')
-          THEN pg_size_pretty(pg_database_size(d.datname))
-          ELSE 'No Access'
-          END
-          size,
-          t.spcname as tablespace
-          FROM pg_catalog.pg_database d
-          JOIN pg_catalog.pg_tablespace t
-          ON d.dattablespace = t.oid
-          WHERE NOT datistemplate
-          ORDER BY 1
-        \""
-      register: dbs_result
-      delegate_to: "{{ groups.master[0] }}"
-      changed_when: false
-
-    - name: PostgreSQL list of databases
-      run_once: true
-      ansible.builtin.debug:
-        var: dbs_result.stdout_lines
+- name: Get Postgres databases
+  run_once: true
+  become: true
+  become_user: postgres
+  ansible.builtin.command:
+    "{{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -Xc '\\l'"
+  register: dbs_result
+  delegate_to: "{{ groups.master[0] }}"
+  changed_when: false
   ignore_errors: true
   tags: databases, db_list, cluster_info, cluster_status, point_in_time_recovery
 
-# cluster info
-- block:
-    - name: Check postgresql cluster health
-      run_once: true
-      become: true
-      become_user: postgres
-      ansible.builtin.command: patronictl -c /etc/patroni/patroni.yml list
-      register: patronictl_result
-      environment:
-        PATH: "{{ ansible_env.PATH }}:/usr/bin:/usr/local/bin"
-      changed_when: false
-
-    - name: PostgreSQL Cluster health
-      run_once: true
-      ansible.builtin.debug:
-        var: patronictl_result.stdout_lines
+- name: Get Postgres cluster info
+  run_once: true
+  become: true
+  become_user: postgres
+  ansible.builtin.command: patronictl -c /etc/patroni/patroni.yml list
+  register: patronictl_result
+  environment:
+    PATH: "{{ ansible_env.PATH }}:/usr/bin:/usr/local/bin"
+  changed_when: false
   ignore_errors: true
+  tags: patroni_status, cluster_info, cluster_status, point_in_time_recovery
+
+
+# Print info
+- name: Postgres list of users
+  run_once: true
+  ansible.builtin.debug:
+    var: users_result.stdout_lines
+  when: users_result.stdout_lines is defined
+  tags: users, users_list, cluster_info, cluster_status, point_in_time_recovery
+
+- name: Postgres list of databases
+  run_once: true
+  ansible.builtin.debug:
+    var: dbs_result.stdout_lines
+  when: dbs_result.stdout_lines is defined
+  tags: databases, db_list, cluster_info, cluster_status, point_in_time_recovery
+
+- name: Postgres Cluster info
+  run_once: true
+  ansible.builtin.debug:
+    var: patronictl_result.stdout_lines
+  when: patronictl_result.stdout_lines is defined
   tags: patroni_status, cluster_info, cluster_status, point_in_time_recovery
 
 # connection info
 # if the variable 'mask_password' is 'true', do not print the superuser password in connection info
 - block:  # if cluster_vip is defined
-    - name: PostgreSQL Cluster connection info
+    - name: Postgres Cluster connection info
       run_once: true
       ansible.builtin.debug:
         msg:
@@ -100,7 +84,7 @@
         - with_haproxy_load_balancing | bool
         - synchronous_mode | bool
 
-    - name: PostgreSQL Cluster connection info
+    - name: Postgres Cluster connection info
       run_once: true
       ansible.builtin.debug:
         msg:
@@ -115,7 +99,7 @@
         - with_haproxy_load_balancing | bool
         - not synchronous_mode | bool
 
-    - name: PostgreSQL Cluster connection info
+    - name: Postgres Cluster connection info
       run_once: true
       ansible.builtin.debug:
         msg:
@@ -133,90 +117,80 @@
   ignore_errors: true
   tags: conn_info, cluster_info, cluster_status
 
-- block:
-    - name: Get vip info
-      ansible.builtin.set_fact:
-        man_ip: "{{ item }}"
-      loop: "{{ ansible_all_ipv4_addresses }}"
-      when: item == cluster_vip
-
-    - name: Virtual IP Address (VIP) info
-      ansible.builtin.debug:
-        msg:
-          "Cluster ip address (VIP) {{ cluster_vip }}
-           is running on server {{ ansible_hostname }}"
-      when: man_ip is defined and man_ip == cluster_vip
-  when:
-    - (cluster_vip is defined and cluster_vip | length > 0)
-    - dcs_type == "etcd"
-  ignore_errors: true
-  tags: vip_owner, vip_status, cluster_info, cluster_status
-
 
 - block:  # if cluster_vip is not defined
-    - name: Create list of nodes
-      run_once: true
-      ansible.builtin.set_fact:
-        haproxy_nodes: >-
-          {{
-            groups['balancers']
-            | default([])
-            | map('extract', hostvars, 'inventory_hostname')
-            | join(',')
-          }}
-        postgres_cluster_nodes: >-
-          {{
-            groups['postgres_cluster']
-            | default([])
-            | map('extract', hostvars, 'inventory_hostname')
-            | join(',')
-          }}
-
-    - name: PostgreSQL Cluster connection info
+    - name: Postgres Cluster connection info
       run_once: true
       ansible.builtin.debug:
         msg:
           - +------------------------------------------------+
-          - "address: {{ haproxy_nodes }}"
+          - "{% if database_public_access | default(false) | bool %}public address: {{ public_haproxy_ip_adresses }}{% endif %}"
+          - "private address: {{ haproxy_ip_adresses }}"
           - "port: {{ haproxy_listen_port.master }} (read/write) master"
           - "port: {{ haproxy_listen_port.replicas }} (read only) all replicas"
           - "port: {{ haproxy_listen_port.replicas_sync }} (read only) synchronous replica only"
           - "port: {{ haproxy_listen_port.replicas_async }} (read only) asynchronous replicas only"
           - "superuser: {{ patroni_superuser_username }}"
           - "password: {% if mask_password | default(false) | bool %}'********'{% else %}{{ patroni_superuser_password }}{% endif %}"
+          - ""
+          - "connection string (libpq):"
+          - "  read-write: 'postgresql://{{ superuser_username }}:{{ superuser_password }}@{{ libpq_haproxy_host_port_master }}/postgres' "
+          - "  read-only: 'postgresql://{{ superuser_username }}:{{ superuser_password }}@{{ libpq_haproxy_host_port_replica }}/postgres' "
           - +------------------------------------------------+
       when:
         - with_haproxy_load_balancing | bool
         - synchronous_mode | bool
 
-    - name: PostgreSQL Cluster connection info
+    - name: Postgres Cluster connection info
       run_once: true
       ansible.builtin.debug:
         msg:
           - +------------------------------------------------+
-          - "address: {{ haproxy_nodes }}"
+          - "{% if database_public_access | default(false) | bool %}public address: {{ public_haproxy_ip_adresses }}{% endif %}"
+          - "private address: {{ haproxy_ip_adresses }}"
           - "port: {{ haproxy_listen_port.master }} (read/write) master"
           - "port: {{ haproxy_listen_port.replicas }} (read only) all replicas"
           - "superuser: {{ patroni_superuser_username }}"
           - "password: {% if mask_password | default(false) | bool %}'********'{% else %}{{ patroni_superuser_password }}{% endif %}"
+          - ""
+          - "connection string (libpq):"
+          - "  read-write: 'postgresql://{{ superuser_username }}:{{ superuser_password }}@{{ libpq_haproxy_host_port_master }}/postgres' "
+          - "  read-only: 'postgresql://{{ superuser_username }}:{{ superuser_password }}@{{ libpq_haproxy_host_port_replica }}/postgres' "
           - +------------------------------------------------+
       when:
         - with_haproxy_load_balancing | bool
         - not synchronous_mode | bool
 
-    - name: PostgreSQL Cluster connection info
+    - name: Postgres Cluster connection info
       run_once: true
       ansible.builtin.debug:
         msg:
           - +------------------------------------------------+
-          - "address: {{ postgres_cluster_nodes }}"
-          - "port: {% if pgbouncer_install %}{{ pgbouncer_listen_port }} (pgbouncer){% else %}{{ postgresql_port }}{% endif %}"
-          - "superuser: {{ patroni_superuser_username }}"
-          - "password: {% if mask_password | default(false) | bool %}'********'{% else %}{{ patroni_superuser_password }}{% endif %}"
+          - "{% if database_public_access | default(false) | bool %}public address: {{ public_postgres_ip_adresses }}{% endif %}"
+          - "private address: {{ postgres_ip_adresses }}"
+          - "port: {{ port }}"
+          - "superuser: {{ superuser_username }}"
+          - "password: {{ superuser_password }}"
+          - ""
+          - "connection string (libpq):"
+          - "  read-write: 'postgresql://{{ superuser_username }}:{{ superuser_password }}@{{ libpq_postgres_host_port }}/postgres?target_session_attrs=read-write' "
+          - "  read-only: 'postgresql://{{ superuser_username }}:{{ superuser_password }}@{{ libpq_postgres_host_port }}/postgres?target_session_attrs=read-only{{ libpq_load_balance }}' "
           - +------------------------------------------------+
       when:
         - not with_haproxy_load_balancing | bool
   ignore_errors: true
+  vars:
+    public_haproxy_ip_adresses: "{{ groups['balancers'] | default([]) | map('extract', hostvars, 'ansible_ssh_host') | join(',') }}"
+    public_postgres_ip_adresses: "{{ groups['postgres_cluster'] | default([]) | map('extract', hostvars, 'ansible_ssh_host') | join(',') }}"
+    haproxy_ip_adresses: "{{ groups['balancers'] | default([]) | map('extract', hostvars, 'inventory_hostname') | join(',') }}"
+    postgres_ip_adresses: "{{ groups['postgres_cluster'] | default([]) | map('extract', hostvars, 'inventory_hostname') | join(',') }}"
+    port: "{% if pgbouncer_install %}{{ pgbouncer_listen_port }}{% else %}{{ postgresql_port }}{% endif %}"
+    superuser_username: "{{ patroni_superuser_username }}"
+    superuser_password: "{% if mask_password | default(false) | bool %}'********'{% else %}{{ patroni_superuser_password }}{% endif %}"
+    libpq_haproxy_host_port_master: "{{ haproxy_ip_adresses.split(',') | map('regex_replace', '$', ':' + haproxy_listen_port.master | string) | join(',') }}"
+    libpq_haproxy_host_port_replica: "{{ haproxy_ip_adresses.split(',') | map('regex_replace', '$', ':' + haproxy_listen_port.replicas | string) | join(',') }}"
+    libpq_postgres_host_port: "{{ postgres_ip_adresses.split(',') | map('regex_replace', '$', ':' + port | string) | join(',') }}"
+    libpq_load_balance: "{% if postgresql_version is version('16', '>=') %}&load_balance_hosts=random{% endif %}"
   when:
     - (cluster_vip is not defined or cluster_vip | length < 1)
     - dcs_type == "etcd"
@@ -224,7 +198,7 @@
 
 
 - block:  # if dcs_type: "consul"
-    - name: PostgreSQL Cluster connection info
+    - name: Postgres Cluster connection info
       run_once: true
       ansible.builtin.debug:
         msg:
@@ -238,7 +212,7 @@
           - +------------------------------------------------+
       when: not synchronous_mode | bool
 
-    - name: PostgreSQL Cluster connection info
+    - name: Postgres Cluster connection info
       run_once: true
       ansible.builtin.debug:
         msg:
@@ -253,6 +227,8 @@
           - "password: {% if mask_password | default(false) | bool %}'********'{% else %}{{ patroni_superuser_password }}{% endif %}"
           - +------------------------------------------------+
       when: synchronous_mode | bool
+  ignore_errors: true
   when: dcs_type == "consul"
+  tags: conn_info, cluster_info, cluster_status
 
 ...
