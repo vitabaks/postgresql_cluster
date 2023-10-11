@@ -476,25 +476,19 @@ wal_g_cron_jobs:
 pgbackrest_install: false  # or 'true' to install and configure backups using pgBackRest
 pgbackrest_install_from_pgdg_repo: true  # or 'false'
 pgbackrest_stanza: "{{ patroni_cluster_name }}"  # specify your --stanza
-pgbackrest_repo_type: "s3"  # or "gcs", "azure", "posix"
+pgbackrest_repo_type: "posix"  # or "s3", "gcs", "azure"
 pgbackrest_repo_host: ""  # dedicated repository host (optional)
-pgbackrest_repo_user: ""  # if "repo_host" is set (optional)
+pgbackrest_repo_user: "postgres"  # if "repo_host" is set (optional)
 pgbackrest_conf_file: "/etc/pgbackrest/pgbackrest.conf"
 # see more options https://pgbackrest.org/configuration.html
 pgbackrest_conf:
   global:  # [global] section
     - { option: "log-level-file", value: "detail" }
     - { option: "log-path", value: "/var/log/pgbackrest" }
-    - { option: "repo1-type", value: "{{ pgbackrest_repo_type | lower | default('s3') }}" }
-#    - { option: "repo1-host", value: "{{ pgbackrest_repo_host | default('postgres', true) }}" }
+    - { option: "repo1-type", value: "{{ pgbackrest_repo_type | lower }}" }
+#    - { option: "repo1-host", value: "{{ pgbackrest_repo_host }}" }
 #    - { option: "repo1-host-user", value: "{{ pgbackrest_repo_user }}" }
-#    - { option: "repo1-path", value: "/var/lib/pgbackrest" }
-    - { option: "repo1-path", value: "/pgbackrest" } # for 's3', if you use 'posix' specify the full path
-    - { option: "repo1-s3-key", value: "{{ AWS_ACCESS_KEY_ID | default('') }}" }  # define values or pass via --extra-vars
-    - { option: "repo1-s3-key-secret", value: "{{ AWS_SECRET_ACCESS_KEY | default('') }}" }  # define values or pass via --extra-vars
-    - { option: "repo1-s3-bucket", value: "{{ AWS_S3_BUCKET | default(patroni_cluster_name) }}" }
-    - { option: "repo1-s3-endpoint", value: "{{ AWS_S3_ENDPOINT | default('s3.' ~ (server_location | default('us-east-1')) ~ '.amazonaws.com') }}" }
-    - { option: "repo1-s3-region", value: "{{ AWS_S3_REGION | default(server_location | default('us-east-1')) }}" }
+    - { option: "repo1-path", value: "/var/lib/pgbackrest" }
     - { option: "repo1-retention-full", value: "4" }
     - { option: "repo1-retention-archive", value: "4" }
     - { option: "repo1-bundle", value: "y" }
@@ -522,13 +516,13 @@ pgbackrest_server_conf:
     - { option: "repo1-retention-archive", value: "4" }
     - { option: "repo1-bundle", value: "y" }
     - { option: "repo1-block", value: "y" }
-    - { option: "start-fast", value: "y" }
-    - { option: "stop-auto", value: "y" }
-    - { option: "resume", value: "n" }
-    - { option: "link-all", value: "y" }
     - { option: "archive-check", value: "y" }
     - { option: "archive-copy", value: "n" }
     - { option: "backup-standby", value: "y" }
+    - { option: "start-fast", value: "y" }
+    - { option: "stop-auto", value: "y" }
+    - { option: "link-all", value: "y" }
+    - { option: "resume", value: "n" }
 #    - { option: "", value: "" }
 # the stanza section will be generated automatically
 
