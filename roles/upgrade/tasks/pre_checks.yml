@@ -32,6 +32,7 @@
     - pexpect
   environment:
     PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
+    PIP_BREAK_SYSTEM_PACKAGES: "1"
   vars:
     ansible_python_interpreter: /usr/bin/python3
 
