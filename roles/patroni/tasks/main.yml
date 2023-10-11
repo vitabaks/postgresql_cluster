@@ -27,6 +27,7 @@
         umask: "0022"
       environment:
         PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
+        PIP_BREAK_SYSTEM_PACKAGES: "1"
       when: patroni_pip_requirements_repo | length < 1
 
     - name: Install requirements
@@ -37,6 +38,7 @@
         umask: "0022"
       environment:
         PATH: "{{ ansible_env.PATH }}:{{ postgresql_bin_dir }}:/usr/local/bin:/usr/bin"
+        PIP_BREAK_SYSTEM_PACKAGES: "1"
       when: patroni_pip_requirements_repo | length < 1
 
     - name: Install patroni
@@ -48,6 +50,7 @@
         umask: "0022"
       environment:
         PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
+        PIP_BREAK_SYSTEM_PACKAGES: "1"
       when: patroni_pip_package_repo | length < 1 and patroni_install_version == "latest"
 
     - name: "Install patroni {{ patroni_install_version }}"
@@ -58,6 +61,7 @@
         umask: "0022"
       environment:
         PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
+        PIP_BREAK_SYSTEM_PACKAGES: "1"
       when: patroni_pip_package_repo | length < 1 and patroni_install_version != "latest"
   when: installation_method == "repo" and patroni_installation_method == "pip"
   environment: "{{ proxy_env | default({}) }}"
@@ -93,6 +97,7 @@
       loop: "{{ patroni_pip_requirements_repo | map('basename') | list }}"
       environment:
         PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
+        PIP_BREAK_SYSTEM_PACKAGES: "1"
       when: patroni_pip_requirements_repo | length > 0
 
     - name: Install patroni
@@ -104,6 +109,7 @@
       loop: "{{ patroni_pip_package_repo | map('basename') | list }}"
       environment:
         PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
+        PIP_BREAK_SYSTEM_PACKAGES: "1"
       when: patroni_pip_package_repo | length > 0
   when: installation_method == "repo" and patroni_installation_method == "pip"
   vars:
@@ -134,6 +140,7 @@
       loop: "{{ patroni_pip_requirements_file | map('basename') | list }}"
       environment:
         PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
+        PIP_BREAK_SYSTEM_PACKAGES: "1"
       when: patroni_pip_requirements_file | length > 0
 
     - name: Install patroni
@@ -145,6 +152,7 @@
       loop: "{{ patroni_pip_package_file | map('basename') | list }}"
       environment:
         PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
+        PIP_BREAK_SYSTEM_PACKAGES: "1"
       when: patroni_pip_package_file | length > 0
   when: installation_method == "file" and patroni_installation_method == "pip"
   vars:
@@ -617,6 +625,7 @@
         - ruamel.yaml
       environment:
         PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
+        PIP_BREAK_SYSTEM_PACKAGES: "1"
       vars:
         ansible_python_interpreter: /usr/bin/python3
   # Run PITR
