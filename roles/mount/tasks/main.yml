@@ -78,29 +78,18 @@
           retries: 3
           when: ansible_distribution == 'Ubuntu'
 
-        - block: # Debian
-            - name: Install zfs dependencies
-              ansible.builtin.package:
-                name:
-                  - dpkg-dev
-                  - linux-headers-generic
-                  - linux-image-generic
-                state: present
-              register: package_status
-              until: package_status is success
-              delay: 5
-              retries: 3
-
-            - name: Install zfs
-              ansible.builtin.package:
-                name:
-                  - zfs-dkms
-                  - zfsutils-linux
-                state: present
-              register: package_status
-              until: package_status is success
-              delay: 5
-              retries: 3
+        - name: Install zfs
+          ansible.builtin.package:
+            name:
+              - "linux-headers-{{ ansible_kernel }}"
+              - dpkg-dev
+              - zfs-dkms
+              - zfsutils-linux
+            state: present
+          register: package_status
+          until: package_status is success
+          delay: 5
+          retries: 3
           when: ansible_distribution == 'Debian'
 
         - block: # RedHat based
