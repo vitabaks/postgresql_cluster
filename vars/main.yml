@@ -296,6 +296,7 @@ postgresql_pgpass:
 
 # PgBouncer parameters
 pgbouncer_install: true  # or 'false' if you do not want to install and configure the pgbouncer service
+pgbouncer_processes: 1  # Number of pgbouncer processes to be used. Multiple processes use the so_reuseport option for better performance.
 pgbouncer_conf_dir: "/etc/pgbouncer"
 pgbouncer_log_dir: "/var/log/pgbouncer"
 pgbouncer_listen_addr: "0.0.0.0"

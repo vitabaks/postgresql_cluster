@@ -11,10 +11,14 @@
 - name: Update pgbouncer.ini
   ansible.builtin.template:
     src: ../templates/pgbouncer.ini.j2
-    dest: "{{ pgbouncer_conf_dir }}/pgbouncer.ini"
+    dest: "{{ pgbouncer_conf_dir }}/pgbouncer{{ '-%d' % (idx + 1) if idx > 0 else '' }}.ini"
     owner: postgres
     group: postgres
     mode: "0640"
+  loop: "{{ range(0, (pgbouncer_processes | default(1) | int)) | list }}"
+  loop_control:
+    index_var: idx
+    label: "{{ 'pgbouncer' if idx == 0 else 'pgbouncer-%d' % (idx + 1) }}"
   notify: "restart pgbouncer"
   when: existing_pgcluster is not defined or not existing_pgcluster|bool
   tags: pgbouncer, pgbouncer_conf
