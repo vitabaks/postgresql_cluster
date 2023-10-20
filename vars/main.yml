@@ -450,7 +450,8 @@ wal_g_backup_command:
   - " && wal-g backup-push {{ postgresql_data_dir }} > {{ postgresql_log_dir }}/walg_backup.log 2>&1"
 wal_g_delete_command:
   - "[ $(curl -s -o /dev/null -w '%{http_code}' http://{{ inventory_hostname }}:{{ patroni_restapi_port }}) = '200' ]"
-  - " && wal-g delete retain FULL 4 --confirm > {{ postgresql_log_dir }}/walg_delete.log 2>&1"
+  - " && wal-g delete retain FULL {{ WAL_G_RETENTION_FULL | default('4') }} --confirm > {{ postgresql_log_dir }}/walg_delete.log 2>&1"
+# retain 4 full backups (adjust according to your company's backup retention policy)
 
 wal_g_cron_jobs:
   - name: "WAL-G: Create daily backup"
@@ -462,7 +463,7 @@ wal_g_cron_jobs:
     month: "*"
     weekday: "*"
     job: "{{ wal_g_backup_command | join('') }}"
-  - name: "WAL-G: Delete old backups" # retain 4 full backups (adjust according to your company's backup retention policy)
+  - name: "WAL-G: Delete old backups"
     user: "postgres"
     file: /etc/cron.d/walg
     minute: "30"
@@ -543,8 +544,8 @@ pgbackrest_cron_jobs:
     day: "*"
     month: "*"
     weekday: "0"
-    job: "pgbackrest --type=full --stanza={{ pgbackrest_stanza }} backup"
-    # job: "if [ $(psql -tAXc 'select pg_is_in_recovery()') = 'f' ]; then pgbackrest --type=full --stanza={{ pgbackrest_stanza }} backup; fi"
+    job: "pgbackrest --stanza={{ pgbackrest_stanza }} --type=full backup"
+    # job: "if [ $(psql -tAXc 'select pg_is_in_recovery()') = 'f' ]; then pgbackrest --stanza={{ pgbackrest_stanza }} --type=full backup; fi"
   - name: "pgBackRest: Diff Backup"
     file: "/etc/cron.d/pgbackrest-{{ patroni_cluster_name }}"
     user: "postgres"
@@ -553,8 +554,8 @@ pgbackrest_cron_jobs:
     day: "*"
     month: "*"
     weekday: "1-6"
-    job: "pgbackrest --type=diff --stanza={{ pgbackrest_stanza }} backup"
-    # job: "if [ $(psql -tAXc 'select pg_is_in_recovery()') = 'f' ]; then pgbackrest --type=diff --stanza={{ pgbackrest_stanza }} backup; fi"
+    job: "pgbackrest --stanza={{ pgbackrest_stanza }} --type=diff backup"
+    # job: "if [ $(psql -tAXc 'select pg_is_in_recovery()') = 'f' ]; then pgbackrest --stanza={{ pgbackrest_stanza }} --type=diff backup; fi"
 
 
 # PITR mode (if patroni_cluster_bootstrap_method: "pgbackrest" or "wal-g"):

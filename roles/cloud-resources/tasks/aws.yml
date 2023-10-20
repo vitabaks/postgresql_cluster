@@ -218,7 +218,7 @@
             ([] if not firewall | bool else [patroni_cluster_name + '-private-security-group'])
           }}
 
-    # S3 bucket
+    # Backups
     - name: "AWS: Create S3 bucket '{{ patroni_cluster_name }}'"
       amazon.aws.s3_bucket:
         access_key: "{{ lookup('ansible.builtin.env', 'AWS_ACCESS_KEY_ID') }}"
@@ -229,6 +229,52 @@
         delete_public_access: true
         object_lock_enabled: "{{ aws_s3_bucket_object_lock_enabled | default(false) }}"
       when: (pgbackrest_install | bool) or (wal_g_install | bool)
+
+    - name: "Set variable: pgbackrest_conf"
+      ansible.builtin.set_fact:
+        pgbackrest_conf:
+          global:
+            - { option: "log-level-file", value: "detail" }
+            - { option: "log-path", value: "/var/log/pgbackrest" }
+            - { option: "repo1-type", value: "s3" }
+            - { option: "repo1-path", value: "/pgbackrest" }
+            - { option: "repo1-s3-key", value: "{{ AWS_ACCESS_KEY_ID | default('') }}" }
+            - { option: "repo1-s3-key-secret", value: "{{ AWS_SECRET_ACCESS_KEY | default('') }}" }
+            - { option: "repo1-s3-bucket", value: "{{ AWS_S3_BUCKET | default(patroni_cluster_name) }}" }
+            - { option: "repo1-s3-endpoint", value: "{{ AWS_S3_ENDPOINT | default('s3.' ~ (server_location | default('us-east-1')) ~ '.amazonaws.com') }}" }
+            - { option: "repo1-s3-region", value: "{{ AWS_S3_REGION | default(server_location | default('us-east-1')) }}" }
+            - { option: "repo1-retention-full", value: "{{ PGBACKREST_RETENTION_FULL | default('4') }}" }
+            - { option: "repo1-retention-archive", value: "{{ PGBACKREST_RETENTION_ARCHIVE | default('4') }}" }
+            - { option: "repo1-retention-archive-type", value: "{{ PGBACKREST_RETENTION_ARCHIVE_TYPE | default('full') }}" }
+            - { option: "repo1-bundle", value: "y" }
+            - { option: "repo1-block", value: "y" }
+            - { option: "start-fast", value: "y" }
+            - { option: "stop-auto", value: "y" }
+            - { option: "link-all", value: "y" }
+            - { option: "resume", value: "n" }
+            - { option: "process-max", value: "{{ PGBACKREST_PROCESS_MAX | default([ansible_processor_vcpus | int // 2, 1] | max) }}" }
+          stanza:
+            - { option: "log-level-console", value: "info" }
+            - { option: "recovery-option", value: "recovery_target_action=promote" }
+            - { option: "pg1-path", value: "{{ pg_data_mount_path | default('/pgdata') }}/{{ postgresql_version }}/{{ patroni_cluster_name }}" }
+      when: pgbackrest_install | bool
+
+    - name: "Set variable: wal_g_json"
+      ansible.builtin.set_fact:
+        wal_g_json:
+          - { option: "AWS_ACCESS_KEY_ID", value: "{{ AWS_ACCESS_KEY_ID | default('') }}" }
+          - { option: "AWS_SECRET_ACCESS_KEY", value: "{{ AWS_SECRET_ACCESS_KEY | default('') }}" }
+          - { option: "WALG_S3_PREFIX", value: "{{ WALG_S3_PREFIX | default('s3://' + patroni_cluster_name) }}" }
+          - { option: "WALG_COMPRESSION_METHOD", value: "{{ WALG_COMPRESSION_METHOD | default('brotli') }}" }
+          - { option: "WALG_DELTA_MAX_STEPS", value: "{{ WALG_DELTA_MAX_STEPS | default('6') }}" }
+          - { option: "WALG_DOWNLOAD_CONCURRENCY", value: "{{ WALG_DOWNLOAD_CONCURRENCY | default([ansible_processor_vcpus | int // 2, 1] | max) }}" }
+          - { option: "WALG_UPLOAD_CONCURRENCY", value: "{{ WALG_UPLOAD_CONCURRENCY | default([ansible_processor_vcpus | int // 2, 1] | max) }}" }
+          - { option: "WALG_UPLOAD_DISK_CONCURRENCY", value: "{{ WALG_UPLOAD_DISK_CONCURRENCY | default([ansible_processor_vcpus | int // 2, 1] | max) }}" }
+          - { option: "PGDATA", value: "{{ pg_data_mount_path | default('/pgdata') }}/{{ postgresql_version }}/{{ patroni_cluster_name }}" }
+          - { option: "PGHOST", value: "{{ postgresql_unix_socket_dir | default('/var/run/postgresql') }}" }
+          - { option: "PGPORT", value: "{{ postgresql_port | default('5432') }}" }
+          - { option: "PGUSER", value: "{{ patroni_superuser_username | default('postgres') }}" }
+      when: wal_g_install | bool
   when: state == 'present'
 
 - name: Wait for EC2 instance to be available via SSH

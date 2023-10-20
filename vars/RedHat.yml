@@ -4,12 +4,12 @@
 #
 # When deploying to cloud providers, we create a disk and mount the data directory
 # along the path defined in the 'pg_data_mount_path' variable (or use '/pgdata' by default).
-# You can specify custom data dir path. Example: "/pgdata/{{ postgresql_version }}/data"
+# You can specify custom data dir path. Example: "/pgdata/{{ postgresql_version }}/{{ patroni_cluster_name }}"
 postgresql_data_dir: "\
   {% if provision is defined and provision | lower != 'none' %}\
-    {{ pg_data_mount_path | default('/pgdata') }}/{{ postgresql_version }}/data\
+    {{ pg_data_mount_path | default('/pgdata') }}/{{ postgresql_version }}/{{ patroni_cluster_name }}\
   {% else %}\
-    /var/lib/pgsql/{{ postgresql_version }}/data\
+    /var/lib/pgsql/{{ postgresql_version }}/{{ patroni_cluster_name }}\
   {% endif %}"
 
 # You can specify custom WAL dir path. Example: "/pgwal/{{ postgresql_version }}/pg_wal"
