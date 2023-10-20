@@ -1,7 +1,12 @@
 ---
 
 # PostgreSQL variables
-postgresql_cluster_name: "{{ patroni_cluster_name }}"
+postgresql_cluster_name: "\
+  {% if provision is defined and provision | lower != 'none' %}\
+    {{ patroni_cluster_name }}\
+  {% else %}\
+    main\
+  {% endif %}"
 
 # When deploying to cloud providers, we create a disk and mount the data directory
 # along the path defined in the 'pg_data_mount_path' variable (or use '/pgdata' by default).
