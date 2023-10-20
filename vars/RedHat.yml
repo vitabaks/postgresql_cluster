@@ -72,6 +72,7 @@ system_packages:
   - iptables
   - acl
   - bind-utils
+  - moreutils
   - perf
 
 # The glibc-langpack package includes the basic information required to support the language in your applications.

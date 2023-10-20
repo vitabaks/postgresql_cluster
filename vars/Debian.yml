@@ -64,6 +64,7 @@ system_packages:
   - iptables
   - acl
   - dnsutils
+  - moreutils
   - "{{ 'linux-tools-common' if ansible_distribution == 'Ubuntu' else 'linux-perf' }}" # perf
 
 postgresql_packages:
