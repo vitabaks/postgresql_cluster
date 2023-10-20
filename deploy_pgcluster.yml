@@ -119,6 +119,48 @@
       retries: 3
       when: ansible_os_family == "Debian"
 
+    # (optional) Command or script to be executed before the Postgres cluster deployment.
+    - name: Run pre-deploy command
+      run_once: true # noqa run-once
+      ansible.builtin.debug:
+        var: pre_deploy_command
+      when:
+        - pre_deploy_command_print | default(false) | bool
+        - pre_deploy_command | default('') | length > 0
+
+    - name: Execute pre-deploy command
+      run_once: true # noqa run-once
+      ansible.builtin.shell: "{{ pre_deploy_command }} > /tmp/pre_deploy_command.log 2>&1"
+      args:
+        executable: /bin/bash
+      delegate_to: "{{ item }}"
+      loop: "{{ groups[pre_deploy_command_hosts] }}"
+      register: pre_deploy_result
+      when: pre_deploy_command | default('') | length > 0
+
+    - name: Get pre-deploy command log
+      run_once: true # noqa run-once
+      ansible.builtin.command: cat /tmp/pre_deploy_command.log
+      register: pre_deploy_command_log
+      delegate_to: "{{ item }}"
+      loop: "{{ groups[pre_deploy_command_hosts] }}"
+      changed_when: false
+      when:
+        - pre_deploy_command | default('') | length > 0
+        - pre_deploy_command_print_result | default(false) | bool
+
+    - name: Print pre-deploy command result
+      run_once: true # noqa run-once
+      ansible.builtin.debug:
+        msg: "{{ item.stdout_lines }}"
+      loop: "{{ pre_deploy_command_log.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+      when:
+        - pre_deploy_command_print_result | default(false) | bool
+        - pre_deploy_command_log.results is defined
+        - item.stdout_lines is defined
+
 - name: deploy_pgcluster.yml | Deploy etcd cluster
   ansible.builtin.import_playbook: etcd_cluster.yml
   when: not dcs_exists|bool and dcs_type == "etcd"
@@ -268,3 +310,47 @@
 
     # finish (info)
     - role: deploy-finish
+
+  tasks:
+    # (optional) Command or script to be executed after the Postgres cluster deployment.
+    - name: Run post-deploy command
+      run_once: true # noqa run-once
+      ansible.builtin.debug:
+        var: post_deploy_command
+      when:
+        - post_deploy_command_print | default(false) | bool
+        - post_deploy_command | default('') | length > 0
+
+    - name: Execute post-deploy command
+      run_once: true # noqa run-once
+      ansible.builtin.shell: "{{ post_deploy_command }} > /tmp/post_deploy_command.log 2>&1"
+      args:
+        executable: /bin/bash
+      delegate_to: "{{ item }}"
+      loop: "{{ groups[post_deploy_command_hosts] }}"
+      when: post_deploy_command | default('') | length > 0
+
+    - name: Get post-deploy command log
+      run_once: true # noqa run-once
+      ansible.builtin.command: cat /tmp/post_deploy_command.log
+      register: post_deploy_command_log
+      delegate_to: "{{ item }}"
+      loop: "{{ groups[post_deploy_command_hosts] }}"
+      changed_when: false
+      when:
+        - post_deploy_command | default('') | length > 0
+        - post_deploy_command_print_result | default(false) | bool
+
+    - name: Print post-deploy command result
+      run_once: true # noqa run-once
+      ansible.builtin.debug:
+        msg: "{{ item.stdout_lines }}"
+      loop: "{{ post_deploy_command_log.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+      when:
+        - post_deploy_command_print_result | default(false) | bool
+        - post_deploy_command_log.results is defined
+        - item.stdout_lines is defined
+
+...
