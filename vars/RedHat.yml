@@ -9,7 +9,7 @@ postgresql_data_dir: "\
   {% if provision is defined and provision | lower != 'none' %}\
     {{ pg_data_mount_path | default('/pgdata') }}/{{ postgresql_version }}/{{ patroni_cluster_name }}\
   {% else %}\
-    /var/lib/pgsql/{{ postgresql_version }}/{{ patroni_cluster_name }}\
+    /var/lib/pgsql/{{ postgresql_version }}/data\
   {% endif %}"
 
 # You can specify custom WAL dir path. Example: "/pgwal/{{ postgresql_version }}/pg_wal"
