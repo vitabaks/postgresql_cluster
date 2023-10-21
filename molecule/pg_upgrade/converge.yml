@@ -16,6 +16,7 @@
         consul_node_role: server # if dcs_type: "consul"
         consul_bootstrap_expect: true # if dcs_type: "consul"
         postgresql_version: "14" # redefine the version to install for the upgrade test
+        pgbouncer_processes: 1 # Test multiple pgbouncer processes (so_reuseport)
         cacheable: true
 
     - name: Set variables for custom PostgreSQL data and WAL directory test

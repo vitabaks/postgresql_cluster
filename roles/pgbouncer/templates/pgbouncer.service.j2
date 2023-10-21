@@ -9,8 +9,8 @@ User=postgres
 Group=postgres
 
 PermissionsStartOnly=true
-ExecStartPre=-/bin/mkdir -p /run/pgbouncer/pgbouncer{{ '-%d' % (idx + 1) if idx > 0 else '' }} {{ pgbouncer_log_dir }}
-ExecStartPre=/bin/chown -R postgres:postgres /run/pgbouncer {{ pgbouncer_log_dir }}
+ExecStartPre=-/bin/mkdir -p /run/pgbouncer /var/run/pgbouncer{{ '-%d' % (idx + 1) if idx > 0 else '' }} {{ pgbouncer_log_dir }}
+ExecStartPre=/bin/chown -R postgres:postgres /run/pgbouncer /var/run/pgbouncer{{ '-%d' % (idx + 1) if idx > 0 else '' }} {{ pgbouncer_log_dir }}
 {% if ansible_os_family == "Debian" %}
 ExecStart=/usr/sbin/pgbouncer -d {{ pgbouncer_conf_dir }}/pgbouncer{{ '-%d' % (idx + 1) if idx > 0 else '' }}.ini
 {% endif %}
@@ -18,7 +18,7 @@ ExecStart=/usr/sbin/pgbouncer -d {{ pgbouncer_conf_dir }}/pgbouncer{{ '-%d' % (i
 ExecStart=/usr/bin/pgbouncer -d {{ pgbouncer_conf_dir }}/pgbouncer{{ '-%d' % (idx + 1) if idx > 0 else '' }}.ini
 {% endif %}
 ExecReload=/bin/kill -SIGHUP $MAINPID
-PIDFile=/run/pgbouncer/pgbouncer{{ '-%d' % (idx + 1) if idx > 0 else '' }}.pid
+PIDFile=/run/pgbouncer{{ '-%d' % (idx + 1) if idx > 0 else '' }}/pgbouncer.pid
 Restart=on-failure
 
 LimitNOFILE=100000

@@ -36,6 +36,21 @@
       and state <> 'idle'
       and query_start < clock_timestamp() - interval '{{ pg_slow_active_query_treshold_to_terminate }} ms'
       {{ "and backend_type = 'client backend'" if pg_old_version is version('10', '>=') else '' }}
+    # Depending on the number of PgBouncer processes, it either uses a local connection or the socket paths for each PgBouncer process.
+    pgbouncer_pause_command: >-
+      {% if pgbouncer_processes | default(1) | int == 1 %}
+      bash -c 'PGPASSWORD={{ patroni_superuser_password }} psql -h localhost -p {{ pgbouncer_listen_port }} -U {{ patroni_superuser_username }} -d pgbouncer -tAXc "PAUSE"'
+      {% else %}
+        {% set unix_socket_dir = [] %}
+        {% for i in range(0, pgbouncer_processes | default(1) | int) %}
+            {% if i == 0 %}
+                {{ unix_socket_dir.append('/var/run/pgbouncer') }}
+            {% else %}
+                {{ unix_socket_dir.append('/var/run/pgbouncer-' + i | string) }}
+            {% endif %}
+        {% endfor %}
+        echo -e "{{ unix_socket_dir | join('\n') }}" | xargs -I {} -P {{ pgbouncer_processes | default(1) | int }} bash -c 'PGPASSWORD={{ patroni_superuser_password }} psql -h {} -p {{ pgbouncer_listen_port }} -U {{ patroni_superuser_username }} -d pgbouncer -tAXc "PAUSE"'
+      {% endif %}
   ansible.builtin.shell: |
     set -o pipefail;
 
@@ -46,7 +61,7 @@
     # it is assumed that pgbouncer is installed on database servers
     pgb_servers="$pg_servers"
     pgb_count="$pg_count"
-    pgb_pause_command="psql -h localhost -p {{ pgbouncer_listen_port }} -U {{ patroni_superuser_username }} -d pgbouncer -tAXc \"PAUSE\""
+    pgb_pause_command="{{ pgbouncer_pause_command }}"
     pgb_resume_command='kill -SIGUSR2 $(pidof pgbouncer)'
 
     start_time=$(date +%s)
