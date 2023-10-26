@@ -15,7 +15,7 @@ vip_interface: "{{ ansible_default_ipv4.interface }}"  # interface name (e.g., "
 # - For the "Type B" scheme: Use libpq `target_session_attrs`, ensuring read/write connections go to the primary database, as an alternative to cluster_vip.
 
 patroni_cluster_name: "postgres-cluster"  # the cluster name (must be unique for each cluster)
-patroni_install_version: "3.1.0"  # or 'latest'
+patroni_install_version: "3.2.0"  # or 'latest'
 
 patroni_superuser_username: "postgres"
 patroni_superuser_password: "postgres-pass"  # please change password
