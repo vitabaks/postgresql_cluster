@@ -120,46 +120,57 @@
       when: ansible_os_family == "Debian"
 
     # (optional) Command or script to be executed before the Postgres cluster deployment.
-    - name: Run pre-deploy command
-      run_once: true # noqa run-once
-      ansible.builtin.debug:
-        var: pre_deploy_command
-      when:
-        - pre_deploy_command_print | default(false) | bool
-        - pre_deploy_command | default('') | length > 0
+    - block:
+        - name: Print pre-deploy command
+          ansible.builtin.debug:
+            var: pre_deploy_command
+          when: pre_deploy_command_print | default(false) | bool
 
-    - name: Execute pre-deploy command
+        - name: Execute pre-deploy command
+          ansible.builtin.shell: "{{ pre_deploy_command }} > /tmp/pre_deploy_command.log 2>&1"
+          args:
+            executable: /bin/bash
+          register: pre_deploy_result
+          delegate_to: "{{ item }}"
+          loop: "{{ pre_deploy_command_hosts.split(',') | map('extract', groups) | list | flatten }}"
+          async: "{{ pre_deploy_command_timeout }}"  # run the command asynchronously
+          poll: 0
+
+        - name: Wait for the pre-deploy command to complete
+          ansible.builtin.async_status:
+            jid: "{{ item.ansible_job_id }}"
+          register: pre_deploy_job_result
+          delegate_to: "{{ item.item }}"
+          loop: "{{ pre_deploy_result.results }}"
+          loop_control:
+            label: "{{ item.item }}"
+          until: pre_deploy_job_result.finished
+          retries: "{{ (pre_deploy_command_timeout | int) // 10 }}"
+          delay: 10
+          when:
+            - pre_deploy_result.results is defined
+            - item.ansible_job_id is defined
+
+        - name: Get pre-deploy command log
+          ansible.builtin.command: cat /tmp/pre_deploy_command.log
+          register: pre_deploy_command_log
+          delegate_to: "{{ item }}"
+          loop: "{{ pre_deploy_command_hosts.split(',') | map('extract', groups) | list | flatten }}"
+          changed_when: false
+          when: pre_deploy_command_print_result | default(false) | bool
+
+        - name: Print pre-deploy command result
+          ansible.builtin.debug:
+            msg: "{{ item.stdout_lines }}"
+          loop: "{{ pre_deploy_command_log.results }}"
+          loop_control:
+            label: "{{ item.item }}"
+          when:
+            - pre_deploy_command_log.results is defined
+            - item.stdout_lines is defined
       run_once: true # noqa run-once
-      ansible.builtin.shell: "{{ pre_deploy_command }} > /tmp/pre_deploy_command.log 2>&1"
-      args:
-        executable: /bin/bash
-      delegate_to: "{{ item }}"
-      loop: "{{ groups[pre_deploy_command_hosts] }}"
-      register: pre_deploy_result
       when: pre_deploy_command | default('') | length > 0
-
-    - name: Get pre-deploy command log
-      run_once: true # noqa run-once
-      ansible.builtin.command: cat /tmp/pre_deploy_command.log
-      register: pre_deploy_command_log
-      delegate_to: "{{ item }}"
-      loop: "{{ groups[pre_deploy_command_hosts] }}"
-      changed_when: false
-      when:
-        - pre_deploy_command | default('') | length > 0
-        - pre_deploy_command_print_result | default(false) | bool
-
-    - name: Print pre-deploy command result
-      run_once: true # noqa run-once
-      ansible.builtin.debug:
-        msg: "{{ item.stdout_lines }}"
-      loop: "{{ pre_deploy_command_log.results }}"
-      loop_control:
-        label: "{{ item.item }}"
-      when:
-        - pre_deploy_command_print_result | default(false) | bool
-        - pre_deploy_command_log.results is defined
-        - item.stdout_lines is defined
+      tags: pre_deploy, pre_deploy_command
 
 - name: deploy_pgcluster.yml | Deploy etcd cluster
   ansible.builtin.import_playbook: etcd_cluster.yml
@@ -313,44 +324,56 @@
 
   tasks:
     # (optional) Command or script to be executed after the Postgres cluster deployment.
-    - name: Run post-deploy command
-      run_once: true # noqa run-once
-      ansible.builtin.debug:
-        var: post_deploy_command
-      when:
-        - post_deploy_command_print | default(false) | bool
-        - post_deploy_command | default('') | length > 0
+    - block:
+        - name: Print post-deploy command
+          ansible.builtin.debug:
+            var: post_deploy_command
+          when: post_deploy_command_print | default(false) | bool
 
-    - name: Execute post-deploy command
+        - name: Execute post-deploy command
+          ansible.builtin.shell: "{{ post_deploy_command }} > /tmp/post_deploy_command.log 2>&1"
+          args:
+            executable: /bin/bash
+          register: post_deploy_result
+          delegate_to: "{{ item }}"
+          loop: "{{ post_deploy_command_hosts.split(',') | map('extract', groups) | list | flatten }}"
+          async: "{{ post_deploy_command_timeout }}"  # run the command asynchronously
+          poll: 0
+
+        - name: Wait for the post-deploy command to complete
+          ansible.builtin.async_status:
+            jid: "{{ item.ansible_job_id }}"
+          register: post_deploy_job_result
+          delegate_to: "{{ item.item }}"
+          loop: "{{ post_deploy_result.results }}"
+          loop_control:
+            label: "{{ item.item }}"
+          until: post_deploy_job_result.finished
+          retries: "{{ (post_deploy_command_timeout | int) // 10 }}"
+          delay: 10
+          when:
+            - post_deploy_result.results is defined
+            - item.ansible_job_id is defined
+
+        - name: Get post-deploy command log
+          ansible.builtin.command: cat /tmp/post_deploy_command.log
+          register: post_deploy_command_log
+          delegate_to: "{{ item }}"
+          loop: "{{ post_deploy_command_hosts.split(',') | map('extract', groups) | list | flatten }}"
+          changed_when: false
+          when: post_deploy_command_print_result | default(false) | bool
+
+        - name: Print post-deploy command result
+          ansible.builtin.debug:
+            msg: "{{ item.stdout_lines }}"
+          loop: "{{ post_deploy_command_log.results }}"
+          loop_control:
+            label: "{{ item.item }}"
+          when:
+            - post_deploy_command_log.results is defined
+            - item.stdout_lines is defined
       run_once: true # noqa run-once
-      ansible.builtin.shell: "{{ post_deploy_command }} > /tmp/post_deploy_command.log 2>&1"
-      args:
-        executable: /bin/bash
-      delegate_to: "{{ item }}"
-      loop: "{{ groups[post_deploy_command_hosts] }}"
       when: post_deploy_command | default('') | length > 0
-
-    - name: Get post-deploy command log
-      run_once: true # noqa run-once
-      ansible.builtin.command: cat /tmp/post_deploy_command.log
-      register: post_deploy_command_log
-      delegate_to: "{{ item }}"
-      loop: "{{ groups[post_deploy_command_hosts] }}"
-      changed_when: false
-      when:
-        - post_deploy_command | default('') | length > 0
-        - post_deploy_command_print_result | default(false) | bool
-
-    - name: Print post-deploy command result
-      run_once: true # noqa run-once
-      ansible.builtin.debug:
-        msg: "{{ item.stdout_lines }}"
-      loop: "{{ post_deploy_command_log.results }}"
-      loop_control:
-        label: "{{ item.item }}"
-      when:
-        - post_deploy_command_print_result | default(false) | bool
-        - post_deploy_command_log.results is defined
-        - item.stdout_lines is defined
+      tags: post_deploy, post_deploy_command
 
 ...
