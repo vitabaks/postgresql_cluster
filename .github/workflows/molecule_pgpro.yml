@@ -15,7 +15,6 @@ jobs:
           - centos8
           - debian10
           - debian11
-          - ubuntu1804
           - ubuntu2004
           - ubuntu2204
 
