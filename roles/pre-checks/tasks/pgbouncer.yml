@@ -40,13 +40,14 @@
   ansible.builtin.set_fact:
     pgbouncer_total_pool_size: >-
       {{
-        (pgbouncer_pool_size | int)
+        ((pgbouncer_pool_size | int)
         +
         (postgresql_databases
           | default([])
           | rejectattr('db', 'in', pgbouncer_pools | map(attribute='dbname') | list)
           | length
-        ) * (pgbouncer_default_pool_size | default(0) | int)
+        ) * (pgbouncer_default_pool_size | default(0) | int))
+        * (pgbouncer_processes | default(1) | int)
       }}
   when: pgbouncer_pool_size is defined
 

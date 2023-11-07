@@ -53,18 +53,26 @@
 - name: Configure pgbouncer systemd service file
   ansible.builtin.template:
     src: templates/pgbouncer.service.j2
-    dest: /etc/systemd/system/pgbouncer.service
+    dest: "/etc/systemd/system/pgbouncer{{ '-%d' % (idx + 1) if idx > 0 else '' }}.service"
     owner: postgres
     group: postgres
     mode: "0644"
+  loop: "{{ range(0, (pgbouncer_processes | default(1) | int)) | list }}"
+  loop_control:
+    index_var: idx
+    label: "{{ 'pgbouncer' if idx == 0 else 'pgbouncer-%d' % (idx + 1) }}"
   notify: "restart pgbouncer"
   tags: pgbouncer_service, pgbouncer
 
 - name: Ensure pgbouncer service is enabled
   ansible.builtin.systemd:
     daemon_reload: true
-    name: pgbouncer
+    name: "pgbouncer{{ '-%d' % (idx + 1) if idx > 0 else '' }}"
     enabled: true
+  loop: "{{ range(0, (pgbouncer_processes | default(1) | int)) | list }}"
+  loop_control:
+    index_var: idx
+    label: "{{ 'pgbouncer' if idx == 0 else 'pgbouncer-%d' % (idx + 1) }}"
   tags: pgbouncer_service, pgbouncer
 
 - block:  # workaround for pgbouncer from postgrespro repo
@@ -88,7 +96,7 @@
 - name: Enable log rotation with logrotate
   ansible.builtin.copy:
     content: |
-      /var/log/pgbouncer/pgbouncer.log {
+      {{ pgbouncer_log_dir }}/pgbouncer{{ '-%d' % (idx + 1) if idx > 0 else '' }}.log {
              daily
              rotate 7
              copytruncate
@@ -98,16 +106,24 @@
              missingok
              su root root
       }
-    dest: /etc/logrotate.d/pgbouncer
+    dest: "/etc/logrotate.d/pgbouncer{{ '-%d' % (idx + 1) if idx > 0 else '' }}"
+  loop: "{{ range(0, (pgbouncer_processes | default(1) | int)) | list }}"
+  loop_control:
+    index_var: idx
+    label: "{{ 'pgbouncer' if idx == 0 else 'pgbouncer-%d' % (idx + 1) }}"
   tags: pgbouncer_logrotate, pgbouncer
 
 - name: Configure pgbouncer.ini
   ansible.builtin.template:
     src: templates/pgbouncer.ini.j2
-    dest: "{{ pgbouncer_conf_dir }}/pgbouncer.ini"
+    dest: "{{ pgbouncer_conf_dir }}/pgbouncer{{ '-%d' % (idx + 1) if idx > 0 else '' }}.ini"
     owner: postgres
     group: postgres
     mode: "0640"
+  loop: "{{ range(0, (pgbouncer_processes | default(1) | int)) | list }}"
+  loop_control:
+    index_var: idx
+    label: "{{ 'pgbouncer' if idx == 0 else 'pgbouncer-%d' % (idx + 1) }}"
   notify: "restart pgbouncer"
   when: existing_pgcluster is not defined or not existing_pgcluster|bool
   tags: pgbouncer_conf, pgbouncer
@@ -128,10 +144,14 @@
     - name: Fetch pgbouncer.ini file from master
       run_once: true
       ansible.builtin.fetch:
-        src: "{{ pgbouncer_conf_dir }}/pgbouncer.ini"
+        src: "{{ pgbouncer_conf_dir }}/pgbouncer{{ '-%d' % (idx + 1) if idx > 0 else '' }}.ini"
         dest: files/
         validate_checksum: true
         flat: true
+      loop: "{{ range(0, (pgbouncer_processes | default(1) | int)) | list }}"
+      loop_control:
+        index_var: idx
+        label: "{{ 'pgbouncer' if idx == 0 else 'pgbouncer-%d' % (idx + 1) }}"
       delegate_to: "{{ groups.master[0] }}"
 
     - name: Fetch userlist.txt conf file from master
@@ -146,11 +166,15 @@
 
     - name: Copy pgbouncer.ini file to replica
       ansible.builtin.copy:
-        src: files/pgbouncer.ini
+        src: "files/pgbouncer{{ '-%d' % (idx + 1) if idx > 0 else '' }}.ini"
         dest: "{{ pgbouncer_conf_dir }}"
         owner: postgres
         group: postgres
         mode: "0640"
+      loop: "{{ range(0, (pgbouncer_processes | default(1) | int)) | list }}"
+      loop_control:
+        index_var: idx
+        label: "{{ 'pgbouncer' if idx == 0 else 'pgbouncer-%d' % (idx + 1) }}"
 
     - name: Copy userlist.txt conf file to replica
       ansible.builtin.copy:
@@ -165,8 +189,12 @@
       become: false
       run_once: true
       ansible.builtin.file:
-        path: files/pgbouncer.ini
+        path: "files/pgbouncer{{ '-%d' % (idx + 1) if idx > 0 else '' }}.ini"
         state: absent
+      loop: "{{ range(0, (pgbouncer_processes | default(1) | int)) | list }}"
+      loop_control:
+        index_var: idx
+        label: "{{ 'pgbouncer' if idx == 0 else 'pgbouncer-%d' % (idx + 1) }}"
       delegate_to: localhost
 
     - name: Remove userlist.txt conf file from localhost
@@ -180,30 +208,16 @@
 
     - name: Prepare pgbouncer.ini conf file (replace "listen_addr")
       ansible.builtin.lineinfile:
-        path: "{{ pgbouncer_conf_dir }}/pgbouncer.ini"
-        regexp: "{{ item.regexp }}"
-        line: "{{ item.line }}"
+        path: "{{ pgbouncer_conf_dir }}/pgbouncer{{ '-%d' % (idx + 1) if idx > 0 else '' }}.ini"
+        regexp: '^listen_addr ='
+        line: 'listen_addr = {{ pgbouncer_listen_addr }}'
         backrefs: true
-      loop:
-        - { regexp: '^listen_addr =', line: 'listen_addr = {{ hostvars[inventory_hostname].inventory_hostname }}' }
+      loop: "{{ range(0, (pgbouncer_processes | default(1) | int)) | list }}"
       loop_control:
-        label: "{{ item.line }}"
+        index_var: idx
+        label: "{{ 'pgbouncer' if idx == 0 else 'pgbouncer-%d' % (idx + 1) }}"
       notify: "restart pgbouncer"
-      when: with_haproxy_load_balancing|bool or
-            (cluster_vip is not defined or cluster_vip | length < 1)
-
-    - name: Prepare pgbouncer.ini conf file (replace "listen_addr")
-      ansible.builtin.lineinfile:
-        path: "{{ pgbouncer_conf_dir }}/pgbouncer.ini"
-        regexp: "{{ item.regexp }}"
-        line: "{{ item.line }}"
-        backrefs: true
-      loop:
-        - { regexp: '^listen_addr =', line: 'listen_addr = {{ hostvars[inventory_hostname].inventory_hostname }},{{ cluster_vip }}' }
-      loop_control:
-        label: "{{ item.line }}"
-      notify: "restart pgbouncer"
-      when: not with_haproxy_load_balancing|bool and (cluster_vip is defined and cluster_vip | length > 0 )
+      when: pgbouncer_listen_addr != "0.0.0.0"
   when: existing_pgcluster is defined and existing_pgcluster|bool
   tags: pgbouncer_conf, pgbouncer
 
