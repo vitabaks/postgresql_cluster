@@ -129,8 +129,8 @@ Please see the variable file vars/[upgrade.yml](../../vars/upgrade.yml)
 - **Check if PostgreSQL tablespaces exist**
   - Print tablespace location (if exists)
   - Note: If tablespaces are present they will be upgraded (step 5) on replicas using rsync
-- **Test PgBouncer access via localhost**
-  - test access via 'localhost' to be able to perform 'PAUSE' command
+- **Test PgBouncer access via unix socket**
+  - test access via unix socket to be able to perform 'PAUSE' command
 - **Make sure that the cluster ip address (VIP) is running**
   - Notes: if 'cluster_vip' is defined
 

@@ -6,11 +6,11 @@
 * = host=127.0.0.1 port={{ postgresql_port }}
 
 [pgbouncer]
-logfile = {{ pgbouncer_log_dir }}/pgbouncer.log
-pidfile = /run/pgbouncer/pgbouncer.pid
+logfile = {{ pgbouncer_log_dir }}/pgbouncer{{ '-%d' % (idx + 1) if idx > 0 else '' }}.log
+pidfile = /run/pgbouncer{{ '-%d' % (idx + 1) if idx > 0 else '' }}/pgbouncer.pid
 listen_addr = {{ pgbouncer_listen_addr | default('0.0.0.0') }}
 listen_port = {{ pgbouncer_listen_port | default(6432) }}
-unix_socket_dir = /var/run/postgresql
+unix_socket_dir = /var/run/pgbouncer{{ '-%d' % (idx + 1) if idx > 0 else '' }}
 auth_type = {{ pgbouncer_auth_type }}
 {% if pgbouncer_auth_user | bool %}
 auth_user = {{ pgbouncer_auth_username }}
@@ -33,6 +33,8 @@ reserve_pool_timeout = 1
 max_db_connections = {{ pgbouncer_max_db_connections }}
 pkt_buf = 8192
 listen_backlog = 4096
+
+so_reuseport = 1
 
 log_connections = 0
 log_disconnections = 0

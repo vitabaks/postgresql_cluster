@@ -2,9 +2,13 @@
 
 - name: Restart pgbouncer service
   ansible.builtin.systemd:
-    name: pgbouncer
+    name: pgbouncer{{ '-%d' % (idx + 1) if idx > 0 else '' }}
     enabled: true
     state: restarted
+  loop: "{{ range(0, (pgbouncer_processes | default(1) | int)) | list }}"
+  loop_control:
+    index_var: idx
+    label: "{{ 'pgbouncer' if idx == 0 else 'pgbouncer-%d' % (idx + 1) }}"
   listen: "restart pgbouncer"
 
 - name: Wait for port "{{ pgbouncer_listen_port }}" to become open on the host
@@ -19,8 +23,12 @@
 
 - name: Reload pgbouncer service
   ansible.builtin.systemd:
-    name: pgbouncer
+    name: pgbouncer{{ '-%d' % (idx + 1) if idx > 0 else '' }}
     state: reloaded
+  loop: "{{ range(0, (pgbouncer_processes | default(1) | int)) | list }}"
+  loop_control:
+    index_var: idx
+    label: "{{ 'pgbouncer' if idx == 0 else 'pgbouncer-%d' % (idx + 1) }}"
   listen: "reload pgbouncer"
   ignore_errors: true  # Added to prevent test failures in CI.
 
