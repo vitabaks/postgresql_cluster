@@ -303,6 +303,7 @@ pgbouncer_listen_addr: "0.0.0.0"
 pgbouncer_listen_port: 6432
 pgbouncer_max_client_conn: 10000
 pgbouncer_max_db_connections: 1000
+pgbouncer_max_prepared_statements: 1024
 pgbouncer_default_pool_size: 20
 pgbouncer_query_wait_timeout: 120
 pgbouncer_default_pool_mode: "session"
