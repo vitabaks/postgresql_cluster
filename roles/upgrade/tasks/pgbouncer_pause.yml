@@ -39,7 +39,7 @@
     pgb_unix_socket_dirs: >-
       {% set unix_socket_dir = ['/var/run/pgbouncer'] %}
       {%- for idx in range(1, pgbouncer_processes | default(1) | int) -%}
-        {{ unix_socket_dir.append('/var/run/pgbouncer-' + (idx + 1) | string) }}
+        {% set _ = unix_socket_dir.append('/var/run/pgbouncer-' ~ (idx + 1) | string) %}
       {%- endfor -%}
       {{ unix_socket_dir | join(' ') }}
   ansible.builtin.shell: |
