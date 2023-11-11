@@ -146,16 +146,12 @@
         state: present
 
     # Firewall
-    - name: "DigitalOcean: Create or modify SSH firewall rule"
+    - name: "DigitalOcean: Create or modify public firewall"
       community.digitalocean.digital_ocean_firewall:
         oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
+        name: "{{ patroni_cluster_name }}-public-firewall"
         state: "present"
-        name: "{{ patroni_cluster_name }}-public-ssh-firewall-rule"
-        inbound_rules:
-          - protocol: "tcp"
-            ports: "{{ ansible_ssh_port | default('22') }}"
-            sources:
-              addresses: ["0.0.0.0/0", "::/0"] # allow public ssh access for deployment
+        inbound_rules: "{{ inbound_rules }}"
         outbound_rules:
           - protocol: "tcp"
             ports: "1-65535"
@@ -172,46 +168,85 @@
         tags:
           - "{{ patroni_cluster_name }}" # Only VMs with this tag will be affected
       vars:
-        sources_addresses: "{{ (server_network | length > 0) | ternary(vpc_ip_range, default_ip_range) }}"
+        inbound_rules: >-
+          {{
+            ([
+              {
+                'protocol': 'tcp',
+                'ports': ansible_ssh_port | default('22'),
+                'sources': {
+                  'addresses': ssh_public_allowed_ips | default('0.0.0.0/0,::/0', true) | split(',')
+                }
+              }
+            ] if ssh_public_access | bool else []) +
+            ([
+              {
+                'protocol': 'tcp',
+                'ports': netdata_port | default('19999'),
+                'sources': {
+                  'addresses': netdata_public_allowed_ips | default('0.0.0.0/0,::/0', true) | split(',')
+                }
+              }
+            ] if netdata_install | bool and netdata_public_access | bool else []) +
+            ([
+              {
+                'protocol': 'tcp',
+                'ports': haproxy_listen_port.master | default('5000'),
+                'sources': {
+                  'addresses': database_public_allowed_ips | default('0.0.0.0/0,::/0', true) | split(',')
+                }
+              },
+              {
+                'protocol': 'tcp',
+                'ports': haproxy_listen_port.replicas | default('5001'),
+                'sources': {
+                  'addresses': database_public_allowed_ips | default('0.0.0.0/0,::/0', true) | split(',')
+                }
+              },
+              {
+                'protocol': 'tcp',
+                'ports': haproxy_listen_port.replicas_sync | default('5002'),
+                'sources': {
+                  'addresses': database_public_allowed_ips | default('0.0.0.0/0,::/0', true) | split(',')
+                }
+              },
+              {
+                'protocol': 'tcp',
+                'ports': haproxy_listen_port.replicas_async | default('5003'),
+                'sources': {
+                  'addresses': database_public_allowed_ips | default('0.0.0.0/0,::/0', true) | split(',')
+                }
+              }
+            ] if database_public_access | bool and with_haproxy_load_balancing | bool else []) +
+            ([
+              {
+                'protocol': 'tcp',
+                'ports': pgbouncer_listen_port | default('6432'),
+                'sources': {
+                  'addresses': database_public_allowed_ips | default('0.0.0.0/0,::/0', true) | split(',')
+                }
+              }
+            ] if database_public_access | bool and (not with_haproxy_load_balancing | bool and pgbouncer_install | bool) else []) +
+            ([
+              {
+                'protocol': 'tcp',
+                'ports': postgresql_port | default('5432'),
+                'sources': {
+                  'addresses': database_public_allowed_ips | default('0.0.0.0/0,::/0', true) | split(',')
+                }
+              }
+            ] if database_public_access | bool and (not with_haproxy_load_balancing | bool and not pgbouncer_install | bool) else [])
+          }}
       when:
-        - ssh_public_access | bool
         - firewall | bool
+        - (ssh_public_access | bool or netdata_public_access | bool or database_public_access | bool)
 
-    # if 'database_public_access' is 'true'
-    - name: "DigitalOcean: Create or modify public firewall rule"
+    - name: "DigitalOcean: Create or modify Postgres cluster firewall"
       community.digitalocean.digital_ocean_firewall:
         oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
+        name: "{{ patroni_cluster_name }}-firewall"
         state: "present"
-        name: "{{ patroni_cluster_name }}-public-database-firewall-rule"
-        inbound_rules:
-          - protocol: "tcp"
-            ports: "{{ haproxy_listen_port.master }}"
-            sources:
-              addresses: ["0.0.0.0/0", "::/0"]
-          - protocol: "tcp"
-            ports: "{{ haproxy_listen_port.replicas }}"
-            sources:
-              addresses: ["0.0.0.0/0", "::/0"]
-          - protocol: "tcp"
-            ports: "{{ haproxy_listen_port.replicas_sync }}"
-            sources:
-              addresses: ["0.0.0.0/0", "::/0"]
-          - protocol: "tcp"
-            ports: "{{ haproxy_listen_port.replicas_async }}"
-            sources:
-              addresses: ["0.0.0.0/0", "::/0"]
-          - protocol: "tcp"
-            ports: "{{ pgbouncer_listen_port }}"
-            sources:
-              addresses: ["0.0.0.0/0", "::/0"]
-          - protocol: "tcp"
-            ports: "{{ postgresql_port }}"
-            sources:
-              addresses: ["0.0.0.0/0", "::/0"]
-          - protocol: "tcp"
-            ports: "{{ netdata_port | default('19999') }}"
-            sources:
-              addresses: ["0.0.0.0/0", "::/0"]
+        inbound_rules: "{{ inbound_rules }}"
         outbound_rules:
           - protocol: "tcp"
             ports: "1-65535"
@@ -229,89 +264,149 @@
           - "{{ patroni_cluster_name }}" # Only VMs with this tag will be affected
       vars:
         sources_addresses: "{{ (server_network | length > 0) | ternary(vpc_ip_range, default_ip_range) }}"
-      when:
-        - database_public_access | bool
-        - firewall | bool
-
-    - name: "DigitalOcean: Create or modify private firewall rule"
-      community.digitalocean.digital_ocean_firewall:
-        oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
-        state: "present"
-        name: "{{ patroni_cluster_name }}-private-firewall-rule"
-        inbound_rules:
-          - protocol: "tcp"
-            ports: "{{ ansible_ssh_port | default('22') }}"
-            sources:
-              addresses: ["{{ sources_addresses }}"]
-          - protocol: "tcp"
-            ports: "{{ haproxy_listen_port.master }}"
-            sources:
-              addresses: ["{{ sources_addresses }}"]
-          - protocol: "tcp"
-            ports: "{{ haproxy_listen_port.replicas }}"
-            sources:
-              addresses: ["{{ sources_addresses }}"]
-          - protocol: "tcp"
-            ports: "{{ haproxy_listen_port.replicas_sync }}"
-            sources:
-              addresses: ["{{ sources_addresses }}"]
-          - protocol: "tcp"
-            ports: "{{ haproxy_listen_port.replicas_async }}"
-            sources:
-              addresses: ["{{ sources_addresses }}"]
-          - protocol: "tcp"
-            ports: "{{ haproxy_listen_port.stats }}"
-            sources:
-              addresses: ["{{ sources_addresses }}"]
-          - protocol: "tcp"
-            ports: "{{ pgbouncer_listen_port }}"
-            sources:
-              addresses: ["{{ sources_addresses }}"]
-          - protocol: "tcp"
-            ports: "{{ postgresql_port }}"
-            sources:
-              addresses: ["{{ sources_addresses }}"]
-          - protocol: "tcp"
-            ports: "{{ netdata_port | default('19999') }}"
-            sources:
-              addresses: ["{{ sources_addresses }}"]
-          - protocol: "tcp" # Patroni
-            ports: "{{ patroni_restapi_port }}"
-            sources:
-              addresses: ["{{ sources_addresses }}"]
-          - protocol: "tcp" # ETCD
-            ports: "2379-2380"
-            sources:
-              addresses: ["{{ sources_addresses }}"]
-          - protocol: "tcp" # Consul
-            ports: "8300-8302"
-            sources:
-              addresses: ["{{ sources_addresses }}"]
-          - protocol: "tcp" # Consul
-            ports: "8500"
-            sources:
-              addresses: ["{{ sources_addresses }}"]
-          - protocol: "tcp" # Consul
-            ports: "8600"
-            sources:
-              addresses: ["{{ sources_addresses }}"]
-        outbound_rules:
-          - protocol: "tcp"
-            ports: "1-65535"
-            destinations:
-              addresses: ["0.0.0.0/0", "::/0"]
-          - protocol: "udp"
-            ports: "1-65535"
-            destinations:
-              addresses: ["0.0.0.0/0", "::/0"]
-          - protocol: "icmp"
-            ports: "1-65535"
-            destinations:
-              addresses: ["0.0.0.0/0", "::/0"]
-        tags:
-          - "{{ patroni_cluster_name }}" # Only VMs with this tag will be affected
-      vars:
-        sources_addresses: "{{ (server_network | length > 0) | ternary(vpc_ip_range, default_ip_range) }}"
+        inbound_rules: >-
+          {{
+            ([
+              {
+                'protocol': 'tcp',
+                'ports': ansible_ssh_port | default('22'),
+                'sources': {
+                  'addresses': [sources_addresses]
+                }
+              }
+            ]) +
+            ([
+              {
+                'protocol': 'tcp',
+                'ports': netdata_port | default('19999'),
+                'sources': {
+                  'addresses': [sources_addresses]
+                }
+              }
+            ] if netdata_install | bool else []) +
+            ([
+              {
+                'protocol': 'tcp',
+                'ports': haproxy_listen_port.master | default('5000'),
+                'sources': {
+                  'addresses': [sources_addresses]
+                }
+              },
+              {
+                'protocol': 'tcp',
+                'ports': haproxy_listen_port.replicas | default('5001'),
+                'sources': {
+                  'addresses': [sources_addresses]
+                }
+              },
+              {
+                'protocol': 'tcp',
+                'ports': haproxy_listen_port.replicas_sync | default('5002'),
+                'sources': {
+                  'addresses': [sources_addresses]
+                }
+              },
+              {
+                'protocol': 'tcp',
+                'ports': haproxy_listen_port.replicas_async | default('5003'),
+                'sources': {
+                  'addresses': [sources_addresses]
+                }
+              },
+              {
+                'protocol': 'tcp',
+                'ports': haproxy_listen_port.stats | default('7000'),
+                'sources': {
+                  'addresses': [sources_addresses]
+                }
+              }
+            ] if with_haproxy_load_balancing | bool else []) +
+            ([
+             {
+                'protocol': 'tcp',
+                'ports': pgbouncer_listen_port | default('6432'),
+                'sources': {
+                  'addresses': [sources_addresses]
+                }
+              }
+            ] if pgbouncer_install | bool else []) +
+            ([
+             {
+                'protocol': 'tcp',
+                'ports': postgresql_port | default('5432'),
+                'sources': {
+                  'addresses': [sources_addresses]
+                }
+              },
+              {
+                'protocol': 'tcp',
+                'ports': patroni_restapi_port | default('8008'),
+                'sources': {
+                  'addresses': [sources_addresses]
+                }
+              }
+            ]) +
+            ([
+              {
+                'protocol': 'tcp',
+                'ports': etcd_client_port | default('2379'),
+                'sources': {
+                  'addresses': [sources_addresses]
+                }
+              },
+              {
+                'protocol': 'tcp',
+                'ports': etcd_peer_port | default('2380'),
+                'sources': {
+                  'addresses': [sources_addresses]
+                }
+              }
+            ] if dcs_type == 'etcd' else []) +
+            ([
+              {
+                'protocol': 'tcp',
+                'ports': consul_ports.dns | default('8600'),
+                'sources': {
+                  'addresses': [sources_addresses]
+                }
+              },
+              {
+                'protocol': 'tcp',
+                'ports': consul_ports.http | default('8500'),
+                'sources': {
+                  'addresses': [sources_addresses]
+                }
+              },
+              {
+                'protocol': 'tcp',
+                'ports': consul_ports.rpc | default('8400'),
+                'sources': {
+                  'addresses': [sources_addresses]
+                }
+              },
+              {
+                'protocol': 'tcp',
+                'ports': consul_ports.serf_lan | default('8301'),
+                'sources': {
+                  'addresses': [sources_addresses]
+                }
+              },
+              {
+                'protocol': 'tcp',
+                'ports': consul_ports.serf_wan | default('8302'),
+                'sources': {
+                  'addresses': [sources_addresses]
+                }
+              },
+              {
+                'protocol': 'tcp',
+                'ports': consul_ports.server | default('8300'),
+                'sources': {
+                  'addresses': [sources_addresses]
+                }
+              }
+            ] if dcs_type == 'consul' else [])
+          }}
       when: firewall | bool
 
     # if server_network is not specified, use default vpc
@@ -497,23 +592,17 @@
       retries: 3
       delay: 5
 
-    - name: "DigitalOcean: Delete public firewall rule"
+    - name: "DigitalOcean: Delete public firewall"
       community.digitalocean.digital_ocean_firewall:
         oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
         state: "absent"
-        name: "{{ patroni_cluster_name }}-public-database-firewall-rule"
+        name: "{{ patroni_cluster_name }}-public-firewall"
 
-    - name: "DigitalOcean: Delete private firewall rule"
+    - name: "DigitalOcean: Delete Postgres cluster firewall"
       community.digitalocean.digital_ocean_firewall:
         oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
         state: "absent"
-        name: "{{ patroni_cluster_name }}-private-firewall-rule"
-
-    - name: "DigitalOcean: Delete SSH firewall rule"
-      community.digitalocean.digital_ocean_firewall:
-        oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
-        state: "absent"
-        name: "{{ patroni_cluster_name }}-public-ssh-firewall-rule"
+        name: "{{ patroni_cluster_name }}-firewall"
   ignore_errors: true
   when: state == 'absent'
 

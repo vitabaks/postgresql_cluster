@@ -61,18 +61,17 @@
         gcp_network_ip_range: "{{ subnetwork_info.resources[0].ipCidrRange }}"
 
     # Firewall
-    - name: "GCP: Create or modify SSH firewall rule"
+    - name: "GCP: Create or modify SSH public firewall"
       google.cloud.gcp_compute_firewall:
         auth_kind: "serviceaccount"
         service_account_contents: "{{ lookup('ansible.builtin.env', 'GCP_SERVICE_ACCOUNT_CONTENTS') }}"
         project: "{{ gcp_project | default(project_info.resources[0].projectNumber) }}"
-        name: "{{ patroni_cluster_name }}-public-ssh-firewall-rule"
+        name: "{{ patroni_cluster_name }}-ssh-public-firewall"
         allowed:
           - ip_protocol: tcp
             ports:
               - "{{ ansible_ssh_port | default(22) }}"
-        source_ranges:
-          - "0.0.0.0/0" # Allow from any IP
+        source_ranges: "{{ ssh_public_allowed_ips | default('0.0.0.0/0', true) | split(',') }}"
         target_tags:
           - "{{ patroni_cluster_name }}" # Only VMs with this tag will be affected
         network:
@@ -82,69 +81,96 @@
         - ssh_public_access | bool
         - firewall | bool
 
-    - name: "GCP: Create or modify public firewall rule"
+    - name: "GCP: Create or modify Netdata public firewall"
       google.cloud.gcp_compute_firewall:
         auth_kind: "serviceaccount"
         service_account_contents: "{{ lookup('ansible.builtin.env', 'GCP_SERVICE_ACCOUNT_CONTENTS') }}"
         project: "{{ gcp_project | default(project_info.resources[0].projectNumber) }}"
-        name: "{{ patroni_cluster_name }}-public-firewall-rule"
+        name: "{{ patroni_cluster_name }}-netdata-public-firewall"
         allowed:
           - ip_protocol: tcp
             ports:
-              - "{{ haproxy_listen_port.master }}"
-              - "{{ haproxy_listen_port.replicas }}"
-              - "{{ haproxy_listen_port.replicas_sync }}"
-              - "{{ haproxy_listen_port.replicas_async }}"
-              - "{{ pgbouncer_listen_port }}"
-              - "{{ postgresql_port }}"
               - "{{ netdata_port | default('19999') }}"
-        source_ranges:
-          - "0.0.0.0/0" # Allow from any IP
+        source_ranges: "{{ netdata_public_allowed_ips | default('0.0.0.0/0', true) | split(',') }}"
         target_tags:
           - "{{ patroni_cluster_name }}" # Only VMs with this tag will be affected
         network:
           selfLink: "global/networks/{{ gcp_network_name }}"
         state: present
       when:
-        - database_public_access | bool
+        - netdata_install | bool
+        - netdata_public_access | bool
         - firewall | bool
 
-    - name: "GCP: Create or modify private firewall rule"
+    - name: "GCP: Create or modify Database public firewall"
       google.cloud.gcp_compute_firewall:
         auth_kind: "serviceaccount"
         service_account_contents: "{{ lookup('ansible.builtin.env', 'GCP_SERVICE_ACCOUNT_CONTENTS') }}"
         project: "{{ gcp_project | default(project_info.resources[0].projectNumber) }}"
-        name: "{{ patroni_cluster_name }}-private-firewall-rule"
+        name: "{{ patroni_cluster_name }}-database-public-firewall"
         allowed:
           - ip_protocol: tcp
-            ports:
-              - "{{ ansible_ssh_port | default(22) }}"
-              - "{{ haproxy_listen_port.master }}"
-              - "{{ haproxy_listen_port.replicas }}"
-              - "{{ haproxy_listen_port.replicas_sync }}"
-              - "{{ haproxy_listen_port.replicas_async }}"
-              - "{{ haproxy_listen_port.stats }}"
-              - "{{ pgbouncer_listen_port }}"
-              - "{{ postgresql_port }}"
-              - "{{ patroni_restapi_port }}"
-              - "{{ netdata_port | default('19999') }}"
-              - "2379" # ETCD
-              - "2380" # ETCD
-              - "8300" # Consul
-              - "8301" # Consul
-              - "8302" # Consul
-              - "8500" # Consul
-              - "8600" # Consul
-        source_ranges:
-          - "{{ gcp_network_ip_range }}"
-        source_tags:
-          - "{{ patroni_cluster_name }}"
+            ports: "{{ allowed_ports }}"
+        source_ranges: "{{ database_public_allowed_ips | default('0.0.0.0/0', true) | split(',') }}"
+        target_tags:
+          - "{{ patroni_cluster_name }}" # Only VMs with this tag will be affected
         network:
           selfLink: "global/networks/{{ gcp_network_name }}"
         state: present
+      vars:
+        allowed_ports: >-
+          {{
+            ([postgresql_port | default('5432')] if not with_haproxy_load_balancing | bool and not pgbouncer_install | bool else []) +
+            ([pgbouncer_listen_port | default('6432')] if not with_haproxy_load_balancing | bool and pgbouncer_install | bool else []) +
+            ([haproxy_listen_port.master | default('5000'),
+              haproxy_listen_port.replicas | default('5001'),
+              haproxy_listen_port.replicas_sync | default('5002'),
+              haproxy_listen_port.replicas_async | default('5003')] if with_haproxy_load_balancing | bool else [])
+          }}
+      when:
+        - database_public_access | bool
+        - firewall | bool
+
+    - name: "GCP: Create or modify Postgres cluster firewall"
+      google.cloud.gcp_compute_firewall:
+        auth_kind: "serviceaccount"
+        service_account_contents: "{{ lookup('ansible.builtin.env', 'GCP_SERVICE_ACCOUNT_CONTENTS') }}"
+        project: "{{ gcp_project | default(project_info.resources[0].projectNumber) }}"
+        name: "{{ patroni_cluster_name }}-firewall"
+        allowed:
+          - ip_protocol: tcp
+            ports: "{{ allowed_ports }}"
+        source_ranges:
+          - "{{ gcp_network_ip_range }}"
+        target_tags:
+          - "{{ patroni_cluster_name }}" # Only VMs with this tag will be affected
+        network:
+          selfLink: "global/networks/{{ gcp_network_name }}"
+        state: present
+      vars:
+        allowed_ports: >-
+          {{
+            [ansible_ssh_port | default('22')] +
+            ([netdata_port | default('19999')] if netdata_install | bool else []) +
+            ([pgbouncer_listen_port | default('6432')] if pgbouncer_install | bool else []) +
+            [postgresql_port | default('5432')] +
+            [patroni_restapi_port | default('8008')] +
+            ([haproxy_listen_port.master | default('5000'),
+              haproxy_listen_port.replicas | default('5001'),
+              haproxy_listen_port.replicas_sync | default('5002'),
+              haproxy_listen_port.replicas_async | default('5003'),
+              haproxy_listen_port.stats | default('7000')] if with_haproxy_load_balancing | bool else []) +
+            ([etcd_client_port | default('2379'), etcd_peer_port | default('2380')] if dcs_type == 'etcd' else []) +
+            ([consul_ports_dns | default('8600'),
+              consul_ports_http | default('8500'),
+              consul_ports_rpc | default('8400'),
+              consul_ports_serf_lan | default('8301'),
+              consul_ports_serf_wan | default('8302'),
+              consul_ports_server | default('8300')] if dcs_type == 'consul' else [])
+          }}
       when: firewall | bool
 
-    - name: "GCP: Create or modify instance"
+    - name: "GCP: Create or modify VM instance"
       google.cloud.gcp_compute_instance:
         auth_kind: "serviceaccount"
         service_account_contents: "{{ lookup('ansible.builtin.env', 'GCP_SERVICE_ACCOUNT_CONTENTS') }}"
@@ -243,7 +269,7 @@
 
 # Delete (if state is absent)
 - block:
-    - name: "GCP: Delete instance"
+    - name: "GCP: Delete VM instance"
       google.cloud.gcp_compute_instance:
         auth_kind: "serviceaccount"
         service_account_contents: "{{ lookup('ansible.builtin.env', 'GCP_SERVICE_ACCOUNT_CONTENTS') }}"
@@ -256,28 +282,36 @@
         index_var: idx
         label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
 
-    - name: "GCP: Delete SSH firewall rule"
+    - name: "GCP: Delete SSH public firewall"
       google.cloud.gcp_compute_firewall:
         auth_kind: "serviceaccount"
         service_account_contents: "{{ lookup('ansible.builtin.env', 'GCP_SERVICE_ACCOUNT_CONTENTS') }}"
         project: "{{ gcp_project | default(project_info.resources[0].projectNumber) }}"
-        name: "{{ patroni_cluster_name }}-public-ssh-firewall-rule"
+        name: "{{ patroni_cluster_name }}-ssh-public-firewall"
         state: absent
 
-    - name: "GCP: Delete public firewall rule"
+    - name: "GCP: Delete Netdata public firewall"
       google.cloud.gcp_compute_firewall:
         auth_kind: "serviceaccount"
         service_account_contents: "{{ lookup('ansible.builtin.env', 'GCP_SERVICE_ACCOUNT_CONTENTS') }}"
         project: "{{ gcp_project | default(project_info.resources[0].projectNumber) }}"
-        name: "{{ patroni_cluster_name }}-public-firewall-rule"
+        name: "{{ patroni_cluster_name }}-netdata-public-firewall"
         state: absent
 
-    - name: "GCP: Delete private firewall rule"
+    - name: "GCP: Delete Database public firewall"
       google.cloud.gcp_compute_firewall:
         auth_kind: "serviceaccount"
         service_account_contents: "{{ lookup('ansible.builtin.env', 'GCP_SERVICE_ACCOUNT_CONTENTS') }}"
         project: "{{ gcp_project | default(project_info.resources[0].projectNumber) }}"
-        name: "{{ patroni_cluster_name }}-private-firewall-rule"
+        name: "{{ patroni_cluster_name }}-database-public-firewall"
+        state: absent
+
+    - name: "GCP: Delete Postgres cluster firewall"
+      google.cloud.gcp_compute_firewall:
+        auth_kind: "serviceaccount"
+        service_account_contents: "{{ lookup('ansible.builtin.env', 'GCP_SERVICE_ACCOUNT_CONTENTS') }}"
+        project: "{{ gcp_project | default(project_info.resources[0].projectNumber) }}"
+        name: "{{ patroni_cluster_name }}-firewall"
         state: absent
   when: state == 'absent'
 

@@ -170,159 +170,231 @@
       when: server_network | length < 1
 
     # Firewall
-    - name: "Hetzner Cloud: Create or modify SSH firewall"
-      hetzner.hcloud.hcloud_firewall:
-        api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
-        state: "present"
-        name: "{{ patroni_cluster_name }}-public-ssh-firewall-rule"
-        rules:
-          - direction: in
-            description: "ssh"
-            protocol: "tcp"
-            port: "{{ ansible_ssh_port | default('22') }}"
-            source_ips: ["0.0.0.0/0", "::/0"] # allow public ssh access for deployment
-      when:
-        - ssh_public_access | bool
-        - firewall | bool
-
-    # if 'database_public_access' is 'true'
     - name: "Hetzner Cloud: Create or modify public firewall"
       hetzner.hcloud.hcloud_firewall:
         api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
         state: "present"
-        name: "{{ patroni_cluster_name }}-public-database-firewall-rule"
-        rules:
-          - direction: in
-            description: "haproxy master"
-            protocol: "tcp"
-            port: "{{ haproxy_listen_port.master }}"
-            source_ips: ["0.0.0.0/0", "::/0"]
-          - direction: in
-            description: "haproxy replicas all"
-            protocol: "tcp"
-            port: "{{ haproxy_listen_port.replicas }}"
-            source_ips: ["0.0.0.0/0", "::/0"]
-          - direction: in
-            description: "haproxy replicas sync"
-            protocol: "tcp"
-            port: "{{ haproxy_listen_port.replicas_sync }}"
-            source_ips: ["0.0.0.0/0", "::/0"]
-          - direction: in
-            description: "haproxy replicas async"
-            protocol: "tcp"
-            port: "{{ haproxy_listen_port.replicas_async }}"
-            source_ips: ["0.0.0.0/0", "::/0"]
-          - direction: in
-            description: "pgbouncer"
-            protocol: "tcp"
-            port: "{{ pgbouncer_listen_port }}"
-            source_ips: ["0.0.0.0/0", "::/0"]
-          - direction: in
-            description: "postgresql"
-            protocol: "tcp"
-            port: "{{ postgresql_port }}"
-            source_ips: ["0.0.0.0/0", "::/0"]
-          - direction: in
-            description: "Netdata"
-            protocol: "tcp"
-            port: "{{ netdata_port | default('19999') }}"
-            source_ips: ["0.0.0.0/0", "::/0"]
+        name: "{{ patroni_cluster_name }}-public-firewall"
+        rules: "{{ rules }}"
+      vars:
+        rules: >-
+          {{
+            ([
+              {
+                'description': 'SSH',
+                'direction': 'in',
+                'protocol': 'tcp',
+                'port': ansible_ssh_port | default('22'),
+                'source_ips': ssh_public_allowed_ips | default('0.0.0.0/0,::/0', true) | split(',')
+              }
+            ] if ssh_public_access | bool else []) +
+            ([
+             {
+                'description': 'Netdata',
+                'direction': 'in',
+                'protocol': 'tcp',
+                'port': netdata_port | default('19999'),
+                'source_ips': netdata_public_allowed_ips | default('0.0.0.0/0,::/0', true) | split(',')
+              }
+            ] if netdata_install | bool and netdata_public_access | bool else []) +
+            ([
+              {
+                'description': 'HAProxy - master',
+                'direction': 'in',
+                'protocol': 'tcp',
+                'port': haproxy_listen_port.master,
+                'source_ips': database_public_allowed_ips | default('0.0.0.0/0,::/0', true) | split(',')
+              },
+               {
+                'description': 'HAProxy - replicas',
+                'direction': 'in',
+                'protocol': 'tcp',
+                'port': haproxy_listen_port.replicas,
+                'source_ips': database_public_allowed_ips | default('0.0.0.0/0,::/0', true) | split(',')
+              },
+              {
+                'description': 'HAProxy - replicas_sync',
+                'direction': 'in',
+                'protocol': 'tcp',
+                'port': haproxy_listen_port.replicas_sync,
+                'source_ips': database_public_allowed_ips | default('0.0.0.0/0,::/0', true) | split(',')
+              },
+              {
+                'description': 'HAProxy - replicas_async',
+                'direction': 'in',
+                'protocol': 'tcp',
+                'port': haproxy_listen_port.replicas_async,
+                'source_ips': database_public_allowed_ips | default('0.0.0.0/0,::/0', true) | split(',')
+              }
+            ] if database_public_access | bool and with_haproxy_load_balancing | bool else []) +
+            ([
+              {
+                'description': 'PgBouncer',
+                'direction': 'in',
+                'protocol': 'tcp',
+                'port': pgbouncer_listen_port | default('6432'),
+                'source_ips': database_public_allowed_ips | default('0.0.0.0/0,::/0', true) | split(',')
+              }
+            ] if database_public_access | bool and (not with_haproxy_load_balancing | bool and pgbouncer_install | bool) else []) +
+            ([
+              {
+                'description': 'PostgreSQL',
+                'direction': 'in',
+                'protocol': 'tcp',
+                'port': postgresql_port | default('5432'),
+                'source_ips': database_public_allowed_ips | default('0.0.0.0/0,::/0', true) | split(',')
+              }
+            ] if database_public_access | bool and (not with_haproxy_load_balancing | bool and not pgbouncer_install | bool) else [])
+          }}
       when:
-        - database_public_access | bool
         - firewall | bool
+        - (ssh_public_access | bool or netdata_public_access | bool or database_public_access | bool)
 
-    - name: "Hetzner Cloud: Create or modify private firewall"
+    - name: "Hetzner Cloud: Create or modify Postgres cluster firewall"
       hetzner.hcloud.hcloud_firewall:
         api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
         state: "present"
-        name: "{{ patroni_cluster_name }}-private-firewall-rule"
-        rules:
-          - direction: in
-            description: "ssh"
-            protocol: "tcp"
-            port: "{{ ansible_ssh_port | default('22') }}"
-            source_ips: ["{{ server_network_ip_range }}"]
-          - direction: in
-            description: "haproxy master"
-            protocol: "tcp"
-            port: "{{ haproxy_listen_port.master }}"
-            source_ips: ["{{ server_network_ip_range }}"]
-          - direction: in
-            description: "haproxy replicas all"
-            protocol: "tcp"
-            port: "{{ haproxy_listen_port.replicas }}"
-            source_ips: ["{{ server_network_ip_range }}"]
-          - direction: in
-            description: "haproxy replicas sync"
-            protocol: "tcp"
-            port: "{{ haproxy_listen_port.replicas_sync }}"
-            source_ips: ["{{ server_network_ip_range }}"]
-          - direction: in
-            description: "haproxy replicas async"
-            protocol: "tcp"
-            port: "{{ haproxy_listen_port.replicas_async }}"
-            source_ips: ["{{ server_network_ip_range }}"]
-          - direction: in
-            description: "haproxy stats"
-            protocol: "tcp"
-            port: "{{ haproxy_listen_port.stats }}"
-            source_ips: ["{{ server_network_ip_range }}"]
-          - direction: in
-            description: "pgbouncer"
-            protocol: "tcp"
-            port: "{{ pgbouncer_listen_port }}"
-            source_ips: ["{{ server_network_ip_range }}"]
-          - direction: in
-            description: "postgresql"
-            protocol: "tcp"
-            port: "{{ postgresql_port }}"
-            source_ips: ["{{ server_network_ip_range }}"]
-          - direction: in
-            description: "Netdata"
-            protocol: "tcp"
-            port: "{{ netdata_port | default('19999') }}"
-            source_ips: ["{{ server_network_ip_range }}"]
-          - direction: in
-            description: "Patroni"
-            protocol: "tcp"
-            port: "{{ patroni_restapi_port }}"
-            source_ips: ["{{ server_network_ip_range }}"]
-          - direction: in
-            description: "ETCD"
-            protocol: "tcp"
-            port: "2379"
-            source_ips: ["{{ server_network_ip_range }}"]
-          - direction: in
-            description: "ETCD"
-            protocol: "tcp"
-            port: "2380"
-            source_ips: ["{{ server_network_ip_range }}"]
-          - direction: in
-            description: "Consul"
-            protocol: "tcp"
-            port: "8300"
-            source_ips: ["{{ server_network_ip_range }}"]
-          - direction: in
-            description: "Consul"
-            protocol: "tcp"
-            port: "8301"
-            source_ips: ["{{ server_network_ip_range }}"]
-          - direction: in
-            description: "Consul"
-            protocol: "tcp"
-            port: "8302"
-            source_ips: ["{{ server_network_ip_range }}"]
-          - direction: in
-            description: "Consul"
-            protocol: "tcp"
-            port: "8500"
-            source_ips: ["{{ server_network_ip_range }}"]
-          - direction: in
-            description: "Consul"
-            protocol: "tcp"
-            port: "8600"
-            source_ips: ["{{ server_network_ip_range }}"]
-      when: firewall | bool
+        name: "{{ patroni_cluster_name }}-firewall"
+        rules: "{{ rules }}"
+      vars:
+        rules: >-
+          {{
+            ([
+              {
+                'description': 'SSH',
+                'direction': 'in',
+                'protocol': 'tcp',
+                'port': ansible_ssh_port | default('22'),
+                'source_ips': [server_network_ip_range]
+              }
+            ]) +
+            ([
+             {
+                'description': 'Netdata',
+                'direction': 'in',
+                'protocol': 'tcp',
+                'port': netdata_port | default('19999'),
+                'source_ips': [server_network_ip_range]
+              }
+            ] if netdata_install | bool else []) +
+            ([
+              {
+                'description': 'HAProxy - master',
+                'direction': 'in',
+                'protocol': 'tcp',
+                'port': haproxy_listen_port.master,
+                'source_ips': [server_network_ip_range]
+              },
+               {
+                'description': 'HAProxy - replicas',
+                'direction': 'in',
+                'protocol': 'tcp',
+                'port': haproxy_listen_port.replicas,
+                'source_ips': [server_network_ip_range]
+              },
+              {
+                'description': 'HAProxy - replicas_sync',
+                'direction': 'in',
+                'protocol': 'tcp',
+                'port': haproxy_listen_port.replicas_sync,
+                'source_ips': [server_network_ip_range]
+              },
+              {
+                'description': 'HAProxy - replicas_async',
+                'direction': 'in',
+                'protocol': 'tcp',
+                'port': haproxy_listen_port.replicas_async,
+                'source_ips': [server_network_ip_range]
+              }
+            ] if with_haproxy_load_balancing | bool else []) +
+            ([
+              {
+                'description': 'PgBouncer',
+                'direction': 'in',
+                'protocol': 'tcp',
+                'port': pgbouncer_listen_port | default('6432'),
+                'source_ips': [server_network_ip_range]
+              }
+            ] if pgbouncer_install | bool else []) +
+            ([
+              {
+                'description': 'PostgreSQL',
+                'direction': 'in',
+                'protocol': 'tcp',
+                'port': postgresql_port | default('5432'),
+                'source_ips': [server_network_ip_range]
+              },
+              {
+                'description': 'Patroni',
+                'direction': 'in',
+                'protocol': 'tcp',
+                'port': patroni_restapi_port | default('8008'),
+                'source_ips': [server_network_ip_range]
+              }
+            ]) +
+            ([
+              {
+                'description': 'ETCD',
+                'direction': 'in',
+                'protocol': 'tcp',
+                'port': etcd_client_port | default('2379'),
+                'source_ips': [server_network_ip_range]
+              },
+              {
+                'description': 'ETCD',
+                'direction': 'in',
+                'protocol': 'tcp',
+                'port': etcd_peer_port | default('2380'),
+                'source_ips': [server_network_ip_range]
+              }
+            ] if dcs_type == 'etcd' else []) +
+            ([
+              {
+                'description': 'Consul',
+                'direction': 'in',
+                'protocol': 'tcp',
+                'port': consul_ports.dns | default('8600'),
+                'source_ips': [server_network_ip_range]
+              },
+              {
+                'description': 'Consul',
+                'direction': 'in',
+                'protocol': 'tcp',
+                'port': consul_ports.http | default('8500'),
+                'source_ips': [server_network_ip_range]
+              },
+              {
+                'description': 'Consul',
+                'direction': 'in',
+                'protocol': 'tcp',
+                'port': consul_ports.rpc | default('8400'),
+                'source_ips': [server_network_ip_range]
+              },
+              {
+                'description': 'Consul',
+                'direction': 'in',
+                'protocol': 'tcp',
+                'port': consul_ports.serf_lan | default('8301'),
+                'source_ips': [server_network_ip_range]
+              },
+              {
+                'description': 'Consul',
+                'direction': 'in',
+                'protocol': 'tcp',
+                'port': consul_ports.serf_wan | default('8302'),
+                'source_ips': [server_network_ip_range]
+              },
+              {
+                'description': 'Consul',
+                'direction': 'in',
+                'protocol': 'tcp',
+                'port': consul_ports.server | default('8300'),
+                'source_ips': [server_network_ip_range]
+              }
+            ] if dcs_type == 'consul' else [])
+          }}
+      when:
+        - firewall | bool
 
     # Server and volume
     - name: "Hetzner Cloud: Create or modify server"
@@ -347,9 +419,9 @@
       vars:
         firewalls_list: >-
           {{
-            ([] if not ssh_public_access | bool else [patroni_cluster_name + '-public-ssh-firewall-rule']) +
-            ([] if not database_public_access | bool else [patroni_cluster_name + '-public-database-firewall-rule']) +
-            ([] if not firewall | bool else [patroni_cluster_name + '-private-firewall-rule'])
+            ([patroni_cluster_name + '-public-firewall'] if firewall | bool and
+              (ssh_public_access | bool or netdata_public_access | bool or database_public_access | bool) else []) +
+            ([patroni_cluster_name + '-firewall'] if firewall | bool else [])
           }}
 
     - name: "Hetzner Cloud: Add server to network '{{ server_network }}'"
@@ -467,23 +539,17 @@
         index_var: idx
         label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-storage"
 
-    - name: "Hetzner Cloud: Delete SSH firewall"
-      hetzner.hcloud.hcloud_firewall:
-        api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
-        state: "absent"
-        name: "{{ patroni_cluster_name }}-public-ssh-firewall-rule"
-
     - name: "Hetzner Cloud: Delete public firewall"
       hetzner.hcloud.hcloud_firewall:
         api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
         state: "absent"
-        name: "{{ patroni_cluster_name }}-public-database-firewall-rule"
+        name: "{{ patroni_cluster_name }}-public-firewall"
 
-    - name: "Hetzner Cloud: Delete private firewall"
+    - name: "Hetzner Cloud: Delete Postgres cluster firewall"
       hetzner.hcloud.hcloud_firewall:
         api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
         state: "absent"
-        name: "{{ patroni_cluster_name }}-private-firewall-rule"
+        name: "{{ patroni_cluster_name }}-firewall"
   when: state == 'absent'
 
 ...
