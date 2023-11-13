@@ -137,12 +137,18 @@
                 'rule_desc': 'Database public access',
                 'proto': 'tcp',
                 'ports':
-                  ([haproxy_listen_port.master | default('5000'),
+                  ([
+                    haproxy_listen_port.master | default('5000'),
                     haproxy_listen_port.replicas | default('5001'),
                     haproxy_listen_port.replicas_sync | default('5002'),
-                    haproxy_listen_port.replicas_async | default('5003') if with_haproxy_load_balancing | bool else []) +
-                  ([pgbouncer_listen_port | default('6432')] if not with_haproxy_load_balancing | bool and pgbouncer_install | bool else []) +
-                  ([postgresql_port | default('5432')] if not with_haproxy_load_balancing | bool and not pgbouncer_install | bool else []),
+                    haproxy_listen_port.replicas_async | default('5003')
+                  ] if with_haproxy_load_balancing | bool else []) +
+                  ([
+                    pgbouncer_listen_port | default('6432')
+                  ] if not with_haproxy_load_balancing | bool and pgbouncer_install | bool else []) +
+                  ([
+                    postgresql_port | default('5432')
+                  ] if not with_haproxy_load_balancing | bool and not pgbouncer_install | bool else []),
                 'cidr_ip': database_public_allowed_ips | default('0.0.0.0/0', true) | split(',')
               }
             ] if database_public_access | bool else []) +
@@ -150,23 +156,36 @@
               'rule_desc': 'Postgres cluster ports',
               'proto': 'tcp',
               'ports':
-                [ansible_ssh_port | default('22')] +
-                ([netdata_port | default('19999')] if netdata_install | bool else []) +
-                ([pgbouncer_listen_port | default('6432')] if pgbouncer_install | bool else []) +
-                [postgresql_port | default('5432')] +
-                [patroni_restapi_port | default('8008')] +
-                ([haproxy_listen_port.master | default('5000'),
+                [ansible_ssh_port | default(22)] +
+                ([
+                  netdata_port | default('19999')
+                ] if netdata_install | bool else []) +
+                ([
+                  pgbouncer_listen_port | default('6432')
+                ] if pgbouncer_install | bool else []) +
+                [
+                  postgresql_port | default('5432'),
+                  patroni_restapi_port | default('8008')
+                ] +
+                ([
+                  haproxy_listen_port.master | default('5000'),
                   haproxy_listen_port.replicas | default('5001'),
                   haproxy_listen_port.replicas_sync | default('5002'),
                   haproxy_listen_port.replicas_async | default('5003'),
-                  haproxy_listen_port.stats | default('7000')] if with_haproxy_load_balancing | bool else []) +
-                ([etcd_client_port | default('2379'), etcd_peer_port | default('2380')] if dcs_type == 'etcd' else []) +
-                ([consul_ports_dns | default('8600'),
+                  haproxy_listen_port.stats | default('7000')
+                ] if with_haproxy_load_balancing | bool else []) +
+                ([
+                  etcd_client_port | default('2379'),
+                  etcd_peer_port | default('2380')
+                ] if dcs_type == 'etcd' else []) +
+                ([
+                  consul_ports_dns | default('8600'),
                   consul_ports_http | default('8500'),
                   consul_ports_rpc | default('8400'),
                   consul_ports_serf_lan | default('8301'),
                   consul_ports_serf_wan | default('8302'),
-                  consul_ports_server | default('8300')] if dcs_type == 'consul' else []),
+                  consul_ports_server | default('8300')
+                ] if dcs_type == 'consul' else []),
               'cidr_ip': vpc_subnet_info.subnets[0].cidr_block
             }]
           }}
@@ -212,9 +231,7 @@
       vars:
         security_groups_list: >-
           {{
-            ([] if not ssh_public_access | bool else [patroni_cluster_name + '-public-ssh-security-group']) +
-            ([] if not database_public_access | bool else [patroni_cluster_name + '-public-security-group']) +
-            ([] if not firewall | bool else [patroni_cluster_name + '-private-security-group'])
+            ([] if not firewall | bool else [patroni_cluster_name + '-security-group'])
           }}
 
     # Backups
