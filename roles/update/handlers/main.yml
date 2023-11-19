@@ -1,6 +1,0 @@
----
-- name: Rebooting host
-  ansible.builtin.reboot:
-    reboot_timeout: 600
-    test_command: uptime
-  listen: "reboot host"
