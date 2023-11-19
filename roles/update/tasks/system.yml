@@ -34,19 +34,19 @@
 - name: Check if a reboot is required
   ansible.builtin.stat:
     path: /var/run/reboot-required
-    get_md5: no
+    get_md5: false
   register: reboot_required
   changed_when: reboot_required.stat.exists
   when: ansible_os_family == "Debian"
   notify: "reboot host"
 
-- name: Check if a reboot is required.
+- name: Check if a reboot is required
   ansible.builtin.command: needs-restarting -r
   register: reboot_required
   ignore_errors: true
   failed_when: false
-  chnaged_when: reboot_required.rc != 0
-  when: ansible_os_family == "RedHat" 
+  changed_when: reboot_required.rc != 0
+  when: ansible_os_family == "RedHat"
   notify: "reboot host"
 
 - name: Make sure handlers are flushed immediately
