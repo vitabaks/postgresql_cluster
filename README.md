@@ -116,8 +116,6 @@ To deploy keepalived instead of vip-manager:
 
 3. Set `with_haproxy_load_balancing: true`
 
-> Good to know: you can reconfigure your cluster from vip-manager to keepalived and via playbook `balancers.yml` if needed.
-
 ### [Type C] PostgreSQL High-Availability with Consul Service Discovery (DNS)
 ![TypeC](images/TypeC.png)
 
