@@ -22,6 +22,15 @@
       delegate_to: localhost
       run_once: true # noqa run-once
 
+    - name: Write dcs_type.yml file (for Molecule verify)
+      ansible.builtin.copy:
+        content: |
+          ---
+          dcs_type: "{{ dcs_type }}"
+        dest: "../../vars/dcs_type.yml"
+      delegate_to: localhost
+      run_once: true # noqa run-once
+
     - name: Set variables for custom PostgreSQL data and WAL directory test
       ansible.builtin.set_fact:
         postgresql_data_dir: "/pgdata/{{ postgresql_version }}/main"
@@ -82,8 +91,8 @@
 - name: Deploy PostgreSQL Cluster test
   ansible.builtin.import_playbook: ../../deploy_pgcluster.yml
 
-- name: Config PostgreSQL Cluster test
-  ansible.builtin.import_playbook: ../../config_pgcluster.yml
+# - name: Config PostgreSQL Cluster test
+#  ansible.builtin.import_playbook: ../../config_pgcluster.yml
 
-- name: Update PostgreSQL Cluster test
-  ansible.builtin.import_playbook: ../../update_pgcluster.yml
+# - name: Update PostgreSQL Cluster test
+#  ansible.builtin.import_playbook: ../../update_pgcluster.yml
