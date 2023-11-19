@@ -30,4 +30,30 @@
   delay: 5
   retries: 3
   ignore_errors: true
+
+- name: Check if a reboot is required
+  ansible.builtin.stat:
+    path: /var/run/reboot-required
+  register: reboot_required_debian
+  changed_when: false
+  when:
+    - ansible_os_family == "Debian"
+    - ansible_virtualization_type not in ['container', 'docker', 'lxc', 'podman']  # exclude for containers to prevent test failures in CI.
+
+- name: Check if a reboot is required
+  ansible.builtin.command: needs-restarting -r
+  register: reboot_required_rhel
+  failed_when: false
+  changed_when: false
+  when:
+    - ansible_os_family == "RedHat"
+    - ansible_virtualization_type not in ['container', 'docker', 'lxc', 'podman']  # exclude for containers to prevent test failures in CI.
+
+- name: Rebooting host
+  ansible.builtin.reboot:
+    msg: "Reboot initiated by Ansible due to required system updates"
+    reboot_timeout: 1800 # 30 minutes
+    test_command: uptime
+  when: (reboot_required_debian.stat.exists is defined and reboot_required_debian.stat.exists) or
+        (reboot_required_rhel.rc is defined and reboot_required_rhel.rc != 0)
 ...
