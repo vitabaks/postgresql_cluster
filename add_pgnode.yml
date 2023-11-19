@@ -1,5 +1,5 @@
 ---
-- name: add_pgnode.yml | PostgreSQL High-Availability Cluster Scaling (add a replica node to the cluster "{{ patroni_cluster_name }}")
+- name: add_pgnode.yml | PostgreSQL HA Cluster Scaling (add a replica node)
   hosts: postgres_cluster
   become: true
   become_method: sudo
@@ -7,11 +7,16 @@
   gather_facts: true
   handlers:
     - ansible.builtin.import_tasks: roles/patroni/handlers/main.yml
-  vars_files:
-    - vars/main.yml
-    - vars/system.yml
 
   pre_tasks:
+    - name: Include main variables
+      ansible.builtin.include_vars: "vars/main.yml"
+      tags: always
+
+    - name: Include system variables
+      ansible.builtin.include_vars: "vars/system.yml"
+      tags: always
+
     - name: Include OS-specific variables
       ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
       tags: always
@@ -134,11 +139,16 @@
   become_method: sudo
   gather_facts: true
   any_errors_fatal: true
-  vars_files:
-    - vars/main.yml
-    - vars/system.yml
 
   pre_tasks:
+    - name: Include main variables
+      ansible.builtin.include_vars: "vars/main.yml"
+      tags: always
+
+    - name: Include system variables
+      ansible.builtin.include_vars: "vars/system.yml"
+      tags: always
+
     - name: Include OS-specific variables
       ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
       tags: always
@@ -165,9 +175,11 @@
   become_method: sudo
   gather_facts: true
   any_errors_fatal: true
-  vars_files:
-    - vars/main.yml
   pre_tasks:
+    - name: Include main variables
+      ansible.builtin.include_vars: "vars/main.yml"
+      tags: always
+
     - name: Include OS-specific variables
       ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
       tags: always
@@ -187,13 +199,18 @@
   become_method: sudo
   gather_facts: true
   any_errors_fatal: true
-  vars_files:
-    - vars/main.yml
-    - vars/system.yml
   vars:
     existing_pgcluster: true
 
   pre_tasks:
+    - name: Include main variables
+      ansible.builtin.include_vars: "vars/main.yml"
+      tags: always
+
+    - name: Include system variables
+      ansible.builtin.include_vars: "vars/system.yml"
+      tags: always
+
     - name: Include OS-specific variables
       ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
       tags: always
