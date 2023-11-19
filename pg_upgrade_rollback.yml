@@ -5,13 +5,15 @@
 # The playbook first checks the health of the current cluster, verifies the version of PostgreSQL, and ensures the new PostgreSQL is not running.
 # If these checks pass, the playbook switches back to the old PostgreSQL paths and restarts the Patroni service.
 
-- name: "Rollback PostgreSQL {{ pg_new_version }} to version {{ pg_old_version }} (PostgreSQL HA Cluster: {{ patroni_cluster_name }})"
+- name: "pg_upgrade_rollback.yml | Rollback the PostgreSQL upgrade"
   hosts: postgres_cluster
   gather_facts: true
   any_errors_fatal: true
-  vars_files:
-    - vars/main.yml
-    - vars/upgrade.yml
+  pre_tasks:
+    - name: Include main variables
+      ansible.builtin.include_vars: "vars/main.yml"
+    - name: Include upgrade variables
+      ansible.builtin.include_vars: "vars/upgrade.yml"
   tasks:
     - name: '[Prepare] Add host to group "primary" (in-memory inventory)'
       ansible.builtin.add_host:
@@ -37,15 +39,13 @@
   become: true
   become_user: postgres
   any_errors_fatal: true
-  vars_files:
-    - vars/main.yml
   pre_tasks:
+    - name: Include main variables
+      ansible.builtin.include_vars: "vars/main.yml"
     - name: Include OS-specific variables
       ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
-      tags: always
     - name: Include upgrade variables
       ansible.builtin.include_vars: "vars/upgrade.yml"
-      tags: always
   tasks:
     - name: Running rollback.yml
       ansible.builtin.include_role:

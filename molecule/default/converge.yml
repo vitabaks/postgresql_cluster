@@ -13,11 +13,14 @@
         nameservers: ["8.8.8.8", "9.9.9.9"]
         timezone: "Etc/UTC"
         with_haproxy_load_balancing: true
+        dcs_type: "{{ ['etcd', 'consul'] | random }}" # Set 'dcs_type' to either 'etcd' or 'consul' randomly
         consul_node_role: server # if dcs_type: "consul"
         consul_bootstrap_expect: true # if dcs_type: "consul"
         postgresql_version: "15" # to test custom WAL dir
         pgbouncer_processes: 2 # Test multiple pgbouncer processes (so_reuseport)
         cacheable: true
+      delegate_to: localhost
+      run_once: true # noqa run-once
 
     - name: Set variables for custom PostgreSQL data and WAL directory test
       ansible.builtin.set_fact:

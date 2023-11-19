@@ -1,16 +1,19 @@
 ---
 # TODO:
 # - Citus support
-- name: "Upgrade PostgreSQL {{ pg_old_version }} to version {{ pg_new_version }} (PostgreSQL HA Cluster: {{ patroni_cluster_name }})"
+- name: "pg_upgrade.yml | Upgrade PostgreSQL {{ pg_old_version }} to the new version {{ pg_new_version }}"
   hosts: postgres_cluster
   gather_facts: true
   become: true
   become_user: postgres
   any_errors_fatal: true
-  vars_files:
-    - vars/main.yml
-    - vars/upgrade.yml
   pre_tasks:
+    - name: Include main variables
+      ansible.builtin.include_vars: "vars/main.yml"
+
+    - name: Include upgrade variables
+      ansible.builtin.include_vars: "vars/upgrade.yml"
+
     - name: '[Prepare] Get Patroni Cluster Leader Node'
       ansible.builtin.uri:
         url: http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/leader
@@ -58,9 +61,9 @@
   become_user: postgres
   any_errors_fatal: true
   environment: "{{ proxy_env | default({}) }}"
-  vars_files:
-    - vars/main.yml
   pre_tasks:
+    - name: Include main variables
+      ansible.builtin.include_vars: "vars/main.yml"
     - name: Include OS-specific variables
       ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
     - name: Include upgrade variables
@@ -81,9 +84,9 @@
   become_user: root
   any_errors_fatal: true
   environment: "{{ proxy_env | default({}) }}"
-  vars_files:
-    - vars/main.yml
   pre_tasks:
+    - name: Include main variables
+      ansible.builtin.include_vars: "vars/main.yml"
     - name: Include OS-specific variables
       ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
     - name: Include upgrade variables
@@ -104,9 +107,9 @@
   become: true
   become_user: postgres
   any_errors_fatal: true
-  vars_files:
-    - vars/main.yml
   pre_tasks:
+    - name: Include main variables
+      ansible.builtin.include_vars: "vars/main.yml"
     - name: Include OS-specific variables
       ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
     - name: Include upgrade variables
@@ -144,9 +147,9 @@
   become: true
   become_user: postgres
   any_errors_fatal: true
-  vars_files:
-    - vars/main.yml
   pre_tasks:
+    - name: Include main variables
+      ansible.builtin.include_vars: "vars/main.yml"
     - name: Include OS-specific variables
       ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
     - name: Include upgrade variables
@@ -166,9 +169,9 @@
   become: true
   become_user: postgres
   any_errors_fatal: true
-  vars_files:
-    - vars/main.yml
   pre_tasks:
+    - name: Include main variables
+      ansible.builtin.include_vars: "vars/main.yml"
     - name: Include OS-specific variables
       ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
     - name: Include upgrade variables
@@ -229,9 +232,9 @@
   become: true
   become_user: postgres
   any_errors_fatal: true
-  vars_files:
-    - vars/main.yml
   pre_tasks:
+    - name: Include main variables
+      ansible.builtin.include_vars: "vars/main.yml"
     - name: Include OS-specific variables
       ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
     - name: Include upgrade variables
@@ -258,9 +261,9 @@
   become: true
   become_user: postgres
   any_errors_fatal: true
-  vars_files:
-    - vars/main.yml
   pre_tasks:
+    - name: Include main variables
+      ansible.builtin.include_vars: "vars/main.yml"
     - name: Include OS-specific variables
       ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
     - name: Include upgrade variables
