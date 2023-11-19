@@ -22,6 +22,7 @@
       ansible.builtin.service:
         name: confd
         state: stopped
+      when: dcs_type == "etcd"
 
     - name: Update haproxy conf file (disable http-checks)
       ansible.builtin.template:
