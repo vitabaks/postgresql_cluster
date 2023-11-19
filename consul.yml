@@ -28,6 +28,7 @@
       until: package_status is success
       delay: 5
       retries: 3
+      when: ansible_distribution != "MacOSX"
 
     - name: Make sure the python3-pip package are present on the control host
       ansible.builtin.package:
@@ -37,6 +38,7 @@
       until: package_status is success
       delay: 5
       retries: 3
+      when: ansible_distribution != "MacOSX"
 
     - name: Install netaddr dependency on the control host
       ansible.builtin.pip:
