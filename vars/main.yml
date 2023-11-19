@@ -49,7 +49,12 @@ vip_manager_interval: "1000"  # time (in milliseconds) after which vip-manager w
 vip_manager_iface: "{{ vip_interface }}"  # interface to which the virtual ip will be added
 vip_manager_ip: "{{ cluster_vip }}"  # the virtual ip address to manage
 vip_manager_mask: "24"  # netmask for the virtual ip
+vip_manager_disable: false # set to true for keepalived deployment
 
+# keepalived is deployed when:
+# 1. if cluster_vip is specified
+# 2. vip_manager_disable set to "true"
+# 3. with_haproxy_load_balancing set to "true"
 
 # DCS (Distributed Consensus Store)
 dcs_exists: false  # or 'true' if you don't want to deploy a new etcd cluster

@@ -100,11 +100,23 @@ In our configuration keepalived checks the status of the HAProxy service and in 
 
 This is simple scheme without load balancing `Used by default`
 
-To provide a single entry point (VIP) for database access is used "vip-manager". If the variable `cluster_vip` is specified (optional).
+To provide a single entry point (VIP) for database access are used "vip-manager" or "keepalived" ("vip-manager" choose by default). If the variable `cluster_vip` is specified (optional).
 
 [**vip-manager**](https://github.com/cybertec-postgresql/vip-manager) is a service that gets started on all cluster nodes and connects to the DCS. If the local node owns the leader-key, vip-manager starts the configured VIP. In case of a failover, vip-manager removes the VIP on the old leader and the corresponding service on the new leader starts it there. \
 Written in Go. Cybertec Schönig & Schönig GmbH https://www.cybertec-postgresql.com
 
+[**keepalived**](https://github.com/acassen/keepalived) is a service that gets started on all cluster nodes too as it does vip-manager. High-availability is achieved by the Virtual Router Redundancy Protocol (VRRP). \
+Written in C. https://www.keepalived.org/
+
+To deploy keepalived instead of vip-manager:
+
+1. Make sure `cluster_vip` is set
+
+2. Set `vip_manager_disable: true`
+
+3. Set `with_haproxy_load_balancing: true`
+
+> Good to know: you can reconfigure your cluster from vip-manager to keepalived and via playbook `balancers.yml` if needed.
 
 ### [Type C] PostgreSQL High-Availability with Consul Service Discovery (DNS)
 ![TypeC](images/TypeC.png)
