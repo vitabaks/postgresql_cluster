@@ -91,8 +91,8 @@
 - name: Deploy PostgreSQL Cluster test
   ansible.builtin.import_playbook: ../../deploy_pgcluster.yml
 
-# - name: Config PostgreSQL Cluster test
-#  ansible.builtin.import_playbook: ../../config_pgcluster.yml
+- name: Config PostgreSQL Cluster test
+  ansible.builtin.import_playbook: ../../config_pgcluster.yml
 
-# - name: Update PostgreSQL Cluster test
-#  ansible.builtin.import_playbook: ../../update_pgcluster.yml
+- name: Update PostgreSQL Cluster test
+  ansible.builtin.import_playbook: ../../update_pgcluster.yml
