@@ -1,0 +1,10 @@
+---
+- name: Molecule.default.cleanup
+  hosts: localhost
+  gather_facts: false
+
+  tasks:
+    - name: Delete dcs_type.yml file
+      ansible.builtin.file:
+        path: "../../vars/dcs_type.yml"
+        state: absent

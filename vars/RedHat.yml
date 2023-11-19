@@ -47,15 +47,18 @@ os_specific_packages:
     - libselinux-python
     - libsemanage-python
     - policycoreutils-python
+    - yum-utils
   RedHat-8:
     - python2
     - python3-libselinux
     - python3-libsemanage
     - python3-policycoreutils
+    - dnf-utils
   RedHat-9:
     - python3-libselinux
     - python3-libsemanage
     - python3-policycoreutils
+    - dnf-utils
 system_packages:
   - "{{ os_specific_packages[ansible_os_family ~ '-' ~ ansible_distribution_major_version] }}"
   - python3

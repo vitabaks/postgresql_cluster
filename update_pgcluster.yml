@@ -1,12 +1,14 @@
 ---
-- name: Update PostgreSQL HA Cluster (based on "Patroni" and "{{ dcs_type }}")
+- name: update_pgcluster.yml | Update PostgreSQL HA Cluster (based on "Patroni")
   hosts: postgres_cluster
   gather_facts: true
   become: true
   become_method: sudo
   any_errors_fatal: true
-  vars_files:
-    - vars/main.yml
+  pre_tasks:
+    - name: Include main variables
+      ansible.builtin.include_vars: "vars/main.yml"
+      tags: always
   tasks:
     - name: "[Prepare] Get Patroni Cluster Leader Node"
       ansible.builtin.uri:
@@ -49,11 +51,12 @@
   become: true
   become_user: postgres
   any_errors_fatal: true
-  vars_files:
-    - vars/main.yml
   vars:
     max_replication_lag_bytes: 10485760 # 10 MiB
     max_transaction_sec: 15 # seconds
+  pre_tasks:
+    - name: Include main variables
+      ansible.builtin.include_vars: "vars/main.yml"
   tasks:
     - name: Running Pre-Checks
       ansible.builtin.include_role:
@@ -71,14 +74,13 @@
   become_method: sudo
   any_errors_fatal: true
   environment: "{{ proxy_env | default({}) }}"
-  vars_files:
-    - vars/main.yml
   vars:
     target: postgres # or 'patroni', 'system'
   pre_tasks:
+    - name: Include main variables
+      ansible.builtin.include_vars: "vars/main.yml"
     - name: Include OS-specific variables
       ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
-      tags: always
 
   tasks:
     - name: Stop read-only traffic
@@ -130,15 +132,13 @@
   become_method: sudo
   any_errors_fatal: true
   environment: "{{ proxy_env | default({}) }}"
-  vars_files:
-    - vars/main.yml
   vars:
     target: postgres # or 'patroni', 'system'
   pre_tasks:
+    - name: Include main variables
+      ansible.builtin.include_vars: "vars/main.yml"
     - name: Include OS-specific variables
       ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
-      tags: always
-
   tasks:
     - name: "Switchover Patroni leader role"
       ansible.builtin.include_role:
@@ -193,10 +193,11 @@
   become: true
   become_user: postgres
   any_errors_fatal: true
-  vars_files:
-    - vars/main.yml
   vars:
     update_extensions: true # or 'false', to avoid updating extensions
+  pre_tasks:
+    - name: Include main variables
+      ansible.builtin.include_vars: "vars/main.yml"
   tasks:
     - name: Update extensions
       ansible.builtin.include_role:

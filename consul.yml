@@ -1,22 +1,40 @@
 ---
-- name: consul.yml | Consul Playbook
-  hosts: localhost
+- name: consul.yml | Configure Consul instances
+  hosts: consul_instances
+  become: true
+  become_method: sudo
   any_errors_fatal: true
-  gather_facts: false
-  vars_files:
-    - vars/main.yml
-  tasks:
+  gather_facts: true
+  environment: "{{ proxy_env | default({}) }}"
+
+  pre_tasks:
+    - name: Include main variables
+      ansible.builtin.include_vars: "vars/main.yml"
+      tags: always
+
+    - name: Include system variables
+      ansible.builtin.include_vars: "vars/system.yml"
+      tags: always
+
+    - name: Include OS-specific variables
+      ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
+      tags: always
+
     - name: Check if the consul role requirements (ansible.utils) are installed
       ansible.builtin.command: ansible-galaxy collection list ansible.utils
       changed_when: false
       failed_when: false
       register: ansible_utils_result
+      delegate_to: localhost
+      run_once: true # noqa run-once
 
     - name: Consul role requirements
       ansible.builtin.fail:
         msg:
           - "Please install consul role requirements (ansible.utils)"
           - "ansible-galaxy install -r roles/consul/requirements.yml"
+      delegate_to: localhost
+      run_once: true # noqa run-once
       when:
         - ansible_utils_result.stderr is search("unable to find")
 
@@ -28,6 +46,8 @@
       until: package_status is success
       delay: 5
       retries: 3
+      delegate_to: localhost
+      run_once: true # noqa run-once
       when: ansible_distribution != "MacOSX"
 
     - name: Make sure the python3-pip package are present on the control host
@@ -38,6 +58,8 @@
       until: package_status is success
       delay: 5
       retries: 3
+      delegate_to: localhost
+      run_once: true # noqa run-once
       when: ansible_distribution != "MacOSX"
 
     - name: Install netaddr dependency on the control host
@@ -47,22 +69,8 @@
       become: false
       environment:
         PIP_BREAK_SYSTEM_PACKAGES: "1"
-
-- name: consul.yml | Configure Consul instances
-  hosts: consul_instances
-  become: true
-  become_method: sudo
-  any_errors_fatal: true
-  gather_facts: true
-  vars_files:
-    - vars/main.yml
-    - vars/system.yml
-  environment: "{{ proxy_env | default({}) }}"
-
-  pre_tasks:
-    - name: Include OS-specific variables
-      ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
-      tags: always
+      delegate_to: localhost
+      run_once: true # noqa run-once
 
     - name: Update apt cache
       ansible.builtin.apt:
