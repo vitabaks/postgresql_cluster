@@ -42,6 +42,9 @@ haproxy_timeout:
   client: "60m"
   server: "60m"
 
+# keepalived
+keepalived_virtual_router_id: "{{ cluster_vip.split('.')[3] | int }}" # The last octet of 'cluster_vip' IP address is used by default. Must be unique in the network (available values are 0..255).
+
 # vip-manager (if cluster_vip is specified and with_haproxy_load_balancing: false)
 vip_manager_version: "2.1.0"  # version to install
 vip_manager_conf: "/etc/patroni/vip-manager.yml"
