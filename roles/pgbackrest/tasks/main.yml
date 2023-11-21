@@ -114,8 +114,7 @@
         group: postgres
         mode: "0750"
       loop: "{{ pgbackrest_conf.global }}"
-      when: 
-        - item.option == 'spool-path'
+      when: item.option == 'spool-path'
       loop_control:
         label: "{{ item.option }}"
 
