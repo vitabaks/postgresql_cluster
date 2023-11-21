@@ -485,7 +485,7 @@ pgbackrest_repo_type: "posix"  # or "s3", "gcs", "azure"
 pgbackrest_repo_host: ""  # dedicated repository host (optional)
 pgbackrest_repo_user: "postgres"
 pgbackrest_conf_file: "/etc/pgbackrest/pgbackrest.conf"
-# see more options https://pgbackrest.org/configuration.html
+# config https://pgbackrest.org/configuration.html
 pgbackrest_conf:
   global:  # [global] section
     - { option: "log-level-file", value: "detail" }
@@ -500,6 +500,10 @@ pgbackrest_conf:
     - { option: "stop-auto", value: "y" }
     - { option: "resume", value: "n" }
     - { option: "link-all", value: "y" }
+    - { option: "spool-path", value: "/var/spool/pgbackrest" }
+    - { option: "archive-async", value: "y" } # Enables asynchronous WAL archiving (details: https://pgbackrest.org/user-guide.html#async-archiving)
+    - { option: "archive-get-queue-max", value: "1GiB" }
+#    - { option: "archive-push-queue-max", value: "100GiB" }
 #    - { option: "", value: "" }
   stanza:  # [stanza_name] section
     - { option: "pg1-path", value: "{{ postgresql_data_dir }}" }
