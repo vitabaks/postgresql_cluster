@@ -106,6 +106,18 @@
   tags: pgbackrest, pgbackrest_install
 
 - block:
+    - name: Ensure spool directory exist
+      ansible.builtin.file:
+        path: "{{ item.value }}"
+        state: directory
+        owner: postgres
+        group: postgres
+        mode: "0750"
+      loop: "{{ pgbackrest_conf.global }}"
+      when: item.option == 'spool-path'
+      loop_control:
+        label: "{{ item.value }}"
+
     - name: Ensure config directory exist
       ansible.builtin.file:
         path: "{{ pgbackrest_conf_file | dirname }}"
