@@ -116,7 +116,7 @@
       loop: "{{ pgbackrest_conf.global }}"
       when: item.option == 'spool-path'
       loop_control:
-        label: "{{ item.option }}"
+        label: "{{ item.value }}"
 
     - name: Ensure config directory exist
       ansible.builtin.file:
