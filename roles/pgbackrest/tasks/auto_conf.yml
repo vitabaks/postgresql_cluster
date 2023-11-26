@@ -1,0 +1,37 @@
+---
+
+# AWS S3 bucket
+- name: "Set variable 'pgbackrest_conf' for backup in the AWS S3 bucket"
+  ansible.builtin.set_fact:
+    pgbackrest_repo_type: "s3"
+    pgbackrest_conf:
+      global:
+        - { option: "log-level-file", value: "detail" }
+        - { option: "log-path", value: "/var/log/pgbackrest" }
+        - { option: "repo1-type", value: "{{ pgbackrest_repo_type }}" }
+        - { option: "repo1-path", value: "{{ PGBACKREST_REPO_PATH | default('/pgbackrest') }}" }
+        - { option: "repo1-s3-key", value: "{{ PGBACKREST_S3_KEY | default('') }}" }
+        - { option: "repo1-s3-key-secret", value: "{{ PGBACKREST_S3_KEY_SECRET | default('') }}" }
+        - { option: "repo1-s3-bucket", value: "{{ PGBACKREST_S3_BUCKET | default(aws_s3_bucket_name | default('backups-' + patroni_cluster_name)) }}" }
+        - { option: "repo1-s3-endpoint", value: "{{ PGBACKREST_S3_ENDPOINT | default('s3.' + (aws_s3_bucket_region | default(server_location)) + '.amazonaws.com') }}" } # yamllint disable rule:line-length
+        - { option: "repo1-s3-region", value: "{{ PGBACKREST_S3_REGION | default(aws_s3_bucket_region | default(server_location)) }}" }
+        - { option: "repo1-retention-full", value: "{{ PGBACKREST_RETENTION_FULL | default('4') }}" }
+        - { option: "repo1-retention-archive", value: "{{ PGBACKREST_RETENTION_ARCHIVE | default('4') }}" }
+        - { option: "repo1-retention-archive-type", value: "{{ PGBACKREST_RETENTION_ARCHIVE_TYPE | default('full') }}" }
+        - { option: "repo1-bundle", value: "y" }
+        - { option: "repo1-block", value: "y" }
+        - { option: "start-fast", value: "y" }
+        - { option: "stop-auto", value: "y" }
+        - { option: "link-all", value: "y" }
+        - { option: "resume", value: "n" }
+        - { option: "archive-async", value: "y" }
+        - { option: "archive-get-queue-max", value: "1GiB" }
+        - { option: "spool-path", value: "/var/spool/pgbackrest" }
+        - { option: "process-max", value: "{{ PGBACKREST_PROCESS_MAX | default([ansible_processor_vcpus | int // 2, 1] | max) }}" }
+      stanza:
+        - { option: "log-level-console", value: "info" }
+        - { option: "recovery-option", value: "recovery_target_action=promote" }
+        - { option: "pg1-path", value: "{{ pg_data_mount_path | default('/pgdata') }}/{{ postgresql_version }}/{{ patroni_cluster_name }}" }
+  when: provision | default('') | lower == 'aws'
+
+...

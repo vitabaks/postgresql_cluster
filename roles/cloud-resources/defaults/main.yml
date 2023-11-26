@@ -25,11 +25,17 @@ firewall: true  # Specify 'false' if you don't want to configure Firewall rules,
 
 ssh_public_access: true  # Allow public ssh access (required for deployment from the public network).
 ssh_public_allowed_ips: ""  # (comma-separated list of IP addresses in CIDR format) If empty, then public access is allowed for any IP address.
-
 netdata_public_access: true  # Allow access to the Netdata monitoring from the public network (if 'netdata_install' is 'true').
 netdata_public_allowed_ips: ""  # (comma-separated list of IP addresses in CIDR format) If empty, then public access is allowed for any IP address.
-
 database_public_access: false  # Allow access to the database from the public network.
 database_public_allowed_ips: ""  # (comma-separated list of IP addresses in CIDR format) If empty, then public access is allowed for any IP address.
+
+# Backups (if 'pgbackrest_install' or 'wal_g_install' is 'true')
+aws_s3_bucket_create: true
+aws_s3_bucket_name: "backups-{{ patroni_cluster_name }}"  # Name of the S3 bucket. Bucket naming rules: https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html
+aws_s3_bucket_region: "{{ server_location }}"  # The AWS region to use.
+aws_s3_bucket_object_lock_enabled: false  # Whether S3 Object Lock to be enabled.
+aws_s3_bucket_encryption: "AES256"  # Describes the default server-side encryption to apply to new objects in the bucket. Choices: "AES256", "aws:kms"
+aws_s3_bucket_absent: true  # Allow to delete S3 bucket when deleting a cluster servers using the 'state=absent' variable.
 
 ...

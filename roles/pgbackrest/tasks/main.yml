@@ -1,5 +1,11 @@
 ---
 
+# Automatic setup of the backup configuration based on the selected cloud provider.
+# if 'provision' is 'aws', 'gcp', 'azure', 'digitalocean'.
+- ansible.builtin.import_tasks: auto_conf.yml
+  when: provision | default('none') != 'none'
+  tags: pgbackrest, pgbackrest_conf
+
 - block:  # Debian pgdg repo
     - name: Make sure the gnupg and apt-transport-https packages are present
       ansible.builtin.apt:
