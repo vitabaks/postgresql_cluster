@@ -3,12 +3,11 @@
 # AWS S3 bucket
 - name: "Set variable 'pgbackrest_conf' for backup in the AWS S3 bucket"
   ansible.builtin.set_fact:
-    pgbackrest_repo_type: "s3"
     pgbackrest_conf:
       global:
         - { option: "log-level-file", value: "detail" }
         - { option: "log-path", value: "/var/log/pgbackrest" }
-        - { option: "repo1-type", value: "{{ pgbackrest_repo_type }}" }
+        - { option: "repo1-type", value: "s3" }
         - { option: "repo1-path", value: "{{ PGBACKREST_REPO_PATH | default('/pgbackrest') }}" }
         - { option: "repo1-s3-key", value: "{{ PGBACKREST_S3_KEY | default('') }}" }
         - { option: "repo1-s3-key-secret", value: "{{ PGBACKREST_S3_KEY_SECRET | default('') }}" }
