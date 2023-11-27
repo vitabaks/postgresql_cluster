@@ -170,6 +170,21 @@
           }}
       when: firewall | bool
 
+    # GCS Bucket
+    - name: "GCP: Create bucket '{{ gcp_bucket_name }}'"
+      google.cloud.gcp_storage_bucket:
+        auth_kind: "serviceaccount"
+        service_account_contents: "{{ lookup('ansible.builtin.env', 'GCP_SERVICE_ACCOUNT_CONTENTS') }}"
+        project: "{{ gcp_project | default(project_info.resources[0].projectNumber) }}"
+        name: "{{ gcp_bucket_name }}"
+        state: present
+        storage_class: "{{ gcp_bucket_storage_class }}"
+        predefined_default_object_acl: "{{ gcp_bucket_default_object_acl }}"
+      when:
+        - (pgbackrest_install | bool or wal_g_install | bool)
+        - gcp_bucket_create | bool
+
+    # Server and volume
     - name: "GCP: Create or modify VM instance"
       google.cloud.gcp_compute_instance:
         auth_kind: "serviceaccount"
@@ -313,6 +328,17 @@
         project: "{{ gcp_project | default(project_info.resources[0].projectNumber) }}"
         name: "{{ patroni_cluster_name }}-firewall"
         state: absent
+
+    - name: "GCP: Delete bucket '{{ gcp_bucket_name }}'"
+      google.cloud.gcp_storage_bucket:
+        auth_kind: "serviceaccount"
+        service_account_contents: "{{ lookup('ansible.builtin.env', 'GCP_SERVICE_ACCOUNT_CONTENTS') }}"
+        project: "{{ gcp_project | default(project_info.resources[0].projectNumber) }}"
+        name: "{{ gcp_bucket_name }}"
+        state: absent
+      when:
+        - (pgbackrest_install | bool or wal_g_install | bool)
+        - gcp_bucket_absent | bool
   when: state == 'absent'
 
 ...

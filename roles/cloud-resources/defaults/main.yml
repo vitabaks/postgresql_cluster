@@ -31,11 +31,17 @@ database_public_access: false  # Allow access to the database from the public ne
 database_public_allowed_ips: ""  # (comma-separated list of IP addresses in CIDR format) If empty, then public access is allowed for any IP address.
 
 # Backups (if 'pgbackrest_install' or 'wal_g_install' is 'true')
-aws_s3_bucket_create: true
+aws_s3_bucket_create: true  # if 'provision=aws'
 aws_s3_bucket_name: "backups-{{ patroni_cluster_name }}"  # Name of the S3 bucket. Bucket naming rules: https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html
 aws_s3_bucket_region: "{{ server_location }}"  # The AWS region to use.
 aws_s3_bucket_object_lock_enabled: false  # Whether S3 Object Lock to be enabled.
 aws_s3_bucket_encryption: "AES256"  # Describes the default server-side encryption to apply to new objects in the bucket. Choices: "AES256", "aws:kms"
 aws_s3_bucket_absent: true  # Allow to delete S3 bucket when deleting a cluster servers using the 'state=absent' variable.
+
+gcp_bucket_create: true  # if 'provision=gcp'
+gcp_bucket_name: "backups-{{ patroni_cluster_name }}"  # Name of the GCS bucket.
+gcp_bucket_storage_class: "MULTI_REGIONAL"  # The bucket’s default storage class. Values include: MULTI_REGIONAL, REGIONAL, STANDARD, NEARLINE, COLDLINE, ARCHIVE, DURABLE_REDUCED_AVAILABILITY.
+gcp_bucket_default_object_acl: "projectPrivate"  # Apply a predefined set of default object access controls to this bucket.
+gcp_bucket_absent: true  # Allow to delete GCS bucket when deleting a cluster servers using the 'state=absent' variable.
 
 ...
