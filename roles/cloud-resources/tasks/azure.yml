@@ -197,7 +197,45 @@
         index_var: idx
         label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-network-interface"
 
-    # Virtual machine and volume
+    # Azure Blob Storage (Backups)
+    - block:
+        - name: "Azure: Create Storage Account '{{ azure_blob_storage_account_name }}'"
+          azure.azcollection.azure_rm_storageaccount:
+            resource_group: "{{ azure_resourcegroup | default('postgres-cluster-resource-group') }}"
+            name: "{{ azure_blob_storage_account_name }}"
+            state: present
+            account_type: "{{ azure_blob_storage_account_type }}"
+            public_network_access: Enabled  # Allow public network access to Storage Account to create Blob Storage.
+            allow_blob_public_access: false  # Disallow public anonymous access.
+            kind: BlobStorage
+            access_tier: Hot
+
+        - name: "Azure: Get Storage Account info"
+          azure.azcollection.azure_rm_storageaccount_info:
+            resource_group: "{{ azure_resourcegroup | default('postgres-cluster-resource-group') }}"
+            name: "{{ azure_blob_storage_account_name }}"
+            show_connection_string: true
+          no_log: true  # do not output storage account contents to the ansible log
+          register: azure_storage_account_info
+
+        - name: "Set variable: azure_storage_account_key"
+          ansible.builtin.set_fact:
+            azure_storage_account_key: "{{ azure_storage_account_info.storageaccounts[0].primary_endpoints.key }}"
+            cacheable: true
+          no_log: true  # do not output storage account contents to the ansible log
+
+        - name: "Azure: Create Blob Storage '{{ azure_blob_storage_name }}'"
+          azure.azcollection.azure_rm_storageblob:
+            resource_group: "{{ azure_resourcegroup | default('postgres-cluster-resource-group') }}"
+            storage_account_name: "{{ azure_blob_storage_account_name }}"
+            container: "{{ azure_blob_storage_name }}"
+            blob_type: block
+            state: present
+      when:
+        - (pgbackrest_install | bool or wal_g_install | bool)
+        - azure_blob_storage_create | bool
+
+    # Server and volume
     - name: "Azure: Create virtual machine"
       azure.azcollection.azure_rm_virtualmachine:
         resource_group: "{{ azure_resourcegroup | default('postgres-cluster-resource-group') }}"
@@ -346,6 +384,24 @@
         resource_group: "{{ azure_resourcegroup | default('postgres-cluster-resource-group') }}"
         name: "{{ patroni_cluster_name }}-security-group"
         state: absent
+
+    - block:
+        - name: "Azure: Delete Blob Storage '{{ azure_blob_storage_name }}'"
+          azure.azcollection.azure_rm_storageblob:
+            resource_group: "{{ azure_resourcegroup | default('postgres-cluster-resource-group') }}"
+            storage_account_name: "{{ azure_blob_storage_account_name }}"
+            container: "{{ azure_blob_storage_name }}"
+            state: absent
+
+        - name: "Azure: Delete Storage Account '{{ azure_blob_storage_account_name }}'"
+          azure.azcollection.azure_rm_storageaccount:
+            resource_group: "{{ azure_resourcegroup | default('postgres-cluster-resource-group') }}"
+            name: "{{ azure_blob_storage_account_name }}"
+            force_delete_nonempty: true
+            state: absent
+      when:
+        - (pgbackrest_install | bool or wal_g_install | bool)
+        - azure_blob_storage_absent | bool
   when: state == 'absent'
 
 ...

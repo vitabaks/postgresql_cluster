@@ -44,4 +44,10 @@ gcp_bucket_storage_class: "MULTI_REGIONAL"  # The bucket’s default storage cla
 gcp_bucket_default_object_acl: "projectPrivate"  # Apply a predefined set of default object access controls to this bucket.
 gcp_bucket_absent: true  # Allow to delete GCS bucket when deleting a cluster servers using the 'state=absent' variable.
 
+azure_blob_storage_create: true  # if 'provision=azure'
+azure_blob_storage_name: "backups-{{ patroni_cluster_name }}"  # Name of a blob container within the storage account.
+azure_blob_storage_account_name: "{{ patroni_cluster_name | lower | replace('-', '') | truncate(24, true, '') }}"  # Storage account name must be between 3 and 24 characters in length and use numbers and lower-case letters only.
+azure_blob_storage_account_type: "Standard_RAGRS"  # Type of storage account. Values include: Standard_LRS, Standard_GRS, Standard_RAGRS, Standard_ZRS, Standard_RAGZRS, Standard_GZRS, Premium_LRS, Premium_ZRS.
+azure_blob_storage_absent: true  # Allow to delete Azure Blob Storage when deleting a cluster servers using the 'state=absent' variable.
+
 ...
