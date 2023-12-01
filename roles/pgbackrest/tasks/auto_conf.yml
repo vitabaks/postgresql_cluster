@@ -130,4 +130,39 @@
   no_log: true  # do not output contents to the ansible log
   when: provision | default('') | lower == 'azure'
 
+# DigitalOcean Spaces Object Storage (if 'provision=digitalocean')
+- name: "Set variable 'pgbackrest_conf' for backup in DigitalOcean Spaces Object Storage"
+  ansible.builtin.set_fact:
+    pgbackrest_conf:
+      global:
+        - { option: "log-level-file", value: "detail" }
+        - { option: "log-path", value: "/var/log/pgbackrest" }
+        - { option: "repo1-type", value: "s3" }
+        - { option: "repo1-path", value: "{{ PGBACKREST_REPO_PATH | default('/pgbackrest') }}" }
+        - { option: "repo1-s3-key", value: "{{ PGBACKREST_S3_KEY | default(AWS_ACCESS_KEY_ID | default('')) }}" }
+        - { option: "repo1-s3-key-secret", value: "{{ PGBACKREST_S3_KEY_SECRET | default(AWS_SECRET_ACCESS_KEY | default('')) }}" }
+        - { option: "repo1-s3-bucket", value: "{{ PGBACKREST_S3_BUCKET | default(digital_ocean_spaces_name | default('backups-' + patroni_cluster_name)) }}" }
+        - { option: "repo1-s3-endpoint", value: "{{ PGBACKREST_S3_ENDPOINT | default('https://' + (digital_ocean_spaces_region | default(server_location)) + '.digitaloceanspaces.com') }}" }
+        - { option: "repo1-s3-region", value: "{{ PGBACKREST_S3_REGION | default(digital_ocean_spaces_region | default(server_location)) }}" }
+        - { option: "repo1-s3-uri-style", value: "{{ PGBACKREST_S3_URI_STYLE | default('path') }}" }
+        - { option: "repo1-retention-full", value: "{{ PGBACKREST_RETENTION_FULL | default('4') }}" }
+        - { option: "repo1-retention-archive", value: "{{ PGBACKREST_RETENTION_ARCHIVE | default('4') }}" }
+        - { option: "repo1-retention-archive-type", value: "{{ PGBACKREST_RETENTION_ARCHIVE_TYPE | default('full') }}" }
+        - { option: "repo1-bundle", value: "y" }
+        - { option: "repo1-block", value: "y" }
+        - { option: "start-fast", value: "y" }
+        - { option: "stop-auto", value: "y" }
+        - { option: "link-all", value: "y" }
+        - { option: "resume", value: "n" }
+        - { option: "archive-async", value: "y" }
+        - { option: "archive-get-queue-max", value: "1GiB" }
+        - { option: "spool-path", value: "/var/spool/pgbackrest" }
+        - { option: "process-max", value: "{{ PGBACKREST_PROCESS_MAX | default([ansible_processor_vcpus | int // 2, 1] | max) }}" }
+      stanza:
+        - { option: "log-level-console", value: "info" }
+        - { option: "recovery-option", value: "recovery_target_action=promote" }
+        - { option: "pg1-path", value: "{{ pg_data_mount_path | default('/pgdata') }}/{{ postgresql_version }}/{{ patroni_cluster_name }}" }
+  no_log: true  # do not output contents to the ansible log
+  when: provision | default('') | lower == 'digitalocean'
+
 ...

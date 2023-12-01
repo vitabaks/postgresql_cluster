@@ -50,4 +50,9 @@ azure_blob_storage_account_name: "{{ patroni_cluster_name | lower | replace('-',
 azure_blob_storage_account_type: "Standard_RAGRS"  # Type of storage account. Values include: Standard_LRS, Standard_GRS, Standard_RAGRS, Standard_ZRS, Standard_RAGZRS, Standard_GZRS, Premium_LRS, Premium_ZRS.
 azure_blob_storage_absent: true  # Allow to delete Azure Blob Storage when deleting a cluster servers using the 'state=absent' variable.
 
+digital_ocean_spaces_create: true  # if 'provision=digitalocean'
+digital_ocean_spaces_name: "backups-{{ patroni_cluster_name | lower }}"  # Name of the Spaces Object Storage (S3 bucket).
+digital_ocean_spaces_region: "nyc3"  # The region to create the Space in.
+digital_ocean_spaces_absent: true  # Allow to delete Spaces Object Storage when deleting a cluster servers using the 'state=absent' variable.
+
 ...

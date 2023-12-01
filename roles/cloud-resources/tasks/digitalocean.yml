@@ -24,6 +24,19 @@
         ansible_become: false
       run_once: true
 
+    - name: Ensure that 'boto3' dependency is present on controlling host
+      ansible.builtin.pip:
+        name: boto3
+        extra_args: --user
+      delegate_to: 127.0.0.1
+      become: false
+      vars:
+        ansible_become: false
+      run_once: true
+      when:
+        - (pgbackrest_install | bool or wal_g_install | bool)
+        - digital_ocean_spaces_create | bool
+
 # SSH key
 - block:
     # Delete the temporary ssh key from the cloud (if exists)
@@ -460,6 +473,20 @@
       when: droplet_result_default_vpc is defined or
             droplet_result_with_vpc is defined
 
+    # Spaces Object Storage (S3 bucket)
+    - name: "DigitalOcean: Create Spaces Bucket '{{ digital_ocean_spaces_name }}'"
+      community.digitalocean.digital_ocean_spaces:
+        oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
+        name: "{{ digital_ocean_spaces_name }}"
+        region: "{{ digital_ocean_spaces_region }}"
+        aws_access_key_id: "{{ AWS_ACCESS_KEY_ID }}"
+        aws_secret_access_key: "{{ AWS_SECRET_ACCESS_KEY }}"
+        state: present
+      when:
+        - (pgbackrest_install | bool or wal_g_install | bool)
+        - digital_ocean_spaces_create | bool
+
+    # Server and volume
     - name: "DigitalOcean: Create or modify Block Storage"
       community.digitalocean.digital_ocean_block_storage:
         oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
@@ -603,6 +630,18 @@
         oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
         state: "absent"
         name: "{{ patroni_cluster_name }}-firewall"
+
+    - name: "DigitalOcean: Delete Spaces Bucket '{{ digital_ocean_spaces_name }}'"
+      community.digitalocean.digital_ocean_spaces:
+        oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
+        name: "{{ digital_ocean_spaces_name }}"
+        region: "{{ digital_ocean_spaces_region }}"
+        aws_access_key_id: "{{ AWS_ACCESS_KEY_ID }}"
+        aws_secret_access_key: "{{ AWS_SECRET_ACCESS_KEY }}"
+        state: absent
+      when:
+        - (pgbackrest_install | bool or wal_g_install | bool)
+        - digital_ocean_spaces_absent | bool
   ignore_errors: true
   when: state == 'absent'
 
