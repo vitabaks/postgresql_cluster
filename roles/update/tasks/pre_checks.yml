@@ -1,6 +1,6 @@
 ---
 - name: '[Pre-Check] (ALL) Test PostgreSQL DB Access'
-  ansible.builtin.command: >
+  ansible.builtin.command: >-
     psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -tAXc 'select 1'
   changed_when: false
 
