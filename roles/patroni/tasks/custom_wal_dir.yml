@@ -113,6 +113,8 @@
       until: patroni_result.status == 200
       retries: 120
       delay: 10
+      environment:
+        no_proxy: "{{ inventory_hostname }}"
       when: is_master | bool and not ansible_check_mode
 
     - name: Start patroni service on the Replica
@@ -141,6 +143,8 @@
       until: patroni_result.status == 200
       retries: 120
       delay: 10
+      environment:
+        no_proxy: "{{ inventory_hostname }}"
       when: not is_master | bool and not ansible_check_mode
 
     - name: "Remove {{ pg_wal_dir }}_old directory"

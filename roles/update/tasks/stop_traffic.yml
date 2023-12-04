@@ -26,6 +26,8 @@
   until: patroni_replica_result.status == 503
   retries: 30
   delay: 2
+  environment:
+    no_proxy: "{{ inventory_hostname }}"
 
 - name: Wait for active transactions to complete
   become: true
