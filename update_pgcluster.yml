@@ -17,6 +17,8 @@
       register: patroni_leader_result
       changed_when: false
       failed_when: false
+      environment:
+        no_proxy: "{{ inventory_hostname }}"
       tags: always
 
     - name: '[Prepare] Add host to group "primary" (in-memory inventory)'

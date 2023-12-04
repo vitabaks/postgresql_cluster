@@ -27,6 +27,8 @@
   until: patroni_leader_result.status == 200
   retries: "{{ (pg_start_stop_timeout | int) // 2 }}"
   delay: 2
+  environment:
+    no_proxy: "{{ inventory_hostname }}"
   when:
     - inventory_hostname in groups['primary']
 
@@ -65,6 +67,8 @@
   until: patroni_replica_result.status == 200
   retries: "{{ (pg_start_stop_timeout | int) // 2 }}"
   delay: 2
+  environment:
+    no_proxy: "{{ inventory_hostname }}"
   when:
     - inventory_hostname in groups['secondary']
 
