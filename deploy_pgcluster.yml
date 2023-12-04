@@ -133,7 +133,7 @@
             var: pre_deploy_command
           when: pre_deploy_command_print | default(false) | bool
 
-        - name: Execute pre-deploy command
+        - name: Run pre-deploy command
           ansible.builtin.shell: "{{ pre_deploy_command }} > /tmp/pre_deploy_command.log 2>&1"
           args:
             executable: /bin/bash
@@ -142,6 +142,7 @@
           loop: "{{ pre_deploy_command_hosts.split(',') | map('extract', groups) | list | flatten }}"
           async: "{{ pre_deploy_command_timeout }}"  # run the command asynchronously
           poll: 0
+          ignore_errors: true # allows to collect logs before stopping execution (in case of failure)
 
         - name: Wait for the pre-deploy command to complete
           ansible.builtin.async_status:
@@ -175,6 +176,11 @@
           when:
             - pre_deploy_command_log.results is defined
             - item.stdout_lines is defined
+
+        - name: Stop if pre-deploy command failed
+          ansible.builtin.fail:
+            msg: "Pre-deploy command failed. See log for details."
+          when: pre_deploy_result.results | json_query('[?failed]') | length > 0
       run_once: true # noqa run-once
       when: pre_deploy_command | default('') | length > 0
       tags: pre_deploy, pre_deploy_command
@@ -350,7 +356,7 @@
             var: post_deploy_command
           when: post_deploy_command_print | default(false) | bool
 
-        - name: Execute post-deploy command
+        - name: Run post-deploy command
           ansible.builtin.shell: "{{ post_deploy_command }} > /tmp/post_deploy_command.log 2>&1"
           args:
             executable: /bin/bash
@@ -359,6 +365,7 @@
           loop: "{{ post_deploy_command_hosts.split(',') | map('extract', groups) | list | flatten }}"
           async: "{{ post_deploy_command_timeout }}"  # run the command asynchronously
           poll: 0
+          ignore_errors: true # allows to collect logs before stopping execution (in case of failure)
 
         - name: Wait for the post-deploy command to complete
           ansible.builtin.async_status:
@@ -392,6 +399,11 @@
           when:
             - post_deploy_command_log.results is defined
             - item.stdout_lines is defined
+
+        - name: Stop if post-deploy command failed
+          ansible.builtin.fail:
+            msg: "Post-deploy command failed. See log for details."
+          when: post_deploy_result.results | json_query('[?failed]') | length > 0
       run_once: true # noqa run-once
       when: post_deploy_command | default('') | length > 0
       tags: post_deploy, post_deploy_command
