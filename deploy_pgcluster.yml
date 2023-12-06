@@ -180,7 +180,7 @@
         - name: Stop if pre-deploy command failed
           ansible.builtin.fail:
             msg: "Pre-deploy command failed. See log for details."
-          when: pre_deploy_result.results | json_query('[?failed]') | length > 0
+          when: pre_deploy_job_result.results | json_query('[?failed]') | length > 0
       run_once: true # noqa run-once
       when: pre_deploy_command | default('') | length > 0
       tags: pre_deploy, pre_deploy_command
@@ -403,7 +403,7 @@
         - name: Stop if post-deploy command failed
           ansible.builtin.fail:
             msg: "Post-deploy command failed. See log for details."
-          when: post_deploy_result.results | json_query('[?failed]') | length > 0
+          when: post_deploy_job_result.results | json_query('[?failed]') | length > 0
       run_once: true # noqa run-once
       when: post_deploy_command | default('') | length > 0
       tags: post_deploy, post_deploy_command
