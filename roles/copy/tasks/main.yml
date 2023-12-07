@@ -1,6 +1,8 @@
 ---
 
 - name: Fetch files from the master
+  become: true
+  become_user: root
   run_once: true
   ansible.builtin.fetch:
     src: "{{ item.src }}"
@@ -15,6 +17,8 @@
   tags: fetch_files
 
 - name: Copy files to all servers
+  become: true
+  become_user: root
   ansible.builtin.copy:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
