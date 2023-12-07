@@ -16,7 +16,7 @@
         dcs_type: "{{ ['etcd', 'consul'] | random }}" # Set 'dcs_type' to either 'etcd' or 'consul' randomly
         consul_node_role: server # if dcs_type: "consul"
         consul_bootstrap_expect: true # if dcs_type: "consul"
-        postgresql_version: "15" # to test custom WAL dir
+        postgresql_version: "16" # to test custom WAL dir
         pgbouncer_processes: 2 # Test multiple pgbouncer processes (so_reuseport)
         cacheable: true
       delegate_to: localhost
