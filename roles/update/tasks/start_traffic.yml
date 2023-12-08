@@ -26,4 +26,6 @@
   until: patroni_replica_result.status == 200
   retries: 30
   delay: 2
+  environment:
+    no_proxy: "{{ inventory_hostname }}"
 ...

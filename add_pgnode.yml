@@ -133,7 +133,7 @@
       changed_when: false
       tags: always
 
-- name: add_pgnode.yml | Add new PostgreSQL node to the cluster
+- name: add_pgnode.yml | Configure new PostgreSQL node
   hosts: new_replica
   become: true
   become_method: sudo
@@ -168,9 +168,10 @@
     - role: timezone
     - role: ntp
     - role: copy
+    - role: cron
 
-- name: add_pgnode.yml | Add new PostgreSQL node with pgBackRest to the cluster
-  hosts: pgbackrest:new_replica
+- name: add_pgnode.yml | Configure pgBackRest
+  hosts: pgbackrest:postgres_cluster
   become: true
   become_method: sudo
   gather_facts: true
@@ -193,7 +194,7 @@
   when: dcs_type == "consul"
   tags: consul
 
-- name: add_pgnode.yml | Configure new replica and additional roles
+- name: add_pgnode.yml | Add new PostgreSQL replica to the cluster
   hosts: new_replica
   become: true
   become_method: sudo
@@ -221,8 +222,6 @@
 
     - role: pg_probackup
       when: pg_probackup_install|bool
-
-    - role: cron
 
     - role: pgbouncer
       when: pgbouncer_install|bool
