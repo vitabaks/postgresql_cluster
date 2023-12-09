@@ -27,9 +27,7 @@
         gpgcheck: "no"
       when: ansible_os_family == "RedHat"
   environment: "{{ proxy_env | default({}) }}"
-  when:
-    - ((enable_timescale | default(false) | bool) or (enable_timescaledb | default(false) | bool))
-    - (postgresql_version is version('12', '>=') and postgresql_version is version('15', '<=')) # TODO (PG16)
+  when: (enable_timescale | default(false) | bool) or (enable_timescaledb | default(false) | bool)
   tags: add_repo, timescaledb, timescale
 
 # Citus (if 'enable_citus' is 'true')
