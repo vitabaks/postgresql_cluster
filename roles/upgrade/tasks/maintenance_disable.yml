@@ -18,6 +18,7 @@
       ansible.builtin.service:
         name: confd
         state: started
+      when: dcs_type == "etcd"
   become: true
   become_user: root
   ignore_errors: true  # show the error and continue the playbook execution
