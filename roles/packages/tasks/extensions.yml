@@ -158,7 +158,7 @@
   delay: 5
   retries: 3
   when: enable_pgrouting | default(false) | bool and
-        not (ansible_distribution == 'Ubuntu' and ansible_distribution_version is version('20.04', ''<=''))
+        not (ansible_distribution == 'Ubuntu' and ansible_distribution_version is version('20.04', '<='))
   tags: pgrouting
 
 # pg_stat_kcache (if 'enable_pg_stat_kcache' is 'true')
