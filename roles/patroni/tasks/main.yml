@@ -456,7 +456,7 @@
             not postgresql_conf_file.stat.exists
 
     # When performing PITR, we do not clear the directory if pgbackrest is used
-    # to be able to use the '--delta restore' option. 
+    # to be able to use the '--delta restore' option.
     - name: Prepare PostgreSQL | make sure the data directory "{{ postgresql_data_dir }}" is empty
       ansible.builtin.file:
         path: "{{ postgresql_data_dir }}"
