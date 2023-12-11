@@ -455,6 +455,8 @@
             postgresql_packages|join(" ") is not search("postgrespro")) and
             not postgresql_conf_file.stat.exists
 
+    # When performing PITR, we do not clear the directory if pgbackrest is used
+    # to be able to use the '--delta restore' option. 
     - name: Prepare PostgreSQL | make sure the data directory "{{ postgresql_data_dir }}" is empty
       ansible.builtin.file:
         path: "{{ postgresql_data_dir }}"
@@ -466,7 +468,7 @@
         - absent
         - directory
       when: (is_master | bool and patroni_cluster_bootstrap_method != "pgbackrest")
-            or (not is_master | bool and 'pgbackrest' not in patroni_create_replica_methods)  # --delta restore
+            or (not is_master | bool and ('pgbackrest' not in patroni_create_replica_methods or new_node | default(false) | bool))
 
     - name: Prepare PostgreSQL | make sure the custom WAL directory "{{ postgresql_wal_dir }}" is empty
       ansible.builtin.file:
@@ -480,7 +482,7 @@
         - directory
       when: (postgresql_wal_dir is defined and postgresql_wal_dir | length > 0) and
             ((is_master | bool and patroni_cluster_bootstrap_method != "pgbackrest")
-              or (not is_master | bool and 'pgbackrest' not in patroni_create_replica_methods))  # --delta restore
+              or (not is_master | bool and ('pgbackrest' not in patroni_create_replica_methods or new_node | default(false) | bool)))
   when: not postgresql_exists | bool or patroni_cluster_bootstrap_method != "initdb"
   tags: patroni, point_in_time_recovery
 
