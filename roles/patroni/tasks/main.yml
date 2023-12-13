@@ -623,8 +623,8 @@
         extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
         umask: "0022"
       loop:
-        - pexpect
-        - ruamel.yaml
+        - pexpect==4.9.0
+        - ruamel.yaml==0.17.40
       environment:
         PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
         PIP_BREAK_SYSTEM_PACKAGES: "1"
