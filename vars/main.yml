@@ -215,7 +215,7 @@ postgresql_parameters:
   - { option: "archive_command", value: "cd ." }  # not doing anything yet with WAL-s
 #  - { option: "archive_command", value: "{{ wal_g_archive_command }}" }  # archive WAL-s using WAL-G
 #  - { option: "archive_command", value: "{{ pgbackrest_archive_command }}" }  # archive WAL-s using pgbackrest
-  - { option: "wal_level", value: "replica" }
+  - { option: "wal_level", value: "logical" }
   - { option: "wal_keep_size", value: "2GB" }
   - { option: "max_wal_senders", value: "10" }
   - { option: "max_replication_slots", value: "10" }
