@@ -36,8 +36,8 @@ python-dateutil==2.8.2
 python-slugify==8.0.1
 requests==2.31.0
 rich==13.3.5
-ruamel.yaml==0.17.26
-ruamel.yaml.clib==0.2.7
+ruamel.yaml==0.17.40
+ruamel.yaml.clib==0.2.8
 selinux==0.3.0
 six==1.16.0
 subprocess-tee==0.4.1
