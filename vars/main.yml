@@ -41,7 +41,7 @@ haproxy_maxconn:
 haproxy_timeout:
   client: "60m"
   server: "60m"
-haproxy_divert_to_master: 0 # diverting percentage (from 1 to 99) of requests which coming to a slave towards the master
+haproxy_divert_to_master: 0 # diverting percentage (from 0 to 99) of requests which coming to a slave towards the master
 
 # keepalived (if 'cluster_vip' is specified and 'with_haproxy_load_balancing' is 'true')
 keepalived_virtual_router_id: "{{ cluster_vip.split('.')[3] | int }}" # The last octet of 'cluster_vip' IP address is used by default.
