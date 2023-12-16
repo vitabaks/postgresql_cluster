@@ -25,6 +25,22 @@ listen stats
     stats enable
     stats uri /
 
+backend master_backend
+    option tcplog
+    option httpchk OPTIONS /primary
+    http-check expect status 200
+    default-server inter 3s fastinter 1s fall 3 rise 4 on-marked-down shutdown-sessions
+{% if pgbouncer_install|bool %}
+  {% for host in groups['postgres_cluster'] %}
+server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}:{{ pgbouncer_listen_port }} check port {{ patroni_restapi_port }}
+  {% endfor %}
+{% endif %}
+{% if ( pgbouncer_install is not defined ) or ( not pgbouncer_install|bool ) %}
+  {% for host in groups['postgres_cluster'] %}
+server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}:{{ postgresql_port }} check port {{ patroni_restapi_port }}
+  {% endfor %}
+{% endif %}
+
 listen master
 {% if cluster_vip is defined and cluster_vip | length > 0 %}
     bind {{ cluster_vip }}:{{ haproxy_listen_port.master }}
@@ -32,10 +48,14 @@ listen master
     bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ haproxy_listen_port.master }}
 {% endif %}
     maxconn {{ haproxy_maxconn.master }}
+    default_backend master_backend
+
+backend replicas_backend
     option tcplog
-    option httpchk OPTIONS /primary
+    option httpchk OPTIONS /replica
+    balance roundrobin
     http-check expect status 200
-    default-server inter 3s fastinter 1s fall 3 rise 4 on-marked-down shutdown-sessions
+    default-server inter 3s fastinter 1s fall 3 rise 2 on-marked-down shutdown-sessions
 {% if pgbouncer_install|bool %}
   {% for host in groups['postgres_cluster'] %}
 server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}:{{ pgbouncer_listen_port }} check port {{ patroni_restapi_port }}
@@ -54,8 +74,17 @@ listen replicas
     bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ haproxy_listen_port.replicas }}
 {% endif %}
     maxconn {{ haproxy_maxconn.replica }}
+{% if haproxy_divert_to_master is defined and haproxy_divert_to_master > 0 and haproxy_divert_to_master < 100 %}
+    acl divert_to_master rand(100) lt {{ haproxy_divert_to_master }}
+{% endif %}
+    default_backend replicas_backend
+{% if haproxy_divert_to_master is defined and haproxy_divert_to_master > 0 and haproxy_divert_to_master < 100 %}
+    use_backend master_backend if divert_to_master
+{% endif %}
+
+backend replicas_sync_backend
     option tcplog
-    option httpchk OPTIONS /replica
+    option httpchk OPTIONS /sync
     balance roundrobin
     http-check expect status 200
     default-server inter 3s fastinter 1s fall 3 rise 2 on-marked-down shutdown-sessions
@@ -77,8 +106,17 @@ listen replicas_sync
     bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ haproxy_listen_port.replicas_sync }}
 {% endif %}
     maxconn {{ haproxy_maxconn.replica }}
+{% if haproxy_divert_to_master is defined and haproxy_divert_to_master > 0 and haproxy_divert_to_master < 100 %}
+    acl divert_to_master rand(100) lt {{ haproxy_divert_to_master }}
+{% endif %}
+    default_backend replicas_sync_backend
+{% if haproxy_divert_to_master is defined and haproxy_divert_to_master > 0 and haproxy_divert_to_master < 100 %}
+    use_backend master_backend if divert_to_master
+{% endif %}
+
+backend replicas_async_backend
     option tcplog
-    option httpchk OPTIONS /sync
+    option httpchk OPTIONS /async
     balance roundrobin
     http-check expect status 200
     default-server inter 3s fastinter 1s fall 3 rise 2 on-marked-down shutdown-sessions
@@ -100,19 +138,10 @@ listen replicas_async
     bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ haproxy_listen_port.replicas_async }}
 {% endif %}
     maxconn {{ haproxy_maxconn.replica }}
-    option tcplog
-    option httpchk OPTIONS /async
-    balance roundrobin
-    http-check expect status 200
-    default-server inter 3s fastinter 1s fall 3 rise 2 on-marked-down shutdown-sessions
-{% if pgbouncer_install|bool %}
-  {% for host in groups['postgres_cluster'] %}
-server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}:{{ pgbouncer_listen_port }} check port {{ patroni_restapi_port }}
-  {% endfor %}
+{% if haproxy_divert_to_master is defined and haproxy_divert_to_master > 0 and haproxy_divert_to_master < 100 %}
+    acl divert_to_master rand(100) lt {{ haproxy_divert_to_master }}
 {% endif %}
-{% if ( pgbouncer_install is not defined ) or ( not pgbouncer_install|bool ) %}
-  {% for host in groups['postgres_cluster'] %}
-server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}:{{ postgresql_port }} check port {{ patroni_restapi_port }}
-  {% endfor %}
+    default_backend replicas_async_backend
+{% if haproxy_divert_to_master is defined and haproxy_divert_to_master > 0 and haproxy_divert_to_master < 100 %}
+    use_backend master_backend if divert_to_master
 {% endif %}
-
