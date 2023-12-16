@@ -25,6 +25,15 @@ listen stats
     stats enable
     stats uri /
 
+listen master
+{% if cluster_vip is defined and cluster_vip | length > 0 %}
+    bind {{ cluster_vip }}:{{ haproxy_listen_port.master }}
+{% else %}
+    bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ haproxy_listen_port.master }}
+{% endif %}
+    maxconn {{ haproxy_maxconn.master }}
+    default_backend master_backend
+
 backend master_backend
     option tcplog
     option httpchk OPTIONS /primary
@@ -39,14 +48,21 @@ backend master_backend
 {{end}}{% endraw %}
 {% endif %}
 
-listen master
+
+listen replicas
 {% if cluster_vip is defined and cluster_vip | length > 0 %}
-    bind {{ cluster_vip }}:{{ haproxy_listen_port.master }}
+    bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas }}
 {% else %}
-    bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ haproxy_listen_port.master }}
+    bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ haproxy_listen_port.replicas }}
 {% endif %}
-    maxconn {{ haproxy_maxconn.master }}
-    default_backend master_backend
+    maxconn {{ haproxy_maxconn.replica }}
+{% if haproxy_divert_to_master is defined and haproxy_divert_to_master > 0 and haproxy_divert_to_master < 100 %}
+    acl divert_to_master rand(100) lt {{ haproxy_divert_to_master }}
+{% endif %}
+    default_backend replicas_backend
+{% if haproxy_divert_to_master is defined and haproxy_divert_to_master > 0 and haproxy_divert_to_master < 100 %}
+    use_backend master_backend if divert_to_master
+{% endif %}
 
 backend replicas_backend
     option tcplog
@@ -63,17 +79,18 @@ backend replicas_backend
 {{end}}{% endraw %}
 {% endif %}
 
-listen replicas
+
+listen replicas_sync
 {% if cluster_vip is defined and cluster_vip | length > 0 %}
-    bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas }}
+    bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas_sync }}
 {% else %}
-    bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ haproxy_listen_port.replicas }}
+    bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ haproxy_listen_port.replicas_sync }}
 {% endif %}
     maxconn {{ haproxy_maxconn.replica }}
 {% if haproxy_divert_to_master is defined and haproxy_divert_to_master > 0 and haproxy_divert_to_master < 100 %}
     acl divert_to_master rand(100) lt {{ haproxy_divert_to_master }}
 {% endif %}
-    default_backend replicas_backend
+    default_backend replicas_sync_backend
 {% if haproxy_divert_to_master is defined and haproxy_divert_to_master > 0 and haproxy_divert_to_master < 100 %}
     use_backend master_backend if divert_to_master
 {% endif %}
@@ -93,17 +110,18 @@ backend replicas_sync_backend
 {{end}}{% endraw %}
 {% endif %}
 
-listen replicas_sync
+
+listen replicas_async
 {% if cluster_vip is defined and cluster_vip | length > 0 %}
-    bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas_sync }}
+    bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas_async }}
 {% else %}
-    bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ haproxy_listen_port.replicas_sync }}
+    bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ haproxy_listen_port.replicas_async }}
 {% endif %}
     maxconn {{ haproxy_maxconn.replica }}
 {% if haproxy_divert_to_master is defined and haproxy_divert_to_master > 0 and haproxy_divert_to_master < 100 %}
     acl divert_to_master rand(100) lt {{ haproxy_divert_to_master }}
 {% endif %}
-    default_backend replicas_sync_backend
+    default_backend replicas_async_backend
 {% if haproxy_divert_to_master is defined and haproxy_divert_to_master > 0 and haproxy_divert_to_master < 100 %}
     use_backend master_backend if divert_to_master
 {% endif %}
@@ -121,20 +139,5 @@ backend replicas_async_backend
 {% if ( pgbouncer_install is not defined ) or ( not pgbouncer_install|bool ) %}
 {% raw %}{{range gets "/members/*"}} server {{base .Key}} {{$data := json .Value}}{{base (replace (index (split $data.conn_url "/") 2) "@" "/" -1)}} check port {{index (split (index (split $data.api_url "/") 2) ":") 1}}
 {{end}}{% endraw %}
-{% endif %}
-
-listen replicas_async
-{% if cluster_vip is defined and cluster_vip | length > 0 %}
-    bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas_async }}
-{% else %}
-    bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ haproxy_listen_port.replicas_async }}
-{% endif %}
-    maxconn {{ haproxy_maxconn.replica }}
-{% if haproxy_divert_to_master is defined and haproxy_divert_to_master > 0 and haproxy_divert_to_master < 100 %}
-    acl divert_to_master rand(100) lt {{ haproxy_divert_to_master }}
-{% endif %}
-    default_backend replicas_async_backend
-{% if haproxy_divert_to_master is defined and haproxy_divert_to_master > 0 and haproxy_divert_to_master < 100 %}
-    use_backend master_backend if divert_to_master
 {% endif %}
 
