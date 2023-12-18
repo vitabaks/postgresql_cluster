@@ -69,7 +69,9 @@
       '; done
   args:
     executable: /bin/bash
-  when: pgbouncer_auth_user|bool and is_master|bool
+  when:
+    - pgbouncer_auth_user | bool
+    - (is_master | bool and patroni_standby_cluster.host | default('') | length < 1) # do not perform on the Standby Cluster leader
   tags: pgbouncer, pgbouncer_conf, pgbouncer_auth_query
 
 ...
