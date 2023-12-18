@@ -9,7 +9,7 @@
       tags: always
   roles:
     - role: cloud-resources
-      when: provision | lower != 'none'
+      when: cloud_provider | default('') | length > 0
       tags: always
 
 - name: deploy_pgcluster.yml | Perform pre-checks

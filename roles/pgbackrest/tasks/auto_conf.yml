@@ -1,7 +1,7 @@
 # yamllint disable rule:line-length
 ---
 
-# AWS S3 bucket (if 'provision=aws')
+# AWS S3 bucket (if 'cloud_provider=aws')
 - name: "Set variable 'pgbackrest_conf' for backup in AWS S3 bucket"
   ansible.builtin.set_fact:
     pgbackrest_conf:
@@ -33,9 +33,9 @@
         - { option: "recovery-option", value: "recovery_target_action=promote" }
         - { option: "pg1-path", value: "{{ pg_data_mount_path | default('/pgdata') }}/{{ postgresql_version }}/{{ patroni_cluster_name }}" }
   no_log: true  # do not output contents to the ansible log
-  when: provision | default('') | lower == 'aws'
+  when: cloud_provider | default('') | lower == 'aws'
 
-# GCS Bucket (if 'provision=gcp')
+# GCS Bucket (if 'cloud_provider=gcp')
 - block:
     - name: "Set variable 'pgbackrest_conf' for backup in GCS Bucket"
       ansible.builtin.set_fact:
@@ -95,9 +95,9 @@
         group: "postgres"
       no_log: true  # do not output GCP service account contents to the ansible log
       when: gcs_key_file is defined and gcs_key_file | length > 0
-  when: provision | default('') | lower == 'gcp'
+  when: cloud_provider | default('') | lower == 'gcp'
 
-# Azure Blob Storage (if 'provision=azure')
+# Azure Blob Storage (if 'cloud_provider=azure')
 - name: "Set variable 'pgbackrest_conf' for backup in Azure Blob Storage"
   ansible.builtin.set_fact:
     pgbackrest_conf:
@@ -128,9 +128,9 @@
         - { option: "recovery-option", value: "recovery_target_action=promote" }
         - { option: "pg1-path", value: "{{ pg_data_mount_path | default('/pgdata') }}/{{ postgresql_version }}/{{ patroni_cluster_name }}" }
   no_log: true  # do not output contents to the ansible log
-  when: provision | default('') | lower == 'azure'
+  when: cloud_provider | default('') | lower == 'azure'
 
-# DigitalOcean Spaces Object Storage (if 'provision=digitalocean')
+# DigitalOcean Spaces Object Storage (if 'cloud_provider=digitalocean')
 - name: "Set variable 'pgbackrest_conf' for backup in DigitalOcean Spaces Object Storage"
   ansible.builtin.set_fact:
     pgbackrest_conf:
@@ -163,6 +163,6 @@
         - { option: "recovery-option", value: "recovery_target_action=promote" }
         - { option: "pg1-path", value: "{{ pg_data_mount_path | default('/pgdata') }}/{{ postgresql_version }}/{{ patroni_cluster_name }}" }
   no_log: true  # do not output contents to the ansible log
-  when: provision | default('') | lower == 'digitalocean'
+  when: cloud_provider | default('') | lower == 'digitalocean'
 
 ...

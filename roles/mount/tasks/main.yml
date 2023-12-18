@@ -1,7 +1,7 @@
 ---
 
 - block:
-    # Try to detect an empty disk (if provision != 'none')
+    # Try to detect an empty disk (if 'cloud_provider' is defined)
     - name: Detect empty volume
       ansible.builtin.shell: |
         set -o pipefail;
@@ -11,7 +11,7 @@
         executable: /bin/bash
       register: lsblk_disk
       changed_when: false
-      when: (provision is defined and provision | lower != 'none') and mount[0].src | length < 1
+      when: (cloud_provider | default('') | length > 0) and mount[0].src | length < 1
 
     # Show the error message, if empty volume is not detected
     - name: Empty volume is not detected

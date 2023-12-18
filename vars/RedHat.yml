@@ -6,7 +6,7 @@
 # along the path defined in the 'pg_data_mount_path' variable (or use '/pgdata' by default).
 # You can specify custom data dir path. Example: "/pgdata/{{ postgresql_version }}/{{ patroni_cluster_name }}"
 postgresql_data_dir: "\
-  {% if provision is defined and provision | lower != 'none' %}\
+  {% if cloud_provider | default('') | length > 0 %}\
     {{ pg_data_mount_path | default('/pgdata') }}/{{ postgresql_version }}/{{ patroni_cluster_name }}\
   {% else %}\
     /var/lib/pgsql/{{ postgresql_version }}/data\
