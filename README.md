@@ -15,12 +15,9 @@ This Ansible playbook is designed for deploying a PostgreSQL high availability c
 In addition to deploying new clusters, this playbook also support the deployment of cluster over already existing and running PostgreSQL. You can convert your basic PostgreSQL installation to a high availability cluster. Just specify the variable `postgresql_exists='true'` in the inventory file.
 **Attention!** Your PostgreSQL will be stopped before running in cluster mode (please plan for a short downtime of databases).
 
-> :heavy_exclamation_mark: Please test it in your test environment before using in a production.
-
 ---
 
-:trophy: _Please consider [sponsoring](https://github.com/vitabaks/postgresql_cluster#sponsor-this-project) this project. It is necessary that this open source project become even better, so that more functionality and automation are added. Also, some membership levels include live chat with me and personalized support._
-
+:trophy: **Use the [sponsoring](https://github.com/vitabaks/postgresql_cluster#sponsor-this-project) program to get personalized support, or just to contribute to this project.**
 
 ## Index
 - [Cluster types](#cluster-types)
@@ -596,6 +593,8 @@ vitabaks@gmail.com
 
 ## Sponsor this project
 
+Join our sponsorship program to directly contribute to our project's growth and gain exclusive access to personalized support. Your sponsorship is crucial for innovation and progress. Become a sponsor today!
+
 Support our work through [GitHub Sponsors](https://github.com/sponsors/vitabaks)
 
 [![GitHub Sponsors](https://img.shields.io/github/sponsors/vitabaks?style=for-the-badge)](https://github.com/sponsors/vitabaks)
@@ -604,7 +603,7 @@ Support our work through [Patreon](https://www.patreon.com/vitabaks)
 
 [![Support me on Patreon](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fshieldsio-patreon.vercel.app%2Fapi%3Fusername%3Dvitabaks%26type%3Dpatrons&style=for-the-badge)](https://patreon.com/vitabaks)
 
-Support our work through crypto wallet:
+Support our work through a crypto wallet:
 
 USDT (TRC20): `TSTSXZzqDCUDHDjZwCpuBkdukjuDZspwjj`
 
