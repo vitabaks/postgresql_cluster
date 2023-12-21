@@ -15,6 +15,22 @@
 # the timeout command will interrupt the execution of 'pgb_resume_command' and execute the pgb_resume_query command to remove the pause and ensure atomicity.
 #
 # Finally, the script checks whether all servers have been successfully paused by comparing the number of successful PAUSE executions to the total number of pgbouncer servers.
+
+- name: Ensure correct permissions for PgBouncer unix socket directory
+  become: true
+  become_user: root
+  ansible.builtin.file:
+    path: "/var/run/pgbouncer{{ '-%d' % (idx + 1) if idx > 0 else '' }}"
+    state: directory
+    owner: postgres
+    group: postgres
+    mode: "0755"
+  loop: "{{ range(0, (pgbouncer_processes | default(1) | int)) | list }}"
+  loop_control:
+    index_var: idx
+    label: "{{ 'pgbouncer' if idx == 0 else 'pgbouncer-%d' % (idx + 1) }}"
+  when: ansible_os_family == "RedHat" # Added to prevent test failures in CI.
+
 - name: PAUSE PgBouncer pools
   become: true
   become_user: postgres
