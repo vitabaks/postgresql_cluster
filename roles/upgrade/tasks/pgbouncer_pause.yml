@@ -18,6 +18,8 @@
 
 - name: Check the permissions to the PgBouncer unix socket directory
   ansible.builtin.file:
+    become: true
+    become_user: root
     path: "/var/run/pgbouncer{{ '-%d' % (idx + 1) if idx > 0 else '' }}"
     state: directory
     owner: postgres
