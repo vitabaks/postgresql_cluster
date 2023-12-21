@@ -16,7 +16,7 @@
 #
 # Finally, the script checks whether all servers have been successfully paused by comparing the number of successful PAUSE executions to the total number of pgbouncer servers.
 
-- name: Check the permissions to the PgBouncer unix socket directory
+- name: Ensure correct permissions for PgBouncer unix socket directory
   become: true
   become_user: root
   ansible.builtin.file:
