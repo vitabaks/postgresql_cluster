@@ -7,7 +7,13 @@
 {% for stanza in pgbackrest_conf.stanza %}
 {{ stanza.option }}={{ stanza.value }}
 {% endfor %}
-{% if any(item.option == "backup-standby" and item.value == "y" for item in pgbackrest_conf.global) %}
+{% set backup_standby_set = false %}
+{% for item in pgbackrest_conf.global %}
+  {% if item.option == "backup-standby" and item.value == "y" %}
+    {% set backup_standby_set = true %}
+  {% endif %}
+{% endfor %}
+{% if backup_standby_set %}
 {% set host_index = 2 %}
 {% for host in groups['postgres_cluster'] %}
   {% if host != ansible_hostname %}
