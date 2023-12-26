@@ -175,7 +175,7 @@
 # if 'pgbackrest_repo_host' or 'backup-standby' are specified
 - ansible.builtin.import_tasks: ssh_keys.yml
   when: (pgbackrest_repo_host is defined and pgbackrest_repo_host | length > 0) or
-        (pgbackrest_conf.global | selectattr("option", "equalto", "backup-standby") | map(attribute="value") | list | last | default('') == "y")
+        (pgbackrest_conf.global | selectattr('option', 'equalto', 'backup-standby') | map(attribute='value') | list | last | default('') == 'y')
   tags: pgbackrest, pgbackrest_ssh_keys
 
 - ansible.builtin.import_tasks: cron.yml
