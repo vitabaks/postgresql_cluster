@@ -199,8 +199,8 @@ postgresql_parameters:
   - { option: "wal_buffers", value: "32MB" }
   - { option: "default_statistics_target", value: "1000" }
   - { option: "seq_page_cost", value: "1" }
-  - { option: "random_page_cost", value: "4" }  # "1.1" for SSD storage. Also, if your databases fits in shared_buffers
-  - { option: "effective_io_concurrency", value: "2" }  # "200" for SSD storage
+  - { option: "random_page_cost", value: "1.1" }  # or "4" for HDDs with slower random access
+  - { option: "effective_io_concurrency", value: "200" }  # or "2" for traditional HDDs with lower I/O parallelism
   - { option: "synchronous_commit", value: "on" }  # or 'off' if you can you lose single transactions in case of a crash
   - { option: "autovacuum", value: "on" }  # never turn off the autovacuum!
   - { option: "autovacuum_max_workers", value: "5" }
