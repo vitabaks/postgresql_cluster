@@ -172,7 +172,7 @@
     - pgbackrest_repo_host | length > 0
   tags: pgbackrest, pgbackrest_conf
 
-# if pgbackrest_repo_host or "backup-standby" is set
+# if 'pgbackrest_repo_host' or 'backup-standby' are specified
 - ansible.builtin.import_tasks: ssh_keys.yml
   when: (pgbackrest_repo_host is defined and pgbackrest_repo_host | length > 0) or
         (pgbackrest_conf.global | json_query("[?option=='backup-standby'].[value=='y']") | length > 0)
