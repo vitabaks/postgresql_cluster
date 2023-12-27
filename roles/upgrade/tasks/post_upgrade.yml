@@ -91,7 +91,7 @@
 
     - name: pgbackrest | Upgrade stanza "{{ pgbackrest_stanza }}"
       ansible.builtin.command: "pgbackrest --stanza={{ pgbackrest_stanza }} --no-online stanza-upgrade"
-      when: pg_path_count.stdout | length > 0
+      when: pg_path_count.stdout | length > 0 and pgbackrest_stanza_upgrade | bool
   become: true
   become_user: postgres
   ignore_errors: true
@@ -125,7 +125,7 @@
       delegate_to: "{{ groups['pgbackrest'][0] }}"
       run_once: true
       ansible.builtin.command: "pgbackrest --stanza={{ pgbackrest_stanza }} --no-online stanza-upgrade"
-      when: pg_path_count.stdout | length > 0
+      when: pg_path_count.stdout | length > 0 and pgbackrest_stanza_upgrade | bool
   become: true
   become_user: "{{ pgbackrest_repo_user }}"
   ignore_errors: true
