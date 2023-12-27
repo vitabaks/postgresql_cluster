@@ -7,20 +7,12 @@
 {% for stanza in pgbackrest_conf.stanza %}
 {{ stanza.option }}={{ stanza.value }}
 {% endfor %}
-{% set backup_standby_set = false %}
-{% for item in pgbackrest_conf.global %}
-  {% if item.option == "backup-standby" and item.value == "y" %}
-    {% set backup_standby_set = true %}
-  {% endif %}
-{% endfor %}
-{% if backup_standby_set %}
-{% set host_index = 2 %}
+{% if pgbackrest_conf.global | selectattr('option', 'equalto', 'backup-standby') | map(attribute='value') | list | last | default('') == 'y' %}
 {% for host in groups['postgres_cluster'] %}
-  {% if host != ansible_hostname %}
-    pg{{ host_index }}-host={{ host }}
-    pg{{ host_index }}-port={{ postgresql_port }}
-    pg{{ host_index }}-path={{ postgresql_data_dir }}
-    {% set host_index = host_index + 1 %}
-  {% endif %}
+{% if host != inventory_hostname %}
+pg{{ loop.index + 1 }}-host={{ host }}
+pg{{ loop.index + 1 }}-port={{ postgresql_port }}
+pg{{ loop.index + 1 }}-path={{ postgresql_data_dir }}
+{% endif %}
 {% endfor %}
 {% endif %}
