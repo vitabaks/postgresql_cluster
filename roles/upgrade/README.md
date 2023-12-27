@@ -86,6 +86,7 @@ If these checks pass, the playbook switches back to the old PostgreSQL paths and
 | `pgbouncer_pool_pause_stop_after` | Time in seconds after which the script exits with an error if unable to pause all pgbouncer pools. | `60` |
 | `pg_slow_active_query_treshold` | Time in milliseconds to wait for active queries before trying to pause the pool. | `1000` |
 | `pg_slow_active_query_treshold_to_terminate` | Time in milliseconds after reaching "pgbouncer_pool_pause_terminate_after" before the script terminates active queries. | `100` |
+| `pgbackrest_stanza_upgrade` | Perform the "stanza-upgrade" command after the upgrade (if 'pgbackrest_install' is 'true'). | `true` |
 
 Note: For variables marked as "Derived value", the default value is determined based on other variables. \
 Please see the variable file vars/[upgrade.yml](../../vars/upgrade.yml)
