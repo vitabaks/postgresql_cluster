@@ -28,6 +28,7 @@
         - { option: "archive-get-queue-max", value: "1GiB" }
         - { option: "spool-path", value: "/var/spool/pgbackrest" }
         - { option: "process-max", value: "{{ PGBACKREST_PROCESS_MAX | default([ansible_processor_vcpus | int // 2, 1] | max) }}" }
+        - { option: "backup-standby", value: "{{ 'y' if groups['postgres_cluster'] | length > 1 else 'n' }}" }
       stanza:
         - { option: "log-level-console", value: "info" }
         - { option: "recovery-option", value: "recovery_target_action=promote" }
@@ -60,6 +61,7 @@
             - { option: "archive-get-queue-max", value: "1GiB" }
             - { option: "spool-path", value: "/var/spool/pgbackrest" }
             - { option: "process-max", value: "{{ PGBACKREST_PROCESS_MAX | default([ansible_processor_vcpus | int // 2, 1] | max) }}" }
+            - { option: "backup-standby", value: "{{ 'y' if groups['postgres_cluster'] | length > 1 else 'n' }}" }
           stanza:
             - { option: "log-level-console", value: "info" }
             - { option: "recovery-option", value: "recovery_target_action=promote" }
@@ -123,6 +125,7 @@
         - { option: "archive-get-queue-max", value: "1GiB" }
         - { option: "spool-path", value: "/var/spool/pgbackrest" }
         - { option: "process-max", value: "{{ PGBACKREST_PROCESS_MAX | default([ansible_processor_vcpus | int // 2, 1] | max) }}" }
+        - { option: "backup-standby", value: "{{ 'y' if groups['postgres_cluster'] | length > 1 else 'n' }}" }
       stanza:
         - { option: "log-level-console", value: "info" }
         - { option: "recovery-option", value: "recovery_target_action=promote" }
@@ -158,6 +161,7 @@
         - { option: "archive-get-queue-max", value: "1GiB" }
         - { option: "spool-path", value: "/var/spool/pgbackrest" }
         - { option: "process-max", value: "{{ PGBACKREST_PROCESS_MAX | default([ansible_processor_vcpus | int // 2, 1] | max) }}" }
+        - { option: "backup-standby", value: "{{ 'y' if groups['postgres_cluster'] | length > 1 else 'n' }}" }
       stanza:
         - { option: "log-level-console", value: "info" }
         - { option: "recovery-option", value: "recovery_target_action=promote" }
