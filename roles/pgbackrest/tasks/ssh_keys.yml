@@ -41,7 +41,7 @@
 - name: ssh_keys | Get public ssh key from pgbackrest server
   ansible.builtin.slurp:
     src: "~{{ pgbackrest_repo_user }}/.ssh/id_rsa.pub"
-  register: pgbackrest_sshkey
+  register: pgbackrest_server_sshkey
   changed_when: false
   when: "'pgbackrest' in group_names"
 
@@ -56,8 +56,8 @@
   ansible.posix.authorized_key:
     user: postgres
     state: present
-    key: "{{ hostvars[item].pgbackrest_sshkey['content'] | b64decode }}"
-  loop: "{{ groups['pgbackrest'] }}"
+    key: "{{ hostvars[item].pgbackrest_server_sshkey['content'] | b64decode }}"
+  loop: "{{ groups['pgbackrest'] | default([]) }}"
   when: "'postgres_cluster' in group_names"
 
 - name: ssh_keys | Add database ssh keys in "~{{ pgbackrest_repo_user }}/.ssh/authorized_keys" on pgbackrest server
@@ -67,6 +67,17 @@
     key: "{{ hostvars[item].postgres_cluster_sshkey['content'] | b64decode }}"
   loop: "{{ groups['postgres_cluster'] }}"
   when: "'pgbackrest' in group_names"
+
+# if 'backup-standby' are specified in pgbackrest_conf.global
+- name: ssh_keys | Add ssh keys in "~postgres/.ssh/authorized_keys" on database servers
+  ansible.posix.authorized_key:
+    user: postgres
+    state: present
+    key: "{{ hostvars[item].postgres_cluster_sshkey['content'] | b64decode }}"
+  loop: "{{ groups['postgres_cluster'] }}"
+  when:
+    - "'postgres_cluster' in group_names"
+    - pgbackrest_conf.global | selectattr('option', 'equalto', 'backup-standby') | map(attribute='value') | list | last | default('') == 'y'
 
 - name: known_hosts | Get public ssh keys of hosts (ssh-keyscan)
   ansible.builtin.command: "ssh-keyscan -trsa -p {{ ansible_ssh_port | default(22) }} {{ item }}"
