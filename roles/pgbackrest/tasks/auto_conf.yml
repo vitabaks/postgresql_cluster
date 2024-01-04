@@ -32,7 +32,7 @@
       stanza:
         - { option: "log-level-console", value: "info" }
         - { option: "recovery-option", value: "recovery_target_action=promote" }
-        - { option: "pg1-path", value: "{{ pg_data_mount_path | default('/pgdata') }}/{{ postgresql_version }}/{{ patroni_cluster_name }}" }
+        - { option: "pg1-path", value: "{{ postgresql_data_dir }}" }
   no_log: true  # do not output contents to the ansible log
   when: cloud_provider | default('') | lower == 'aws'
 
@@ -65,7 +65,7 @@
           stanza:
             - { option: "log-level-console", value: "info" }
             - { option: "recovery-option", value: "recovery_target_action=promote" }
-            - { option: "pg1-path", value: "{{ pg_data_mount_path | default('/pgdata') }}/{{ postgresql_version }}/{{ patroni_cluster_name }}" }
+            - { option: "pg1-path", value: "{{ postgresql_data_dir }}" }
       no_log: true  # do not output contents to the ansible log
 
     # if 'gcs_key_file' is not defined, copy GCS key file from GCP_SERVICE_ACCOUNT_CONTENTS environment variable.
@@ -129,7 +129,7 @@
       stanza:
         - { option: "log-level-console", value: "info" }
         - { option: "recovery-option", value: "recovery_target_action=promote" }
-        - { option: "pg1-path", value: "{{ pg_data_mount_path | default('/pgdata') }}/{{ postgresql_version }}/{{ patroni_cluster_name }}" }
+        - { option: "pg1-path", value: "{{ postgresql_data_dir }}" }
   no_log: true  # do not output contents to the ansible log
   when: cloud_provider | default('') | lower == 'azure'
 
@@ -165,7 +165,7 @@
       stanza:
         - { option: "log-level-console", value: "info" }
         - { option: "recovery-option", value: "recovery_target_action=promote" }
-        - { option: "pg1-path", value: "{{ pg_data_mount_path | default('/pgdata') }}/{{ postgresql_version }}/{{ patroni_cluster_name }}" }
+        - { option: "pg1-path", value: "{{ postgresql_data_dir }}" }
   no_log: true  # do not output contents to the ansible log
   when: cloud_provider | default('') | lower == 'digitalocean'
 
