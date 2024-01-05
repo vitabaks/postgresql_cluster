@@ -29,7 +29,6 @@
   loop_control:
     index_var: idx
     label: "{{ 'pgbouncer' if idx == 0 else 'pgbouncer-%d' % (idx + 1) }}"
-  when: ansible_os_family == "RedHat" # Added to prevent test failures in CI.
 
 - name: PAUSE PgBouncer pools
   become: true
