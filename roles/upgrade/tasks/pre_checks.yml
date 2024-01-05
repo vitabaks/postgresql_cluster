@@ -334,7 +334,24 @@
     - tablespace_location.stdout_lines | length > 0
 
 # PgBouncer (if 'pgbouncer_pool_pause' is 'true')
-# test access via unix socket to be able to perform 'PAUSE' command
+- name: Ensure correct permissions for PgBouncer unix socket directory
+  become: true
+  become_user: root
+  ansible.builtin.file:
+    path: "/var/run/pgbouncer{{ '-%d' % (idx + 1) if idx > 0 else '' }}"
+    state: directory
+    owner: postgres
+    group: postgres
+    mode: "0755"
+  loop: "{{ range(0, (pgbouncer_processes | default(1) | int)) | list }}"
+  loop_control:
+    index_var: idx
+    label: "{{ 'pgbouncer' if idx == 0 else 'pgbouncer-%d' % (idx + 1) }}"
+  when:
+    - pgbouncer_install | bool
+    - pgbouncer_pool_pause | bool
+
+# Test access via unix socket to be able to perform 'PAUSE' command
 - name: '[Pre-Check] Test PgBouncer access via unix socket'
   ansible.builtin.command: >-
     psql -h /var/run/pgbouncer{{ '-%d' % (idx + 1) if idx > 0 else '' }}
