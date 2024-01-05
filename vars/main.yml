@@ -79,7 +79,7 @@ patroni_etcd_protocol: "" # (optional) http or https, if not specified http is u
 # https://patroni.readthedocs.io/en/latest/SETTINGS.html#consul
 
 # if dcs_type: "consul"
-consul_version: "1.14.7"
+consul_version: "1.15.8"
 consul_config_path: "/etc/consul"
 consul_configd_path: "{{ consul_config_path }}/conf.d"
 consul_data_path: "/var/lib/consul"
