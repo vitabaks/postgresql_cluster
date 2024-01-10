@@ -28,11 +28,14 @@ synchronous_node_count: 1  # number of synchronous standby databases
 
 # Load Balancing
 with_haproxy_load_balancing: false  # or 'true' if you want to install and configure the load-balancing
+with_haproxy_direct_connections: false # or 'true' if you want to enable haproxy ports that skip pgbouncer (and if pgbouncer_install is 'true')
 haproxy_listen_port:
   master: 5000
+  master_direct: 6000
   replicas: 5001
   replicas_sync: 5002
   replicas_async: 5003
+  replicas_direct: 6001
   stats: 7000
 haproxy_maxconn:
   global: 100000
