@@ -4,12 +4,11 @@
   ansible.builtin.fail:
     msg:
       - "One or more required variables have empty values."
-      - "Please specify value for variables: 'server_type', 'server_image', 'server_location', 'volume_size'."
+      - "Please specify value for variables: 'server_type', 'server_image', 'server_location'."
   when: state == 'present' and
     (server_type | length < 1 or
     (server_image | length < 1 and cloud_provider != 'azure') or
-    server_location | length < 1 or
-    volume_size | length < 1)
+    server_location | length < 1)
 
 # if ssh_key_name is not specified
 # with each new execution of the playbook, a new temporary ssh key is created

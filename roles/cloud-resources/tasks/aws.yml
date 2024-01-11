@@ -189,6 +189,7 @@
               'cidr_ip': vpc_subnet_info.subnets[0].cidr_block
             }]
           }}
+      register: ec2_security_group_result
       when: firewall | bool
 
     # S3 bucket
@@ -219,7 +220,7 @@
         image_id: "{{ server_image }}"
         key_name: "{{ ssh_key_name }}"
         region: "{{ server_location }}"
-        security_groups: "{{ security_groups_list }}"
+        security_groups: "{{ ([] if not firewall | bool else [patroni_cluster_name + '-security-group']) }}"
         vpc_subnet_id: "{{ server_network }}"
         network:
           assign_public_ip: true
@@ -228,7 +229,7 @@
           - device_name: /dev/sda1
             ebs:
               volume_type: "{{ volume_type | default('gp3', true) }}"
-              volume_size: "{{ system_volume_size | default('40') }}"  # system disk size
+              volume_size: "{{ system_volume_size | int }}"
               delete_on_termination: true
           - device_name: /dev/sdb
             ebs:
@@ -245,11 +246,90 @@
         - server_result.instances[0].public_ip_address | length > 0
       retries: 3
       delay: 10
-      vars:
-        security_groups_list: >-
-          {{
-            ([] if not firewall | bool else [patroni_cluster_name + '-security-group'])
-          }}
+      when: not aws_ec2_spot_instance | default(false) | bool
+
+    # Spot instance (if 'aws_ec2_spot_instance' is 'true')
+    - block:
+        - name: "AWS: Gather information about EC2 Spot instances"
+          amazon.aws.ec2_instance_info:
+            access_key: "{{ lookup('ansible.builtin.env', 'AWS_ACCESS_KEY_ID') }}"
+            secret_key: "{{ lookup('ansible.builtin.env', 'AWS_SECRET_ACCESS_KEY') }}"
+            region: "{{ server_location }}"
+            filters:
+              instance-lifecycle: "spot"
+              instance-type: "{{ server_type }}"
+              image-id: "{{ server_image }}"
+              instance-state-name: ["pending", "running", "shutting-down", "stopping", "stopped"]
+              "tag:Name": "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
+          loop: "{{ range(0, servers_count | int) | list }}"
+          loop_control:
+            index_var: idx
+            label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
+          register: ec2_instance_info
+
+        # if spot instances are still created, create them
+        - name: "AWS: Create a request for EC2 Spot instance"
+          amazon.aws.ec2_spot_instance:
+            access_key: "{{ lookup('ansible.builtin.env', 'AWS_ACCESS_KEY_ID') }}"
+            secret_key: "{{ lookup('ansible.builtin.env', 'AWS_SECRET_ACCESS_KEY') }}"
+            region: "{{ server_location }}"
+            state: present
+            launch_specification:
+              instance_type: "{{ server_type }}"
+              image_id: "{{ server_image }}"
+              key_name: "{{ ssh_key_name }}"
+              network_interfaces:
+                - subnet_id: "{{ server_network }}"
+                  groups: "{{ ec2_security_group_result.group_id }}"
+                  associate_public_ip_address: true
+                  delete_on_termination: true
+                  device_index: 0
+              block_device_mappings:
+                - device_name: /dev/sda1
+                  ebs:
+                    volume_type: "{{ volume_type | default('gp3', true) }}"
+                    volume_size: 100 # TODO: use 'system_volume_size' variable (https://github.com/ansible-collections/amazon.aws/issues/1949)
+                    delete_on_termination: true
+                - device_name: /dev/sdb
+                  ebs:
+                    volume_type: "{{ volume_type | default('gp3', true) }}"
+                    volume_size: 100 # TODO: use 'volume_size' variable (https://github.com/ansible-collections/amazon.aws/issues/1949)
+                    delete_on_termination: true
+            tags:
+              Name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
+          loop: "{{ ec2_instance_info.results }}"
+          loop_control:
+            index_var: idx
+            label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
+          register: ec2_spot_instance_result
+          when: item.instances[0] | default('') | length < 1
+
+        - name: "AWS: Rename the EC2 Spot instance"
+          amazon.aws.ec2_instance:
+            access_key: "{{ lookup('ansible.builtin.env', 'AWS_ACCESS_KEY_ID') }}"
+            secret_key: "{{ lookup('ansible.builtin.env', 'AWS_SECRET_ACCESS_KEY') }}"
+            region: "{{ server_location }}"
+            name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
+            filters:
+              spot-instance-request-id: "{{ item.spot_request.spot_instance_request_id }}"
+          loop: "{{ ec2_spot_instance_result.results }}"
+          loop_control:
+            index_var: idx
+            label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
+          register: server_result
+          until:
+            - server_result.instances[0].public_ip_address is defined
+            - server_result.instances[0].public_ip_address | length > 0
+          retries: 3
+          delay: 10
+          when: item.spot_request.spot_instance_request_id is defined
+
+        # if spot instances have already been created, use them
+        - name: "Set variable: server_result"
+          ansible.builtin.set_fact:
+            server_result: "{{ ec2_instance_info }}"
+          when: not server_result.changed
+      when: aws_ec2_spot_instance | default(false) | bool
   when: state == 'present'
 
 - name: Wait for EC2 instance to be available via SSH
