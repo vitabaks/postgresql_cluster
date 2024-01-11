@@ -45,6 +45,21 @@ listen master
 {{end}}{% endraw %}
 {% endif %}
 
+{% if pgbouncer_install|bool and haproxy_listen_port.master_direct | default('') | length > 0 %}
+listen master_direct
+{% if cluster_vip is defined and cluster_vip | length > 0 %}
+    bind {{ cluster_vip }}:{{ haproxy_listen_port.master_direct }}
+{% else %}
+    bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ haproxy_listen_port.master_direct }}
+{% endif %}
+    maxconn {{ haproxy_maxconn.master }}
+    option tcplog
+    option httpchk OPTIONS /primary
+    http-check expect status 200
+    default-server inter 3s fastinter 1s fall 3 rise 4 on-marked-down shutdown-sessions
+{% raw %}{{range gets "/members/*"}} server {{base .Key}} {{$data := json .Value}}{{base (replace (index (split $data.conn_url "/") 2) "@" "/" -1)}} check port {{index (split (index (split $data.api_url "/") 2) ":") 1}}
+{{end}}{% endraw %}
+{% endif %}
 
 listen replicas
 {% if cluster_vip is defined and cluster_vip | length > 0 %}
@@ -67,6 +82,22 @@ listen replicas
 {{end}}{% endraw %}
 {% endif %}
 
+{% if pgbouncer_install|bool and haproxy_listen_port.replicas_direct | default('') | length > 0 %}
+listen replicas_direct
+{% if cluster_vip is defined and cluster_vip | length > 0 %}
+    bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas_direct }}
+{% else %}
+    bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ haproxy_listen_port.replicas_direct }}
+{% endif %}
+    maxconn {{ haproxy_maxconn.replica }}
+    option tcplog
+    option httpchk OPTIONS /replica
+    balance roundrobin
+    http-check expect status 200
+    default-server inter 3s fastinter 1s fall 3 rise 2 on-marked-down shutdown-sessions
+{% raw %}{{range gets "/members/*"}} server {{base .Key}} {{$data := json .Value}}{{base (replace (index (split $data.conn_url "/") 2) "@" "/" -1)}} check port {{index (split (index (split $data.api_url "/") 2) ":") 1}}
+{{end}}{% endraw %}
+{% endif %}
 
 listen replicas_sync
 {% if cluster_vip is defined and cluster_vip | length > 0 %}
@@ -89,6 +120,22 @@ listen replicas_sync
 {{end}}{% endraw %}
 {% endif %}
 
+{% if pgbouncer_install|bool and haproxy_listen_port.replicas_sync_direct | default('') | length > 0 %}
+listen replicas_sync_direct
+{% if cluster_vip is defined and cluster_vip | length > 0 %}
+    bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas_sync_direct }}
+{% else %}
+    bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ haproxy_listen_port.replicas_sync_direct }}
+{% endif %}
+    maxconn {{ haproxy_maxconn.replica }}
+    option tcplog
+    option httpchk OPTIONS /sync
+    balance roundrobin
+    http-check expect status 200
+    default-server inter 3s fastinter 1s fall 3 rise 2 on-marked-down shutdown-sessions
+{% raw %}{{range gets "/members/*"}} server {{base .Key}} {{$data := json .Value}}{{base (replace (index (split $data.conn_url "/") 2) "@" "/" -1)}} check port {{index (split (index (split $data.api_url "/") 2) ":") 1}}
+{{end}}{% endraw %}
+{% endif %}
 
 listen replicas_async
 {% if cluster_vip is defined and cluster_vip | length > 0 %}
@@ -111,32 +158,16 @@ listen replicas_async
 {{end}}{% endraw %}
 {% endif %}
 
-
-{% if with_haproxy_direct_connections|bool and pgbouncer_install|bool %}
-listen master_direct
+{% if pgbouncer_install|bool and haproxy_listen_port.replicas_async_direct | default('') | length > 0 %}
+listen replicas_async_direct
 {% if cluster_vip is defined and cluster_vip | length > 0 %}
-    bind {{ cluster_vip }}:{{ haproxy_listen_port.master_direct }}
+    bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas_async_direct }}
 {% else %}
-    bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ haproxy_listen_port.master_direct }}
-{% endif %}
-    maxconn {{ haproxy_maxconn.master }}
-    option tcplog
-    option httpchk OPTIONS /primary
-    http-check expect status 200
-    default-server inter 3s fastinter 1s fall 3 rise 4 on-marked-down shutdown-sessions
-{% raw %}{{range gets "/members/*"}} server {{base .Key}} {{$data := json .Value}}{{base (replace (index (split $data.conn_url "/") 2) "@" "/" -1)}} check port {{index (split (index (split $data.api_url "/") 2) ":") 1}}
-{{end}}{% endraw %}
-
-
-listen replicas_direct
-{% if cluster_vip is defined and cluster_vip | length > 0 %}
-    bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas_direct }}
-{% else %}
-    bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ haproxy_listen_port.replicas_direct }}
+    bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ haproxy_listen_port.replicas_async_direct }}
 {% endif %}
     maxconn {{ haproxy_maxconn.replica }}
     option tcplog
-    option httpchk OPTIONS /replica
+    option httpchk OPTIONS /async
     balance roundrobin
     http-check expect status 200
     default-server inter 3s fastinter 1s fall 3 rise 2 on-marked-down shutdown-sessions
