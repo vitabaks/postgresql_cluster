@@ -37,7 +37,7 @@ listen master
 server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}:{{ pgbouncer_listen_port }}
 {% endfor %}
 
-{% if haproxy_listen_port.master_direct | default('') | length > 0 %}
+{% if haproxy_listen_port.master_direct is defined %}
 listen master_direct
 {% if cluster_vip is defined and cluster_vip | length > 0 %}
     bind {{ cluster_vip }}:{{ haproxy_listen_port.master_direct }}
@@ -64,7 +64,7 @@ listen replicas
 server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}:{{ pgbouncer_listen_port }}
 {% endfor %}
 
-{% if haproxy_listen_port.replicas_direct | default('') | length > 0 %}
+{% if haproxy_listen_port.replicas_direct is defined %}
 listen replicas_direct
 {% if cluster_vip is defined and cluster_vip | length > 0 %}
     bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas_direct }}
@@ -92,7 +92,7 @@ listen replicas_sync
 server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}:{{ pgbouncer_listen_port }}
 {% endfor %}
 
-{% if haproxy_listen_port.replicas_sync_direct | default('') | length > 0 %}
+{% if haproxy_listen_port.replicas_sync_direct is defined %}
 listen replicas_sync_direct
 {% if cluster_vip is defined and cluster_vip | length > 0 %}
     bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas_sync_direct }}
@@ -120,7 +120,7 @@ listen replicas_async
 server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}:{{ pgbouncer_listen_port }}
 {% endfor %}
 
-{% if haproxy_listen_port.replicas_async_direct | default('') | length > 0 %}
+{% if haproxy_listen_port.replicas_async_direct is defined %}
 listen replicas_async_direct
 {% if cluster_vip is defined and cluster_vip | length > 0 %}
     bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas_async_direct }}
