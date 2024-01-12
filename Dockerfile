@@ -11,11 +11,11 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/partial \
     && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
        ca-certificates gnupg git python3 python3-pip keychain ssh-client sshpass \
     && pip3 install --no-cache-dir \
-       ansible==8.4.0 \
-       boto3==1.28.49 \
+       ansible==8.7.0 \
+       boto3==1.34.17 \
        dopy==0.3.7 \
-       google-auth==2.23.0 \
-       hcloud==1.28.0 \
+       google-auth==2.26.2 \
+       hcloud==1.33.2 \
     && ansible-galaxy install -r \
        postgresql_cluster/roles/consul/requirements.yml \
     && apt-get autoremove -y --purge gnupg git \
