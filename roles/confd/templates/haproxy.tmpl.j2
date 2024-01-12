@@ -174,3 +174,4 @@ listen replicas_async_direct
 {% raw %}{{range gets "/members/*"}} server {{base .Key}} {{$data := json .Value}}{{base (replace (index (split $data.conn_url "/") 2) "@" "/" -1)}} check port {{index (split (index (split $data.api_url "/") 2) ":") 1}}
 {{end}}{% endraw %}
 {% endif %}
+
