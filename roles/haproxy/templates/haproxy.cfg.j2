@@ -47,6 +47,23 @@ server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hos
   {% endfor %}
 {% endif %}
 
+{% if pgbouncer_install|bool and haproxy_listen_port.master_direct is defined %}
+listen master_direct
+{% if cluster_vip is defined and cluster_vip | length > 0 %}
+    bind {{ cluster_vip }}:{{ haproxy_listen_port.master_direct }}
+{% else %}
+    bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ haproxy_listen_port.master_direct }}
+{% endif %}
+    maxconn {{ haproxy_maxconn.master }}
+    option tcplog
+    option httpchk OPTIONS /primary
+    http-check expect status 200
+    default-server inter 3s fastinter 1s fall 3 rise 4 on-marked-down shutdown-sessions
+  {% for host in groups['postgres_cluster'] %}
+server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}:{{ postgresql_port }} check port {{ patroni_restapi_port }}
+  {% endfor %}
+{% endif %}
+
 listen replicas
 {% if cluster_vip is defined and cluster_vip | length > 0 %}
     bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas }}
@@ -65,6 +82,24 @@ server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hos
   {% endfor %}
 {% endif %}
 {% if ( pgbouncer_install is not defined ) or ( not pgbouncer_install|bool ) %}
+  {% for host in groups['postgres_cluster'] %}
+server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}:{{ postgresql_port }} check port {{ patroni_restapi_port }}
+  {% endfor %}
+{% endif %}
+
+{% if pgbouncer_install|bool and haproxy_listen_port.replicas_direct is defined %}
+listen replicas_direct
+{% if cluster_vip is defined and cluster_vip | length > 0 %}
+    bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas_direct }}
+{% else %}
+    bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ haproxy_listen_port.replicas_direct }}
+{% endif %}
+    maxconn {{ haproxy_maxconn.replica }}
+    option tcplog
+    option httpchk OPTIONS /replica
+    balance roundrobin
+    http-check expect status 200
+    default-server inter 3s fastinter 1s fall 3 rise 2 on-marked-down shutdown-sessions
   {% for host in groups['postgres_cluster'] %}
 server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}:{{ postgresql_port }} check port {{ patroni_restapi_port }}
   {% endfor %}
@@ -93,6 +128,24 @@ server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hos
   {% endfor %}
 {% endif %}
 
+{% if pgbouncer_install|bool and haproxy_listen_port.replicas_sync_direct is defined %}
+listen replicas_sync_direct
+{% if cluster_vip is defined and cluster_vip | length > 0 %}
+    bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas_sync_direct }}
+{% else %}
+    bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ haproxy_listen_port.replicas_sync_direct }}
+{% endif %}
+    maxconn {{ haproxy_maxconn.replica }}
+    option tcplog
+    option httpchk OPTIONS /sync
+    balance roundrobin
+    http-check expect status 200
+    default-server inter 3s fastinter 1s fall 3 rise 2 on-marked-down shutdown-sessions
+  {% for host in groups['postgres_cluster'] %}
+server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}:{{ postgresql_port }} check port {{ patroni_restapi_port }}
+  {% endfor %}
+{% endif %}
+
 listen replicas_async
 {% if cluster_vip is defined and cluster_vip | length > 0 %}
     bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas_async }}
@@ -111,6 +164,24 @@ server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hos
   {% endfor %}
 {% endif %}
 {% if ( pgbouncer_install is not defined ) or ( not pgbouncer_install|bool ) %}
+  {% for host in groups['postgres_cluster'] %}
+server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}:{{ postgresql_port }} check port {{ patroni_restapi_port }}
+  {% endfor %}
+{% endif %}
+
+{% if pgbouncer_install|bool and haproxy_listen_port.replicas_async_direct is defined %}
+listen replicas_async_direct
+{% if cluster_vip is defined and cluster_vip | length > 0 %}
+    bind {{ cluster_vip }}:{{ haproxy_listen_port.replicas_async_direct }}
+{% else %}
+    bind {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ haproxy_listen_port.replicas_async_direct }}
+{% endif %}
+    maxconn {{ haproxy_maxconn.replica }}
+    option tcplog
+    option httpchk OPTIONS /async
+    balance roundrobin
+    http-check expect status 200
+    default-server inter 3s fastinter 1s fall 3 rise 2 on-marked-down shutdown-sessions
   {% for host in groups['postgres_cluster'] %}
 server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}:{{ postgresql_port }} check port {{ patroni_restapi_port }}
   {% endfor %}
