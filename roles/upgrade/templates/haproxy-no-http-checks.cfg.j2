@@ -134,3 +134,4 @@ listen replicas_async_direct
 server {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['inventory_hostname'] }}:{{ postgresql_port }}
   {% endfor %}
 {% endif %}
+
