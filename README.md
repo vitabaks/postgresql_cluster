@@ -1,6 +1,5 @@
 # PostgreSQL High-Availability Cluster :elephant: :sparkling_heart:
 
-[![Ansible Galaxy](https://img.shields.io/badge/galaxy-vitabaks.postgresql_cluster-success.svg)](https://galaxy.ansible.com/vitabaks/postgresql_cluster)
 [<img src="https://github.com/vitabaks/postgresql_cluster/workflows/Ansible-lint/badge.svg?branch=master">](https://github.com/vitabaks/postgresql_cluster/actions?query=workflow%3AAnsible-lint)
 [<img src="https://github.com/vitabaks/postgresql_cluster/workflows/Yamllint/badge.svg?branch=master">](https://github.com/vitabaks/postgresql_cluster/actions?query=workflow%3AYamllint)
 [<img src="https://github.com/vitabaks/postgresql_cluster/workflows/Flake8/badge.svg?branch=master">](https://github.com/vitabaks/postgresql_cluster/actions?query=workflow%3AFlake8)
@@ -8,7 +7,7 @@
 [![GitHub license](https://img.shields.io/github/license/vitabaks/postgresql_cluster)](https://github.com/vitabaks/postgresql_cluster/blob/master/LICENSE) 
 ![GitHub stars](https://img.shields.io/github/stars/vitabaks/postgresql_cluster)
 
-### Deploy a Production Ready PostgreSQL High-Availability Cluster (based on "Patroni" and DCS "etcd" or "consul"). Automating with Ansible.
+### Production-ready PostgreSQL High-Availability Cluster (based on "Patroni" and DCS "etcd" or "consul"). Automating with Ansible.
 
 This Ansible playbook is designed for deploying a PostgreSQL high availability cluster on dedicated physical servers for a production environment. The cluster can also be deployed on virtual machines and in the Cloud.
 
@@ -41,9 +40,9 @@ In addition to deploying new clusters, this playbook also support the deployment
     - [Create cluster with WAL-G:](#create-cluster-with-wal-g)
     - [Point-In-Time-Recovery:](#point-in-time-recovery)
 - [Maintenance](#maintenance)
+    - [Changing PostgreSQL configuration parameters](#changing-postgresql-configuration-parameters) 
     - [Update the PostgreSQL HA Cluster](#update-the-postgresql-ha-cluster)
     - [PostgreSQL major upgrade](#postgresql-major-upgrade)
-    - [Using Git for cluster configuration management](#using-git-for-cluster-configuration-management-iacgitops)
 - [Disaster Recovery](#disaster-recovery)
     - [etcd](#etcd)
     - [PostgreSQL (databases)](#postgresql-databases)
@@ -487,6 +486,28 @@ I recommend that you study the following materials for further maintenance of th
 - [Patroni documentation](https://patroni.readthedocs.io/en/latest/)
 - [etcd operations guide](https://etcd.io/docs/v3.5/op-guide/)
 
+### Changing PostgreSQL configuration parameters
+
+To change the PostgreSQL configuration in a cluster using automation:
+
+1. Update the `postgresql_parameters` variable with the desired parameter changes.
+    - Note: Optionally, set `pending_restart: true` to automatically restart PostgreSQL if a parameter change requires it.
+3. Execute the `config_pgcluster.yml` playbook to apply the changes.
+
+#### Using Git for cluster configuration management (IaC/GitOps)
+
+Infrastructure as Code (IaC) is the managing and provisioning of infrastructure through code instead of through manual processes. \
+GitOps automates infrastructure updates using a Git workflow with continuous integration (CI) and continuous delivery (CI/CD). When new code is merged, the CI/CD pipeline enacts the change in the environment. Any configuration drift, such as manual changes or errors, is overwritten by GitOps automation so the environment converges on the desired state defined in Git. 
+
+Once the cluster is deployed, you can use the `config_pgcluster.yml` playbook to integrate with Git to manage cluster configurations. \
+For example, GitHub Action ([link](https://github.com/marketplace/actions/run-ansible-playbook)), GitLab CI/CD ([link](https://medium.com/geekculture/how-to-run-an-ansible-playbook-using-gitlab-ci-cd-2135f76d7f1e))
+
+Details about IaC and GitOps:
+
+- [What is GitOps](https://about.gitlab.com/topics/gitops/)?
+- [What is Infrastructure as Code (IaC)](https://www.redhat.com/en/topics/automation/what-is-infrastructure-as-code-iac)?
+
+
 ### Update the PostgreSQL HA Cluster
 
 Use the `update_pgcluster.yml` playbook for update the PostgreSQL HA Cluster to a new minor version (for example 15.1->15.2, and etc).
@@ -533,20 +554,6 @@ ansible-playbook pg_upgrade.yml -e "pg_old_version=14 pg_new_version=15"
 </details>
 
 More details [here](roles/upgrade/README.md)
-
-
-### Using Git for cluster configuration management (IaC/GitOps)
-
-Infrastructure as Code (IaC) is the managing and provisioning of infrastructure through code instead of through manual processes. \
-GitOps automates infrastructure updates using a Git workflow with continuous integration (CI) and continuous delivery (CI/CD). When new code is merged, the CI/CD pipeline enacts the change in the environment. Any configuration drift, such as manual changes or errors, is overwritten by GitOps automation so the environment converges on the desired state defined in Git. 
-
-Once the cluster is deployed, you can use the `config_pgcluster.yml` playbook to integrate with Git to manage cluster configurations. \
-For example, GitHub Action ([link](https://github.com/marketplace/actions/run-ansible-playbook)), GitLab CI/CD ([link](https://medium.com/geekculture/how-to-run-an-ansible-playbook-using-gitlab-ci-cd-2135f76d7f1e))
-
-Details about IaC and GitOps:
-
-- [What is GitOps](https://about.gitlab.com/topics/gitops/)?
-- [What is Infrastructure as Code (IaC)](https://www.redhat.com/en/topics/automation/what-is-infrastructure-as-code-iac)?
 
 ## Disaster Recovery
 
