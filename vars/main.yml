@@ -12,7 +12,7 @@ vip_interface: "{{ ansible_default_ipv4.interface }}"  # interface name (e.g., "
 # Note: VIP-based solutions such as keepalived or vip-manager may not function correctly in cloud environments.
 
 patroni_cluster_name: "postgres-cluster"  # the cluster name (must be unique for each cluster)
-patroni_install_version: "3.2.0"  # or 'latest'
+patroni_install_version: "3.2.2"  # or 'latest'
 
 patroni_superuser_username: "postgres"
 patroni_superuser_password: ""  # Please specify a password. If not defined, will be generated automatically during deployment.
@@ -30,6 +30,13 @@ haproxy_listen_port:
   replicas: 5001
   replicas_sync: 5002
   replicas_async: 5003
+# The following ('_direct') ports are used for direct connections to the PostgreSQL database,
+# bypassing the PgBouncer connection pool (if 'pgbouncer_install' is 'true').
+# Uncomment the relevant lines if you need to set up direct connections.
+#  master_direct: 6000
+#  replicas_direct: 6001
+#  replicas_sync_direct: 6002
+#  replicas_async_direct: 6003
   stats: 7000
 haproxy_maxconn:
   global: 100000

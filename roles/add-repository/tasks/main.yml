@@ -20,6 +20,10 @@
   tags: add_repo
 
 - block:  # RedHat/CentOS
+    - name: Add repository GPG key
+      ansible.builtin.command: "rpm --import https://repo.almalinux.org/almalinux/RPM-GPG-KEY-AlmaLinux-{{ ansible_distribution_major_version }}"
+      when: ansible_distribution == "AlmaLinux"
+
     - name: Add repository
       ansible.builtin.yum_repository:
         name: "{{ item.name }}"
