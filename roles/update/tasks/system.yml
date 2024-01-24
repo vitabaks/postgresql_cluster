@@ -1,15 +1,19 @@
 ---
-- name: Clean yum cache
-  ansible.builtin.command: yum clean all
+- name: Update yum cache
+  ansible.builtin.shell: yum clean all && yum -y makecache
+  args:
+    executable: /bin/bash
   when:
     - ansible_os_family == "RedHat"
     - ansible_distribution_major_version == '7'
 
-- name: Clean dnf cache
-  ansible.builtin.command: dnf clean all
+- name: Update dnf cache
+  ansible.builtin.shell: dnf clean all && dnf -y makecache
+  args:
+    executable: /bin/bash
   when:
     - ansible_os_family == "RedHat"
-    - ansible_distribution_major_version is version('8', '>=')
+    - ansible_distribution_major_version >= '8'
 
 - name: Update apt cache
   ansible.builtin.apt:
@@ -30,6 +34,33 @@
   delay: 5
   retries: 3
   ignore_errors: true
+  when: ansible_os_family == "Debian"
+
+- name: Update all system packages
+  ansible.builtin.yum:
+    name: '*'
+    state: latest
+    disablerepo: 'pgdg*'
+  register: package_status
+  until: package_status is success
+  delay: 5
+  retries: 3
+  when:
+    - ansible_os_family == "RedHat"
+    - ansible_distribution_major_version == '7'
+
+- name: Update all system packages
+  ansible.builtin.dnf:
+    name: '*'
+    state: latest
+    disablerepo: 'pgdg*'
+  register: package_status
+  until: package_status is success
+  delay: 5
+  retries: 3
+  when:
+    - ansible_os_family == "RedHat"
+    - ansible_distribution_major_version >= '8'
 
 - name: Check if a reboot is required
   ansible.builtin.stat:
