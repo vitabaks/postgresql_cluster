@@ -52,13 +52,16 @@
   ansible.builtin.package:
     name: "{{ item }}"
     state: present
-  loop: "{{ system_packages }}"
+  loop: "{{ system_packages | list }}"
   register: package_status
   until: package_status is success
   delay: 5
   retries: 3
   environment: "{{ proxy_env | default({}) }}"
-  when: ansible_os_family == "RedHat" and installation_method == "repo"
+  when:
+    - installation_method == "repo"
+    - ansible_os_family == "RedHat"
+    - system_packages | default('') | length > 0
   tags: install_packages
 
 # Debian
@@ -66,13 +69,16 @@
   ansible.builtin.apt:
     name: "{{ item }}"
     state: present
-  loop: "{{ system_packages }}"
+  loop: "{{ system_packages | list }}"
   environment: "{{ proxy_env | default({}) }}"
   register: apt_status
   until: apt_status is success
   delay: 5
   retries: 3
-  when: ansible_os_family == "Debian" and installation_method == "repo"
+  when:
+    - installation_method == "repo"
+    - ansible_os_family == "Debian"
+    - system_packages | default('') | length > 0
   tags: install_packages
 
 # PostgreSQL prepare for install (for Debian based only)
@@ -122,13 +128,16 @@
   ansible.builtin.package:
     name: "{{ item }}"
     state: present
-  loop: "{{ postgresql_packages }}"
+  loop: "{{ postgresql_packages | list }}"
   register: package_status
   until: package_status is success
   delay: 5
   retries: 3
   environment: "{{ proxy_env | default({}) }}"
-  when: ansible_os_family == "RedHat" and installation_method == "repo"
+  when:
+    - installation_method == "repo"
+    - ansible_os_family == "RedHat"
+    - postgresql_packages | default('') | length > 0
   tags: install_packages, install_postgres
 
 # Debian
@@ -136,13 +145,16 @@
   ansible.builtin.apt:
     name: "{{ item }}"
     state: present
-  loop: "{{ postgresql_packages }}"
+  loop: "{{ postgresql_packages | list }}"
   environment: "{{ proxy_env | default({}) }}"
   register: apt_status
   until: apt_status is success
   delay: 5
   retries: 3
-  when: ansible_os_family == "Debian" and installation_method == "repo"
+  when:
+    - installation_method == "repo"
+    - ansible_os_family == "Debian"
+    - postgresql_packages | default('') | length > 0
   tags: install_packages, install_postgres
 
 - name: Install PostgreSQL Extensions
