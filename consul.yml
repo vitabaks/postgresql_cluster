@@ -130,7 +130,6 @@
       vars:
         nameservers: [127.0.0.1] # add a nameserver entry poining to localhost for dnsmasq.
     - role: etc_hosts
-    - role: sysctl
     - role: timezone
     - role: ntp
 
