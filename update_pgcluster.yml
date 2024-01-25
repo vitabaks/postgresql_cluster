@@ -99,16 +99,15 @@
       ansible.builtin.include_role:
         name: update
         tasks_from: postgres
-      when: target | lower == 'postgres'
+      when: target | lower == 'postgres' or target | lower == 'system'
 
     - name: Update Patroni
       ansible.builtin.include_role:
         name: update
         tasks_from: patroni
-      when: target | lower == 'patroni' or
-        (target | lower == 'system' and patroni_installation_method == "pip")
+      when: target | lower == 'patroni' or target | lower == 'system'
 
-    - name: Update all system packages (includes PostgreSQL and Patroni)
+    - name: Update all system packages
       ansible.builtin.include_role:
         name: update
         tasks_from: system
@@ -161,16 +160,15 @@
       ansible.builtin.include_role:
         name: update
         tasks_from: postgres
-      when: target | lower == 'postgres'
+      when: target | lower == 'postgres' or target | lower == 'system'
 
     - name: Update Patroni
       ansible.builtin.include_role:
         name: update
         tasks_from: patroni
-      when: target | lower == 'patroni' or
-        (target | lower == 'system' and patroni_installation_method == "pip")
+      when: target | lower == 'patroni' or target | lower == 'system'
 
-    - name: Update all system packages (includes PostgreSQL and Patroni)
+    - name: Update all system packages
       ansible.builtin.include_role:
         name: update
         tasks_from: system

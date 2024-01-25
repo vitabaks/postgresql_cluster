@@ -35,13 +35,17 @@
   tags: install_packages_from_file
 
 - block:  # RedHat (update cache)
-    - name: Clean yum cache
-      ansible.builtin.command: yum clean all
+    - name: Update yum cache
+      ansible.builtin.shell: yum clean all && yum -y makecache
+      args:
+        executable: /bin/bash
       when: ansible_distribution_major_version == '7'
 
-    - name: Clean dnf cache
-      ansible.builtin.command: dnf clean all
-      when: ansible_distribution_major_version is version('8', '>=')
+    - name: Update dnf cache
+      ansible.builtin.shell: dnf clean all && dnf -y makecache
+      args:
+        executable: /bin/bash
+      when: ansible_distribution_major_version >= '8'
   environment: "{{ proxy_env | default({}) }}"
   when: ansible_os_family == "RedHat" and installation_method == "repo"
   tags: install_packages, install_postgres
@@ -49,9 +53,10 @@
 # Install packages from repository
 # RedHat
 - name: Install system packages
-  ansible.builtin.package:
+  ansible.builtin.yum:
     name: "{{ item }}"
     state: present
+    disablerepo: 'pgdg*'
   loop: "{{ system_packages | list }}"
   register: package_status
   until: package_status is success
@@ -61,6 +66,25 @@
   when:
     - installation_method == "repo"
     - ansible_os_family == "RedHat"
+    - ansible_distribution_major_version == '7'
+    - system_packages | default('') | length > 0
+  tags: install_packages
+
+- name: Install system packages
+  ansible.builtin.dnf:
+    name: "{{ item }}"
+    state: present
+    disablerepo: 'pgdg*'
+  loop: "{{ system_packages | list }}"
+  register: package_status
+  until: package_status is success
+  delay: 5
+  retries: 3
+  environment: "{{ proxy_env | default({}) }}"
+  when:
+    - installation_method == "repo"
+    - ansible_os_family == "RedHat"
+    - ansible_distribution_major_version >= '8'
     - system_packages | default('') | length > 0
   tags: install_packages
 
@@ -106,7 +130,7 @@
   when: installation_method == "repo" and ansible_os_family == "Debian"
   tags: install_postgres
 
-# PostgreSQL prepare for install (for RHEL 8)
+# PostgreSQL prepare for install (for RHEL)
 - block:
     - name: PostgreSQL | check if appstream module is enabled
       ansible.builtin.command: 'dnf -y -C module list postgresql'
