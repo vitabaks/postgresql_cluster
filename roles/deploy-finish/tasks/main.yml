@@ -41,7 +41,6 @@
   ignore_errors: true
   tags: patroni_status, cluster_info, cluster_status, point_in_time_recovery
 
-
 # Print info
 - name: Postgres list of users
   run_once: true
@@ -64,9 +63,10 @@
   when: patronictl_result.stdout_lines is defined
   tags: patroni_status, cluster_info, cluster_status, point_in_time_recovery
 
-# connection info
-# if the variable 'mask_password' is 'true', do not print the superuser password in connection info
-- block:  # if cluster_vip is defined
+# Connection info
+# Note: if the variable 'mask_password' is 'true', do not print the superuser password in connection info.
+
+- block:  # if 'cluster_vip' is defined
     - name: Postgres Cluster connection info
       run_once: true
       ansible.builtin.debug:
@@ -77,12 +77,10 @@
           - "port: {{ haproxy_listen_port.replicas }} (read only) all replicas"
           - "port: {{ haproxy_listen_port.replicas_sync }} (read only) synchronous replica only"
           - "port: {{ haproxy_listen_port.replicas_async }} (read only) asynchronous replicas only"
-          - "superuser: {{ patroni_superuser_username }}"
-          - "password: {% if mask_password | default(false) | bool %}'********'{% else %}{{ patroni_superuser_password }}{% endif %}"
+          - "superuser: {{ superuser_username }}"
+          - "password: {{ superuser_password }}"
           - +------------------------------------------------+
-      when:
-        - with_haproxy_load_balancing | bool
-        - synchronous_mode | bool
+      when: with_haproxy_load_balancing | bool and synchronous_mode | bool
 
     - name: Postgres Cluster connection info
       run_once: true
@@ -92,12 +90,10 @@
           - "address: (VIP) {{ cluster_vip }}"
           - "port: {{ haproxy_listen_port.master }} (read/write) master"
           - "port: {{ haproxy_listen_port.replicas }} (read only) all replicas"
-          - "superuser: {{ patroni_superuser_username }}"
-          - "password: {% if mask_password | default(false) | bool %}'********'{% else %}{{ patroni_superuser_password }}{% endif %}"
+          - "superuser: {{ superuser_username }}"
+          - "password: {{ superuser_password }}"
           - +------------------------------------------------+
-      when:
-        - with_haproxy_load_balancing | bool
-        - not synchronous_mode | bool
+      when: with_haproxy_load_balancing | bool and not synchronous_mode | bool
 
     - name: Postgres Cluster connection info
       run_once: true
@@ -106,17 +102,19 @@
           - +------------------------------------------------+
           - "address: (VIP) {{ cluster_vip }}"
           - "port: {% if pgbouncer_install %}{{ pgbouncer_listen_port }} (pgbouncer){% else %}{{ postgresql_port }}{% endif %}"
-          - "superuser: {{ patroni_superuser_username }}"
-          - "password: {% if mask_password | default(false) | bool %}'********'{% else %}{{ patroni_superuser_password }}{% endif %}"
+          - "superuser: {{ superuser_username }}"
+          - "password: {{ superuser_password }}"
           - +------------------------------------------------+
-      when:
-        - not with_haproxy_load_balancing | bool
+      when: not with_haproxy_load_balancing | bool
+  vars:
+    superuser_username: "{{ patroni_superuser_username }}"
+    superuser_password: "{% if mask_password | default(false) | bool %}'********'{% else %}{{ patroni_superuser_password }}{% endif %}"
   when:
     - (cluster_vip is defined and cluster_vip | length > 0)
     - dcs_type == "etcd"
+    - (cloud_provider | default('') | length < 1 or not cloud_load_balancer | default(false) | bool)
   ignore_errors: true
   tags: conn_info, cluster_info, cluster_status
-
 
 - block:  # if 'cluster_vip' is not defined and 'pgbouncer_install' is 'true'
     - name: Postgres Cluster connection info
@@ -130,12 +128,10 @@
           - "port: {{ haproxy_listen_port.replicas }} (read only) all replicas"
           - "port: {{ haproxy_listen_port.replicas_sync }} (read only) synchronous replica only"
           - "port: {{ haproxy_listen_port.replicas_async }} (read only) asynchronous replicas only"
-          - "superuser: {{ patroni_superuser_username }}"
-          - "password: {% if mask_password | default(false) | bool %}'********'{% else %}{{ patroni_superuser_password }}{% endif %}"
+          - "superuser: {{ superuser_username }}"
+          - "password: {{ superuser_password }}"
           - +------------------------------------------------+
-      when:
-        - with_haproxy_load_balancing | bool
-        - synchronous_mode | bool
+      when: with_haproxy_load_balancing | bool and synchronous_mode | bool
 
     - name: Postgres Cluster connection info
       run_once: true
@@ -146,12 +142,10 @@
           - "private address: {{ haproxy_ip_adresses }}"
           - "port: {{ haproxy_listen_port.master }} (read/write) master"
           - "port: {{ haproxy_listen_port.replicas }} (read only) all replicas"
-          - "superuser: {{ patroni_superuser_username }}"
-          - "password: {% if mask_password | default(false) | bool %}'********'{% else %}{{ patroni_superuser_password }}{% endif %}"
+          - "superuser: {{ superuser_username }}"
+          - "password: {{ superuser_password }}"
           - +------------------------------------------------+
-      when:
-        - with_haproxy_load_balancing | bool
-        - not synchronous_mode | bool
+      when: with_haproxy_load_balancing | bool and not synchronous_mode | bool
 
     - name: Postgres Cluster connection info
       run_once: true
@@ -164,8 +158,7 @@
           - "superuser: {{ superuser_username }}"
           - "password: {{ superuser_password }}"
           - +------------------------------------------------+
-      when:
-        - not with_haproxy_load_balancing | bool
+      when: not with_haproxy_load_balancing | bool
   ignore_errors: true
   vars:
     public_haproxy_ip_adresses: "{{ groups['balancers'] | default([]) | map('extract', hostvars, 'ansible_ssh_host') | join(',') }}"
@@ -178,6 +171,7 @@
     - (cluster_vip is not defined or cluster_vip | length < 1)
     - dcs_type == "etcd"
     - pgbouncer_install | bool
+    - (cloud_provider | default('') | length < 1 or not cloud_load_balancer | default(false) | bool)
   tags: conn_info, cluster_info, cluster_status
 
 - block:  # if 'cluster_vip' is not defined and 'pgbouncer_install' is 'false'
@@ -192,16 +186,14 @@
           - "port: {{ haproxy_listen_port.replicas }} (read only) all replicas"
           - "port: {{ haproxy_listen_port.replicas_sync }} (read only) synchronous replica only"
           - "port: {{ haproxy_listen_port.replicas_async }} (read only) asynchronous replicas only"
-          - "superuser: {{ patroni_superuser_username }}"
-          - "password: {% if mask_password | default(false) | bool %}'********'{% else %}{{ patroni_superuser_password }}{% endif %}"
+          - "superuser: {{ superuser_username }}"
+          - "password: {{ superuser_password }}"
           - ""
           - "connection string (libpq):"
           - "  read-write: 'postgresql://{{ superuser_username }}:{{ superuser_password }}@{{ libpq_haproxy_host_port_master }}/postgres' "
           - "  read-only: 'postgresql://{{ superuser_username }}:{{ superuser_password }}@{{ libpq_haproxy_host_port_replica }}/postgres' "
           - +------------------------------------------------+
-      when:
-        - with_haproxy_load_balancing | bool
-        - synchronous_mode | bool
+      when: with_haproxy_load_balancing | bool and synchronous_mode | bool
 
     - name: Postgres Cluster connection info
       run_once: true
@@ -212,16 +204,14 @@
           - "private address: {{ haproxy_ip_adresses }}"
           - "port: {{ haproxy_listen_port.master }} (read/write) master"
           - "port: {{ haproxy_listen_port.replicas }} (read only) all replicas"
-          - "superuser: {{ patroni_superuser_username }}"
-          - "password: {% if mask_password | default(false) | bool %}'********'{% else %}{{ patroni_superuser_password }}{% endif %}"
+          - "superuser: {{ superuser_username }}"
+          - "password: {{ superuser_password }}"
           - ""
           - "connection string (libpq):"
           - "  read-write: 'postgresql://{{ superuser_username }}:{{ superuser_password }}@{{ libpq_haproxy_host_port_master }}/postgres' "
           - "  read-only: 'postgresql://{{ superuser_username }}:{{ superuser_password }}@{{ libpq_haproxy_host_port_replica }}/postgres' "
           - +------------------------------------------------+
-      when:
-        - with_haproxy_load_balancing | bool
-        - not synchronous_mode | bool
+      when: with_haproxy_load_balancing | bool and not synchronous_mode | bool
 
     - name: Postgres Cluster connection info
       run_once: true
@@ -238,8 +228,7 @@
           - "  read-write: 'postgresql://{{ superuser_username }}:{{ superuser_password }}@{{ libpq_postgres_host_port }}/postgres?target_session_attrs=read-write' "
           - "  read-only: 'postgresql://{{ superuser_username }}:{{ superuser_password }}@{{ libpq_postgres_host_port }}/postgres?target_session_attrs=read-only{{ libpq_load_balance }}' "
           - +------------------------------------------------+
-      when:
-        - not with_haproxy_load_balancing | bool
+      when: not with_haproxy_load_balancing | bool
   ignore_errors: true
   vars:
     public_haproxy_ip_adresses: "{{ groups['balancers'] | default([]) | map('extract', hostvars, 'ansible_ssh_host') | join(',') }}"
@@ -256,8 +245,8 @@
     - (cluster_vip is not defined or cluster_vip | length < 1)
     - dcs_type == "etcd"
     - not pgbouncer_install | bool
+    - (cloud_provider | default('') | length < 1 or not cloud_load_balancer | default(false) | bool)
   tags: conn_info, cluster_info, cluster_status
-
 
 - block:  # if dcs_type: "consul"
     - name: Postgres Cluster connection info
@@ -265,12 +254,12 @@
       ansible.builtin.debug:
         msg:
           - +------------------------------------------------+
-          - "Client access point (DNS):"
+          - "Client access point (Consul DNS):"
           - " master.{{ patroni_cluster_name }}.service.consul "
           - " replica.{{ patroni_cluster_name }}.service.consul "
           - "port: {% if pgbouncer_install %}{{ pgbouncer_listen_port }} (pgbouncer){% else %}{{ postgresql_port }}{% endif %}"
-          - "superuser: {{ patroni_superuser_username }}"
-          - "password: {% if mask_password | default(false) | bool %}'********'{% else %}{{ patroni_superuser_password }}{% endif %}"
+          - "superuser: {{ superuser_username }}"
+          - "password: {{ superuser_password }}"
           - +------------------------------------------------+
       when: not synchronous_mode | bool
 
@@ -279,18 +268,61 @@
       ansible.builtin.debug:
         msg:
           - +------------------------------------------------+
-          - "Client access point (DNS):"
+          - "Client access point (Consul DNS):"
           - " master.{{ patroni_cluster_name }}.service.consul "
           - " replica.{{ patroni_cluster_name }}.service.consul "
           - " sync-replica.{{ patroni_cluster_name }}.service.consul "
           - " async-replica.{{ patroni_cluster_name }}.service.consul "
           - "port: {% if pgbouncer_install %}{{ pgbouncer_listen_port }} (pgbouncer){% else %}{{ postgresql_port }}{% endif %}"
-          - "superuser: {{ patroni_superuser_username }}"
-          - "password: {% if mask_password | default(false) | bool %}'********'{% else %}{{ patroni_superuser_password }}{% endif %}"
+          - "superuser: {{ superuser_username }}"
+          - "password: {{ superuser_password }}"
           - +------------------------------------------------+
       when: synchronous_mode | bool
   ignore_errors: true
-  when: dcs_type == "consul"
+  vars:
+    superuser_username: "{{ patroni_superuser_username }}"
+    superuser_password: "{% if mask_password | default(false) | bool %}'********'{% else %}{{ patroni_superuser_password }}{% endif %}"
+  when:
+    - dcs_type == "consul"
+    - (cloud_provider | default('') | length < 1 or not cloud_load_balancer | default(false) | bool)
+  tags: conn_info, cluster_info, cluster_status
+
+# Cloud (if 'cloud_provider' is defined)
+- block: # AWS
+    - name: Postgres Cluster connection info
+      run_once: true
+      ansible.builtin.debug:
+        msg:
+          - +-------------------------------------------------------------------------+
+          - "DNS (primary): {{ load_balancer_primary }} "
+          - "DNS (replica): {{ load_balancer_replica }} "
+          - "port: {% if pgbouncer_install %}{{ pgbouncer_listen_port }} (pgbouncer){% else %}{{ postgresql_port }}{% endif %}"
+          - "superuser: {{ superuser_username }}"
+          - "password: {{ superuser_password }}"
+          - +-------------------------------------------------------------------------+
+      when: not synchronous_mode | bool
+
+    - name: Postgres Cluster connection info
+      run_once: true
+      ansible.builtin.debug:
+        msg:
+          - +-------------------------------------------------------------------------+
+          - "DNS (primary): {{ load_balancer_primary }} "
+          - "DNS (replica): {{ load_balancer_replica }} "
+          - "DNS (replica-sync): {{ load_balancer_sync }} "
+          - "port: {% if pgbouncer_install %}{{ pgbouncer_listen_port }} (pgbouncer){% else %}{{ postgresql_port }}{% endif %}"
+          - "superuser: {{ superuser_username }}"
+          - "password: {{ superuser_password }}"
+          - +-------------------------------------------------------------------------+
+      when: synchronous_mode | bool
+  ignore_errors: true
+  vars:
+    load_balancer_primary: "{{ (hostvars['localhost']['aws_elb_classic_lb']['results'] | selectattr('item', 'equalto', 'primary') | first).elb.dns_name }}"
+    load_balancer_replica: "{{ (hostvars['localhost']['aws_elb_classic_lb']['results'] | selectattr('item', 'equalto', 'replica') | first).elb.dns_name }}"
+    load_balancer_sync: "{{ (hostvars['localhost']['aws_elb_classic_lb']['results'] | selectattr('item', 'equalto', 'sync') | first).elb.dns_name }}"
+    superuser_username: "{{ patroni_superuser_username }}"
+    superuser_password: "{% if mask_password | default(false) | bool %}'********'{% else %}{{ patroni_superuser_password }}{% endif %}"
+  when: cloud_provider | default('') | lower  == 'aws' and cloud_load_balancer | default(false) | bool
   tags: conn_info, cluster_info, cluster_status
 
 ...

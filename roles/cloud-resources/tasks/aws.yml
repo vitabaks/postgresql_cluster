@@ -192,23 +192,6 @@
       register: ec2_security_group_result
       when: firewall | bool
 
-    # S3 bucket
-    - name: "AWS: Create S3 bucket '{{ aws_s3_bucket_name }}'"
-      amazon.aws.s3_bucket:
-        access_key: "{{ lookup('ansible.builtin.env', 'AWS_ACCESS_KEY_ID') }}"
-        secret_key: "{{ lookup('ansible.builtin.env', 'AWS_SECRET_ACCESS_KEY') }}"
-        name: "{{ aws_s3_bucket_name }}"
-        region: "{{ aws_s3_bucket_region }}"
-        state: present
-        object_lock_enabled: "{{ aws_s3_bucket_object_lock_enabled }}"
-        encryption: "{{ aws_s3_bucket_encryption }}"
-        public_access:
-          block_public_acls: true
-          ignore_public_acls: true
-      when:
-        - (pgbackrest_install | bool or wal_g_install | bool)
-        - aws_s3_bucket_create | bool
-
     # Server and volume
     - name: "AWS: Create or modify EC2 instance"
       amazon.aws.ec2_instance:
@@ -330,20 +313,77 @@
             server_result: "{{ ec2_instance_info }}"
           when: not server_result.changed
       when: aws_ec2_spot_instance | default(false) | bool
-  when: state == 'present'
 
-- name: Wait for EC2 instance to be available via SSH
-  ansible.builtin.wait_for:
-    host: "{{ item.instances[0].public_ip_address }}"
-    port: 22
-    delay: 5
-    timeout: 300
-  loop: "{{ server_result.results }}"
-  loop_control:
-    label: "{{ item.instances[0].public_ip_address | default('N/A') }}"
-  when:
-    - server_result.results is defined
-    - item.instances is defined
+    - name: Wait for EC2 instance to be available via SSH
+      ansible.builtin.wait_for:
+        host: "{{ item.instances[0].public_ip_address }}"
+        port: 22
+        delay: 5
+        timeout: 300
+      loop: "{{ server_result.results }}"
+      loop_control:
+        label: "{{ item.instances[0].public_ip_address | default('N/A') }}"
+      when:
+        - server_result.results is defined
+        - item.instances is defined
+
+    # Load Balancer (ELB)
+    - name: "AWS: Create or modify Elastic Load Balancer (ELB)"
+      amazon.aws.elb_classic_lb:
+        access_key: "{{ lookup('ansible.builtin.env', 'AWS_ACCESS_KEY_ID') }}"
+        secret_key: "{{ lookup('ansible.builtin.env', 'AWS_SECRET_ACCESS_KEY') }}"
+        name: "{{ patroni_cluster_name }}-{{ item }}"
+        region: "{{ server_location }}"
+        security_group_ids:
+          - "{{ ec2_security_group_result.group_id }}"
+        subnets:
+          - "{{ server_network }}"
+        instance_ids: "{{ server_result.results | map(attribute='instances') | map('first') | map(attribute='instance_id') }}"
+        purge_instance_ids: true
+        listeners:
+          - protocol: tcp
+            load_balancer_port: "{{ pgbouncer_listen_port | default('6432') if pgbouncer_install | bool else postgresql_port | default('5432') }}"
+            instance_port: "{{ pgbouncer_listen_port | default('6432') if pgbouncer_install | bool else postgresql_port | default('5432') }}"
+        health_check:
+          ping_protocol: "http"
+          ping_port: "{{ patroni_restapi_port }}"
+          ping_path: "/{{ item }}"
+          interval: 5
+          timeout: 2
+          unhealthy_threshold: 2
+          healthy_threshold: 3
+        idle_timeout: 600
+        scheme: "{{ 'internet-facing' if database_public_access | bool else 'internal' }}"
+        state: present
+      loop:
+        - "primary"
+        - "replica"
+        - "sync"
+      loop_control:
+        label: "{{ patroni_cluster_name }}-{{ item }}"
+      register: aws_elb_classic_lb
+      when: cloud_load_balancer | bool and
+            (item == 'primary' or
+            (item == 'replica' and servers_count | int > 1) or
+            (item in ['sync', 'async'] and servers_count | int > 1 and synchronous_mode | bool))
+
+    # S3 bucket
+    - name: "AWS: Create S3 bucket '{{ aws_s3_bucket_name }}'"
+      amazon.aws.s3_bucket:
+        access_key: "{{ lookup('ansible.builtin.env', 'AWS_ACCESS_KEY_ID') }}"
+        secret_key: "{{ lookup('ansible.builtin.env', 'AWS_SECRET_ACCESS_KEY') }}"
+        name: "{{ aws_s3_bucket_name }}"
+        region: "{{ aws_s3_bucket_region }}"
+        state: present
+        object_lock_enabled: "{{ aws_s3_bucket_object_lock_enabled }}"
+        encryption: "{{ aws_s3_bucket_encryption }}"
+        public_access:
+          block_public_acls: true
+          ignore_public_acls: true
+      when:
+        - (pgbackrest_install | bool or wal_g_install | bool)
+        - aws_s3_bucket_create | bool
+  when: state == 'present'
 
 # Info
 - name: Show EC2 instance info
@@ -414,11 +454,32 @@
         index_var: idx
         label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
 
+    - name: "AWS: Delete Elastic Load Balancer (ELB)"
+      amazon.aws.elb_classic_lb:
+        access_key: "{{ lookup('ansible.builtin.env', 'AWS_ACCESS_KEY_ID') }}"
+        secret_key: "{{ lookup('ansible.builtin.env', 'AWS_SECRET_ACCESS_KEY') }}"
+        name: "{{ patroni_cluster_name }}-{{ item }}"
+        region: "{{ server_location }}"
+        state: absent
+      loop:
+        - "primary"
+        - "replica"
+        - "sync"
+      loop_control:
+        label: "{{ patroni_cluster_name }}-{{ item }}"
+      when: item == 'primary' or
+            (item == 'replica' and servers_count | int > 1) or
+            (item in ['sync', 'async'] and servers_count | int > 1 and synchronous_mode | bool)
+
     - name: "AWS: Delete Security Group"
       amazon.aws.ec2_security_group:
         name: "{{ patroni_cluster_name }}-security-group"
         region: "{{ server_location }}"
         state: absent
+      register: ec2_security_group_delete
+      until: ec2_security_group_delete is success
+      delay: 10
+      retries: 3
 
     - name: "AWS: Delete S3 bucket '{{ patroni_cluster_name }}'"
       amazon.aws.s3_bucket:
