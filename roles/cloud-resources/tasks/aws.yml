@@ -284,7 +284,7 @@
           loop_control:
             index_var: idx
             label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
-          register: ec2_spot_instance_result
+          register: ec2_spot_request_result
           when: item.instances[0] | default('') | length < 1
 
         - name: "AWS: Rename the EC2 Spot instance"
@@ -295,22 +295,32 @@
             name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
             filters:
               spot-instance-request-id: "{{ item.spot_request.spot_instance_request_id }}"
-          loop: "{{ ec2_spot_instance_result.results }}"
+          loop: "{{ ec2_spot_request_result.results }}"
           loop_control:
             index_var: idx
             label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
           register: ec2_spot_instance_result
           until:
-            - server_result.instances[0].public_ip_address is defined
-            - server_result.instances[0].public_ip_address | length > 0
+            - ec2_spot_instance_result.instances[0].public_ip_address is defined
+            - ec2_spot_instance_result.instances[0].public_ip_address | length > 0
           retries: 3
           delay: 10
           when: item.spot_request.spot_instance_request_id is defined
 
-        # if spot instances have already been created, use them
+        # if spot instances are created now
         - name: "Set variable: server_result"
           ansible.builtin.set_fact:
-            server_result: "{{ ec2_spot_instance_info | default(ec2_spot_instance_result, true) }}"
+            server_result: "{{ ec2_spot_instance_result }}"
+          when:
+            - ec2_spot_instance_result.results is defined
+            - ec2_spot_instance_result.results | selectattr('instances', 'defined')
+        # if spot instances have already been created
+        - name: "Set variable: server_result"
+          ansible.builtin.set_fact:
+            server_result: "{{ ec2_spot_instance_info }}"
+          when:
+            - ec2_spot_instance_info.results is defined
+            - ec2_spot_instance_info.results | selectattr('instances', 'defined')
       when: aws_ec2_spot_instance | default(false) | bool
 
     - name: Wait for EC2 instance to be available via SSH
