@@ -248,7 +248,7 @@
           loop_control:
             index_var: idx
             label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
-          register: ec2_instance_info
+          register: ec2_spot_instance_info
 
         # if spot instances are still created, create them
         - name: "AWS: Create a request for EC2 Spot instance"
@@ -280,7 +280,7 @@
                     delete_on_termination: true
             tags:
               Name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
-          loop: "{{ ec2_instance_info.results }}"
+          loop: "{{ ec2_spot_instance_info.results }}"
           loop_control:
             index_var: idx
             label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
@@ -299,7 +299,7 @@
           loop_control:
             index_var: idx
             label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
-          register: server_result
+          register: ec2_spot_instance_result
           until:
             - server_result.instances[0].public_ip_address is defined
             - server_result.instances[0].public_ip_address | length > 0
@@ -310,8 +310,7 @@
         # if spot instances have already been created, use them
         - name: "Set variable: server_result"
           ansible.builtin.set_fact:
-            server_result: "{{ ec2_instance_info }}"
-          when: not server_result.changed
+            server_result: "{{ ec2_spot_instance_info | default(ec2_spot_instance_result, true) }}"
       when: aws_ec2_spot_instance | default(false) | bool
 
     - name: Wait for EC2 instance to be available via SSH
