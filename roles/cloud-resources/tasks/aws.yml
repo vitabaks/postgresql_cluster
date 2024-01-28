@@ -311,16 +311,13 @@
         - name: "Set variable: server_result"
           ansible.builtin.set_fact:
             server_result: "{{ ec2_spot_instance_result }}"
-          when:
-            - ec2_spot_instance_result.results is defined
-            - ec2_spot_instance_result.results | selectattr('instances', 'defined')
+          when: ec2_spot_instance_result.changed | default(false)
+
         # if spot instances have already been created
         - name: "Set variable: server_result"
           ansible.builtin.set_fact:
             server_result: "{{ ec2_spot_instance_info }}"
-          when:
-            - ec2_spot_instance_info.results is defined
-            - ec2_spot_instance_info.results | selectattr('instances', 'defined')
+          when: not ec2_spot_instance_result.changed | default(false)
       when: aws_ec2_spot_instance | default(false) | bool
 
     - name: Wait for EC2 instance to be available via SSH
