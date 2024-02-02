@@ -47,6 +47,10 @@
       ansible.builtin.set_fact:
         target: system # includes updates to Postgres, Patroni, and all system packages
 
+   - name: Add repository GPG key
+      ansible.builtin.command: "rpm --import https://repo.almalinux.org/almalinux/RPM-GPG-KEY-AlmaLinux-{{ ansible_distribution_major_version }}"
+      when: ansible_distribution == "AlmaLinux"
+
     - name: Clean yum cache (molecule containers)
       ansible.builtin.command: yum clean all
       when:
