@@ -117,8 +117,8 @@
 
     - name: Add a nameserver entry poining to localhost for dnsmasq
       ansible.builtin.set_fact:
-        nameservers: [127.0.0.1]
-      when: dcs_type == "consul" and consul_dnsmasq_enable | bool
+        nameservers: "{{ ['127.0.0.1'] + (nameservers | default([])) }}"
+      when: dcs_type == "consul" and consul_dnsmasq_enable | bool and ('127.0.0.1' not in nameservers)
 
   roles:
     - role: ansible-role-firewall
