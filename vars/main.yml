@@ -130,7 +130,7 @@ consul_services:
     tags: ['replica']
     port: "{{ pgbouncer_listen_port }}"
     checks:
-      - { http: "http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/replica", interval: "2s" }
+      - { http: "http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/replica?lag={{ patroni_maximum_lag_on_replica }}", interval: "2s" }
       - { args: ["systemctl", "status", "pgbouncer"], interval: "5s" }
 #  - name: "{{ patroni_cluster_name }}"
 #    id: "{{ patroni_cluster_name }}-sync-replica"
@@ -144,7 +144,7 @@ consul_services:
 #    tags: ['async-replica']
 #    port: "{{ pgbouncer_listen_port }}"
 #    checks:
-#      - { http: "http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/async", interval: "2s" }
+#      - { http: "http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/async?lag={{ patroni_maximum_lag_on_replica }}", interval: "2s" }
 #      - { args: ["systemctl", "status", "pgbouncer"], interval: "5s" }
 
 
