@@ -339,8 +339,9 @@ patroni_restapi_port: 8008
 patroni_ttl: 30
 patroni_loop_wait: 10
 patroni_retry_timeout: 10
-patroni_maximum_lag_on_failover: 1048576
 patroni_master_start_timeout: 300
+patroni_maximum_lag_on_failover: 1048576 # (1MB) the maximum bytes a follower may lag to be able to participate in leader election.
+patroni_maximum_lag_on_replica: "100MB" # the maximum of lag that replica can be in order to be available for read-only queries.
 
 # https://patroni.readthedocs.io/en/latest/SETTINGS.html?highlight=callbacks#dynamic-configuration-settings
 patroni_callbacks: []
