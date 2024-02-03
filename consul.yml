@@ -117,6 +117,16 @@
       when: firewall_enabled_at_boot | bool
       tags: firewall
 
+    - name: Add a nameserver entry poining to localhost for dnsmasq
+      ansible.builtin.set_fact:
+        nameservers: "{{ ['127.0.0.1'] + (nameservers | default([])) }}"
+      when: dcs_type == "consul" and consul_dnsmasq_enable | bool and ('127.0.0.1' not in (nameservers | default([])))
+
+    - name: Redefine the consul_dnsmasq_servers variable
+      ansible.builtin.set_fact:
+        consul_dnsmasq_servers: "{{ consul_dnsmasq_servers | reject('equalto', '127.0.0.1') | list }}"
+      when: dcs_type == "consul" and consul_dnsmasq_enable | bool and ('127.0.0.1' in (consul_dnsmasq_servers | default([])))
+
   roles:
     - role: ansible-role-firewall
       vars:
@@ -127,8 +137,6 @@
 
     - role: hostname
     - role: resolv_conf
-      vars:
-        nameservers: [127.0.0.1] # add a nameserver entry poining to localhost for dnsmasq.
     - role: etc_hosts
     - role: timezone
     - role: ntp

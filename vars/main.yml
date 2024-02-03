@@ -105,9 +105,7 @@ consul_tls_server_key: "server.key"
 consul_recursors: []  # List of upstream DNS servers
 consul_dnsmasq_enable: true  # Enable DNS forwarding with Dnsmasq
 consul_dnsmasq_cache: 0  # dnsmasq cache-size (0 - disable caching)
-consul_dnsmasq_servers:  # Upstream DNS servers used by dnsmasq
-  - "8.8.8.8"
-  - "9.9.9.9"
+consul_dnsmasq_servers: "{{ nameservers }}" # Upstream DNS servers used by dnsmasq
 consul_join: []  # List of LAN servers of an existing consul cluster, to join.
 # - "10.128.64.140"
 # - "10.128.64.142"
@@ -127,7 +125,7 @@ consul_services:
     tags: ['replica']
     port: "{{ pgbouncer_listen_port }}"
     checks:
-      - { http: "http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/replica", interval: "2s" }
+      - { http: "http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/replica?lag={{ patroni_maximum_lag_on_replica }}", interval: "2s" }
       - { args: ["systemctl", "status", "pgbouncer"], interval: "5s" }
 #  - name: "{{ patroni_cluster_name }}"
 #    id: "{{ patroni_cluster_name }}-sync-replica"
@@ -141,7 +139,7 @@ consul_services:
 #    tags: ['async-replica']
 #    port: "{{ pgbouncer_listen_port }}"
 #    checks:
-#      - { http: "http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/async", interval: "2s" }
+#      - { http: "http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/async?lag={{ patroni_maximum_lag_on_replica }}", interval: "2s" }
 #      - { args: ["systemctl", "status", "pgbouncer"], interval: "5s" }
 
 
@@ -336,8 +334,9 @@ patroni_restapi_port: 8008
 patroni_ttl: 30
 patroni_loop_wait: 10
 patroni_retry_timeout: 10
-patroni_maximum_lag_on_failover: 1048576
 patroni_master_start_timeout: 300
+patroni_maximum_lag_on_failover: 1048576 # (1MB) the maximum bytes a follower may lag to be able to participate in leader election.
+patroni_maximum_lag_on_replica: "100MB" # the maximum of lag that replica can be in order to be available for read-only queries.
 
 # https://patroni.readthedocs.io/en/latest/SETTINGS.html?highlight=callbacks#dynamic-configuration-settings
 patroni_callbacks: []
