@@ -153,6 +153,12 @@
       ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
       tags: always
 
+    # if 'dcs_type' is 'consul'
+    - name: Add a nameserver entry poining to localhost for dnsmasq
+      ansible.builtin.set_fact:
+        nameservers: "{{ ['127.0.0.1'] + (nameservers | default([])) }}"
+      when: dcs_type == "consul" and consul_dnsmasq_enable | bool and ('127.0.0.1' not in (nameservers | default([])))
+
   roles:
     - role: hostname
     - role: resolv_conf
