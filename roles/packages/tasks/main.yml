@@ -100,6 +100,32 @@
   when: ansible_os_family == "Debian" and installation_method == "repo"
   tags: install_packages
 
+- name: Set Python alternative
+  alternatives:
+    name: python3
+    path: /usr/bin/python3.11
+    link: /usr/bin/python3
+    priority: 1100
+    state: selected
+  when:
+    - installation_method == "repo"
+    - ansible_os_family == "RedHat"
+    - ansible_distribution_major_version >= '8'
+  tags: install_packages
+
+- name: Set Pip alternative
+  alternatives:
+    name: pip3
+    path: /usr/bin/pip3.11
+    link: /usr/bin/pip3
+    priority: 1100
+    state: selected
+  when:
+    - installation_method == "repo"
+    - ansible_os_family == "RedHat"
+    - ansible_distribution_major_version >= '8'
+  tags: install_packages
+
 # PostgreSQL prepare for install (for Debian based only)
 - block:
     - name: PostgreSQL | ensure postgresql database-cluster manager package

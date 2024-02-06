@@ -7,7 +7,7 @@
 - ansible.builtin.import_tasks: pip.yml
   when:
     - patroni_installation_method == "pip"
-    - system_packages is not search("python3-pip")
+    - system_packages is not search("{{ python_pip_version }}")
   tags: patroni, patroni_install, pip
 
 # Patroni install

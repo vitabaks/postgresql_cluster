@@ -50,14 +50,15 @@ os_specific_packages:
     - python3-libsemanage
     - python3-policycoreutils
     - dnf-utils
+python_pip_version: python3.11-pip
 system_packages:
   - "{{ os_specific_packages[ansible_os_family ~ '-' ~ ansible_distribution_major_version] }}"
-  - python3
-  - python3-devel
-  - python3-psycopg2
-  - python3-setuptools
-  - python3-pip
-  - python3-urllib3
+  - python3.11
+  - python3.11-devel
+  - python3.11-psycopg2
+  - python3.11-setuptools
+  - "{{ python_pip_version }}"
+  - python3.11-urllib3
   - less
   - sudo
   - vim
