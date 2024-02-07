@@ -112,6 +112,9 @@
     - ansible_os_family == "RedHat"
     - ansible_distribution_major_version >= '8'
     - python_version | default('') | length > 1
+    - pip_package in system_packages
+  vars:
+    pip_package: "python{{ python_version | default('3') }}-pip"
   tags: install_packages
 
 # Debian
