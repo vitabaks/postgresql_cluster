@@ -7,7 +7,7 @@
 - ansible.builtin.import_tasks: pip.yml
   when:
     - patroni_installation_method == "pip"
-    - "'{{ python_pip_version }}' not in system_packages"
+    - "python_pip_version not in system_packages"
   tags: patroni, patroni_install, pip
 
 # Patroni install
