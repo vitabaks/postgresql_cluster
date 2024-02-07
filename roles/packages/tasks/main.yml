@@ -86,20 +86,6 @@
     - ansible_distribution_major_version >= '8'
   tags: install_packages
 
-# Debian
-- name: Install system packages
-  ansible.builtin.apt:
-    name: "{{ item }}"
-    state: present
-  loop: "{{ system_packages }}"
-  environment: "{{ proxy_env | default({}) }}"
-  register: apt_status
-  until: apt_status is success
-  delay: 5
-  retries: 3
-  when: ansible_os_family == "Debian" and installation_method == "repo"
-  tags: install_packages
-
 - name: Set Python alternative
   community.general.alternatives:
     name: python3
@@ -111,7 +97,7 @@
     - installation_method == "repo"
     - ansible_os_family == "RedHat"
     - ansible_distribution_major_version >= '8'
-    - python_version | default('') | length > 0
+    - python_version | default('') | length > 1
   tags: install_packages
 
 - name: Set Pip alternative
@@ -125,7 +111,21 @@
     - installation_method == "repo"
     - ansible_os_family == "RedHat"
     - ansible_distribution_major_version >= '8'
-    - python_version | default('') | length > 0
+    - python_version | default('') | length > 1
+  tags: install_packages
+
+# Debian
+- name: Install system packages
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ system_packages }}"
+  environment: "{{ proxy_env | default({}) }}"
+  register: apt_status
+  until: apt_status is success
+  delay: 5
+  retries: 3
+  when: ansible_os_family == "Debian" and installation_method == "repo"
   tags: install_packages
 
 # PostgreSQL prepare for install (for Debian based only)
