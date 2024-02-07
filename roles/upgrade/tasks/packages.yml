@@ -48,13 +48,12 @@
     state: latest
   loop: "{{ timescaledb_package }}"
   vars:
-    timescaledb_package:
-      - >
-        {% if pg_new_version | int >= 11 %}
-        timescaledb-2-postgresql-{{ pg_new_version }}
-        {% else %}
-        timescaledb-postgresql-{{ pg_new_version }}
-        {% endif %}
+    timescaledb_package: >-
+      [{% if pg_new_version | int >= 11 %}
+      "timescaledb-2-postgresql-{{ pg_new_version }}"
+      {% else %}
+      "timescaledb-postgresql-{{ pg_new_version }}"
+      {% endif %}]
   register: package_status
   until: package_status is success
   delay: 5
