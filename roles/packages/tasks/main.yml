@@ -103,7 +103,7 @@
 - name: Set Python alternative
   community.general.alternatives:
     name: python3
-    path: /usr/bin/python3.11
+    path: /usr/bin/python{{ python_version }}
     link: /usr/bin/python3
     priority: 1100
     state: selected
@@ -111,12 +111,13 @@
     - installation_method == "repo"
     - ansible_os_family == "RedHat"
     - ansible_distribution_major_version >= '8'
+    - python_version | default('') | length > 0
   tags: install_packages
 
 - name: Set Pip alternative
   community.general.alternatives:
     name: pip3
-    path: /usr/bin/pip3.11
+    path: /usr/bin/pip{{ python_version }}
     link: /usr/bin/pip3
     priority: 1100
     state: selected
@@ -124,6 +125,7 @@
     - installation_method == "repo"
     - ansible_os_family == "RedHat"
     - ansible_distribution_major_version >= '8'
+    - python_version | default('') | length > 0
   tags: install_packages
 
 # PostgreSQL prepare for install (for Debian based only)

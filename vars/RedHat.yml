@@ -29,6 +29,8 @@ install_postgresql_repo: true  # or 'false' (installed from the package "pgdg-re
 install_scl_repo: true  # or 'false' (Redhat 7 family only)
 
 # Packages (for yum repo)
+python_version: "3.11"
+
 os_specific_packages:
   RedHat-7:
     - python
@@ -41,24 +43,23 @@ os_specific_packages:
     - yum-utils
   RedHat-8:
     - python2
-    - python3-libselinux
-    - python3-libsemanage
-    - python3-policycoreutils
+    - python{{ python_version }}-libselinux
+    - python{{ python_version }}-libsemanage
+    - python{{ python_version }}-policycoreutils
     - dnf-utils
   RedHat-9:
-    - python3-libselinux
-    - python3-libsemanage
-    - python3-policycoreutils
+    - python{{ python_version }}-libselinux
+    - python{{ python_version }}-libsemanage
+    - python{{ python_version }}-policycoreutils
     - dnf-utils
-python_pip_version: python3.11-pip
 system_packages:
   - "{{ os_specific_packages[ansible_os_family ~ '-' ~ ansible_distribution_major_version] }}"
-  - python3.11
-  - python3.11-devel
-  - python3.11-psycopg2
-  - python3.11-setuptools
-  - "{{ python_pip_version }}"
-  - python3.11-urllib3
+  - python{{ python_version }}
+  - python{{ python_version }}-devel
+  - python{{ python_version }}-psycopg2
+  - python{{ python_version }}-setuptools
+  - python{{ python_version }}-pip
+  - python{{ python_version }}-urllib3
   - less
   - sudo
   - vim
