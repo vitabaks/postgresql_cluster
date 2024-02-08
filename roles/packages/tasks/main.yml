@@ -159,12 +159,12 @@
 # PostgreSQL prepare for install (for RHEL)
 - block:
     - name: PostgreSQL | check if appstream module is enabled
-      ansible.builtin.command: 'dnf -y -C module list postgresql'
+      ansible.builtin.command: '/usr/bin/dnf -y -C module list postgresql'
       register: postgresql_module_result
       changed_when: false
 
     - name: PostgreSQL | disable appstream module
-      ansible.builtin.command: 'dnf -y -C module disable postgresql'
+      ansible.builtin.command: '/usr/bin/dnf -y -C module disable postgresql'
       when: "'[x] ' not in postgresql_module_result.stdout"
   when: installation_method == "repo" and
         ansible_os_family == "RedHat" and
