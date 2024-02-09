@@ -88,6 +88,37 @@
     - system_packages | default('') | length > 0
   tags: install_packages
 
+- name: Set Python alternative
+  community.general.alternatives:
+    name: python3
+    path: /usr/bin/python{{ python_version }}
+    link: /usr/bin/python3
+    priority: 1100
+    state: selected
+  when:
+    - installation_method == "repo"
+    - ansible_os_family == "RedHat"
+    - ansible_distribution_major_version >= '8'
+    - python_version | default('') | length > 1
+  tags: install_packages
+
+- name: Set Pip alternative
+  community.general.alternatives:
+    name: pip3
+    path: /usr/bin/pip{{ python_version }}
+    link: /usr/bin/pip3
+    priority: 1100
+    state: selected
+  when:
+    - installation_method == "repo"
+    - ansible_os_family == "RedHat"
+    - ansible_distribution_major_version >= '8'
+    - python_version | default('') | length > 1
+    - pip_package in system_packages
+  vars:
+    pip_package: "python{{ python_version | default('3') }}-pip"
+  tags: install_packages
+
 # Debian
 - name: Install system packages
   ansible.builtin.apt:
@@ -153,6 +184,41 @@
     name: "{{ item }}"
     state: present
   loop: "{{ postgresql_packages | list }}"
+  register: package_status
+  until: package_status is success
+  delay: 5
+  retries: 3
+  environment: "{{ proxy_env | default({}) }}"
+  when: ansible_os_family == "RedHat" and installation_method == "repo"
+  tags: install_packages, install_postgres
+
+# Debian
+- name: Install PostgreSQL packages
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ postgresql_packages | list }}"
+  environment: "{{ proxy_env | default({}) }}"
+  register: apt_status
+  until: apt_status is success
+  delay: 5
+  retries: 3
+  when: ansible_os_family == "Debian" and installation_method == "repo"
+  tags: install_packages, install_postgres
+
+# timescaledb (if enable_timescale is defined)
+- name: Install TimescaleDB package
+  ansible.builtin.package:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ timescaledb_package }}"
+  vars:
+    timescaledb_package: >-
+      [{% if postgresql_version | int >= 11 %}
+      "timescaledb-2-postgresql-{{ postgresql_version }}"
+      {% else %}
+      "timescaledb-postgresql-{{ postgresql_version }}"
+      {% endif %}]
   register: package_status
   until: package_status is success
   delay: 5
