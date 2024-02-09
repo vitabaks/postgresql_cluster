@@ -436,22 +436,6 @@
         index_var: idx
         label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-public-ip"
 
-    - name: "Azure: Delete Load Balancer public IP address"
-      azure.azcollection.azure_rm_publicipaddress:
-        resource_group: "{{ azure_resource_group | default('postgres-cluster-resource-group' ~ '-' ~ server_location) }}"
-        name: "{{ patroni_cluster_name }}-{{ item }}-public-ip"
-        state: absent
-      loop:
-        - "primary"
-        - "replica"
-        - "sync"
-      loop_control:
-        label: "{{ patroni_cluster_name }}-{{ item }}-public-ip"
-      when: database_public_access | bool and cloud_load_balancer | bool and
-            (item == 'primary' or
-            (item == 'replica' and server_count | int > 1) or
-            (item in ['sync', 'async'] and server_count | int > 1 and synchronous_mode | bool))
-
     - name: "Azure: Delete Load Balancer"
       azure.azcollection.azure_rm_loadbalancer:
         resource_group: "{{ azure_resource_group | default('postgres-cluster-resource-group' ~ '-' ~ server_location) }}"
@@ -465,6 +449,22 @@
       loop_control:
         label: "{{ patroni_cluster_name }}-{{ item }}"
       when: cloud_load_balancer | bool and
+            (item == 'primary' or
+            (item == 'replica' and server_count | int > 1) or
+            (item in ['sync', 'async'] and server_count | int > 1 and synchronous_mode | bool))
+
+    - name: "Azure: Delete Load Balancer public IP address"
+      azure.azcollection.azure_rm_publicipaddress:
+        resource_group: "{{ azure_resource_group | default('postgres-cluster-resource-group' ~ '-' ~ server_location) }}"
+        name: "{{ patroni_cluster_name }}-{{ item }}-public-ip"
+        state: absent
+      loop:
+        - "primary"
+        - "replica"
+        - "sync"
+      loop_control:
+        label: "{{ patroni_cluster_name }}-{{ item }}-public-ip"
+      when: database_public_access | bool and cloud_load_balancer | bool and
             (item == 'primary' or
             (item == 'replica' and server_count | int > 1) or
             (item in ['sync', 'async'] and server_count | int > 1 and synchronous_mode | bool))
