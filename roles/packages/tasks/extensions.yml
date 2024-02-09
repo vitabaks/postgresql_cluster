@@ -30,15 +30,15 @@
   vars:
     citus_package: >-
       [{% if ansible_os_family == 'Debian' and postgresql_version >= "14" %}
-      postgresql-{{ postgresql_version }}-citus-{{ citus_version | default('12.1') }}
+      "postgresql-{{ postgresql_version }}-citus-{{ citus_version | default('12.1') }}"
       {% elif ansible_os_family == 'Debian' and postgresql_version == "13" %}
-      postgresql-{{ postgresql_version }}-citus-11.3
+      "postgresql-{{ postgresql_version }}-citus-11.3"
       {% elif ansible_os_family == 'Debian' and postgresql_version == "12" %}
-      postgresql-{{ postgresql_version }}-citus-10.2
+      "postgresql-{{ postgresql_version }}-citus-10.2"
       {% elif ansible_os_family == 'Debian' and postgresql_version == "11" %}
-      postgresql-{{ postgresql_version }}-citus-10.0
+      "postgresql-{{ postgresql_version }}-citus-10.0"
       {% else %}
-      citus_{{ postgresql_version }}
+      "citus_{{ postgresql_version }}"
       {% endif %}]
   register: package_status
   until: package_status is success
