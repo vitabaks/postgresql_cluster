@@ -411,7 +411,7 @@
         private_networks:
           - "{{ server_network }}"
         firewalls: "{{ firewalls_list }}"
-      loop: "{{ range(0, servers_count | int) | list }}"
+      loop: "{{ range(0, server_count | int) | list }}"
       loop_control:
         index_var: idx
         label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
@@ -430,7 +430,7 @@
         network: "{{ server_network }}"
         server: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
         state: present
-      loop: "{{ range(0, servers_count | int) | list }}"
+      loop: "{{ range(0, server_count | int) | list }}"
       loop_control:
         index_var: idx
         label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
@@ -443,7 +443,7 @@
         state: present
         size: "{{ volume_size | int }}"
         server: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
-      loop: "{{ range(0, servers_count | int) | list }}"
+      loop: "{{ range(0, server_count | int) | list }}"
       loop_control:
         index_var: idx
         label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-storage"
@@ -523,7 +523,7 @@
         name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
         state: absent
         location: "{{ server_location }}"
-      loop: "{{ range(0, servers_count | int) | list }}"
+      loop: "{{ range(0, server_count | int) | list }}"
       loop_control:
         index_var: idx
         label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
@@ -534,7 +534,7 @@
         name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-storage"
         state: absent
         location: "{{ server_location }}"
-      loop: "{{ range(0, servers_count | int) | list }}"
+      loop: "{{ range(0, server_count | int) | list }}"
       loop_control:
         index_var: idx
         label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-storage"

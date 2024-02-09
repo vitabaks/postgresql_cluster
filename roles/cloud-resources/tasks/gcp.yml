@@ -248,7 +248,7 @@
             - "{{ patroni_cluster_name }}"
         status: "{{ gcp_instance_status | default('RUNNING') }}"
         state: present
-      loop: "{{ range(0, servers_count | int) | list }}"
+      loop: "{{ range(0, server_count | int) | list }}"
       loop_control:
         index_var: idx
         label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
@@ -319,7 +319,7 @@
         zone: "{{ server_location + '-b' if not server_location is match('.*-[a-z]$') else server_location }}"  # add "-b" if the zone is not defined
         name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
         state: absent
-      loop: "{{ range(0, servers_count | int) | list }}"
+      loop: "{{ range(0, server_count | int) | list }}"
       loop_control:
         index_var: idx
         label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"

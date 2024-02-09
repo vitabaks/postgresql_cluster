@@ -4,7 +4,7 @@
 cloud_provider: "{{ provision | default('') }}" # Specifies the Cloud provider for server creation. Available options: 'aws', 'gcp', 'azure', 'digitalocean', 'hetzner'.
 state: present  # Set to 'present' to create a server, 'absent' to delete.
 
-servers_count: 3  # Number of servers in the cluster. Servers will be automatically named with suffixes 01, 02, 03, etc.
+server_count: "{{ servers_count | default(3) }}"  # Number of servers in the cluster. Servers will be automatically named with suffixes 01, 02, 03, etc.
 
 server_name: "{{ patroni_cluster_name }}-pgnode"  # (optional) If not provided, a name will be auto-generated.
 server_type: ""  # (required) Server type.

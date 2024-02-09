@@ -219,7 +219,7 @@
               volume_type: "{{ volume_type | default('gp3', true) }}"
               volume_size: "{{ volume_size | int }}"
               delete_on_termination: true
-      loop: "{{ range(0, servers_count | int) | list }}"
+      loop: "{{ range(0, server_count | int) | list }}"
       loop_control:
         index_var: idx
         label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
@@ -244,7 +244,7 @@
               image-id: "{{ server_image }}"
               instance-state-name: ["pending", "running", "shutting-down", "stopping", "stopped"]
               "tag:Name": "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
-          loop: "{{ range(0, servers_count | int) | list }}"
+          loop: "{{ range(0, server_count | int) | list }}"
           loop_control:
             index_var: idx
             label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
@@ -370,8 +370,8 @@
       register: aws_elb_classic_lb
       when: cloud_load_balancer | bool and
             (item == 'primary' or
-            (item == 'replica' and servers_count | int > 1) or
-            (item in ['sync', 'async'] and servers_count | int > 1 and synchronous_mode | bool))
+            (item == 'replica' and server_count | int > 1) or
+            (item in ['sync', 'async'] and server_count | int > 1 and synchronous_mode | bool))
 
     # S3 bucket
     - name: "AWS: Create S3 bucket '{{ aws_s3_bucket_name }}'"
@@ -455,7 +455,7 @@
         name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
         region: "{{ server_location }}"
         state: absent
-      loop: "{{ range(0, servers_count | int) | list }}"
+      loop: "{{ range(0, server_count | int) | list }}"
       loop_control:
         index_var: idx
         label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
@@ -474,8 +474,8 @@
       loop_control:
         label: "{{ patroni_cluster_name }}-{{ item }}"
       when: item == 'primary' or
-            (item == 'replica' and servers_count | int > 1) or
-            (item in ['sync', 'async'] and servers_count | int > 1 and synchronous_mode | bool)
+            (item == 'replica' and server_count | int > 1) or
+            (item in ['sync', 'async'] and server_count | int > 1 and synchronous_mode | bool)
 
     - name: "AWS: Delete Security Group"
       amazon.aws.ec2_security_group:

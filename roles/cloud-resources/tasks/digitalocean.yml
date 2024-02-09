@@ -436,7 +436,7 @@
         wait_timeout: 500
         tags:
           - "{{ patroni_cluster_name }}"
-      loop: "{{ range(0, servers_count | int) | list }}"
+      loop: "{{ range(0, server_count | int) | list }}"
       loop_control:
         index_var: idx
         label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
@@ -458,7 +458,7 @@
         wait_timeout: 500
         tags:
           - "{{ patroni_cluster_name }}"
-      loop: "{{ range(0, servers_count | int) | list }}"
+      loop: "{{ range(0, server_count | int) | list }}"
       loop_control:
         index_var: idx
         label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
@@ -495,7 +495,7 @@
         volume_name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-storage"
         region: "{{ server_location }}"
         block_size: "{{ volume_size | int }}"
-      loop: "{{ range(0, servers_count | int) | list }}"
+      loop: "{{ range(0, server_count | int) | list }}"
       loop_control:
         index_var: idx
         label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-storage"
@@ -594,7 +594,7 @@
         name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
         unique_name: true
         region: "{{ server_location }}"
-      loop: "{{ range(0, servers_count | int) | list }}"
+      loop: "{{ range(0, server_count | int) | list }}"
       loop_control:
         index_var: idx
         label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
@@ -610,7 +610,7 @@
         command: create
         volume_name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-storage"
         region: "{{ server_location }}"
-      loop: "{{ range(0, servers_count | int) | list }}"
+      loop: "{{ range(0, server_count | int) | list }}"
       loop_control:
         index_var: idx
         label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-storage"

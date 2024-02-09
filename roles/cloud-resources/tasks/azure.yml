@@ -87,7 +87,7 @@
         name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-public-ip"
         allocation_method: "Static"
         sku: "Standard"
-      loop: "{{ range(0, servers_count | int) | list }}"
+      loop: "{{ range(0, server_count | int) | list }}"
       loop_control:
         index_var: idx
         label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-public-ip"
@@ -108,8 +108,8 @@
         label: "{{ patroni_cluster_name }}-{{ item }}-public-ip"
       when: database_public_access | bool and cloud_load_balancer | bool and
             (item == 'primary' or
-            (item == 'replica' and servers_count | int > 1) or
-            (item in ['sync', 'async'] and servers_count | int > 1 and synchronous_mode | bool))
+            (item == 'replica' and server_count | int > 1) or
+            (item in ['sync', 'async'] and server_count | int > 1 and synchronous_mode | bool))
 
     - name: "Azure: Create or modify Load Balancer"
       azure.azcollection.azure_rm_loadbalancer:
@@ -149,8 +149,8 @@
       register: azure_loadbalancer
       when: cloud_load_balancer | bool and
             (item == 'primary' or
-            (item == 'replica' and servers_count | int > 1) or
-            (item in ['sync', 'async'] and servers_count | int > 1 and synchronous_mode | bool))
+            (item == 'replica' and server_count | int > 1) or
+            (item in ['sync', 'async'] and server_count | int > 1 and synchronous_mode | bool))
 
     # Security Group (Firewall)
     - name: "Azure: Create or modify Security Group"
@@ -251,7 +251,7 @@
             load_balancer_backend_address_pools: "{{ cloud_load_balancer | bool | ternary(load_balancer_backend_ids, omit) }}"
         dns_servers:
           - 8.8.8.8
-      loop: "{{ range(0, servers_count | int) | list }}"
+      loop: "{{ range(0, server_count | int) | list }}"
       loop_control:
         index_var: idx
         label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-network-interface"
@@ -292,7 +292,7 @@
             managed_disk_type: "{{ volume_type | default('StandardSSD_LRS', true) }}"
         network_interface_names:
           - "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-network-interface"
-      loop: "{{ range(0, servers_count | int) | list }}"
+      loop: "{{ range(0, server_count | int) | list }}"
       loop_control:
         index_var: idx
         label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
@@ -410,7 +410,7 @@
         resource_group: "{{ azure_resource_group | default('postgres-cluster-resource-group' ~ '-' ~ server_location) }}"
         name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
         state: absent
-      loop: "{{ range(0, servers_count | int) | list }}"
+      loop: "{{ range(0, server_count | int) | list }}"
       loop_control:
         index_var: idx
         label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
@@ -420,7 +420,7 @@
         resource_group: "{{ azure_resource_group | default('postgres-cluster-resource-group' ~ '-' ~ server_location) }}"
         name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-network-interface"
         state: absent
-      loop: "{{ range(0, servers_count | int) | list }}"
+      loop: "{{ range(0, server_count | int) | list }}"
       loop_control:
         index_var: idx
         label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-network-interface"
@@ -430,7 +430,7 @@
         resource_group: "{{ azure_resource_group | default('postgres-cluster-resource-group' ~ '-' ~ server_location) }}"
         name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-public-ip"
         state: absent
-      loop: "{{ range(0, servers_count | int) | list }}"
+      loop: "{{ range(0, server_count | int) | list }}"
       loop_control:
         index_var: idx
         label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-public-ip"
@@ -448,8 +448,8 @@
         label: "{{ patroni_cluster_name }}-{{ item }}-public-ip"
       when: database_public_access | bool and cloud_load_balancer | bool and
             (item == 'primary' or
-            (item == 'replica' and servers_count | int > 1) or
-            (item in ['sync', 'async'] and servers_count | int > 1 and synchronous_mode | bool))
+            (item == 'replica' and server_count | int > 1) or
+            (item in ['sync', 'async'] and server_count | int > 1 and synchronous_mode | bool))
 
     - name: "Azure: Delete Load Balancer"
       azure.azcollection.azure_rm_loadbalancer:
@@ -465,8 +465,8 @@
         label: "{{ patroni_cluster_name }}-{{ item }}"
       when: cloud_load_balancer | bool and
             (item == 'primary' or
-            (item == 'replica' and servers_count | int > 1) or
-            (item in ['sync', 'async'] and servers_count | int > 1 and synchronous_mode | bool))
+            (item == 'replica' and server_count | int > 1) or
+            (item in ['sync', 'async'] and server_count | int > 1 and synchronous_mode | bool))
 
     - name: "Azure: Delete Security Group"
       azure.azcollection.azure_rm_securitygroup:
