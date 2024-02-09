@@ -106,6 +106,7 @@
         - "sync"
       loop_control:
         label: "{{ patroni_cluster_name }}-{{ item }}-public-ip"
+      register: loadbalancer_public_ip_address
       when: database_public_access | bool and cloud_load_balancer | bool and
             (item == 'primary' or
             (item == 'replica' and server_count | int > 1) or
@@ -119,11 +120,11 @@
         frontend_ip_configurations:
           - name: "{{ patroni_cluster_name }}-{{ item }}-frontend"
             public_ip_address: "{{ database_public_access | bool | ternary(patroni_cluster_name ~ '-' ~ item ~ '-public-ip', omit) }}"
-            subnet: "{{ network_info.virtualnetworks[0].subnets[0].id }}"
+            subnet: "{{ database_public_access | bool | ternary(omit, network_info.virtualnetworks[0].subnets[0].id) }}"
         backend_address_pools:
           - name: "{{ patroni_cluster_name }}-{{ item }}-backend"
         probes:
-          - name: "{{ patroni_cluster_name }}-{{ item }}-probe"
+          - name: "{{ patroni_cluster_name }}-{{ item }}-health-probe"
             protocol: "Http"
             port: "{{ patroni_restapi_port }}"
             request_path: "/{{ item }}"
@@ -133,7 +134,7 @@
           - name: "{{ patroni_cluster_name }}-{{ item }}-rule"
             frontend_ip_configuration: "{{ patroni_cluster_name }}-{{ item }}-frontend"
             backend_address_pool: "{{ patroni_cluster_name }}-{{ item }}-backend"
-            probe: "{{ patroni_cluster_name }}-{{ item }}-probe"
+            probe: "{{ patroni_cluster_name }}-{{ item }}-health-probe"
             backend_port: "{{ pgbouncer_listen_port | default('6432') if pgbouncer_install | bool else postgresql_port | default('5432') }}"
             frontend_port: "{{ pgbouncer_listen_port | default('6432') if pgbouncer_install | bool else postgresql_port | default('5432') }}"
             protocol: "Tcp"
@@ -168,7 +169,7 @@
               'destination_port_range': [ansible_ssh_port | default(22)],
               'source_address_prefix': ssh_public_allowed_ips | default('0.0.0.0/0', true) | split(','),
               'access': 'Allow',
-              'priority': 200,
+              'priority': 1200,
               'direction': 'Inbound'
             }] if ssh_public_access | bool else []) +
             ([{
@@ -178,7 +179,7 @@
               'destination_port_range': [netdata_port | default('19999')],
               'source_address_prefix': netdata_public_allowed_ips | default('0.0.0.0/0', true) | split(','),
               'access': 'Allow',
-              'priority': 400,
+              'priority': 1400,
               'direction': 'Inbound'
             }] if netdata_install | bool and netdata_public_access | bool else []) +
             ([{
@@ -195,7 +196,7 @@
                 ([postgresql_port | default('5432')] if not with_haproxy_load_balancing | bool and not pgbouncer_install | bool else []),
               'source_address_prefix': '0.0.0.0/0',
               'access': 'Allow',
-              'priority': 300,
+              'priority': 1300,
               'direction': 'Inbound'
             }] if database_public_access | bool else []) +
             [{
@@ -230,7 +231,7 @@
                 ([netdata_port | default('19999')] if netdata_install | bool else []),
               'source_address_prefix': network_info.virtualnetworks[0].address_prefixes,
               'access': 'Allow',
-              'priority': 100,
+              'priority': 1000,
               'direction': 'Inbound'
             }]
           }}
