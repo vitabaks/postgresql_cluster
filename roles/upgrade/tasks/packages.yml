@@ -1,7 +1,9 @@
 ---
 
-- name: Clean yum cache
-  ansible.builtin.command: yum clean all
+- name: Update yum cache
+  ansible.builtin.shell: yum clean all && yum -y makecache
+  args:
+    executable: /bin/bash
   register: yum_status
   until: yum_status is success
   delay: 5
@@ -10,15 +12,17 @@
     - ansible_os_family == "RedHat"
     - ansible_distribution_major_version == '7'
 
-- name: Clean dnf cache
-  ansible.builtin.command: dnf clean all
+- name: Update dnf cache
+  ansible.builtin.shell: dnf clean all && dnf -y makecache
+  args:
+    executable: /bin/bash
   register: dnf_status
   until: dnf_status is success
   delay: 5
   retries: 3
   when:
     - ansible_os_family == "RedHat"
-    - ansible_distribution_major_version is version('8', '>=')
+    - ansible_distribution_major_version >= '8'
 
 - name: Update apt cache
   ansible.builtin.apt:
@@ -28,8 +32,7 @@
   until: apt_status is success
   delay: 5
   retries: 3
-  when:
-    - ansible_os_family == "Debian"
+  when: ansible_os_family == "Debian"
 
 - name: "Install PostgreSQL {{ pg_new_version }} packages"
   ansible.builtin.package:
@@ -47,8 +50,16 @@
 # TimescaleDB (if 'enable_timescale' is 'true')
 - name: "Install TimescaleDB package for PostgreSQL {{ pg_new_version }}"
   ansible.builtin.package:
-    name: timescaledb-2-postgresql-{{ pg_new_version }}
+    name: "{{ item }}"
     state: latest
+  loop: "{{ timescaledb_package }}"
+  vars:
+    timescaledb_package: >-
+      [{% if pg_new_version | int >= 11 %}
+      "timescaledb-2-postgresql-{{ pg_new_version }}"
+      {% else %}
+      "timescaledb-postgresql-{{ pg_new_version }}"
+      {% endif %}]
   register: package_status
   until: package_status is success
   delay: 5
@@ -58,9 +69,13 @@
 # Citus (if 'enable_citus' is 'true')
 - name: "Install Citus package for PostgreSQL {{ pg_new_version }}"
   ansible.builtin.package:
-    name: >-
-      {% if ansible_os_family == 'Debian' and pg_new_version >= "14" %}
-      postgresql-{{ pg_new_version }}-citus-12.1
+    name: "{{ item }}"
+    state: latest
+  loop: "{{ citus_package }}"
+  vars:
+    citus_package: >-
+      [{% if ansible_os_family == 'Debian' and pg_new_version >= "14" %}
+      postgresql-{{ pg_new_version }}-citus-{{ citus_version | default('12.1') }}
       {% elif ansible_os_family == 'Debian' and pg_new_version == "13" %}
       postgresql-{{ pg_new_version }}-citus-11.3
       {% elif ansible_os_family == 'Debian' and pg_new_version == "12" %}
@@ -69,8 +84,7 @@
       postgresql-{{ pg_new_version }}-citus-10.0
       {% else %}
       citus_{{ pg_new_version }}
-      {% endif %}
-    state: latest
+      {% endif %}]
   register: package_status
   until: package_status is success
   delay: 5
@@ -83,13 +97,15 @@
 # pg_repack (if 'enable_pg_repack' is 'true')
 - name: "Install pg_repack package for PostgreSQL {{ pg_new_version }}"
   ansible.builtin.package:
-    name: >-
+    name: "{{ pg_repack_package }}"
+    state: latest
+  vars:
+    pg_repack_package: >-
       {% if ansible_os_family == 'Debian' %}
       postgresql-{{ pg_new_version }}-repack
       {% else %}
       pg_repack_{{ pg_new_version }}
       {% endif %}
-    state: latest
   register: package_status
   until: package_status is success
   delay: 5
@@ -99,13 +115,15 @@
 # pg_cron (if 'enable_pg_cron' is 'true')
 - name: "Install pg_cron package for PostgreSQL {{ pg_new_version }}"
   ansible.builtin.package:
-    name: >-
+    name: "{{ pg_cron_package }}"
+    state: latest
+  vars:
+    pg_cron_package: >-
       {% if ansible_os_family == 'Debian' %}
       postgresql-{{ pg_new_version }}-cron
       {% else %}
       pg_cron_{{ pg_new_version }}
       {% endif %}
-    state: latest
   register: package_status
   until: package_status is success
   delay: 5
@@ -115,23 +133,25 @@
 # pgaudit (if 'enable_pgaudit' is 'true')
 - name: "Install pgaudit package for PostgreSQL {{ pg_new_version }}"
   ansible.builtin.package:
-    name: >-
-      {% if ansible_os_family == 'Debian' %}
-        postgresql-{{ pg_new_version }}-pgaudit
-      {% elif ansible_os_family == 'RedHat' and pg_new_version >= "16" %}
-        pgaudit_{{ pg_new_version }}
-      {% elif ansible_os_family == 'RedHat' and pg_new_version == "15" %}
-        pgaudit17_{{ pg_new_version }}
-      {% elif ansible_os_family == 'RedHat' and pg_new_version == "14" %}
-        pgaudit16_{{ pg_new_version }}
-      {% elif ansible_os_family == 'RedHat' and pg_new_version == "13" %}
-        pgaudit15_{{ pg_new_version }}
-      {% elif ansible_os_family == 'RedHat' and pg_new_version == "12" %}
-        pgaudit14_{{ pg_new_version }}
-      {% elif ansible_os_family == 'RedHat' and pg_new_version == "11" %}
-        pgaudit13_{{ pg_new_version }}
-      {% endif %}
+    name: "{{ pgaudit_package }}"
     state: latest
+  vars:
+    pgaudit_package: >-
+      {% if ansible_os_family == 'Debian' %}
+      postgresql-{{ pg_new_version }}-pgaudit
+      {% elif ansible_os_family == 'RedHat' and pg_new_version >= "16" %}
+      pgaudit_{{ pg_new_version }}
+      {% elif ansible_os_family == 'RedHat' and pg_new_version == "15" %}
+      pgaudit17_{{ pg_new_version }}
+      {% elif ansible_os_family == 'RedHat' and pg_new_version == "14" %}
+      pgaudit16_{{ pg_new_version }}
+      {% elif ansible_os_family == 'RedHat' and pg_new_version == "13" %}
+      pgaudit15_{{ pg_new_version }}
+      {% elif ansible_os_family == 'RedHat' and pg_new_version == "12" %}
+      pgaudit14_{{ pg_new_version }}
+      {% elif ansible_os_family == 'RedHat' and pg_new_version == "11" %}
+      pgaudit13_{{ pg_new_version }}
+      {% endif %}
   register: package_status
   until: package_status is success
   delay: 5
@@ -141,13 +161,15 @@
 # pgvector (if 'enable_pgvector' is 'true')
 - name: "Install pgvector package for PostgreSQL {{ pg_new_version }}"
   ansible.builtin.package:
-    name: >-
+    name: "{{ pgvector_package }}"
+    state: latest
+  vars:
+    pgvector_package: >-
       {% if ansible_os_family == 'Debian' %}
       postgresql-{{ pg_new_version }}-pgvector
       {% else %}
       pgvector_{{ pg_new_version }}
       {% endif %}
-    state: latest
   register: package_status
   until: package_status is success
   delay: 5
@@ -160,7 +182,10 @@
 # postgis (if 'enable_postgis' is 'true')
 - name: "Install postgis package for PostgreSQL {{ pg_new_version }}"
   ansible.builtin.package:
-    name: >-
+    name: "{{ postgis_package }}"
+    state: latest
+  vars:
+    postgis_package: >-
       {% if ansible_os_family == 'Debian' %}
       postgresql-{{ pg_new_version }}-postgis-3
       {% elif ansible_os_family == 'RedHat' and pg_new_version == "16" %}
@@ -168,7 +193,6 @@
       {% else %}
       postgis33_{{ pg_new_version }}
       {% endif %}
-    state: latest
   register: package_status
   until: package_status is success
   delay: 5
@@ -178,13 +202,15 @@
 # pgrouting (if 'enable_pgrouting' is 'true')
 - name: "Install pgrouting package for PostgreSQL {{ pg_new_version }}"
   ansible.builtin.package:
-    name: >-
+    name: "{{ pgrouting_package }}"
+    state: latest
+  vars:
+    pgrouting_package: >-
       {% if ansible_os_family == 'Debian' %}
       postgresql-{{ pg_new_version }}-pgrouting
       {% else %}
       pgrouting_{{ pg_new_version }}
       {% endif %}
-    state: latest
   register: package_status
   until: package_status is success
   delay: 5
@@ -195,13 +221,15 @@
 # pg_stat_kcache (if 'enable_pg_stat_kcache' is 'true')
 - name: "Install pg_stat_kcache package for PostgreSQL {{ pg_new_version }}"
   ansible.builtin.package:
-    name: >-
+    name: "{{ pg_stat_kcache_package }}"
+    state: latest
+  vars:
+    pg_stat_kcache_package: >-
       {% if ansible_os_family == 'Debian' %}
       postgresql-{{ pg_new_version }}-pg-stat-kcache
       {% else %}
       pg_stat_kcache_{{ pg_new_version }}
       {% endif %}
-    state: latest
   register: package_status
   until: package_status is success
   delay: 5
@@ -211,13 +239,15 @@
 # pg_wait_sampling (if 'enable_pg_wait_sampling' is 'true')
 - name: "Install pg_wait_sampling package for PostgreSQL {{ pg_new_version }}"
   ansible.builtin.package:
-    name: >-
+    name: "{{ pg_wait_sampling_package }}"
+    state: latest
+  vars:
+    pg_wait_sampling_package: >-
       {% if ansible_os_family == 'Debian' %}
       postgresql-{{ pg_new_version }}-pg-wait-sampling
       {% else %}
       pg_wait_sampling_{{ pg_new_version }}
       {% endif %}
-    state: latest
   register: package_status
   until: package_status is success
   delay: 5
@@ -227,13 +257,15 @@
 # pg_partman (if 'enable_pg_partman' is 'true')
 - name: "Install pg_partman package for PostgreSQL {{ pg_new_version }}"
   ansible.builtin.package:
-    name: >-
+    name: "{{ pg_partman_package }}"
+    state: latest
+  vars:
+    pg_partman_package: >-
       {% if ansible_os_family == 'Debian' %}
       postgresql-{{ pg_new_version }}-partman
       {% else %}
       pg_partman_{{ pg_new_version }}
       {% endif %}
-    state: latest
   register: package_status
   until: package_status is success
   delay: 5
