@@ -4,9 +4,8 @@
 cloud_provider: "{{ provision | default('') }}" # Specifies the Cloud provider for server creation. Available options: 'aws', 'gcp', 'azure', 'digitalocean', 'hetzner'.
 state: present  # Set to 'present' to create a server, 'absent' to delete.
 
-server_count: "{{ servers_count | default(3) }}"  # Number of servers in the cluster. Servers will be automatically named with suffixes 01, 02, 03, etc.
-
-server_name: "{{ patroni_cluster_name }}-pgnode"  # (optional) If not provided, a name will be auto-generated.
+server_count: "{{ servers_count | default(3) }}"  # Number of servers in the cluster.
+server_name: "{{ patroni_cluster_name }}-pgnode"  # (optional) If not provided, a name will be auto-generated. Servers will be automatically named with suffixes 01, 02, 03, etc.
 server_type: ""  # (required) Server type.
 server_image: ""  # (required) OS image for the server. For Azure, use variables 'azure_vm_image_offer', 'azure_vm_image_publisher', 'azure_vm_image_sku', 'azure_vm_image_version' instead of variable 'server_image'
 server_location: ""  # (required) Server location or region.
