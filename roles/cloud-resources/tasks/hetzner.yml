@@ -28,7 +28,7 @@
 - block:
     # Delete the temporary ssh key from the cloud (if exists)
     - name: "Hetzner Cloud: Remove temporary SSH key '{{ ssh_key_name }}' from cloud (if any)"
-      hetzner.hcloud.hcloud_ssh_key:
+      hetzner.hcloud.ssh_key:
         api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
         name: "{{ ssh_key_name }}"
         state: absent
@@ -39,7 +39,7 @@
 
     # if ssh_key_name and ssh_key_content is specified, add this ssh key to the cloud
     - name: "Hetzner Cloud: Add SSH key '{{ ssh_key_name }}' to cloud"
-      hetzner.hcloud.hcloud_ssh_key:
+      hetzner.hcloud.ssh_key:
         api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
         name: "{{ ssh_key_name }}"
         public_key: "{{ ssh_key_content }}"
@@ -50,7 +50,7 @@
 
     # if ssh_key_name is specified
     - name: "Hetzner Cloud: Gather information about SSH key '{{ ssh_key_name }}'"
-      hetzner.hcloud.hcloud_ssh_key_info:
+      hetzner.hcloud.ssh_key_info:
         api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
         name: "{{ ssh_key_name }}"
       register: ssh_keys
@@ -78,7 +78,7 @@
     # if ssh_key_name is not specified, and ssh_public_keys is not defined
     # get the names of all ssh keys
     - name: "Hetzner Cloud: Gather information about SSH keys"
-      hetzner.hcloud.hcloud_ssh_key_info:
+      hetzner.hcloud.ssh_key_info:
         api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
       register: ssh_keys
       when:
@@ -117,7 +117,7 @@
       when: item.name == server_location
 
     - name: "Hetzner Cloud: Gather information about networks"
-      hetzner.hcloud.hcloud_network_info:
+      hetzner.hcloud.network_info:
         api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
       register: network_info
 
@@ -148,14 +148,14 @@
     # if server_network is not specified, create a network and subnet
     - block:
         - name: "Hetzner Cloud: Create a network '{{ hcloud_network_name | default('postgres-cluster-network-' + target_network_zone) }}'"
-          hetzner.hcloud.hcloud_network:
+          hetzner.hcloud.network:
             api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
             name: "{{ hcloud_network_name | default('postgres-cluster-network-' + target_network_zone) }}"
             ip_range: "{{ hcloud_network_ip_range | default('10.0.0.0/16') }}"
             state: present
 
         - name: "Hetzner Cloud: Create a subnetwork in network '{{ hcloud_network_name | default('postgres-cluster-network-' + target_network_zone) }}'"
-          hetzner.hcloud.hcloud_subnetwork:
+          hetzner.hcloud.subnetwork:
             api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
             network: "{{ hcloud_network_name | default('postgres-cluster-network-' + target_network_zone) }}"
             ip_range: "{{ hcloud_subnetwork_ip_range | default('10.0.1.0/24') }}"
@@ -171,7 +171,7 @@
 
     # Firewall
     - name: "Hetzner Cloud: Create or modify public firewall"
-      hetzner.hcloud.hcloud_firewall:
+      hetzner.hcloud.firewall:
         api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
         state: "present"
         name: "{{ patroni_cluster_name }}-public-firewall"
@@ -251,7 +251,7 @@
         - (ssh_public_access | bool or netdata_public_access | bool or database_public_access | bool)
 
     - name: "Hetzner Cloud: Create or modify Postgres cluster firewall"
-      hetzner.hcloud.hcloud_firewall:
+      hetzner.hcloud.firewall:
         api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
         state: "present"
         name: "{{ patroni_cluster_name }}-firewall"
@@ -398,7 +398,7 @@
 
     # Server and volume
     - name: "Hetzner Cloud: Create or modify server"
-      hetzner.hcloud.hcloud_server:
+      hetzner.hcloud.server:
         api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
         name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
         state: present
@@ -425,7 +425,7 @@
           }}
 
     - name: "Hetzner Cloud: Add server to network '{{ server_network }}'"
-      hetzner.hcloud.hcloud_server_network:
+      hetzner.hcloud.server_network:
         api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
         network: "{{ server_network }}"
         server: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
@@ -437,7 +437,7 @@
       when: server_network | length > 0
 
     - name: "Hetzner Cloud: Create or modify volume"
-      hetzner.hcloud.hcloud_volume:
+      hetzner.hcloud.volume:
         api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
         name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-storage"
         state: present
@@ -506,7 +506,7 @@
 
 # Delete the temporary ssh key from the cloud after creating the server
 - name: "Hetzner Cloud: Remove temporary SSH key {{ ssh_key_name }} from cloud"
-  hetzner.hcloud.hcloud_ssh_key:
+  hetzner.hcloud.ssh_key:
     api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
     name: "{{ ssh_key_name }}"
     state: absent
@@ -518,7 +518,7 @@
 # Delete (if state is absent)
 - block:
     - name: "Hetzner Cloud: Delete server"
-      hetzner.hcloud.hcloud_server:
+      hetzner.hcloud.server:
         api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
         name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
         state: absent
@@ -529,7 +529,7 @@
         label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
 
     - name: "Hetzner Cloud: Delete volume"
-      hetzner.hcloud.hcloud_volume:
+      hetzner.hcloud.volume:
         api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
         name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-storage"
         state: absent
@@ -540,13 +540,13 @@
         label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-storage"
 
     - name: "Hetzner Cloud: Delete public firewall"
-      hetzner.hcloud.hcloud_firewall:
+      hetzner.hcloud.firewall:
         api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
         state: "absent"
         name: "{{ patroni_cluster_name }}-public-firewall"
 
     - name: "Hetzner Cloud: Delete Postgres cluster firewall"
-      hetzner.hcloud.hcloud_firewall:
+      hetzner.hcloud.firewall:
         api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
         state: "absent"
         name: "{{ patroni_cluster_name }}-firewall"
