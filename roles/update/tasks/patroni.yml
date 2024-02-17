@@ -11,10 +11,12 @@
       environment:
         PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
         PIP_BREAK_SYSTEM_PACKAGES: "1"
-  when: installation_method == "repo" and patroni_installation_method == "pip"
+      register: update_patroni_package_pip
+  ignore_errors: true
   environment: "{{ proxy_env | default({}) }}"
   vars:
     ansible_python_interpreter: /usr/bin/python3
+  when: installation_method == "repo" and patroni_installation_method == "pip"
 
 # patroni_installation_method: "rpm/deb"
 - block:
@@ -23,8 +25,8 @@
       ansible.builtin.package:
         name: "{{ patroni_packages | default('patroni') }}"
         state: latest
-      register: package_status
-      until: package_status is success
+      register: update_patroni_package_debian
+      until: update_patroni_package_debian is success
       delay: 5
       retries: 3
       when: ansible_os_family == "Debian" and patroni_deb_package_repo | length < 1
@@ -34,8 +36,8 @@
       ansible.builtin.package:
         name: "{{ patroni_packages | default('patroni') }}"
         state: latest
-      register: package_status
-      until: package_status is success
+      register: update_patroni_package_rhel
+      until: update_patroni_package_rhel is success
       delay: 5
       retries: 3
       when: ansible_os_family == "RedHat" and patroni_rpm_package_repo | length < 1
@@ -57,8 +59,8 @@
         deb: "/tmp/{{ item }}"
         state: present
       loop: "{{ patroni_deb_package_repo | map('basename') | list }}"
-      register: apt_status
-      until: apt_status is success
+      register: update_patroni_package_deb
+      until: update_patroni_package_deb is success
       delay: 5
       retries: 3
       when: ansible_os_family == "Debian" and patroni_deb_package_repo | length > 0
@@ -78,13 +80,26 @@
         name: "/tmp/{{ item }}"
         state: present
       loop: "{{ patroni_rpm_package_repo | map('basename') | list }}"
-      register: package_status
-      until: package_status is success
+      register: update_patroni_package_rpm
+      until: update_patroni_package_rpm is success
       delay: 5
       retries: 3
       when: ansible_os_family == "RedHat" and patroni_rpm_package_repo | length > 0
+  ignore_errors: true
   environment: "{{ proxy_env | default({}) }}"
   when:
     - installation_method == "repo"
     - (patroni_installation_method == "rpm" or patroni_installation_method == "deb")
+
+# Set flag if any update failed
+- name: "Set variable: update_patroni_failed"
+  ansible.builtin.set_fact:
+    update_patroni_failed: true
+  when: >
+    (update_patroni_package_pip is defined and update_patroni_package_pip is failed) or
+    (update_patroni_package_debian is defined and update_patroni_package_debian is failed) or
+    (update_patroni_package_rhel is defined and update_patroni_package_rhel is failed) or
+    (update_patroni_package_deb is defined and update_patroni_package_deb is failed) or
+    (update_patroni_package_rpm is defined and update_patroni_package_rpm is failed)
+
 ...

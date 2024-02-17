@@ -3,6 +3,7 @@
   ansible.builtin.shell: yum clean all && yum -y makecache
   args:
     executable: /bin/bash
+  ignore_errors: true
   when:
     - ansible_os_family == "RedHat"
     - ansible_distribution_major_version == '7'
@@ -11,6 +12,7 @@
   ansible.builtin.shell: dnf clean all && dnf -y makecache
   args:
     executable: /bin/bash
+  ignore_errors: true
   when:
     - ansible_os_family == "RedHat"
     - ansible_distribution_major_version >= '8'
@@ -23,14 +25,15 @@
   until: apt_status is success
   delay: 5
   retries: 3
+  ignore_errors: true
   when: ansible_os_family == "Debian"
 
 - name: Update all system packages
   ansible.builtin.package:
     name: '*'
     state: latest
-  register: package_status
-  until: package_status is success
+  register: update_system_packages_debian
+  until: update_system_packages_debian is success
   delay: 5
   retries: 3
   ignore_errors: true
@@ -41,10 +44,11 @@
     name: '*'
     state: latest
     disablerepo: 'pgdg*'
-  register: package_status
-  until: package_status is success
+  register: update_system_packages_rhel7
+  until: update_system_packages_rhel7 is success
   delay: 5
   retries: 3
+  ignore_errors: true
   when:
     - ansible_os_family == "RedHat"
     - ansible_distribution_major_version == '7'
@@ -54,10 +58,11 @@
     name: '*'
     state: latest
     disablerepo: 'pgdg*'
-  register: package_status
-  until: package_status is success
+  register: update_system_packages_rhel
+  until: update_system_packages_rhel is success
   delay: 5
   retries: 3
+  ignore_errors: true
   when:
     - ansible_os_family == "RedHat"
     - ansible_distribution_major_version >= '8'
@@ -66,6 +71,7 @@
   ansible.builtin.stat:
     path: /var/run/reboot-required
   register: reboot_required_debian
+  failed_when: false
   changed_when: false
   when:
     - ansible_os_family == "Debian"
@@ -87,4 +93,14 @@
     test_command: uptime
   when: (reboot_required_debian.stat.exists is defined and reboot_required_debian.stat.exists) or
         (reboot_required_rhel.rc is defined and reboot_required_rhel.rc != 0)
+
+# Set flag if any update failed
+- name: "Set variable: update_system_failed"
+  ansible.builtin.set_fact:
+    update_system_failed: true
+  when: >
+    (update_system_packages_debian is defined and update_system_packages_debian is failed) or
+    (update_system_packages_rhel is defined and update_system_packages_rhel is failed) or
+    (update_system_packages_rhel7 is defined and update_system_packages_rhel7 is failed)
+
 ...

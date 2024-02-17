@@ -3,6 +3,7 @@
   ansible.builtin.shell: yum clean all && yum -y makecache
   args:
     executable: /bin/bash
+  ignore_errors: true
   when:
     - ansible_os_family == "RedHat"
     - ansible_distribution_major_version == '7'
@@ -11,6 +12,7 @@
   ansible.builtin.shell: dnf clean all && dnf -y makecache
   args:
     executable: /bin/bash
+  ignore_errors: true
   when:
     - ansible_os_family == "RedHat"
     - ansible_distribution_major_version >= '8'
@@ -23,6 +25,7 @@
   until: apt_status is success
   delay: 5
   retries: 3
+  ignore_errors: true
   when: ansible_os_family == "Debian"
 
 - name: Install the latest version of PostgreSQL packages
@@ -30,8 +33,16 @@
     name: "{{ item }}"
     state: latest
   loop: "{{ postgresql_packages }}"
-  register: package_status
-  until: package_status is success
+  register: update_postgres_package
+  until: update_postgres_package is success
   delay: 5
   retries: 3
+  ignore_errors: true
+
+# Set flag if any update failed
+- name: "Set variable: update_postgres_failed"
+  ansible.builtin.set_fact:
+    update_postgres_failed: true
+  when: update_postgres_package is failed
+
 ...
