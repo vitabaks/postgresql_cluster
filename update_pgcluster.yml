@@ -206,6 +206,15 @@
       when: update_extensions | bool
 
     # finish (info)
+    - name: Check for any update failure
+      run_once: true # noqa run-once
+      ansible.builtin.set_fact:
+        any_update_failed: "{{ any_update_failed | default(false) or
+          hostvars[item].update_postgres_failed | default(false) or
+          hostvars[item].update_patroni_failed | default(false) or
+          hostvars[item].update_system_failed | default(false) }}"
+      loop: "{{ groups['postgres_cluster'] }}"
+
     - name: Check the Patroni cluster state
       run_once: true # noqa run-once
       become: true
@@ -230,13 +239,23 @@
         msg: "{{ patronictl_result.stdout_lines }}"
       when: patronictl_result.stdout_lines is defined
 
+    # if there are no update errors
     - name: Update completed
       run_once: true # noqa run-once
       ansible.builtin.debug:
         msg:
           - "PostgreSQL HA cluster update completed."
           - "Current version: {{ postgres_version.stdout }}"
-      when: postgres_version.stdout is defined
+      when: not any_update_failed
+
+    # if there were errors during the update
+    - name: Update completed with error
+      run_once: true # noqa run-once
+      ansible.builtin.debug:
+        msg:
+          - "Update of PostgreSQL HA cluster completed with errors. Check the Ansible log."
+          - "Current version: {{ postgres_version.stdout }}"
+      when: any_update_failed
   tags:
     - update
     - update-extensions
