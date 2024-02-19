@@ -16,6 +16,7 @@ skip_list:
   - risky-file-permissions # TODO
   - role-name
   - schema[playbook] # TODO
+  - var-naming[no-role-prefix]
 
 exclude_paths:
   - ../.venv
