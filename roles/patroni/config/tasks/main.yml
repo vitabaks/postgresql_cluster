@@ -78,6 +78,7 @@
 # pending_restart
 - block:
     - name: "Check if there are any changed parameters that require a restart"
+      become: true
       become_user: postgres
       community.postgresql.postgresql_query:
         login_host: "127.0.0.1"
