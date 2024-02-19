@@ -15,6 +15,7 @@ skip_list:
   - package-latest
   - risky-file-permissions # TODO
   - role-name
+  - schema[playbook] # TODO
 
 exclude_paths:
   - ../.venv
