@@ -15,7 +15,8 @@ skip_list:
   - package-latest
   - risky-file-permissions # TODO
   - role-name
-  - schema[playbook] # TODO
+  - schema[playbook] # ignore `become_method` (TODO)
+  - schema[tasks] # ignore `become_method` (TODO)
   - var-naming[no-role-prefix]
 
 exclude_paths:
