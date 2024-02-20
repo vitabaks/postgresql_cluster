@@ -67,6 +67,7 @@
     - ansible_os_family == "RedHat"
     - ansible_distribution_major_version >= '8'
 
+# Reboot (if 'reboot_host_after_update' is 'true')
 - name: Check if a reboot is required
   ansible.builtin.stat:
     path: /var/run/reboot-required
@@ -76,6 +77,7 @@
   when:
     - ansible_os_family == "Debian"
     - ansible_virtualization_type not in ['container', 'docker', 'lxc', 'podman']  # exclude for containers to prevent test failures in CI.
+    - reboot_host_after_update | bool
 
 - name: Check if a reboot is required
   ansible.builtin.command: needs-restarting -r
@@ -85,14 +87,24 @@
   when:
     - ansible_os_family == "RedHat"
     - ansible_virtualization_type not in ['container', 'docker', 'lxc', 'podman']  # exclude for containers to prevent test failures in CI.
+    - reboot_host_after_update | bool
 
 - name: Rebooting host
   ansible.builtin.reboot:
     msg: "Reboot initiated by Ansible due to required system updates"
-    reboot_timeout: 1800 # 30 minutes
+    reboot_timeout: "{{ reboot_host_timeout | int }}"
     test_command: uptime
+  register: reboot_result
   when: (reboot_required_debian.stat.exists is defined and reboot_required_debian.stat.exists) or
         (reboot_required_rhel.rc is defined and reboot_required_rhel.rc != 0)
+
+- name: "Wait {{ reboot_host_post_delay }} minutes for caches to warm up after reboot"
+  ansible.builtin.pause:
+    minutes: "{{ reboot_host_post_delay }}"
+  when:
+    - (reboot_result.rebooted is defined and reboot_result.rebooted)
+    - (reboot_host_post_delay is defined and reboot_host_post_delay | int > 0)
+    - (inventory_hostname in groups['secondary'] and groups['secondary'] | length > 1)
 
 # Set flag if any update failed
 - name: "Set variable: update_system_failed"

@@ -53,9 +53,6 @@
   become: true
   become_user: postgres
   any_errors_fatal: true
-  vars:
-    max_replication_lag_bytes: 10485760 # 10 MiB
-    max_transaction_sec: 15 # seconds
   pre_tasks:
     - name: Include main variables
       ansible.builtin.include_vars: "vars/main.yml"
@@ -76,8 +73,6 @@
   become_method: sudo
   any_errors_fatal: true
   environment: "{{ proxy_env | default({}) }}"
-  vars:
-    target: postgres # or 'patroni', 'system'
   pre_tasks:
     - name: Include main variables
       ansible.builtin.include_vars: "vars/main.yml"
@@ -133,8 +128,6 @@
   become_method: sudo
   any_errors_fatal: true
   environment: "{{ proxy_env | default({}) }}"
-  vars:
-    target: postgres # or 'patroni', 'system'
   pre_tasks:
     - name: Include main variables
       ansible.builtin.include_vars: "vars/main.yml"
@@ -193,8 +186,6 @@
   become: true
   become_user: postgres
   any_errors_fatal: true
-  vars:
-    update_extensions: true # or 'false', to avoid updating extensions
   pre_tasks:
     - name: Include main variables
       ansible.builtin.include_vars: "vars/main.yml"
