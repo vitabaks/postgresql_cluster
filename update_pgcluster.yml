@@ -54,6 +54,8 @@
   become_user: postgres
   any_errors_fatal: true
   pre_tasks:
+    - name: Include role variables
+      ansible.builtin.include_vars: "roles/update/vars/main.yml"
     - name: Include main variables
       ansible.builtin.include_vars: "vars/main.yml"
   tasks:
@@ -74,11 +76,12 @@
   any_errors_fatal: true
   environment: "{{ proxy_env | default({}) }}"
   pre_tasks:
+    - name: Include role variables
+      ansible.builtin.include_vars: "roles/update/vars/main.yml"
     - name: Include main variables
       ansible.builtin.include_vars: "vars/main.yml"
     - name: Include OS-specific variables
       ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
-
   tasks:
     - name: Stop read-only traffic
       ansible.builtin.include_role:
@@ -129,6 +132,8 @@
   any_errors_fatal: true
   environment: "{{ proxy_env | default({}) }}"
   pre_tasks:
+    - name: Include role variables
+      ansible.builtin.include_vars: "roles/update/vars/main.yml"
     - name: Include main variables
       ansible.builtin.include_vars: "vars/main.yml"
     - name: Include OS-specific variables
@@ -187,6 +192,8 @@
   become_user: postgres
   any_errors_fatal: true
   pre_tasks:
+    - name: Include role variables
+      ansible.builtin.include_vars: "roles/update/vars/main.yml"
     - name: Include main variables
       ansible.builtin.include_vars: "vars/main.yml"
   tasks:
