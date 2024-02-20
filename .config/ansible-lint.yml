@@ -1,20 +1,22 @@
 ---
 skip_list:
-  - command-instead-of-module # Using command rather than module where necessary
-  - command-instead-of-shell # Using command rather than shell where necessary
-  - experimental # all rules tagged as experimental
+  - command-instead-of-module
+  - command-instead-of-shell
+  - experimental
   - ignore-errors
-  - jinja[invalid] # TODO
-  - key-order[task] # TODO
-  - name[casing] # TODO: All names should start with an uppercase letter.
-  - name[missing] # All tasks should be named.
-  - name[template] # Rule for checking task and play names
   - no-changed-when
   - no-handler
   - no-relative-paths
   - package-latest
-  - risky-file-permissions # TODO
-  - role-name
+  - key-order[task]
+  - var-naming[no-role-prefix]
+  - name[missing]
+  - name[template]
+  - name[casing] # TODO: All names should start with an uppercase letter.
+  - risky-file-permissions # TODO: File permissions unset or incorrect.
+  - role-name # TODO: Avoid using paths when importing roles. Role name XXX does not match ``^*$`` pattern.
+  - schema[playbook] # TODO: Use FQCN for `become_method`.
+  - schema[tasks] # TODO: Use FQCN for `become_method`.
 
 exclude_paths:
   - ../.venv
