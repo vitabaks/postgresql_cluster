@@ -2,7 +2,7 @@
 
 - name: Make sure that physical replication is active
   ansible.builtin.command: >-
-    psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -tAXc
+    {{ pg_new_bindir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -tAXc
     "select count(*) from pg_stat_replication
     where application_name != 'pg_basebackup'"
   register: pg_replication_state
@@ -28,7 +28,7 @@
 
 - name: Create a table "test_replication" with 10000 rows on the Primary
   ansible.builtin.command: >-
-    psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -tAXc
+    {{ pg_new_bindir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -tAXc
     "drop table IF EXISTS test_replication;
     create table test_replication as select generate_series(1, 10000)"
   when:
@@ -36,7 +36,7 @@
 
 - name: Wait until the PostgreSQL replica is synchronized
   ansible.builtin.command: >-
-    psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -tAXc
+    {{ pg_new_bindir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -tAXc
     "select count(*) from test_replication"
   register: count_test
   until: count_test.stdout | int == 10000
@@ -49,7 +49,7 @@
 
 - name: Drop a table "test_replication"
   ansible.builtin.command: >-
-    psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -tAXc
+    {{ pg_new_bindir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -tAXc
     "drop table IF EXISTS test_replication"
   when:
     - inventory_hostname in groups['primary']

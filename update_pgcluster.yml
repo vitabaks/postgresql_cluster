@@ -53,12 +53,13 @@
   become: true
   become_user: postgres
   any_errors_fatal: true
-  vars:
-    max_replication_lag_bytes: 10485760 # 10 MiB
-    max_transaction_sec: 15 # seconds
   pre_tasks:
+    - name: Include role variables
+      ansible.builtin.include_vars: "roles/update/vars/main.yml"
     - name: Include main variables
       ansible.builtin.include_vars: "vars/main.yml"
+    - name: Include OS-specific variables
+      ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
   tasks:
     - name: Running Pre-Checks
       ansible.builtin.include_role:
@@ -76,14 +77,13 @@
   become_method: sudo
   any_errors_fatal: true
   environment: "{{ proxy_env | default({}) }}"
-  vars:
-    target: postgres # or 'patroni', 'system'
   pre_tasks:
+    - name: Include role variables
+      ansible.builtin.include_vars: "roles/update/vars/main.yml"
     - name: Include main variables
       ansible.builtin.include_vars: "vars/main.yml"
     - name: Include OS-specific variables
       ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
-
   tasks:
     - name: Stop read-only traffic
       ansible.builtin.include_role:
@@ -133,9 +133,9 @@
   become_method: sudo
   any_errors_fatal: true
   environment: "{{ proxy_env | default({}) }}"
-  vars:
-    target: postgres # or 'patroni', 'system'
   pre_tasks:
+    - name: Include role variables
+      ansible.builtin.include_vars: "roles/update/vars/main.yml"
     - name: Include main variables
       ansible.builtin.include_vars: "vars/main.yml"
     - name: Include OS-specific variables
@@ -193,11 +193,13 @@
   become: true
   become_user: postgres
   any_errors_fatal: true
-  vars:
-    update_extensions: true # or 'false', to avoid updating extensions
   pre_tasks:
+    - name: Include role variables
+      ansible.builtin.include_vars: "roles/update/vars/main.yml"
     - name: Include main variables
       ansible.builtin.include_vars: "vars/main.yml"
+    - name: Include OS-specific variables
+      ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
   tasks:
     - name: Update extensions
       ansible.builtin.include_role:
@@ -228,7 +230,7 @@
     - name: Check the current PostgreSQL version
       run_once: true # noqa run-once
       ansible.builtin.command: >-
-        psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -tAXc
+        {{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -tAXc
         "select current_setting('server_version')"
       register: postgres_version
       changed_when: false

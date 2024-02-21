@@ -1,12 +1,12 @@
 ---
 - name: '[Pre-Check] (ALL) Test PostgreSQL DB Access'
   ansible.builtin.command: >-
-    psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -tAXc 'select 1'
+    {{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -tAXc 'select 1'
   changed_when: false
 
 - name: '[Pre-Check] Make sure that physical replication is active'
   ansible.builtin.command: >-
-    psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -tAXc
+    {{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -tAXc
     "select count(*) from pg_stat_replication
     where application_name != 'pg_basebackup'"
   register: pg_replication_state
@@ -24,7 +24,7 @@
 
 - name: '[Pre-Check] Make sure there is no high replication lag (more than {{ max_replication_lag_bytes | human_readable }})'
   ansible.builtin.command: >-
-    psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -tAXc
+    {{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -tAXc
     "select pg_wal_lsn_diff(pg_current_wal_lsn(),replay_lsn) pg_lag_bytes
     from pg_stat_replication
     order by pg_lag_bytes desc limit 1"
@@ -53,7 +53,7 @@
 
 - name: '[Pre-Check] Make sure there are no long-running transactions (more than {{ max_transaction_sec }} seconds)'
   ansible.builtin.command: >-
-    psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -tAXc
+    {{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -tAXc
     "select pid, usename, client_addr, clock_timestamp() - xact_start as xact_age,
       state, wait_event_type ||':'|| wait_event as wait_events,
       left(regexp_replace(query, E'[ \\t\\n\\r]+', ' ', 'g'),100) as query
