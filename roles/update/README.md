@@ -93,6 +93,8 @@ When using load balancing for read-only traffic (the "Type A" and "Type C" schem
   - Disable `noloadbalance`, `nosync`, `nofailover` parameters in the patroni.yml
   - Reload patroni service
   - Make sure replica endpoint is available
+  - Wait N minutes for caches to warm up after reboot
+    - Note: variable `reboot_host_post_delay`
 - Perform the same steps for the next replica server.
 #### 3. UPDATE: Primary
 - Switchover Patroni leader role
