@@ -98,14 +98,6 @@
   when: (reboot_required_debian.stat.exists is defined and reboot_required_debian.stat.exists) or
         (reboot_required_rhel.rc is defined and reboot_required_rhel.rc != 0)
 
-- name: "Wait {{ reboot_host_post_delay }} minutes for caches to warm up after reboot"
-  ansible.builtin.pause:
-    minutes: "{{ reboot_host_post_delay }}"
-  when:
-    - (reboot_result.rebooted is defined and reboot_result.rebooted)
-    - (reboot_host_post_delay is defined and reboot_host_post_delay | int > 0)
-    - (inventory_hostname in groups['secondary'] and groups['secondary'] | length > 1)
-
 # Set flag if any update failed
 - name: "Set variable: update_system_failed"
   ansible.builtin.set_fact:
