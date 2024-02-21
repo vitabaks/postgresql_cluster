@@ -2,7 +2,7 @@
 
 - name: Get a list of databases
   ansible.builtin.command: >-
-    psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -tAXc
+    {{ pg_new_bindir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -tAXc
     "select datname from pg_catalog.pg_database where datname <> 'template0'"
   register: databases_list
   changed_when: false

@@ -24,19 +24,30 @@ Update all system packages:
 - `target` 
   - Defines the target for the update.
   - Available values: 'postgres', 'patroni', 'system'
-  - Default value: postgres
+  - Default value: `postgres`
 - `max_replication_lag_bytes`
   - Determines the size of the replication lag above which the update will not be performed.
-  - If the lag is high, you will be prompted to try again later.
-  - Default value: 10485760 (10 MiB)
+  - Note: If the lag is high, you will be prompted to try again later.
+  - Default value: `10485760` (10 MiB)
 - `max_transaction_sec`
   - Determines the maximum transaction time, in the presence of which the update will not be performed.
-  - If long-running transactions are present, you will be prompted to try again later. 
-  - Default value: 15 (seconds)
+  - Note: If long-running transactions are present, you will be prompted to try again later. 
+  - Default value: `15` (seconds)
 - `update_extensions`
-  - If 'true', an attempt will be made to automatically update all extensions for all databases.
-  - Specify 'false', to avoid updating extensions.
-  - Default value: true
+  - Attempt to automatically update all PostgreSQL extensions in all databases.
+  - Note: Specify 'false', to avoid updating extensions.
+  - Default value: `true`
+- `reboot_host_after_update`
+  - Restart the server if it is required after the update.
+  - Default value: `true`
+- `reboot_host_timeout`
+  - Maximum seconds to wait for machine to reboot and respond to a test command.
+  - Default value: `1800` (30 minutes)
+- `reboot_host_post_delay`
+  - The waiting time (in minutes) for the caches to warm up after restarting the server before updating the next server.
+  - Note: Applicable when there are multiple replicas.
+  - Default value: `5` (minutes). 
+
 ---
 
 ## Plan:
@@ -82,6 +93,8 @@ When using load balancing for read-only traffic (the "Type A" and "Type C" schem
   - Disable `noloadbalance`, `nosync`, `nofailover` parameters in the patroni.yml
   - Reload patroni service
   - Make sure replica endpoint is available
+  - Wait N minutes for caches to warm up after reboot
+    - Note: variable `reboot_host_post_delay`
 - Perform the same steps for the next replica server.
 #### 3. UPDATE: Primary
 - Switchover Patroni leader role
