@@ -58,6 +58,8 @@
       ansible.builtin.include_vars: "roles/update/vars/main.yml"
     - name: Include main variables
       ansible.builtin.include_vars: "vars/main.yml"
+    - name: Include OS-specific variables
+      ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
   tasks:
     - name: Running Pre-Checks
       ansible.builtin.include_role:
@@ -196,6 +198,8 @@
       ansible.builtin.include_vars: "roles/update/vars/main.yml"
     - name: Include main variables
       ansible.builtin.include_vars: "vars/main.yml"
+    - name: Include OS-specific variables
+      ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
   tasks:
     - name: Update extensions
       ansible.builtin.include_role:
