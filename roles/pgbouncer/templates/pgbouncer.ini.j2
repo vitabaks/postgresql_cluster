@@ -35,7 +35,11 @@ pkt_buf = 8192
 listen_backlog = 4096
 max_prepared_statements = {{ pgbouncer_max_prepared_statements }}
 so_reuseport = 1
-
+{% if pgbouncer_client_tls_sslmode != 'disable' %}
+client_tls_sslmode = {{ pgbouncer_client_tls_sslmode }}
+client_tls_key_file = {{ pgbouncer_client_tls_key_file }}
+client_tls_cert_file = {{ pgbouncer_client_tls_cert_file }}
+{% endif %}
 log_connections = 0
 log_disconnections = 0
 
