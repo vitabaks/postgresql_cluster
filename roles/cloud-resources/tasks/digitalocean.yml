@@ -109,6 +109,13 @@
       register: vpc_info
 
     # if server_network is not specified
+    - name: "Fail if no VPC found in the specified region."
+      ansible.builtin.fail:
+        msg: "No default VPC found in region '{{ server_location }}'. Please create a network (VPC)."
+      when:
+        - server_network | length < 1
+        - vpc_info.data | selectattr('region', 'equalto', server_location) | selectattr('default', 'equalto', true) | list | length == 0
+
     - name: Extract ip_range from default VPC
       ansible.builtin.set_fact:
         default_ip_range: >-
@@ -119,7 +126,7 @@
             | map(attribute='ip_range')
             | list | first) | default('')
           }}
-      when: server_network is not defined or server_network | length < 1
+      when: server_network | length < 1
 
     # if server_network is specified
     - name: "Fail if no VPC found in the specified region"
@@ -257,7 +264,7 @@
     - name: "DigitalOcean: Create or modify Postgres cluster firewall"
       community.digitalocean.digital_ocean_firewall:
         oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
-        name: "{{ patroni_cluster_name }}-firewall"
+        name: "{{ patroni_cluster_name }}-private-firewall"
         state: "present"
         inbound_rules: "{{ inbound_rules }}"
         outbound_rules:
@@ -422,6 +429,7 @@
           }}
       when: firewall | bool
 
+    # Server and volume
     # if server_network is not specified, use default vpc
     - name: "DigitalOcean: Create or modify Droplet"
       community.digitalocean.digital_ocean_droplet:
@@ -444,7 +452,7 @@
       when: server_network is not defined or server_network | length < 1
 
     # if server_network is specified, get UUID for this vpc
-    - name: "DigitalOcean: Create or modify Droplet with VPC '{{ server_network }}'"
+    - name: "DigitalOcean: Create or modify Droplet"
       community.digitalocean.digital_ocean_droplet:
         oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
         state: present
@@ -467,26 +475,9 @@
 
     - name: "Set variable: droplet_result"
       ansible.builtin.set_fact:
-        droplet_result: "{{ droplet_result_default_vpc
-                            if server_network | default([]) | length < 1
-                            else droplet_result_with_vpc }}"
-      when: droplet_result_default_vpc is defined or
-            droplet_result_with_vpc is defined
+        droplet_result: "{{ droplet_result_default_vpc if server_network | default([]) | length < 1 else droplet_result_with_vpc }}"
+      when: droplet_result_default_vpc is defined or droplet_result_with_vpc is defined
 
-    # Spaces Object Storage (S3 bucket)
-    - name: "DigitalOcean: Create Spaces Bucket '{{ digital_ocean_spaces_name }}'"
-      community.digitalocean.digital_ocean_spaces:
-        oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
-        name: "{{ digital_ocean_spaces_name }}"
-        region: "{{ digital_ocean_spaces_region }}"
-        aws_access_key_id: "{{ AWS_ACCESS_KEY_ID }}"
-        aws_secret_access_key: "{{ AWS_SECRET_ACCESS_KEY }}"
-        state: present
-      when:
-        - (pgbackrest_install | bool or wal_g_install | bool)
-        - digital_ocean_spaces_create | bool
-
-    # Server and volume
     - name: "DigitalOcean: Create or modify Block Storage"
       community.digitalocean.digital_ocean_block_storage:
         oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
@@ -514,20 +505,111 @@
         index_var: idx
         label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-storage"
       when: droplet_result.results is defined
-  when: state == 'present'
 
-- name: Wait for host to be available via SSH
-  ansible.builtin.wait_for:
-    host: "{{ (item.data.droplet.networks.v4 | selectattr('type', 'equalto', 'public')).0.ip_address }}"
-    port: 22
-    delay: 5
-    timeout: 300
-  loop: "{{ droplet_result.results }}"
-  loop_control:
-    label: "{{ (item.data.droplet.networks.v4 | selectattr('type', 'equalto', 'public')).0.ip_address | default('N/A') }}"
-  when:
-    - droplet_result.results is defined
-    - item.data is defined
+    - name: Wait for host to be available via SSH
+      ansible.builtin.wait_for:
+        host: "{{ (item.data.droplet.networks.v4 | selectattr('type', 'equalto', 'public')).0.ip_address }}"
+        port: 22
+        delay: 5
+        timeout: 300
+      loop: "{{ droplet_result.results }}"
+      loop_control:
+        label: "{{ (item.data.droplet.networks.v4 | selectattr('type', 'equalto', 'public')).0.ip_address | default('N/A') }}"
+      when:
+        - droplet_result.results is defined
+        - item.data is defined
+
+    # Load Balancer
+    - name: "Set variable: digital_ocean_load_balancer_entry_port"
+      ansible.builtin.set_fact:
+        digital_ocean_load_balancer_entry_port: "{{ pgbouncer_listen_port }}"
+      when:
+        - cloud_load_balancer | bool
+        - pgbouncer_install | bool
+        - digital_ocean_load_balancer_entry_port | default('') | length < 1
+
+    - name: "Set variable: digital_ocean_load_balancer_target_port"
+      ansible.builtin.set_fact:
+        digital_ocean_load_balancer_target_port: "{{ pgbouncer_listen_port }}"
+      when:
+        - cloud_load_balancer | bool
+        - pgbouncer_install | bool
+        - digital_ocean_load_balancer_target_port | default('') | length < 1
+
+    # if 'pgbouncer_install' is 'false'
+    - name: "Set variable: digital_ocean_load_balancer_entry_port"
+      ansible.builtin.set_fact:
+        digital_ocean_load_balancer_entry_port: "{{ postgresql_port }}"
+      when:
+        - cloud_load_balancer | bool
+        - not pgbouncer_install | bool
+        - digital_ocean_load_balancer_entry_port | default('') | length < 1
+
+    - name: "Set variable: digital_ocean_load_balancer_target_port"
+      ansible.builtin.set_fact:
+        digital_ocean_load_balancer_target_port: "{{ postgresql_port }}"
+      when:
+        - cloud_load_balancer | bool
+        - not pgbouncer_install | bool
+        - digital_ocean_load_balancer_target_port | default('') | length < 1
+
+    - name: "DigitalOcean: Create or modify Load Balancer"
+      community.digitalocean.digital_ocean_load_balancer:
+        oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
+        state: present
+        name: "{{ patroni_cluster_name }}-{{ item }}"
+        region: "{{ server_location }}"
+        forwarding_rules:
+          - entry_protocol: tcp
+            entry_port: "{{ digital_ocean_load_balancer_entry_port }}"
+            target_protocol: tcp
+            target_port: "{{ digital_ocean_load_balancer_target_port }}"
+        health_check:
+          protocol: http
+          port: "{{ patroni_restapi_port }}"
+          path: "/{{ item }}"
+          check_interval_seconds: 5
+          response_timeout_seconds: 3
+          unhealthy_threshold: 2
+          healthy_threshold: 3
+        size: "{{ (digital_ocean_load_balancer_size | default('lb-small')) if server_location in ['ams2', 'nyc2', 'sfo1'] else omit }}"
+        size_unit: "{{ (digital_ocean_load_balancer_size_unit | default(1)) if server_location not in ['ams2', 'nyc2', 'sfo1'] else omit }}"
+        vpc_uuid: "{{ vpc_id | default(omit) }}"
+        tag: "{{ patroni_cluster_name }}" # a tag associated with droplets for load balancing.
+      loop:
+        - primary
+        - replica
+        - sync
+      loop_control:
+        label: "{{ patroni_cluster_name }}-{{ item }}"
+      when: cloud_load_balancer | bool and
+            (item == 'primary' or
+            (item == 'replica' and server_count | int > 1) or
+            (item in ['sync', 'async'] and server_count | int > 1 and synchronous_mode | bool))
+
+    - name: "DigitalOcean: Gather information about load balancers"
+      community.digitalocean.digital_ocean_load_balancer_info:
+        oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
+      register: digitalocean_load_balancer
+      when: cloud_load_balancer | bool
+
+    - name: Debug digitalocean_load_balancer
+      ansible.builtin.debug:
+        var: digitalocean_load_balancer
+
+    # Spaces Object Storage (S3 bucket)
+    - name: "DigitalOcean: Create Spaces Bucket '{{ digital_ocean_spaces_name }}'"
+      community.digitalocean.digital_ocean_spaces:
+        oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
+        name: "{{ digital_ocean_spaces_name }}"
+        region: "{{ digital_ocean_spaces_region }}"
+        aws_access_key_id: "{{ AWS_ACCESS_KEY_ID }}"
+        aws_secret_access_key: "{{ AWS_SECRET_ACCESS_KEY }}"
+        state: present
+      when:
+        - (pgbackrest_install | bool or wal_g_install | bool)
+        - digital_ocean_spaces_create | bool
+  when: state == 'present'
 
 # Info
 - name: Show Droplet info
@@ -619,6 +701,23 @@
       retries: 3
       delay: 5
 
+    - name: "DigitalOcean: Delete Load Balancer"
+      community.digitalocean.digital_ocean_load_balancer:
+        oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
+        state: absent
+        name: "{{ patroni_cluster_name }}-{{ item }}"
+        region: "{{ server_location }}"
+      loop:
+        - primary
+        - replica
+        - sync
+      loop_control:
+        label: "{{ patroni_cluster_name }}-{{ item }}"
+      when: cloud_load_balancer | bool and
+            (item == 'primary' or
+            (item == 'replica' and server_count | int > 1) or
+            (item in ['sync', 'async'] and server_count | int > 1 and synchronous_mode | bool))
+
     - name: "DigitalOcean: Delete public firewall"
       community.digitalocean.digital_ocean_firewall:
         oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
@@ -629,7 +728,7 @@
       community.digitalocean.digital_ocean_firewall:
         oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
         state: "absent"
-        name: "{{ patroni_cluster_name }}-firewall"
+        name: "{{ patroni_cluster_name }}-private-firewall"
 
     - name: "DigitalOcean: Delete Spaces Bucket '{{ digital_ocean_spaces_name }}'"
       community.digitalocean.digital_ocean_spaces:
