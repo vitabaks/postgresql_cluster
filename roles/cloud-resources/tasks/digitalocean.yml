@@ -120,11 +120,11 @@
       ansible.builtin.set_fact:
         default_ip_range: >-
           {{
-            (vpc_info.data
+            vpc_info.data
             | selectattr('region', 'equalto', server_location)
             | selectattr('default', 'equalto', true)
             | map(attribute='ip_range')
-            | list | first) | default('')
+            | first
           }}
       when: server_network | length < 1
 
@@ -140,11 +140,11 @@
       ansible.builtin.set_fact:
         vpc_ip_range: >-
           {{
-            (vpc_info.data
+            vpc_info.data
             | selectattr('region', 'equalto', server_location)
             | selectattr('name', 'equalto', server_network)
             | map(attribute='ip_range')
-            | list | first) | default('')
+            | first
           }}
       when: server_network | length > 0
 
@@ -156,6 +156,7 @@
             | selectattr('region', 'equalto', server_location)
             | selectattr('name', 'equalto', server_network)
             | map(attribute='id')
+            | first
           }}
       when: server_network | length > 0
 
@@ -430,7 +431,6 @@
       when: firewall | bool
 
     # Server and volume
-    # if server_network is not specified, use default vpc
     - name: "DigitalOcean: Create or modify Droplet"
       community.digitalocean.digital_ocean_droplet:
         oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
@@ -441,6 +441,7 @@
         region: "{{ server_location }}"
         image: "{{ server_image }}"
         ssh_keys: "{{ ssh_key_fingerprint }}"
+        vpc_uuid: "{{ vpc_id | default(omit) }}"
         wait_timeout: 500
         tags:
           - "{{ patroni_cluster_name }}"
@@ -448,35 +449,7 @@
       loop_control:
         index_var: idx
         label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
-      register: droplet_result_default_vpc
-      when: server_network is not defined or server_network | length < 1
-
-    # if server_network is specified, get UUID for this vpc
-    - name: "DigitalOcean: Create or modify Droplet"
-      community.digitalocean.digital_ocean_droplet:
-        oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
-        state: present
-        name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
-        unique_name: true
-        size: "{{ server_type }}"
-        region: "{{ server_location }}"
-        image: "{{ server_image }}"
-        ssh_keys: "{{ ssh_key_fingerprint }}"
-        vpc_uuid: "{{ vpc_id }}"
-        wait_timeout: 500
-        tags:
-          - "{{ patroni_cluster_name }}"
-      loop: "{{ range(0, server_count | int) | list }}"
-      loop_control:
-        index_var: idx
-        label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
-      register: droplet_result_with_vpc
-      when: server_network | length > 0
-
-    - name: "Set variable: droplet_result"
-      ansible.builtin.set_fact:
-        droplet_result: "{{ droplet_result_default_vpc if server_network | default([]) | length < 1 else droplet_result_with_vpc }}"
-      when: droplet_result_default_vpc is defined or droplet_result_with_vpc is defined
+      register: droplet_result
 
     - name: "DigitalOcean: Create or modify Block Storage"
       community.digitalocean.digital_ocean_block_storage:
@@ -514,7 +487,7 @@
         timeout: 300
       loop: "{{ droplet_result.results }}"
       loop_control:
-        label: "{{ (item.data.droplet.networks.v4 | selectattr('type', 'equalto', 'public')).0.ip_address | default('N/A') }}"
+        label: "{{ (item.data.droplet.networks.v4 | default('') | selectattr('type', 'equalto', 'public')).0.ip_address | default('N/A') }}"
       when:
         - droplet_result.results is defined
         - item.data is defined
@@ -621,7 +594,7 @@
   loop: "{{ droplet_result.results }}"
   loop_control:
     index_var: idx
-    label: "{{ (item.data.droplet.networks.v4 | selectattr('type', 'equalto', 'public')).0.ip_address | default('N/A') }}"
+    label: "{{ (item.data.droplet.networks.v4 | default('') | selectattr('type', 'equalto', 'public')).0.ip_address | default('N/A') }}"
   when:
     - droplet_result.results is defined
     - item.data is defined
