@@ -51,7 +51,7 @@
   roles:
     - role: pre-checks
       vars:
-        minimal_ansible_version: 2.11.0
+        minimal_ansible_version: 2.15.0
         timescale_minimal_pg_version: 12 # if enable_timescale is defined
       tags: always
 
