@@ -332,7 +332,7 @@
     msg:
       - +-------------------------------------------------------------------------+
       - "IP Address (primary): {{ load_balancer_primary }} "
-      - "IP Address (replica): {{ load_balancer_replica }} {% if synchronous_mode | bool %} (synchronous replica): {{ load_balancer_sync }} {% endif %}"
+      - "IP Address (replica): {{ load_balancer_replica }} {% if synchronous_mode | bool %}(synchronous replica): {{ load_balancer_sync }} {% endif %}"
       - "port: {{ digital_ocean_load_balancer_port | default(database_port) }}"
       - "superuser: {{ superuser_username }}"
       - "password: {{ superuser_password }}"
