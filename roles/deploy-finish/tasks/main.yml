@@ -325,4 +325,27 @@
   when: cloud_provider | default('') | lower  == 'aws' and cloud_load_balancer | default(false) | bool
   tags: conn_info, cluster_info, cluster_status
 
+# DigitalOcean
+- name: Postgres Cluster connection info
+  run_once: true
+  ansible.builtin.debug:
+    msg:
+      - +-------------------------------------------------------------------------+
+      - "IP Address (primary): {{ load_balancer_primary }} "
+      - "IP Address (replica): {{ load_balancer_replica }} {% if synchronous_mode | bool %} (synchronous replica): {{ load_balancer_sync }} {% endif %}"
+      - "port: {{ digital_ocean_load_balancer_port | default(database_port) }}"
+      - "superuser: {{ superuser_username }}"
+      - "password: {{ superuser_password }}"
+      - +-------------------------------------------------------------------------+
+  ignore_errors: true
+  vars:
+    load_balancer_primary: "{{ (hostvars['localhost']['digitalocean_load_balancer']['data'] | selectattr('name', 'equalto', patroni_cluster_name + '-primary') | first).ip | default('N/A') }}"
+    load_balancer_replica: "{{ (hostvars['localhost']['digitalocean_load_balancer']['data'] | selectattr('name', 'equalto', patroni_cluster_name + '-replica') | first).ip | default('N/A') }}"
+    load_balancer_sync: "{{ (hostvars['localhost']['digitalocean_load_balancer']['data'] | selectattr('name', 'equalto', patroni_cluster_name + '-sync') | first).ip | default('N/A') }}"
+    database_port: "{% if pgbouncer_install %}{{ pgbouncer_listen_port }} (pgbouncer){% else %}{{ postgresql_port }}{% endif %}"
+    superuser_username: "{{ patroni_superuser_username }}"
+    superuser_password: "{% if mask_password | default(false) | bool %}'********'{% else %}{{ patroni_superuser_password }}{% endif %}"
+  when: cloud_provider | default('') | lower  == 'digitalocean' and cloud_load_balancer | default(false) | bool
+  tags: conn_info, cluster_info, cluster_status
+
 ...

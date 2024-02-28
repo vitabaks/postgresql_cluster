@@ -520,13 +520,13 @@
         - item.data is defined
 
     # Load Balancer
-    - name: "Set variable: digital_ocean_load_balancer_entry_port"
+    - name: "Set variable: digital_ocean_load_balancer_port"
       ansible.builtin.set_fact:
-        digital_ocean_load_balancer_entry_port: "{{ pgbouncer_listen_port }}"
+        digital_ocean_load_balancer_port: "{{ pgbouncer_listen_port }}"
       when:
         - cloud_load_balancer | bool
         - pgbouncer_install | bool
-        - digital_ocean_load_balancer_entry_port | default('') | length < 1
+        - digital_ocean_load_balancer_port | default('') | length < 1
 
     - name: "Set variable: digital_ocean_load_balancer_target_port"
       ansible.builtin.set_fact:
@@ -537,13 +537,13 @@
         - digital_ocean_load_balancer_target_port | default('') | length < 1
 
     # if 'pgbouncer_install' is 'false'
-    - name: "Set variable: digital_ocean_load_balancer_entry_port"
+    - name: "Set variable: digital_ocean_load_balancer_port"
       ansible.builtin.set_fact:
-        digital_ocean_load_balancer_entry_port: "{{ postgresql_port }}"
+        digital_ocean_load_balancer_port: "{{ postgresql_port }}"
       when:
         - cloud_load_balancer | bool
         - not pgbouncer_install | bool
-        - digital_ocean_load_balancer_entry_port | default('') | length < 1
+        - digital_ocean_load_balancer_port | default('') | length < 1
 
     - name: "Set variable: digital_ocean_load_balancer_target_port"
       ansible.builtin.set_fact:
@@ -561,7 +561,7 @@
         region: "{{ server_location }}"
         forwarding_rules:
           - entry_protocol: tcp
-            entry_port: "{{ digital_ocean_load_balancer_entry_port }}"
+            entry_port: "{{ digital_ocean_load_balancer_port }}"
             target_protocol: tcp
             target_port: "{{ digital_ocean_load_balancer_target_port }}"
         health_check:
@@ -592,10 +592,6 @@
         oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
       register: digitalocean_load_balancer
       when: cloud_load_balancer | bool
-
-    - name: Debug digitalocean_load_balancer
-      ansible.builtin.debug:
-        var: digitalocean_load_balancer
 
     # Spaces Object Storage (S3 bucket)
     - name: "DigitalOcean: Create Spaces Bucket '{{ digital_ocean_spaces_name }}'"
