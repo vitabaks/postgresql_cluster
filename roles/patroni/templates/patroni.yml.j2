@@ -132,6 +132,10 @@ postgresql:
 {% else %}
   listen: {{ hostvars[inventory_hostname]['inventory_hostname'] }},127.0.0.1:{{ postgresql_port }}
 {% endif %}
+  connect_address: {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ postgresql_port }}
+{% if patroni_superuser_username == 'postgres' %}
+  use_unix_socket: true
+{% endif %}
   data_dir: {{ postgresql_data_dir }}
   bin_dir: {{ postgresql_bin_dir }}
   config_dir: {{ postgresql_conf_dir }}
