@@ -21,7 +21,11 @@ log:
 {% endif %}
 
 restapi:
+  {% if with_external_load_balancing|bool -%}
+  listen: 0.0.0.0:{{ patroni_restapi_port }}
+  {% else -%}
   listen: {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ patroni_restapi_port }}
+  {% endif -%} 
   connect_address: {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ patroni_restapi_port }}
 #  certfile: /etc/ssl/certs/ssl-cert-snakeoil.pem
 #  keyfile: /etc/ssl/private/ssl-cert-snakeoil.key
@@ -123,12 +127,10 @@ bootstrap:
 postgresql:
 {% if not with_haproxy_load_balancing|bool and not pgbouncer_install|bool and (cluster_vip is defined and cluster_vip | length > 0) %}
   listen: {{ hostvars[inventory_hostname]['inventory_hostname'] }},{{ cluster_vip }},127.0.0.1:{{ postgresql_port }}
+{% elif with_external_load_balancing|bool and load_balancer_ips %}
+  listen: {{ hostvars[inventory_hostname]['inventory_hostname'] }},127.0.0.1,{{ load_balancer_ips | join(',') }}:{{ postgresql_port }}
 {% else %}
   listen: {{ hostvars[inventory_hostname]['inventory_hostname'] }},127.0.0.1:{{ postgresql_port }}
-{% endif %}
-  connect_address: {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ postgresql_port }}
-{% if patroni_superuser_username == 'postgres' %}
-  use_unix_socket: true
 {% endif %}
   data_dir: {{ postgresql_data_dir }}
   bin_dir: {{ postgresql_bin_dir }}
