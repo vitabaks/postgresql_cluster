@@ -500,23 +500,11 @@
             - pg_ctl_status_result.rc != 0
             - pg_ctl_status_result.rc != 3
 
-          # "Debian"
         - name: Prepare PostgreSQL | start PostgreSQL on Master
           become: true
           become_user: postgres
-          ansible.builtin.command: "/usr/bin/pg_ctlcluster {{ postgresql_version }} {{ postgresql_cluster_name }} start"
-          register: pg_start_on_master
-          when: pg_ctl_status_result.rc == 3 and
-                (ansible_os_family == "Debian" and postgresql_packages|join(" ") is not search("postgrespro"))
-
-          # "RedHat" or PostgresPro
-        - name: Prepare PostgreSQL | start PostgreSQL on Master
-          become: true
-          become_user: postgres
-          ansible.builtin.command: "{{ postgresql_bin_dir }}/pg_ctl start -D {{ postgresql_data_dir }}"
-          register: pg_start_on_master
-          when: pg_ctl_status_result.rc == 3 and
-                (ansible_os_family == "RedHat" or postgresql_packages|join(" ") is search("postgrespro"))
+          ansible.builtin.command: "{{ postgresql_bin_dir }}/pg_ctl start -D {{ postgresql_data_dir }} -w -t 1800"
+          when: pg_ctl_status_result.rc == 3
 
         - name: Prepare PostgreSQL | check PostgreSQL is accepting connections
           become: true
@@ -589,21 +577,11 @@
       delay: 10
       when: pg_ctl_status_result.rc == 0
 
-      # "Debian"
     - name: Prepare PostgreSQL | stop PostgreSQL (will be managed by patroni)
       become: true
       become_user: postgres
-      ansible.builtin.command: "/usr/bin/pg_ctlcluster {{ postgresql_version }} {{ postgresql_cluster_name }} stop -m fast -- -w -t 600"
-      when: (checkpoint_result.rc is defined and checkpoint_result.rc == 0) and
-            (ansible_os_family == "Debian" and postgresql_packages|join(" ") is not search("postgrespro"))
-
-      # "RedHat" or PostgresPro
-    - name: Prepare PostgreSQL | stop PostgreSQL (will be managed by patroni)
-      become: true
-      become_user: postgres
-      ansible.builtin.command: "{{ postgresql_bin_dir }}/pg_ctl stop -D {{ postgresql_data_dir }} -m fast -w -t 600"
-      when: (checkpoint_result.rc is defined and checkpoint_result.rc == 0) and
-            (ansible_os_family == "RedHat" or postgresql_packages|join(" ") is search("postgrespro"))
+      ansible.builtin.command: "{{ postgresql_bin_dir }}/pg_ctl stop -D {{ postgresql_data_dir }} -m fast -w -t 1800"
+      when: checkpoint_result.rc is defined and checkpoint_result.rc == 0
 
     - name: Prepare PostgreSQL | check PostgreSQL is stopped
       become: true
@@ -706,17 +684,9 @@
           failed_when: false
           when: not keep_patroni_dynamic_json|bool
 
-        - name: Start PostgreSQL for Recovery  # Debian
-          ansible.builtin.command: "/usr/bin/pg_ctlcluster {{ postgresql_version }} {{ postgresql_cluster_name }} start -o '-c hot_standby=off'"
-          when: ansible_os_family == "Debian" and
-                (is_master | bool or
-                (not is_master | bool and 'pgbackrest' in patroni_create_replica_methods))
-
-        - name: Start PostgreSQL for Recovery  # RedHat or PostgresPro
-          ansible.builtin.command: "{{ postgresql_bin_dir }}/pg_ctl start -D {{ postgresql_data_dir }} -o '-c hot_standby=off'"
-          when: (ansible_os_family == "RedHat" or postgresql_packages|join(" ") is search("postgrespro")) and
-                (is_master | bool or
-                (not is_master | bool and 'pgbackrest' in patroni_create_replica_methods))
+        - name: Start PostgreSQL for Recovery
+          ansible.builtin.command: "{{ postgresql_bin_dir }}/pg_ctl start -D {{ postgresql_data_dir }} -o '-c hot_standby=off' -w -t 1800"
+          when: is_master | bool or (not is_master | bool and 'pgbackrest' in patroni_create_replica_methods)
 
         - name: Waiting for PostgreSQL Recovery to complete (WAL apply)
           ansible.builtin.command: >-
@@ -728,8 +698,7 @@
           delay: 30
           changed_when: false
           failed_when: false
-          when: is_master | bool or
-                (not is_master | bool and 'pgbackrest' in patroni_create_replica_methods)
+          when: is_master | bool or (not is_master | bool and 'pgbackrest' in patroni_create_replica_methods)
 
         - name: Check that PostgreSQL is stopped
           ansible.builtin.command: "{{ postgresql_bin_dir }}/pg_ctl status -D {{ postgresql_data_dir }}"
@@ -737,15 +706,9 @@
           changed_when: false
           failed_when: false
 
-        - name: Stop PostgreSQL  # "Debian"
-          ansible.builtin.command: "/usr/bin/pg_ctlcluster {{ postgresql_version }} {{ postgresql_cluster_name }} stop -m fast -- -w -t 600"
-          when: ansible_os_family == "Debian" and
-                (pg_ctl_status_result.rc is defined and (pg_ctl_status_result.rc != 3 and pg_ctl_status_result.rc != 4))
-
-        - name: Stop PostgreSQL  # "RedHat" or PostgresPro
-          ansible.builtin.command: "{{ postgresql_bin_dir }}/pg_ctl stop -D {{ postgresql_data_dir }} -m fast -w -t 600"
-          when: (ansible_os_family == "RedHat" or postgresql_packages|join(" ") is search("postgrespro")) and
-                (pg_ctl_status_result.rc is defined and (pg_ctl_status_result.rc != 3 and pg_ctl_status_result.rc != 4))
+        - name: Stop PostgreSQL
+          ansible.builtin.command: "{{ postgresql_bin_dir }}/pg_ctl stop -D {{ postgresql_data_dir }} -m fast -w -t 1800"
+          when: pg_ctl_status_result.rc is defined and (pg_ctl_status_result.rc != 3 and pg_ctl_status_result.rc != 4)
       when: patroni_cluster_bootstrap_method == "pgbackrest"
       become: true
       become_user: postgres
