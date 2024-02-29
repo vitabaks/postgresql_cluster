@@ -545,8 +545,8 @@
           response_timeout_seconds: 3
           unhealthy_threshold: 2
           healthy_threshold: 3
-        size: "{{ (digital_ocean_load_balancer_size | default('lb-small')) if server_location in ['ams2', 'nyc2', 'sfo1'] else omit }}"
-        size_unit: "{{ (digital_ocean_load_balancer_size_unit | default(1)) if server_location not in ['ams2', 'nyc2', 'sfo1'] else omit }}"
+        size: "{{ (digital_ocean_load_balancer_size | default('lb-medium')) if server_location in ['ams2', 'nyc2', 'sfo1'] else omit }}"
+        size_unit: "{{ (digital_ocean_load_balancer_size_unit | default(3)) if server_location not in ['ams2', 'nyc2', 'sfo1'] else omit }}"
         vpc_uuid: "{{ vpc_id | default(omit) }}"
         tag: "{{ patroni_cluster_name }}" # a tag associated with droplets for load balancing.
       loop:
