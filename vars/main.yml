@@ -321,6 +321,9 @@ pgbouncer_auth_user: true # or 'false' if you want to manage the list of users f
 pgbouncer_auth_username: pgbouncer # user who can query the database via the user_search function
 pgbouncer_auth_password: "" # If not defined, a password will be generated automatically during deployment
 pgbouncer_auth_dbname: "postgres"
+pgbouncer_client_tls_sslmode: "disable"
+pgbouncer_client_tls_key_file: ""
+pgbouncer_client_tls_cert_file: ""
 
 pgbouncer_pools:
   - { name: "postgres", dbname: "postgres", pool_parameters: "" }
