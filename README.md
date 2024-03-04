@@ -180,7 +180,7 @@ If you’d prefer a cross-data center setup, where the replicating databases are
 There are quite a lot of things to consider if you want to create a really robust etcd cluster, but there is one rule: *do not placing all etcd members in your primary data center*. See some [examples](https://www.cybertec-postgresql.com/en/introduction-and-how-to-etcd-clusters-for-patroni/).
 
 
-- **How to prevent data loss in case of autofailover (synchronous_modes and pg_rewind)**:
+- **How to prevent data loss in case of autofailover (synchronous_modes)**:
 
 Due to performance reasons, a synchronous replication is disabled by default.
 
