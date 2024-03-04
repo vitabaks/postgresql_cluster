@@ -552,13 +552,6 @@ A new installation can now be made from scratch.
 
 ---
 
-## License
-Licensed under the MIT License. See the [LICENSE](./LICENSE) file for details.
-
-## Author
-Vitaliy Kukharik (PostgreSQL DBA) \
-vitabaks@gmail.com
-
 ## Sponsor this project
 
 Join our sponsorship program to directly contribute to our project's growth and gain exclusive access to personalized support. Your sponsorship is crucial for innovation and progress. Become a sponsor today!
@@ -575,7 +568,12 @@ Support our work through a crypto wallet:
 
 USDT (TRC20): `TSTSXZzqDCUDHDjZwCpuBkdukjuDZspwjj`
 
----
+## License
+Licensed under the MIT License. See the [LICENSE](./LICENSE) file for details.
+
+## Author
+Vitaliy Kukharik (PostgreSQL DBA) \
+vitabaks@gmail.com
 
 ## Feedback, bug-reports, requests, ...
 Are [welcome](https://github.com/vitabaks/postgresql_cluster/issues)!
