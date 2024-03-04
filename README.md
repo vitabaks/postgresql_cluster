@@ -11,55 +11,37 @@
 
 This Ansible playbook is designed for deploying a PostgreSQL high availability cluster on dedicated physical servers for a production environment. The cluster can also be deployed on virtual machines and in the Cloud.
 
-In addition to deploying new clusters, this playbook also support the deployment of cluster over already existing and running PostgreSQL. You can convert your basic PostgreSQL installation to a high availability cluster. Just specify the variable `postgresql_exists='true'` in the inventory file.
-**Attention!** Your PostgreSQL will be stopped before running in cluster mode (please plan for a short downtime of databases).
-
----
+In addition to deploying new clusters, this playbook also support the deployment of cluster over already existing and running PostgreSQL. You can convert your basic PostgreSQL installation to a high availability cluster. Just specify the variable `postgresql_exists='true'` in the inventory file (_Attention! Your PostgreSQL will be stopped before running in cluster mode, please plan for a short downtime of databases_).
 
 :trophy: **Use the [sponsoring](https://github.com/vitabaks/postgresql_cluster#sponsor-this-project) program to get personalized support, or just to contribute to this project.**
 
-## Index
-- [Cluster types](#cluster-types)
-    - [[Type A] PostgreSQL High-Availability with HAProxy Load Balancing](#type-a-postgresql-high-availability-with-haproxy-load-balancing)
-    - [[Type B] PostgreSQL High-Availability only](#type-b-postgresql-high-availability-only)
-    - [[Type C] PostgreSQL High-Availability with Consul Service Discovery (DNS)](#type-c-postgresql-high-availability-with-consul-service-discovery-dns)
-- [Compatibility](#compatibility)
-    - [Supported Linux Distributions:](#supported-linux-distributions)
-    - [PostgreSQL versions:](#postgresql-versions)
-    - [Ansible version](#ansible-version)
-- [Requirements](#requirements)
-- [Port requirements](#port-requirements)
-- [Recommendations](#recommenations)
-- [Deployment: quick start](#deployment-quick-start)
-- [Variables](#variables)
-- [Cluster Scaling](#cluster-scaling)
-    - [Steps to add a new postgres node](#steps-to-add-a-new-postgres-node)
-    - [Steps to add a new balancer node](#steps-to-add-a-new-balancer-node)
-- [Restore and Cloning](#restore-and-cloning)
-    - [Create cluster with pgBackRest:](#create-cluster-with-pgbackrest)
-    - [Create cluster with WAL-G:](#create-cluster-with-wal-g)
-    - [Point-In-Time-Recovery:](#point-in-time-recovery)
-- [Maintenance](#maintenance)
-    - [Changing PostgreSQL configuration parameters](#changing-postgresql-configuration-parameters) 
-    - [Update the PostgreSQL HA Cluster](#update-the-postgresql-ha-cluster)
-    - [PostgreSQL major upgrade](#postgresql-major-upgrade)
-- [Disaster Recovery](#disaster-recovery)
-    - [etcd](#etcd)
-    - [PostgreSQL (databases)](#postgresql-databases)
-- [How to start from scratch](#how-to-start-from-scratch)
-- [License](#license)
-- [Author](#author)
-- [Sponsor this project](#sponsor-this-project)
-- [Feedback, bug-reports, requests, ...](#feedback-bug-reports-requests-)
+---
 
-## Cluster types
+### Supported setups of Postgres Cluster
+
+![postgresql_cluster](images/postgresql_cluster.png)
 
 You have three schemes available for deployment:
 
-### [Type A] PostgreSQL High-Availability with HAProxy Load Balancing
-![TypeA](images/TypeA.png)
+#### 1. PostgreSQL High-Availability only
 
-> To use this scheme, specify `with_haproxy_load_balancing: true` in variable file vars/main.yml
+This is simple scheme without load balancing (used by default).
+
+##### Components of high availability:
+
+- [**Patroni**](https://github.com/zalando/patroni) is a template for you to create your own customized, high-availability solution using Python and - for maximum accessibility - a distributed configuration store like ZooKeeper, etcd, Consul or Kubernetes. Used for automate the management of PostgreSQL instances and auto failover.
+
+- [**etcd**](https://github.com/etcd-io/etcd) is a distributed reliable key-value store for the most critical data of a distributed system. etcd is written in Go and uses the [Raft](https://raft.github.io/) consensus algorithm to manage a highly-available replicated log. It is used by Patroni to store information about the status of the cluster and PostgreSQL configuration parameters.
+
+[What is Distributed Consensus?](http://thesecretlivesofdata.com/raft/)
+
+(Optional) To provide a single entry point (VIP) for database access is used "vip-manager". If the variable `cluster_vip` is specified.
+
+- [**vip-manager**](https://github.com/cybertec-postgresql/vip-manager) is a service that gets started on all cluster nodes and connects to the DCS. If the local node owns the leader-key, vip-manager starts the configured VIP. In case of a failover, vip-manager removes the VIP on the old leader and the corresponding service on the new leader starts it there.
+
+#### 2. PostgreSQL High-Availability with HAProxy Load Balancing
+
+To use this scheme, specify `with_haproxy_load_balancing: true` in variable file vars/main.yml
 
 This scheme provides the ability to distribute the load on reading. This also allows us to scale out the cluster (with read-only replicas).
 
@@ -70,42 +52,20 @@ This scheme provides the ability to distribute the load on reading. This also al
 - port 5002 (read only) synchronous replica only
 - port 5003 (read only) asynchronous replicas only
 
-> :heavy_exclamation_mark: Your application must have support sending read requests to a custom port (ex 5001), and write requests (ex 5000).
-
-##### Components of high availability:
-[**Patroni**](https://github.com/zalando/patroni) is a template for you to create your own customized, high-availability solution using Python and - for maximum accessibility - a distributed configuration store like ZooKeeper, etcd, Consul or Kubernetes. Used for automate the management of PostgreSQL instances and auto failover.
-
-[**etcd**](https://github.com/etcd-io/etcd) is a distributed reliable key-value store for the most critical data of a distributed system. etcd is written in Go and uses the [Raft](https://raft.github.io/) consensus algorithm to manage a highly-available replicated log. It is used by Patroni to store information about the status of the cluster and PostgreSQL configuration parameters.
-
-[What is Distributed Consensus?](http://thesecretlivesofdata.com/raft/)
+:heavy_exclamation_mark: Note: Your application must have support sending read requests to a custom port 5001, and write requests to port 5000.
 
 ##### Components of load balancing:
-[**HAProxy**](http://www.haproxy.org/) is a free, very fast and reliable solution offering high availability, load balancing, and proxying for TCP and HTTP-based applications. 
 
-[**confd**](https://github.com/kelseyhightower/confd) manage local application configuration files using templates and data from etcd or consul. Used to automate HAProxy configuration file management.
+- [**HAProxy**](http://www.haproxy.org/) is a free, very fast and reliable solution offering high availability, load balancing, and proxying for TCP and HTTP-based applications. 
 
-[**Keepalived**](https://github.com/acassen/keepalived) provides a virtual high-available IP address (VIP) and single entry point for databases access.
-Implementing VRRP (Virtual Router Redundancy Protocol) for Linux.
-In our configuration keepalived checks the status of the HAProxy service and in case of a failure delegates the VIP to another server in the cluster.
+- [**confd**](https://github.com/kelseyhightower/confd) manage local application configuration files using templates and data from etcd or consul. Used to automate HAProxy configuration file management.
 
-[**PgBouncer**](https://pgbouncer.github.io/features.html) is a connection pooler for PostgreSQL.
+- [**Keepalived**](https://github.com/acassen/keepalived) provides a virtual high-available IP address (VIP) and single entry point for databases access.
+Implementing VRRP (Virtual Router Redundancy Protocol) for Linux. In our configuration keepalived checks the status of the HAProxy service and in case of a failure delegates the VIP to another server in the cluster.
 
+#### 3. PostgreSQL High-Availability with Consul Service Discovery (DNS)
 
-### [Type B] PostgreSQL High-Availability only
-![TypeB](images/TypeB.png)
-
-This is simple scheme without load balancing `Used by default`
-
-To provide a single entry point (VIP) for database access is used "vip-manager". If the variable `cluster_vip` is specified (optional).
-
-[**vip-manager**](https://github.com/cybertec-postgresql/vip-manager) is a service that gets started on all cluster nodes and connects to the DCS. If the local node owns the leader-key, vip-manager starts the configured VIP. In case of a failover, vip-manager removes the VIP on the old leader and the corresponding service on the new leader starts it there. \
-Written in Go. Cybertec Schönig & Schönig GmbH https://www.cybertec-postgresql.com
-
-
-### [Type C] PostgreSQL High-Availability with Consul Service Discovery (DNS)
-![TypeC](images/TypeC.png)
-
-> To use this scheme, specify `dcs_type: consul` in variable file vars/main.yml
+To use this scheme, specify `dcs_type: consul` in variable file vars/main.yml
 
 This scheme is suitable for master-only access and for load balancing (using DNS) for reading across replicas. Consul [Service Discovery](https://developer.hashicorp.com/consul/docs/concepts/service-discovery) with [DNS resolving ](https://developer.hashicorp.com/consul/docs/discovery/dns) is used as a client access point to the database.
 
@@ -120,7 +80,7 @@ Example: `replica.postgres-cluster.service.dc1.consul`, `replica.postgres-cluste
 
 It requires the installation of a consul in client mode on each application server for service DNS resolution (or use [forward DNS](https://developer.hashicorp.com/consul/tutorials/networking/dns-forwarding?utm_source=docs) to the remote consul server instead of installing a local consul client).
 
----
+
 ## Compatibility
 RedHat and Debian based distros (x86_64)
 
