@@ -35,9 +35,11 @@ This is simple scheme without load balancing (used by default).
 
 [What is Distributed Consensus?](http://thesecretlivesofdata.com/raft/)
 
-(Optional) To provide a single entry point (VIP) for database access is used "vip-manager". If the variable `cluster_vip` is specified.
+To provide a single entry point (VIP) for database access is used "vip-manager".
 
-- [**vip-manager**](https://github.com/cybertec-postgresql/vip-manager) is a service that gets started on all cluster nodes and connects to the DCS. If the local node owns the leader-key, vip-manager starts the configured VIP. In case of a failover, vip-manager removes the VIP on the old leader and the corresponding service on the new leader starts it there.
+- [**vip-manager**](https://github.com/cybertec-postgresql/vip-manager) (_optional, if the `cluster_vip` variable is specified_) is a service that gets started on all cluster nodes and connects to the DCS. If the local node owns the leader-key, vip-manager starts the configured VIP. In case of a failover, vip-manager removes the VIP on the old leader and the corresponding service on the new leader starts it there.
+
+- [**PgBouncer**](https://pgbouncer.github.io/features.html) (optional, if the `pgbouncer_install` variable is `true`) is a connection pooler for PostgreSQL.
 
 #### 2. PostgreSQL High-Availability with HAProxy Load Balancing
 
@@ -60,7 +62,7 @@ This scheme provides the ability to distribute the load on reading. This also al
 
 - [**confd**](https://github.com/kelseyhightower/confd) manage local application configuration files using templates and data from etcd or consul. Used to automate HAProxy configuration file management.
 
-- [**Keepalived**](https://github.com/acassen/keepalived) provides a virtual high-available IP address (VIP) and single entry point for databases access.
+- [**Keepalived**](https://github.com/acassen/keepalived)  (_optional, if the `cluster_vip` variable is specified_) provides a virtual high-available IP address (VIP) and single entry point for databases access.
 Implementing VRRP (Virtual Router Redundancy Protocol) for Linux. In our configuration keepalived checks the status of the HAProxy service and in case of a failure delegates the VIP to another server in the cluster.
 
 #### 3. PostgreSQL High-Availability with Consul Service Discovery (DNS)
@@ -186,7 +188,6 @@ To minimize the risk of losing data on autofailover, you can configure settings 
 - synchronous_mode: 'true'
 - synchronous_mode_strict: 'true'
 - synchronous_commit: 'on' (or 'remote_apply')
-- use_pg_rewind: 'false' (enabled by default)
 
 ---
 
