@@ -9,9 +9,9 @@
 
 ### Production-ready PostgreSQL High-Availability Cluster (based on "Patroni" and DCS "etcd" or "consul"). Automating with Ansible.
 
-This Ansible playbook is designed for deploying a PostgreSQL high availability cluster on dedicated physical servers for a production environment. The cluster can also be deployed on virtual machines and in the Cloud.
+The **postgresql_cluster** is designed for deployment and management of high-availability PostgreSQL clusters in production environments. This solution is tailored for use on dedicated physical servers, virtual machines, and both on-premises and cloud-based infrastructures.
 
-In addition to deploying new clusters, this playbook also support the deployment of cluster over already existing and running PostgreSQL. You can convert your basic PostgreSQL installation to a high availability cluster. Just specify the variable `postgresql_exists='true'` in the inventory file (_Attention! Your PostgreSQL will be stopped before running in cluster mode, please plan for a short downtime of databases_).
+This project not only facilitates the creation of new clusters but also offers support for integrating with pre-existing PostgreSQL instances. If you intend to upgrade your conventional PostgreSQL setup to a high-availability configuration, then just set `postgresql_exists=true` in the inventory file. Be aware that initiating cluster mode requires temporarily stopping your existing PostgreSQL service, which will lead to a brief period of database downtime. Please plan this transition accordingly.
 
 :trophy: **Use the [sponsoring](https://github.com/vitabaks/postgresql_cluster#sponsor-this-project) program to get personalized support, or just to contribute to this project.**
 
