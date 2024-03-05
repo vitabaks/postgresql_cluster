@@ -19,7 +19,8 @@ This project not only facilitates the creation of new clusters but also offers s
 
 ### Supported setups of Postgres Cluster
 
-![postgresql_cluster](images/postgresql_cluster.png)
+![postgresql_cluster](images/postgresql_cluster.png#gh-light-mode-only)
+![postgresql_cluster](images/postgresql_cluster.dark_mode.png#gh-dark-mode-only)
 
 You have three schemes available for deployment:
 
