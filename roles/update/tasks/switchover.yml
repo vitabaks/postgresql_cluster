@@ -1,6 +1,5 @@
 ---
 - name: Perform switchover of the leader for the Patroni cluster "{{ patroni_cluster_name }}"
-  become: true
   ansible.builtin.uri:
     url: http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/switchover
     method: POST
