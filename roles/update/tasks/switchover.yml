@@ -5,6 +5,10 @@
     method: POST
     body: '{"leader":"{{ ansible_hostname }}"}'
     body_format: json
+  register: patronictl_switchover_result
+  until: patronictl_switchover_result.status == 200
+  retries: 300
+  delay: 2
   environment:
     no_proxy: "{{ inventory_hostname }}"
 
