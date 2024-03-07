@@ -5,8 +5,8 @@
     method: POST
     body: '{"leader":"{{ ansible_hostname }}"}'
     body_format: json
-  register: switchover_result
-  until: switchover_result.status == 200
+  register: patroni_switchover_result
+  until: patroni_switchover_result.status == 200
   retries: 300
   delay: 2
   environment:
