@@ -405,7 +405,7 @@ wal_g:
   - { option: "command", value: "wal-g backup-fetch {{ postgresql_data_dir }} LATEST" }
   - { option: "no_params", value: "True" }
 basebackup:
-  - { option: "max-rate", value: "100M" }
+  - { option: "max-rate", value: "1000M" }
   - { option: "checkpoint", value: "fast" }
 #  - { option: "waldir", value: "{{ postgresql_wal_dir }}" }
 pg_probackup:
