@@ -17,23 +17,13 @@ postgresql_home_dir: "/var/lib/postgresql"
 postgresql_stats_temp_directory_path: "/var/lib/pgsql_stats_tmp"  # or 'none'
 postgresql_stats_temp_directory_size: "1024m"
 
-# Repository and key for Debian >= 12 version
-apt_repository_and_key:
-  - repo: "deb https://apt.postgresql.org/pub/repos/apt/ {{ ansible_distribution_release }}-pgdg main"  # postgresql apt repository
-    key: "https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc"  # postgresql repository apt key
-
-# Repository and key for Debian < 12 version
-apt_repository_keys:
-  - key: "https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc"  # postgresql repository apt key
+# Repository
 apt_repository:
   - repo: "deb https://apt.postgresql.org/pub/repos/apt/ {{ ansible_distribution_release }}-pgdg main"  # postgresql apt repository
-#  - repo: "deb https://deb.debian.org/debian/ {{ ansible_distribution_release }} main"  # debian repo (optional)
-#  - repo: "deb https://deb.debian.org/debian/ {{ ansible_distribution_release }}-updates main"  # debian repo (optional)
-#  - repo: "deb https://security.debian.org/debian-security/ {{ ansible_distribution_release }}/updates main"  # debian repo (optional)
-
-timescale_server: "https://packagecloud.io/timescale/timescaledb"
-timescale_repository: "deb {{ timescale_server }}/{{ ansible_distribution | lower }}/ {{ ansible_distribution_release }} main"
-timescale_repository_key: "{{ timescale_server }}/gpgkey"
+    key: "https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc"  # postgresql apt repository key
+#  - repo: "deb https://deb.debian.org/debian/ {{ ansible_distribution_release }} main"
+#  - repo: "deb https://deb.debian.org/debian/ {{ ansible_distribution_release }}-updates main"
+#  - repo: "deb https://security.debian.org/debian-security/ {{ ansible_distribution_release }}/updates main"
 
 # Packages (for apt repo)
 os_specific_packages:
