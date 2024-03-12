@@ -21,8 +21,8 @@ log:
 {% endif %}
 
 restapi:
-  listen: {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ patroni_restapi_port }}
-  connect_address: {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ patroni_restapi_port }}
+  listen: {{ patroni_restapi_listen_addr }}:{{ patroni_restapi_port }}
+  connect_address: {{ inventory_hostname }}:{{ patroni_restapi_port }}
 #  certfile: /etc/ssl/certs/ssl-cert-snakeoil.pem
 #  keyfile: /etc/ssl/private/ssl-cert-snakeoil.key
 #  authentication:
@@ -121,12 +121,8 @@ bootstrap:
 
 
 postgresql:
-{% if not with_haproxy_load_balancing|bool and not pgbouncer_install|bool and (cluster_vip is defined and cluster_vip | length > 0) %}
-  listen: {{ hostvars[inventory_hostname]['inventory_hostname'] }},{{ cluster_vip }},127.0.0.1:{{ postgresql_port }}
-{% else %}
-  listen: {{ hostvars[inventory_hostname]['inventory_hostname'] }},127.0.0.1:{{ postgresql_port }}
-{% endif %}
-  connect_address: {{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ postgresql_port }}
+  listen: {{ postgresql_listen_addr }}:{{ postgresql_port }}
+  connect_address: {{ inventory_hostname }}:{{ postgresql_port }}
 {% if patroni_superuser_username == 'postgres' %}
   use_unix_socket: true
 {% endif %}

@@ -146,6 +146,7 @@ consul_services:
 # PostgreSQL variables
 postgresql_version: "16"
 # postgresql_data_dir: see vars/Debian.yml or vars/RedHat.yml
+postgresql_listen_addr: "0.0.0.0" # Listen on all interfaces. Or use "{{ inventory_hostname }},127.0.0.1" to listen on a specific IP address.
 postgresql_port: "5432"
 postgresql_encoding: "UTF8"  # for bootstrap only (initdb)
 postgresql_locale: "en_US.UTF-8"  # for bootstrap only (initdb)
@@ -305,7 +306,7 @@ pgbouncer_install: true  # or 'false' if you do not want to install and configur
 pgbouncer_processes: 1  # Number of pgbouncer processes to be used. Multiple processes use the so_reuseport option for better performance.
 pgbouncer_conf_dir: "/etc/pgbouncer"
 pgbouncer_log_dir: "/var/log/pgbouncer"
-pgbouncer_listen_addr: "0.0.0.0"
+pgbouncer_listen_addr: "0.0.0.0" # Listen on all interfaces. Or use "{{ inventory_hostname }}" to listen on a specific IP address.
 pgbouncer_listen_port: 6432
 pgbouncer_max_client_conn: 10000
 pgbouncer_max_db_connections: 1000
@@ -333,6 +334,7 @@ pgbouncer_pools:
 
 
 # Extended variables (optional)
+patroni_restapi_listen_addr: "0.0.0.0" # Listen on all interfaces. Or use "{{ inventory_hostname }}" to listen on a specific IP address.
 patroni_restapi_port: 8008
 patroni_ttl: 30
 patroni_loop_wait: 10
