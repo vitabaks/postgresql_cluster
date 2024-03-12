@@ -11,7 +11,7 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/partial \
     && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
        ca-certificates gnupg git python3 python3-pip keychain ssh-client sshpass \
     && pip3 install --no-cache-dir \
-       ansible==9.2.0 \
+       ansible==9.3.0 \
        boto3==1.34.44 \
        dopy==0.3.7 \
        google-auth==2.28.0 \
