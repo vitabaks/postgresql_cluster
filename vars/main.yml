@@ -333,6 +333,7 @@ pgbouncer_pools:
 
 
 # Extended variables (optional)
+patroni_restapi_listen_addr: "0.0.0.0" # Listen on all interfaces. Use "{{ inventory_hostname }}" to listen on a specific IP address.
 patroni_restapi_port: 8008
 patroni_ttl: 30
 patroni_loop_wait: 10
