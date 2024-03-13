@@ -72,7 +72,7 @@
       retries: 3
       when: ansible_os_family == "Debian"
 
-    - name: Add Debian/Ubuntu Linux repository and signing key, uses whichever key is at the URL
+    - name: Add Debian/Ubuntu Linux repository and signing key
       ansible.builtin.deb822_repository:
         name: "{{ consul_repo_name | default('consul') }}"
         types: [deb]
