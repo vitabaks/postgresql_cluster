@@ -15,7 +15,7 @@
 
     - name: Add pgdg repository and signing key
       ansible.builtin.deb822_repository:
-        name: "{{ name_repo | replace('.', '-') | replace('/', '-') }}"
+        name: "{{ pg_probackup_repo_name | default('pg_probackup') }}"
         types: [deb]
         uris: "http://repo.postgrespro.ru/pg_probackup/deb/"
         signed_by: "https://repo.postgrespro.ru/pg_probackup/keys/GPG-KEY-PG-PROBACKUP"
@@ -23,8 +23,6 @@
         components: "main-{{ ansible_distribution_release }}"
         state: present
         enabled: true
-      vars:
-        name_repo: "{{ 'deb http://repo.postgrespro.ru/pg_probackup/deb/ '~ansible_distribution_release~' main-'~ansible_distribution_release }}"
       when: ansible_os_family == "Debian"
 
     - name: Update apt cache

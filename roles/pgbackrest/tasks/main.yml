@@ -15,7 +15,7 @@
 
     - name: Add pgdg repository and signing key
       ansible.builtin.deb822_repository:
-        name: "{{ name_repo | replace('.', '-') | replace('/', '-') }}"
+        name: "{{ pgbackrest_repo_name | default('apt-postgresql-org') }}"
         types: [deb]
         uris: "https://apt.postgresql.org/pub/repos/apt/"
         signed_by: "https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc"
@@ -23,8 +23,6 @@
         components: [main]
         state: present
         enabled: true
-      vars:
-        name_repo: "{{ 'deb https://apt.postgresql.org/pub/repos/apt/ '~ansible_distribution_release~'-pgdg main'}}"
       when: ansible_os_family == "Debian"
 
     - name: Update apt cache
