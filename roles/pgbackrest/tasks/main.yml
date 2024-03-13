@@ -20,7 +20,7 @@
         uris: "https://apt.postgresql.org/pub/repos/apt/"
         signed_by: "https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc"
         suites: "{{ ansible_distribution_release }}-pgdg"
-        components: "main"
+        components: [main]
         state: present
         enabled: true
       vars:

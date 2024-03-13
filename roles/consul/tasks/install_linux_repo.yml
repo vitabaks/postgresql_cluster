@@ -79,7 +79,7 @@
         uris: "{{ consul_repo_url }}"
         signed_by: "{{ consul_repo_url }}/gpg"
         suites: "{{ ansible_distribution_release }}"
-        components: "main"
+        components: [main]
         state: present
         enabled: true
       when: ansible_os_family == "Debian"
