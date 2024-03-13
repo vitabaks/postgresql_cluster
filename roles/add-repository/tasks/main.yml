@@ -13,14 +13,14 @@
 
     - name: Add repository
       ansible.builtin.deb822_repository:
-        name: "{{ item.repo.split('//')[1].split('/')[0] }}"
-        types: [deb]
-        uris: "{{ item.repo.split(' ')[1] }}"
-        signed_by: "{{ item.key | default(omit) }}"
-        suites: "{{ item.repo.split(' ')[2] }}"
-        components: "{{ item.repo.split(' ')[3] }}"
+        name: "{{ item.name | default(item.repo.split('//')[1].split('/')[0] | replace('.', '-')) }}"
+        types: "{{ item.types | default(['deb']) }}"
+        uris: "{{ item.uris | default(item.repo.split(' ')[1]) }}"
+        signed_by: "{{ item.signed_by | default(item.key | default(omit)) }}"
+        suites: "{{ item.suites | default(item.repo.split(' ')[2]) }}"
+        components: "{{ item.components | default(item.repo.split(' ')[3]) }}"
+        enabled: "{{ item.enabled | default(true) }}"
         state: present
-        enabled: true
       loop: "{{ apt_repository }}"
       when: apt_repository | length > 0
 
