@@ -1,19 +1,16 @@
 ---
 - name: Perform switchover of the leader for the Patroni cluster "{{ patroni_cluster_name }}"
-  become: true
-  become_user: postgres
-  ansible.builtin.expect:
-    command: "patronictl -c /etc/patroni/patroni.yml switchover {{ patroni_cluster_name }}"
-    responses:
-      (.*)Primary(.*): "{{ hostvars[groups['primary'][0]]['ansible_hostname'] }}"
-      (.*)Candidate(.*): "{{ hostvars[groups['secondary'][0]]['ansible_hostname'] }}"
-      (.*)When should the switchover take place(.*): "now"
-      (.*)Are you sure you want to switchover cluster(.*): "y"
-  register: patronictl_switchover_result
+  ansible.builtin.uri:
+    url: http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/switchover
+    method: POST
+    body: '{"leader":"{{ ansible_hostname }}"}'
+    body_format: json
+  register: patroni_switchover_result
+  until: patroni_switchover_result.status == 200
+  retries: 300
+  delay: 2
   environment:
-    PATH: "{{ ansible_env.PATH }}:/usr/bin:/usr/local/bin"
-  vars:
-    ansible_python_interpreter: /usr/bin/python3
+    no_proxy: "{{ inventory_hostname }}"
 
 - name: Make sure that the Patroni is healthy and is a replica
   ansible.builtin.uri:
