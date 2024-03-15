@@ -120,6 +120,9 @@
       hetzner.hcloud.network_info:
         api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
       register: network_info
+      until: network_info is success
+      delay: 5
+      retries: 3
 
     # if server_network is specified
     - name: "Hetzner Cloud: Check if network '{{ server_network }}' exists for given location"
@@ -491,7 +494,7 @@
       hetzner.hcloud.load_balancer_service:
         api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
         load_balancer: "{{ patroni_cluster_name }}-{{ item }}"
-        listen_port: "{{ pgbouncer_listen_port | default(6432) if pgbouncer_install | bool else postgresql_port | default(5432) }}"
+        listen_port: "{{ hetzner_load_balancer_port | default(database_port) }}"
         destination_port: "{{ pgbouncer_listen_port | default(6432) if pgbouncer_install | bool else postgresql_port | default(5432) }}"
         protocol: tcp
         health_check:
@@ -511,6 +514,8 @@
         - "sync"
       loop_control:
         label: "{{ patroni_cluster_name }}-{{ item }}"
+      vars:
+        database_port: "{{ pgbouncer_listen_port | default(6432) if pgbouncer_install | bool else postgresql_port | default(5432) }}"
       when: cloud_load_balancer | bool and
             (item == 'primary' or
             (item == 'replica' and server_count | int > 1) or
@@ -528,13 +533,54 @@
         - "sync"
       loop_control:
         label: "{{ patroni_cluster_name }}-{{ item }}"
-      register: hetzner_load_balancer
       when: cloud_load_balancer | bool and
             (item == 'primary' or
             (item == 'replica' and server_count | int > 1) or
             (item in ['sync', 'async'] and server_count | int > 1 and synchronous_mode | bool))
 
-    - name: "Hetzner Cloud: Add servers to Load Balancer"
+    - name: "Hetzner Cloud: Disable public interface for Load Balancer"
+      hetzner.hcloud.load_balancer:
+        api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
+        name: "{{ patroni_cluster_name }}-{{ item }}"
+        location: "{{ server_location }}"
+        disable_public_interface: true
+      loop:
+        - "primary"
+        - "replica"
+        - "sync"
+      loop_control:
+        label: "{{ patroni_cluster_name }}-{{ item }}"
+      register: hetzner_load_balancer_disable_public
+      until: hetzner_load_balancer_disable_public is success
+      delay: 5
+      retries: 3
+      when: (cloud_load_balancer | bool and not database_public_access | bool) and
+            (item == 'primary' or
+            (item == 'replica' and server_count | int > 1) or
+            (item in ['sync', 'async'] and server_count | int > 1 and synchronous_mode | bool))
+
+    - name: "Hetzner Cloud: Enable public interface for Load Balancer"
+      hetzner.hcloud.load_balancer:
+        api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
+        name: "{{ patroni_cluster_name }}-{{ item }}"
+        location: "{{ server_location }}"
+        disable_public_interface: false
+      loop:
+        - "primary"
+        - "replica"
+        - "sync"
+      loop_control:
+        label: "{{ patroni_cluster_name }}-{{ item }}"
+      register: hetzner_load_balancer_enable_public
+      until: hetzner_load_balancer_enable_public is success
+      delay: 5
+      retries: 3
+      when: (cloud_load_balancer | bool and database_public_access | bool) and
+            (item == 'primary' or
+            (item == 'replica' and server_count | int > 1) or
+            (item in ['sync', 'async'] and server_count | int > 1 and synchronous_mode | bool))
+
+    - name: "Hetzner Cloud: Add servers to Load Balancer (use label_selector 'cluster={{ patroni_cluster_name }}')"
       hetzner.hcloud.load_balancer_target:
         api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
         load_balancer: "{{ patroni_cluster_name }}-{{ item }}"
@@ -551,6 +597,14 @@
             (item == 'primary' or
             (item == 'replica' and server_count | int > 1) or
             (item in ['sync', 'async'] and server_count | int > 1 and synchronous_mode | bool))
+
+    - name: "Hetzner Cloud: Gather information about Load Balancers"
+      hetzner.hcloud.load_balancer_info:
+        api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
+      register: hetzner_load_balancer
+      until: hetzner_load_balancer is success
+      delay: 5
+      retries: 3
   when: state == 'present'
 
 # Info
@@ -630,12 +684,13 @@
         index_var: idx
         label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-storage"
 
-    - name: "Hetzner Cloud: Disable protection for Load Balancer"
+    - name: "Hetzner Cloud: Disable protection for Load Balancer (if exists)"
       hetzner.hcloud.load_balancer:
         api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
         name: "{{ patroni_cluster_name }}-{{ item }}"
         location: "{{ server_location }}"
         delete_protection: false
+      failed_when: false
       loop:
         - "primary"
         - "replica"
