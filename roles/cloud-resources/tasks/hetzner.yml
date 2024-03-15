@@ -474,7 +474,6 @@
         location: "{{ server_location }}"
         load_balancer_type: "{{ hetzner_load_balancer_type | default('lb21') }}"
         algorithm: round_robin
-        disable_public_interface: "{{ (database_public_access | bool) | ternary(false, true) }}"
         delete_protection: true
         state: present
         labels:
