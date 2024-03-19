@@ -82,6 +82,7 @@ If these checks pass, the playbook switches back to the old PostgreSQL paths and
 | `max_transaction_sec` | Maximum allowed duration for a transaction in seconds. | `15` |
 | `copy_files_to_all_server` | Copy files located in the "files" directory to all servers. (optional) | `[]` |
 | `pgbouncer_pool_pause` | Pause pgbouncer pools during upgrade. | `true` |
+| `pgbouncer_pool_pause_timeout` | The maximum waiting time (in seconds) for the pool to be paused. For each iteration of the loop when trying to pause all pools. | `2` |
 | `pgbouncer_pool_pause_terminate_after` | Time in seconds after which script terminates slow active queries. | `30` |
 | `pgbouncer_pool_pause_stop_after` | Time in seconds after which the script exits with an error if unable to pause all pgbouncer pools. | `60` |
 | `pg_slow_active_query_treshold` | Time in milliseconds to wait for active queries before trying to pause the pool. | `1000` |
