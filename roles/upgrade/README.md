@@ -285,20 +285,12 @@ Please see the variable file vars/[upgrade.yml](../../vars/upgrade.yml)
   - Start vip-manager service
   - Make sure that the cluster ip address (VIP) is running
 
-#### 6. POST-UPGRADE: Perform Post-Checks and Update extensions
-- **Make sure that physical replication is active**
-  - if no active replication connections found, print error message:
-    - "No active replication connections found. Please check the replication status and PostgreSQL logs."
-- **Create a table "test_replication" with 10000 rows on the Primary**
-- **Wait until the PostgreSQL replica is synchronized**
-  - Notes: max wait time: 2 minutes
-- **Drop a table "test_replication"**
-- **Print the result of checking the number of records**
-  - if the number of rows match, print info message:
-    - "The PostgreSQL Replication is OK. The number of records in the 'test_replication' table the same as the Primary."
-  - if the number of rows does not match, print error message:
-    - "The number of records in the 'test_replication' table does not match the Primary. Please check the replication status and PostgreSQL logs."
-- **Get a list of databases**
+#### 6. POST-UPGRADE: Analyze a PostgreSQL database (update optimizer statistics) and Post-Upgrade tasks
+- **Run vacuumdb to analyze the PostgreSQL databases**
+  - Notes: Uses parallel processes equal to 50% of CPU cores ('`vacuumdb_parallel_jobs`' variable)
+  - Notes: Before collecting statistics, the 'pg_terminator' script is launched to monitor and terminate any 'ANALYZE' blockers. Once statistics collection is complete, the script is stopped.
+  - Wait for the analyze to complete.
+    - Notes: max wait time: 1 hour ('`vacuumdb_analyze_timeout`' variable)
 - **Update extensions in each database**
   - Get list of installed PostgreSQL extensions
   - Get list of old PostgreSQL extensions
@@ -310,33 +302,36 @@ Please see the variable file vars/[upgrade.yml](../../vars/upgrade.yml)
       - Notes: if pg_repack is installed
     - Notes: if there are no old extensions, print message:
       - "The extension versions are up-to-date for the database. No update is required."
-
-#### 7. POST-UPGRADE: Analyze a PostgreSQL database (update optimizer statistics) and Post-Upgrade tasks
-- **Run vacuumdb to analyze the PostgreSQL databases**
-  - Notes: Uses parallel processes equal to CPU cores ('`vacuumdb_parallel_jobs`' variable)
-  - Notes: Before collecting statistics, the 'pg_terminator' script is launched to monitor and terminate any 'ANALYZE' blockers. Once statistics collection is complete, the script is stopped.
-  - Wait for the analyze to complete.
-    - Notes: max wait time: 1 hour ('`vacuumdb_analyze_timeout`' variable)
-- **Ensure the current data directory is the new data directory**
-  - Notes: to prevent deletion the old directory if it is used
-- **Delete the old PostgreSQL data directory**
-  - Notes: perform pg_dropcluster for Debian based
-- **Delete the old PostgreSQL WAL directory**
-  - Notes: if 'pg_new_wal_dir' is defined
-- **Remove old PostgreSQL packages**
-  - Notes: if 'pg_old_packages_remove' is 'true'
-- **pgBackRest** (if 'pgbackrest_install' is 'true')
-  - Check pg-path option
-  - Update pg-path in pgbackrest.conf
-  - Upgrade stanza
-- **WAL-G** (if 'wal_g_install' is 'true')
-  - Update PostgreSQL data directory path in .walg.json
-  - Update PostgreSQL data directory path in cron jobs
-- **Check the Patroni cluster state**
-- **Check the current PostgreSQL version**
-- **Remove temporary local access rule from pg_hba.conf**
-  - Notes: if it has been changed
-  - Update the PostgreSQL configuration
-- **Print info messages**
-  - List the Patroni cluster members
-  - Upgrade completed
+- **Perform Post-Checks**
+    - Make sure that physical replication is active
+      - Note: if no active replication connections found, print error message: "No active replication connections found. Please check the replication status and PostgreSQL logs."
+      - Create a table "test_replication" with 10000 rows on the Primary
+      - Wait until the PostgreSQL replica is synchronized (max wait time: 2 minutes)
+      - Drop a table "test_replication"
+      - Print the result of checking the number of records
+      - if the number of rows match, print info message: "The PostgreSQL Replication is OK. The number of records in the 'test_replication' table the same as the Primary."
+      - if the number of rows does not match, print error message: "The number of records in the 'test_replication' table does not match the Primary. Please check the replication status and PostgreSQL logs."
+- **Perform Post-Upgrade tasks**
+    - **Ensure the current data directory is the new data directory**
+      - Notes: to prevent deletion the old directory if it is used
+    - **Delete the old PostgreSQL data directory**
+      - Notes: perform pg_dropcluster for Debian based
+    - **Delete the old PostgreSQL WAL directory**
+      - Notes: if 'pg_new_wal_dir' is defined
+    - **Remove old PostgreSQL packages**
+      - Notes: if 'pg_old_packages_remove' is 'true'
+    - **pgBackRest** (if 'pgbackrest_install' is 'true')
+      - Check pg-path option
+      - Update pg-path in pgbackrest.conf
+      - Upgrade stanza
+    - **WAL-G** (if 'wal_g_install' is 'true')
+      - Update PostgreSQL data directory path in .walg.json
+      - Update PostgreSQL data directory path in cron jobs
+    - **Check the Patroni cluster state**
+    - **Check the current PostgreSQL version**
+    - **Remove temporary local access rule from pg_hba.conf**
+      - Notes: if it has been changed
+      - Update the PostgreSQL configuration
+    - **Print info messages**
+      - List the Patroni cluster members
+      - Upgrade completed
