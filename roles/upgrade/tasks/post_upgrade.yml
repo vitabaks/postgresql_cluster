@@ -180,14 +180,19 @@
 
 - name: "Stop pg_terminator script"
   ansible.builtin.shell: |
-    pid=$(cat /tmp/pg_terminator.pid)
-    ps -p $pid > /dev/null 2>&1 && kill -9 $pid
+    while read pid; do
+      if ps -p $pid > /dev/null 2>&1; then
+        echo "Stopping pg_terminator with pid: $pid" >> /tmp/pg_terminator.log
+        kill -9 $pid
+      else
+        echo "No process found for pid: $pid" >> /tmp/pg_terminator.log
+      fi
+    done < /tmp/pg_terminator.pid
   args:
     executable: /bin/bash
   ignore_errors: true
-  when:
-    - pg_terminator_analyze is defined
-    - pg_terminator_analyze is changed
+  when: (pg_terminator_analyze is defined and pg_terminator_analyze is changed) or
+        (pg_terminator_long_transactions is defined and pg_terminator_long_transactions is changed)
 
 # finish (info)
 - name: Check the Patroni cluster state
