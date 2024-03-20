@@ -77,6 +77,7 @@ If these checks pass, the playbook switches back to the old PostgreSQL paths and
 | `schema_compatibility_check_timeout` | Max duration for compatibility check (pg_dumpall --schema-only) in seconds. | `3600` |
 | `vacuumdb_parallel_jobs` | Execute the analyze command in parallel by running `njobs` commands simultaneously. This option may reduce the processing time but it also increases the load on the database server. | all CPU cores |
 | `vacuumdb_analyze_timeout` | Max duration of analyze command in seconds. | `3600` |
+| `vacuumdb_analyze_terminate_treshold` | Terminate active queries that are longer than the specified time (in seconds) during the collection of statistics (0 = do not terminate active backends). | `0` |
 | `update_extensions` | Automatically update all PostgreSQL extensions. | `true` |
 | `max_replication_lag_bytes` | Maximum allowed replication lag in bytes. | `10485760` |
 | `max_transaction_sec` | Maximum allowed duration for a transaction in seconds. | `15` |
