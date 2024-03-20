@@ -56,6 +56,7 @@
           from pg_stat_activity
           where
             backend_type = 'client backend' and pid <> pg_backend_pid()
+            and query not ilike 'ANALYZE %'
             and xact_start < clock_timestamp() - interval '{{ max_tx_sec }}s';" >> /tmp/pg_terminator.log
           sleep 10
         done
