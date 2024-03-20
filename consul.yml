@@ -36,6 +36,7 @@
       delegate_to: localhost
       run_once: true # noqa run-once
       when:
+        - ansible_utils_result.stderr is defined
         - ansible_utils_result.stderr is search("unable to find")
 
     - name: Make sure the unzip package are present on the control host
