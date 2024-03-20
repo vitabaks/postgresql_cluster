@@ -287,10 +287,8 @@ Please see the variable file vars/[upgrade.yml](../../vars/upgrade.yml)
 
 #### 6. POST-UPGRADE: Analyze a PostgreSQL database (update optimizer statistics) and Post-Upgrade tasks
 - **Run vacuumdb to analyze the PostgreSQL databases**
-  - Notes: Uses parallel processes equal to 50% of CPU cores ('`vacuumdb_parallel_jobs`' variable)
-  - Notes: Before collecting statistics, the 'pg_terminator' script is launched to monitor and terminate any 'ANALYZE' blockers. Once statistics collection is complete, the script is stopped.
-  - Wait for the analyze to complete.
-    - Notes: max wait time: 1 hour ('`vacuumdb_analyze_timeout`' variable)
+  - Note: Uses parallel processes equal to 50% of CPU cores ('`vacuumdb_parallel_jobs`' variable)
+  - Note: Before collecting statistics, the 'pg_terminator' script is launched to monitor and terminate any 'ANALYZE' blockers. Once statistics collection is complete, the script is stopped.
 - **Update extensions in each database**
   - Get list of installed PostgreSQL extensions
   - Get list of old PostgreSQL extensions
@@ -320,6 +318,9 @@ Please see the variable file vars/[upgrade.yml](../../vars/upgrade.yml)
       - Notes: if 'pg_new_wal_dir' is defined
     - **Remove old PostgreSQL packages**
       - Notes: if 'pg_old_packages_remove' is 'true'
+    - **Remove temporary local access rule from pg_hba.conf**
+      - Notes: if it has been changed
+      - Update the PostgreSQL configuration
     - **pgBackRest** (if 'pgbackrest_install' is 'true')
       - Check pg-path option
       - Update pg-path in pgbackrest.conf
@@ -327,11 +328,10 @@ Please see the variable file vars/[upgrade.yml](../../vars/upgrade.yml)
     - **WAL-G** (if 'wal_g_install' is 'true')
       - Update PostgreSQL data directory path in .walg.json
       - Update PostgreSQL data directory path in cron jobs
+    - **Wait for the analyze to complete.**
+      - Notes: max wait time: 1 hour ('`vacuumdb_analyze_timeout`' variable)
     - **Check the Patroni cluster state**
     - **Check the current PostgreSQL version**
-    - **Remove temporary local access rule from pg_hba.conf**
-      - Notes: if it has been changed
-      - Update the PostgreSQL configuration
     - **Print info messages**
       - List the Patroni cluster members
       - Upgrade completed

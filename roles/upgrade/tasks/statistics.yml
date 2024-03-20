@@ -49,24 +49,6 @@
       poll: 0
       register: vacuumdb_analyze
       ignore_errors: true  # ignore errors if the task runs for over an 'vacuumdb_analyze_timeout'.
-
-    - name: "Collecting statistics in progress. Wait for the analyze to complete."
-      ansible.builtin.async_status:
-        jid: "{{ vacuumdb_analyze.ansible_job_id }}"
-      register: vacuumdb_analyze_job_result
-      until: vacuumdb_analyze_job_result.finished
-      retries: "{{ (vacuumdb_analyze_timeout | int) // 10 }}"  # max wait time
-      delay: 10
-      ignore_errors: true  # ignore errors if the task runs for over an vacuumdb_analyze_timeout
-
-    - name: "Stop pg_terminator script"
-      ansible.builtin.shell: |
-        pid=$(cat /tmp/pg_terminator.pid)
-        ps -p $pid > /dev/null 2>&1 && kill -9 $pid
-      args:
-        executable: /bin/bash
-      ignore_errors: true
-      when: pg_terminator_analyze is changed
   when: inventory_hostname in groups['primary']
 
 ...
