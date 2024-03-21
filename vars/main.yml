@@ -522,6 +522,7 @@ pgbackrest_conf:
     - { option: "process-max", value: "4" }
     - { option: "log-level-console", value: "info" }
     - { option: "recovery-option", value: "recovery_target_action=promote" }
+    - { option: "pg1-socket-path", value: "{{ postgresql_unix_socket_dir }}" }
     - { option: "pg1-path", value: "{{ postgresql_data_dir }}" }
 #    - { option: "", value: "" }
 # (optional) dedicated backup server config (if "repo_host" is set)
