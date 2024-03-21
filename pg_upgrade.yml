@@ -56,7 +56,7 @@
   tags:
     - always
 
-- name: "(1/7) PRE-UPGRADE: Perform Pre-Checks"
+- name: "(1/6) PRE-UPGRADE: Perform Pre-Checks"
   hosts: 'primary:secondary'
   gather_facts: false
   become: true
@@ -79,7 +79,7 @@
     - upgrade
     - pre-checks
 
-- name: "(2/7) PRE-UPGRADE: Install new PostgreSQL packages"
+- name: "(2/6) PRE-UPGRADE: Install new PostgreSQL packages"
   hosts: 'primary:secondary'
   gather_facts: false
   become: true
@@ -103,7 +103,7 @@
     - upgrade-check
     - packages
 
-- name: "(3/7) PRE-UPGRADE: Initialize new db, schema compatibility check, and pg_upgrade --check"
+- name: "(3/6) PRE-UPGRADE: Initialize new db, schema compatibility check, and pg_upgrade --check"
   hosts: 'primary:secondary'
   gather_facts: false
   become: true
@@ -143,7 +143,7 @@
     - upgrade-check
     - schema-compatibility-check
 
-- name: "(4/7) PRE-UPGRADE: Prepare the Patroni configuration"
+- name: "(4/6) PRE-UPGRADE: Prepare the Patroni configuration"
   hosts: 'primary:secondary'
   gather_facts: false
   become: true
@@ -165,7 +165,7 @@
     - upgrade
     - update-config
 
-- name: "(5/7) UPGRADE: Upgrade PostgreSQL"
+- name: "(5/6) UPGRADE: Upgrade PostgreSQL"
   hosts: 'primary:secondary'
   gather_facts: false
   become: true
@@ -228,36 +228,7 @@
   tags:
     - upgrade
 
-- name: "(6/7) POST-UPGRADE: Perform Post-Checks and Update extensions"
-  hosts: 'primary:secondary'
-  gather_facts: false
-  become: true
-  become_user: postgres
-  any_errors_fatal: true
-  pre_tasks:
-    - name: Include main variables
-      ansible.builtin.include_vars: "vars/main.yml"
-    - name: Include OS-specific variables
-      ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
-    - name: Include upgrade variables
-      ansible.builtin.include_vars: "vars/upgrade.yml"
-  tasks:
-    - name: Running Post-Checks
-      ansible.builtin.include_role:
-        name: upgrade
-        tasks_from: post_checks
-
-    - name: Update extensions
-      ansible.builtin.include_role:
-        name: upgrade
-        tasks_from: extensions
-      when: update_extensions | bool
-  tags:
-    - upgrade
-    - post-checks
-    - update-extensions
-
-- name: "(7/7) POST-UPGRADE: Analyze a PostgreSQL database (update optimizer statistics) and Post-Upgrade tasks"
+- name: "(6/6) POST-UPGRADE: Analyze a PostgreSQL database (update optimizer statistics) and Post-Upgrade tasks"
   hosts: 'primary:secondary'
   gather_facts: false
   become: true
@@ -275,6 +246,19 @@
       ansible.builtin.include_role:
         name: upgrade
         tasks_from: statistics
+      tags: analyze, statistics
+
+    - name: Update extensions
+      ansible.builtin.include_role:
+        name: upgrade
+        tasks_from: extensions
+      when: update_extensions | bool
+      tags: update_extensions
+
+    - name: Running Post-Checks
+      ansible.builtin.include_role:
+        name: upgrade
+        tasks_from: post_checks
 
     - name: Running Post-Upgrade tasks
       ansible.builtin.include_role:
@@ -283,7 +267,5 @@
   tags:
     - upgrade
     - post-upgrade
-    - analyze
-    - statistics
 
 ...

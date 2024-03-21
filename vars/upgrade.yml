@@ -66,6 +66,8 @@ update_extensions: true  # if 'true', try to update extensions automatically
 
 vacuumdb_parallel_jobs: "{{ [ansible_processor_vcpus | int // 2, 1] | max }}"  # use 50% CPU cores
 vacuumdb_analyze_timeout: 3600  # seconds. The maximum duration of analyze command (soft limit, exceeding won't halt playbook)
+# terminate active queries that are longer than the specified time (in seconds) during the collection of statistics.
+vacuumdb_analyze_terminate_treshold: 0 # (0 = do not terminate active backends)
 
 # Do not perform an upgrade if
 max_replication_lag_bytes: 10485760  # 10 MiB - Maximum allowed replication lag in bytes
