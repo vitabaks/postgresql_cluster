@@ -183,7 +183,8 @@ Please see the variable file vars/[upgrade.yml](../../vars/upgrade.yml)
   - Print the result of the pg_upgrade check
 
 #### 4. PRE-UPGRADE: Prepare the Patroni configuration
-- Edit patroni.yml
+- Backup the patroni.yml configuration file
+- Edit the patroni.yml configuration file
   - **Update parameters**: `data_dir`, `bin_dir`, `config_dir`
   - **Check if the 'standby_cluster' parameter is specified**
     - Remove parameters: `standby_cluster` (if exists)
