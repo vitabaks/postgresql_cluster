@@ -35,6 +35,7 @@
   until: create_table_result is success
   delay: 5
   retries: 3
+  ignore_errors: true  # show the error and continue the playbook execution
   when:
     - inventory_hostname in groups['primary']
 
