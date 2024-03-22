@@ -333,6 +333,11 @@
     - inventory_hostname in groups['primary']
     - tablespace_location.stdout_lines | length > 0
 
+- name: Make sure that the 'recovery.signal' file is absent in the data directory
+  ansible.builtin.file:
+    path: "{{ pg_old_datadir }}/recovery.signal"
+    state: absent
+
 # PgBouncer (if 'pgbouncer_pool_pause' is 'true')
 - name: Ensure correct permissions for PgBouncer unix socket directory
   become: true
