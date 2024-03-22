@@ -46,7 +46,7 @@ On average, the PgBouncer pause duration is approximately 30 seconds. However, f
 
 This playbook performs a rollback of a PostgreSQL upgrade.
 
-Note: In some scenarios, if errors occur, the system may automatically initiate a rollback. Alternatively, if the automatic rollback does not occur, you can manually execute this playbook to revert the changes. 
+Note: In some scenarios, if errors occur, the pg_upgrade.yml playbook may automatically initiate a rollback. Alternatively, if the automatic rollback does not occur, you can manually execute the pg_upgrade_rollback.yml playbook to revert the changes. 
 
 ```bash
 ansible-playbook pg_upgrade_rollback.yml
