@@ -132,6 +132,7 @@ Please see the variable file vars/[upgrade.yml](../../vars/upgrade.yml)
 - **Check if PostgreSQL tablespaces exist**
   - Print tablespace location (if exists)
   - Note: If tablespaces are present they will be upgraded (step 5) on replicas using rsync
+- **Make sure that the 'recovery.signal' file is absent** in the data directory
 - **Test PgBouncer access via unix socket**
   - Ensure correct permissions for PgBouncer unix socket directory
   - Test access via unix socket to be able to perform 'PAUSE' command
