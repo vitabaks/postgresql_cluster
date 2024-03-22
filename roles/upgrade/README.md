@@ -46,6 +46,8 @@ On average, the PgBouncer pause duration is approximately 30 seconds. However, f
 
 This playbook performs a rollback of a PostgreSQL upgrade.
 
+Note: In some scenarios, if errors occur, the system may automatically initiate a rollback. Alternatively, if the automatic rollback does not occur, you can manually execute this playbook to revert the changes. 
+
 ```bash
 ansible-playbook pg_upgrade_rollback.yml
 ```
@@ -225,7 +227,7 @@ Please see the variable file vars/[upgrade.yml](../../vars/upgrade.yml)
   - Notes: max wait time: 2 minutes
   - Stop, if replication lag is high
   - Perform rollback
-  - Print error message: "There's a replication lag in the PostgreSQL Cluster. Please try again later"
+    - Print error message: "There's a replication lag in the PostgreSQL Cluster. Please try again later"
 - **Perform PAUSE on all pgbouncers servers**
   - Notes: if 'pgbouncer_install' is 'true' and 'pgbouncer_pool_pause' is 'true'
   - Notes: pgbouncer pause script (details in [pgbouncer_pause.yml](tasks/pgbouncer_pause.yml)) performs the following actions:
@@ -235,7 +237,7 @@ Please see the variable file vars/[upgrade.yml](../../vars/upgrade.yml)
     - If active queries do not complete within 30 seconds (`pgbouncer_pool_pause_terminate_after` variable), the script terminates slow active queries (longer than `pg_slow_active_query_treshold_to_terminate`).
     - If after that it is still not possible to pause the pgbouncer servers within 60 seconds (`pgbouncer_pool_pause_stop_after` variable) from the start of the script, the script exits with an error.
       - Perform rollback
-      - Print error message: "PgBouncer pools could not be paused, please try again later."
+        - Print error message: "PgBouncer pools could not be paused, please try again later."
 - **Stop PostgreSQL** on the Leader and Replicas
   - Check if old PostgreSQL is stopped
   - Check if new PostgreSQL is stopped
@@ -247,9 +249,9 @@ Please see the variable file vars/[upgrade.yml](../../vars/upgrade.yml)
       - "'Latest checkpoint location' is the same on the leader and its standbys"
   - if 'Latest checkpoint location' values doesn't match
     - Perform rollback
-    - Stop with error message:
-      - "Latest checkpoint location' doesn't match on leader and its standbys. Please try again later"
+      - Print error message: "Latest checkpoint location' doesn't match on leader and its standbys. Please try again later"
 - **Upgrade the PostgreSQL on the Primary** (using pg_upgrade --link)
+  - Perform rollback, if the upgrade failed
   - Print the result of the pg_upgrade
 - **Make sure that the new data directory are empty on the Replica**
 - **Upgrade the PostgreSQL on the Replica** (using rsync --hard-links)
