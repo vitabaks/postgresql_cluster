@@ -71,7 +71,21 @@
     - pg_old_packages_remove | bool
     - ansible_os_family == "Debian"
 
-# pgbackrest (local)
+# Return the pg_hba.conf file to its original state (if it has been changed)
+- block:
+    - name: Remove temporary local access rule from pg_hba.conf
+      ansible.builtin.blockinfile:
+        path: "{{ pg_new_confdir }}/pg_hba.conf"
+        marker: "# {mark} ANSIBLE TEMPORARY pg_upgrade RULE"
+        state: absent
+
+    - name: Update the PostgreSQL configuration
+      ansible.builtin.command: "{{ pg_new_bindir }}/pg_ctl reload -D {{ pg_new_datadir }}"
+  when:
+    - socket_access_result.stderr is defined
+    - "'no pg_hba.conf entry' in socket_access_result.stderr"
+
+# pgBackRest (local)
 - block:
     - name: pgbackrest | Check pg-path option
       ansible.builtin.command: "grep -c '^pg.*-path=' {{ pgbackrest_conf_file }}"
@@ -99,7 +113,7 @@
     - pgbackrest_install | bool
     - pgbackrest_repo_host | length < 1
 
-# pgbackrest (dedicated)
+# pgBackRest (dedicated)
 - block:
     - name: pgbackrest | Check pg-path option
       delegate_to: "{{ groups['pgbackrest'][0] }}"
@@ -151,6 +165,36 @@
   ignore_errors: true
   when: wal_g_install | bool
 
+# Wait for the analyze to complete
+- name: "Collecting statistics in progress. Wait for the analyze to complete."
+  ansible.builtin.async_status:
+    jid: "{{ vacuumdb_analyze.ansible_job_id }}"
+  register: vacuumdb_analyze_job_result
+  until: vacuumdb_analyze_job_result.finished
+  retries: "{{ (vacuumdb_analyze_timeout | int) // 10 }}"  # max wait time
+  delay: 10
+  ignore_errors: true  # ignore errors if the task runs for over an vacuumdb_analyze_timeout
+  when:
+    - vacuumdb_analyze is defined
+    - vacuumdb_analyze.ansible_job_id is defined
+
+- name: "Stop pg_terminator script"
+  ansible.builtin.shell: |
+    while read pid; do
+      if ps -p $pid > /dev/null 2>&1; then
+        echo "Stopping pg_terminator with pid: $pid" >> /tmp/pg_terminator.log
+        kill -9 $pid
+      else
+        echo "No process found for pid: $pid" >> /tmp/pg_terminator.log
+      fi
+    done < /tmp/pg_terminator.pid
+  args:
+    executable: /bin/bash
+  ignore_errors: true
+  when: (pg_terminator_analyze is defined and pg_terminator_analyze is changed) or
+        (pg_terminator_long_transactions is defined and pg_terminator_long_transactions is changed)
+
+# finish (info)
 - name: Check the Patroni cluster state
   run_once: true
   become: true
@@ -171,21 +215,6 @@
   changed_when: false
   when: inventory_hostname in groups['primary']
 
-# Return the pg_hba.conf file to its original state (if it has been changed)
-- block:
-    - name: Remove temporary local access rule from pg_hba.conf
-      ansible.builtin.blockinfile:
-        path: "{{ pg_new_confdir }}/pg_hba.conf"
-        marker: "# {mark} ANSIBLE TEMPORARY pg_upgrade RULE"
-        state: absent
-
-    - name: Update the PostgreSQL configuration
-      ansible.builtin.command: "{{ pg_new_bindir }}/pg_ctl reload -D {{ pg_new_datadir }}"
-  when:
-    - socket_access_result.stderr is defined
-    - "'no pg_hba.conf entry' in socket_access_result.stderr"
-
-# finish (info)
 - name: List the Patroni cluster members
   run_once: true
   ansible.builtin.debug:
