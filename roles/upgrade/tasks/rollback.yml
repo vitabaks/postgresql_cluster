@@ -85,8 +85,17 @@
     - inventory_hostname in groups['primary']
     - pg_control_version.stdout == pg_new_version | replace('.', '')
 
-# Revert the paths to the old PostgreSQL
-- name: '[Rollback] Revert the paths to the old PostgreSQL in patroni.yml'
+# Restore the old Patroni configuration
+- name: '[Rollback] Restore the old patroni.yml configuration file'
+  ansible.builtin.copy:
+    src: "{{ patroni_config_file }}.bkp"
+    dest: "{{ patroni_config_file }}"
+    owner: postgres
+    group: postgres
+    mode: "0640"
+    remote_src: true
+
+- name: '[Rollback] Ensure old PostgreSQL paths are set in patroni.yml'
   ansible.builtin.replace:
     path: "{{ patroni_config_file }}"
     regexp: "{{ item.regexp }}"
