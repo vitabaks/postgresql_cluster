@@ -214,16 +214,16 @@ tags:
 {% if patroni_tags is defined and patroni_tags | length > 0 %}
   {{ patroni_tags | replace(" ", "") | replace("=", ": ") | replace(",", "\n  ") }}
 {% endif %}
-{% if 'nofailover=' not in patroni_tags | default('') | replace(" ", "") %}
+{% if 'nofailover' not in patroni_tags | default('') | replace(" ", "") %}
   nofailover: false
 {% endif %}
-{% if 'noloadbalance=' not in patroni_tags | default('') | replace(" ", "") %}
+{% if 'noloadbalance' not in patroni_tags | default('') | replace(" ", "") %}
   noloadbalance: false
 {% endif %}
-{% if 'nosync=' not in patroni_tags | default('') | replace(" ", "") %}
+{% if 'nosync' not in patroni_tags | default('') | replace(" ", "") %}
   nosync: false
 {% endif %}
-{% if 'clonefrom=' not in patroni_tags | default('') | replace(" ", "") %}
+{% if 'clonefrom' not in patroni_tags | default('') | replace(" ", "") %}
   clonefrom: false
 {% endif %}
 
