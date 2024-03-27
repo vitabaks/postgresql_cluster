@@ -211,10 +211,14 @@ watchdog:
   safety_margin: 5
 
 tags:
+{% if patroni_tags is defined and patroni_tags | length > 0 %}
+  {{ patroni_tags | replace(" ", "") | replace("=", ": ") | replace(",", "\n  ") }}
+{% else %}
   nofailover: false
   noloadbalance: false
   clonefrom: false
   nosync: false
+{% endif %}
 
   # specify a node to replicate from (cascading replication)
 #  replicatefrom: (node name)
