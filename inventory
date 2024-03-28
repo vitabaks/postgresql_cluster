@@ -2,14 +2,12 @@
 # The specified ip addresses will be used to listen by the cluster components.
 # Attention! Specify private IP addresses so that the cluster does not listen a public IP addresses.
 # For deploying via public IPs, add 'ansible_host=public_ip_address' variable for each node.
-
-# "postgresql_exists='true'" if PostgreSQL is already exists and running
+#
+# "postgresql_exists=true" if PostgreSQL is already exists and running
 # "hostname=" variable is optional (used to change the server name)
 # "new_node=true" to add a new server to an existing cluster using the add_pgnode.yml playbook
-# patroni_tags="key=value" tags for Patroni in "key=value" format separated by commas (details here: https://patroni.readthedocs.io/en/latest/yaml_configuration.html#tags)
-
-# In this example, all components will be installed on PostgreSQL nodes.
-# You can deploy the haproxy balancers and the etcd or consul cluster on other dedicated servers (recomended).
+# patroni_tags="key=value" the Patroni tags in "key=value" format separated by commas.
+# balancer_tags="key=value" the Balancer tags for the /replica, /sync, /async endpoints. Add the tag to the 'patroni_tags' variable first.
 
 # if dcs_exists: false and dcs_type: "etcd"
 [etcd_cluster]  # recommendation: 3, or 5-7 nodes
@@ -27,10 +25,11 @@
 
 # if with_haproxy_load_balancing: true
 [balancers]
-10.128.64.140
-10.128.64.142
-10.128.64.143
-#10.128.64.144 new_node=true
+10.128.64.140 # balancer_tags="datacenter=dc1"
+10.128.64.142 # balancer_tags="datacenter=dc1"
+10.128.64.143 # balancer_tags="datacenter=dc1"
+#10.128.64.144 balancer_tags="datacenter=dc2"
+#10.128.64.145 balancer_tags="datacenter=dc2" new_node=true
 
 # PostgreSQL nodes
 [master]
@@ -39,7 +38,7 @@
 [replica]
 10.128.64.142 hostname=pgnode02 postgresql_exists=false # patroni_tags="datacenter=dc1"
 10.128.64.143 hostname=pgnode03 postgresql_exists=false # patroni_tags="datacenter=dc1"
-#10.128.64.144 hostname=pgnode04 postgresql_exists=false patroni_tags="datacenter=dc2" new_node=true
+#10.128.64.144 hostname=pgnode04 postgresql_exists=false patroni_tags="datacenter=dc2"
 #10.128.64.145 hostname=pgnode04 postgresql_exists=false patroni_tags="datacenter=dc2" new_node=true
 
 [postgres_cluster:children]
@@ -60,6 +59,6 @@ ansible_ssh_pass='secretpassword'  # "sshpass" package is required for use "ansi
 #ansible_python_interpreter='/usr/bin/python3'  # is required for use python3
 
 [pgbackrest:vars]
-ansible_user='postgres'
-ansible_ssh_pass='secretpassword'
+#ansible_user='postgres'
+#ansible_ssh_pass='secretpassword'
 
