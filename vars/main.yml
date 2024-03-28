@@ -79,8 +79,8 @@ patroni_etcd_password: "" # (optional) password for etcd authentication
 patroni_etcd_protocol: "" # (optional) http or https, if not specified http is used
 
 # more options you can specify in the roles/patroni/templates/patroni.yml.j2
-# https://patroni.readthedocs.io/en/latest/SETTINGS.html#etcd
-# https://patroni.readthedocs.io/en/latest/SETTINGS.html#consul
+# https://patroni.readthedocs.io/en/latest/yaml_configuration.html#etcd
+# https://patroni.readthedocs.io/en/latest/yaml_configuration.html#consul
 
 # if dcs_type: "consul"
 consul_version: "1.15.8"
@@ -343,7 +343,7 @@ patroni_master_start_timeout: 300
 patroni_maximum_lag_on_failover: 1048576 # (1MB) the maximum bytes a follower may lag to be able to participate in leader election.
 patroni_maximum_lag_on_replica: "100MB" # the maximum of lag that replica can be in order to be available for read-only queries.
 
-# https://patroni.readthedocs.io/en/latest/SETTINGS.html?highlight=callbacks#dynamic-configuration-settings
+# https://patroni.readthedocs.io/en/latest/yaml_configuration.html#postgresql
 patroni_callbacks: []
 #  - {action: "on_role_change", script: ""}
 #  - {action: "on_stop", script: ""}

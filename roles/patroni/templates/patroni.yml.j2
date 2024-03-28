@@ -211,10 +211,22 @@ watchdog:
   safety_margin: 5
 
 tags:
-  nofailover: false
-  noloadbalance: false
-  clonefrom: false
+{% if patroni_tags is defined and patroni_tags | length > 0 %}
+  {{ patroni_tags | replace(" ", "") | replace("=", ": ") | replace(",", "\n  ") }}
+{% endif %}
+{% set normalized_tags = patroni_tags | default('') | replace(" ", "") %}
+{% if 'nosync=' not in normalized_tags %}
   nosync: false
+{% endif %}
+{% if 'noloadbalance=' not in normalized_tags %}
+  noloadbalance: false
+{% endif %}
+{% if 'nofailover=' not in normalized_tags %}
+  nofailover: false
+{% endif %}
+{% if 'clonefrom=' not in normalized_tags %}
+  clonefrom: false
+{% endif %}
 
   # specify a node to replicate from (cascading replication)
 #  replicatefrom: (node name)
