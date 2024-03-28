@@ -6,8 +6,8 @@
 # "postgresql_exists=true" if PostgreSQL is already exists and running
 # "hostname=" variable is optional (used to change the server name)
 # "new_node=true" to add a new server to an existing cluster using the add_pgnode.yml playbook
-# patroni_tags="key=value" the Patroni tags in "key=value" format separated by commas (details here: https://patroni.readthedocs.io/en/latest/yaml_configuration.html#tags)
-# balancer_tags="key=value" the Balancer tags for the /replica, /sync, /async endpoints. It is crucial that each specified tag is also added to the Patroni tags via the 'patroni_tags' variable.
+# patroni_tags="key=value" the Patroni tags in "key=value" format separated by commas (details: https://patroni.readthedocs.io/en/latest/yaml_configuration.html#tags)
+# balancer_tags="key=value" the Balancer tags for the /replica, /sync, /async endpoints. Add the tag to the 'patroni_tags' variable first.
 
 # if dcs_exists: false and dcs_type: "etcd"
 [etcd_cluster]  # recommendation: 3, or 5-7 nodes
