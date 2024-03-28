@@ -1,6 +1,21 @@
 ---
 - name: config_pgcluster.yml | Configuration PostgreSQL HA Cluster (based on "Patroni")
+  hosts: localhost
+  gather_facts: true
+  any_errors_fatal: true
+  pre_tasks:
+    - name: Include main variables
+      ansible.builtin.include_vars: "vars/main.yml"
+      tags: always
+  roles:
+    - role: cloud-resources
+      when: cloud_provider | default('') | length > 0
+      tags: always
+
+- name: config_pgcluster.yml | Check the PostgreSQL cluster state and perform pre-checks
   hosts: postgres_cluster
+  become: true
+  become_method: sudo
   gather_facts: true
   pre_tasks:
     - name: Include main variables
@@ -71,7 +86,7 @@
   tags:
     - always
 
-- name: config_pgcluster.yml | Configure Postgres Cluster
+- name: config_pgcluster.yml | Configure PostgreSQL Cluster
   hosts: 'primary:secondary'
   become: true
   become_method: sudo

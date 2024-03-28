@@ -1,5 +1,11 @@
 ---
 
+# Automatic setup of the backup configuration based on the selected cloud provider.
+# if 'cloud_provider' is 'aws', 'gcp', 'azure', 'digitalocean'.
+- ansible.builtin.import_tasks: auto_conf.yml
+  when: cloud_provider | default('') | length > 0
+  tags: pgbackrest, pgbackrest_conf
+
 - block:  # Debian pgdg repo
     - name: Make sure the gnupg and apt-transport-https packages are present
       ansible.builtin.apt:
@@ -174,8 +180,10 @@
 
 # if 'pgbackrest_repo_host' or 'backup-standby' are specified
 - ansible.builtin.import_tasks: ssh_keys.yml
-  when: (pgbackrest_repo_host is defined and pgbackrest_repo_host | length > 0) or
-        (pgbackrest_conf.global | selectattr('option', 'equalto', 'backup-standby') | map(attribute='value') | list | last | default('') == 'y')
+  when:
+    - (pgbackrest_repo_host is defined and pgbackrest_repo_host | length > 0) or
+      (pgbackrest_conf.global | selectattr('option', 'equalto', 'backup-standby') | map(attribute='value') | list | last | default('') == 'y')
+    - not ansible_check_mode
   tags: pgbackrest, pgbackrest_ssh_keys
 
 - ansible.builtin.import_tasks: cron.yml
