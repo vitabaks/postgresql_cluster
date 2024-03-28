@@ -365,11 +365,11 @@ patroni_standby_cluster:
 # Permanent replication slots.
 # These slots will be preserved during switchover/failover.
 # https://patroni.readthedocs.io/en/latest/dynamic_configuration.html
-patroni_slots:
-  - slot: "logical_replication_slot" # the name of the permanent replication slot.
-    type: "logical" # the type of slot. Could be physical or logical (if the slot is logical, you have to define 'database' and 'plugin').
-    plugin: "pgoutput" # the plugin name for the logical slot.
-    database: "postgres" # the database name where logical slots should be created.
+patroni_slots: []
+#  - slot: "logical_replication_slot" # the name of the permanent replication slot.
+#    type: "logical" # the type of slot. Could be 'physical' or 'logical' (if the slot is logical, you have to define 'database' and 'plugin').
+#    plugin: "pgoutput" # the plugin name for the logical slot.
+#    database: "postgres" # the database name where logical slots should be created.
 #  - slot: "test_logical_replication_slot"
 #    type: "logical"
 #    plugin: "pgoutput"
