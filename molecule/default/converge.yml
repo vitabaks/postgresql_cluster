@@ -18,6 +18,8 @@
         consul_bootstrap_expect: true # if dcs_type: "consul"
         postgresql_version: "16" # to test custom WAL dir
         pgbouncer_processes: 2 # Test multiple pgbouncer processes (so_reuseport)
+        patroni_tags: "datacenter=dc1,key1=value1"
+        balancer_tags: "datacenter=dc1"
         cacheable: true
       delegate_to: localhost
       run_once: true # noqa run-once

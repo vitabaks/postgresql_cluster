@@ -278,6 +278,19 @@
   vars:
     ssh_key_user: postgres
 
+# if pg_new_wal_dir is defined (for synchronize wal dir)
+- name: '[Pre-Check] Make sure that the sshpass package are installed'
+  become: true
+  become_user: root
+  ansible.builtin.package:
+    name: sshpass
+    state: present
+  register: package_status
+  until: package_status is success
+  delay: 5
+  retries: 3
+  when: pg_new_wal_dir | length > 0
+
 # Rsync Checks
 - name: '[Pre-Check] Make sure that the rsync package are installed'
   become: true
@@ -285,6 +298,10 @@
   ansible.builtin.package:
     name: rsync
     state: present
+  register: package_status
+  until: package_status is success
+  delay: 5
+  retries: 3
 
 - name: '[Pre-Check] Rsync Checks: create testrsync file on Primary'
   become: true
