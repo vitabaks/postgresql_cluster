@@ -72,7 +72,11 @@ listen replicas
 {% endif %}
     maxconn {{ haproxy_maxconn.replica }}
     option tcplog
-    option httpchk OPTIONS /replica?lag={{ patroni_maximum_lag_on_replica }}{% if balancer_tags | default('') | length > 0 %}{{ '&' + balancer_tags.split(',') | map('trim') | map('regex_replace', '([^=]+)=(.*)', 'tag_\\1=\\2') | join('&') + '\n' }}{% endif %}
+    {% if balancer_tags | default('') | length > 0 %}
+    option httpchk OPTIONS /replica?lag={{ patroni_maximum_lag_on_replica }}{{ '&' + balancer_tags.split(',') | map('trim') | map('regex_replace', '([^=]+)=(.*)', 'tag_\\1=\\2') | join('&') }}
+    {% else %}
+    option httpchk OPTIONS /replica?lag={{ patroni_maximum_lag_on_replica }}
+    {% endif %}
     balance roundrobin
     http-check expect status 200
     default-server inter 3s fastinter 1s fall 3 rise 2 on-marked-down shutdown-sessions
@@ -96,7 +100,11 @@ listen replicas_direct
 {% endif %}
     maxconn {{ haproxy_maxconn.replica }}
     option tcplog
-    option httpchk OPTIONS /replica?lag={{ patroni_maximum_lag_on_replica }}{% if balancer_tags | default('') | length > 0 %}{{ '&' + balancer_tags.split(',') | map('trim') | map('regex_replace', '([^=]+)=(.*)', 'tag_\\1=\\2') | join('&') + '\n' }}{% endif %}
+    {% if balancer_tags | default('') | length > 0 %}
+    option httpchk OPTIONS /replica?lag={{ patroni_maximum_lag_on_replica }}{{ '&' + balancer_tags.split(',') | map('trim') | map('regex_replace', '([^=]+)=(.*)', 'tag_\\1=\\2') | join('&') }}
+    {% else %}
+    option httpchk OPTIONS /replica?lag={{ patroni_maximum_lag_on_replica }}
+    {% endif %}
     balance roundrobin
     http-check expect status 200
     default-server inter 3s fastinter 1s fall 3 rise 2 on-marked-down shutdown-sessions
@@ -113,7 +121,11 @@ listen replicas_sync
 {% endif %}
     maxconn {{ haproxy_maxconn.replica }}
     option tcplog
-    option httpchk OPTIONS /sync{% if balancer_tags | default('') | length > 0 %}{{ '?' + balancer_tags.split(',') | map('trim') | map('regex_replace', '([^=]+)=(.*)', 'tag_\\1=\\2') | join('&') + '\n' }}{% endif %}
+    {% if balancer_tags | default('') | length > 0 %}
+    option httpchk OPTIONS /sync{{ '?' + balancer_tags.split(',') | map('trim') | map('regex_replace', '([^=]+)=(.*)', 'tag_\\1=\\2') | join('&') }}
+    {% else %}
+    option httpchk OPTIONS /sync
+    {% endif %}
     balance roundrobin
     http-check expect status 200
     default-server inter 3s fastinter 1s fall 3 rise 2 on-marked-down shutdown-sessions
@@ -137,7 +149,11 @@ listen replicas_sync_direct
 {% endif %}
     maxconn {{ haproxy_maxconn.replica }}
     option tcplog
-    option httpchk OPTIONS /sync{% if balancer_tags | default('') | length > 0 %}{{ '?' + balancer_tags.split(',') | map('trim') | map('regex_replace', '([^=]+)=(.*)', 'tag_\\1=\\2') | join('&') + '\n' }}{% endif %}
+    {% if balancer_tags | default('') | length > 0 %}
+    option httpchk OPTIONS /sync{{ '?' + balancer_tags.split(',') | map('trim') | map('regex_replace', '([^=]+)=(.*)', 'tag_\\1=\\2') | join('&') }}
+    {% else %}
+    option httpchk OPTIONS /sync
+    {% endif %}
     balance roundrobin
     http-check expect status 200
     default-server inter 3s fastinter 1s fall 3 rise 2 on-marked-down shutdown-sessions
@@ -154,7 +170,11 @@ listen replicas_async
 {% endif %}
     maxconn {{ haproxy_maxconn.replica }}
     option tcplog
-    option httpchk OPTIONS /async?lag={{ patroni_maximum_lag_on_replica }}{% if balancer_tags | default('') | length > 0 %}{{ '&' + balancer_tags.split(',') | map('trim') | map('regex_replace', '([^=]+)=(.*)', 'tag_\\1=\\2') | join('&') + '\n' }}{% endif %}
+    {% if balancer_tags | default('') | length > 0 %}
+    option httpchk OPTIONS /async?lag={{ patroni_maximum_lag_on_replica }}{{ '&' + balancer_tags.split(',') | map('trim') | map('regex_replace', '([^=]+)=(.*)', 'tag_\\1=\\2') | join('&') }}
+    {% else %}
+    option httpchk OPTIONS /async?lag={{ patroni_maximum_lag_on_replica }}
+    {% endif %}
     balance roundrobin
     http-check expect status 200
     default-server inter 3s fastinter 1s fall 3 rise 2 on-marked-down shutdown-sessions
@@ -178,7 +198,11 @@ listen replicas_async_direct
 {% endif %}
     maxconn {{ haproxy_maxconn.replica }}
     option tcplog
-    option httpchk OPTIONS /async?lag={{ patroni_maximum_lag_on_replica }}{% if balancer_tags | default('') | length > 0 %}{{ '&' + balancer_tags.split(',') | map('trim') | map('regex_replace', '([^=]+)=(.*)', 'tag_\\1=\\2') | join('&') + '\n' }}{% endif %}
+    {% if balancer_tags | default('') | length > 0 %}
+    option httpchk OPTIONS /async?lag={{ patroni_maximum_lag_on_replica }}{{ '&' + balancer_tags.split(',') | map('trim') | map('regex_replace', '([^=]+)=(.*)', 'tag_\\1=\\2') | join('&') }}
+    {% else %}
+    option httpchk OPTIONS /async?lag={{ patroni_maximum_lag_on_replica }}
+    {% endif %}
     balance roundrobin
     http-check expect status 200
     default-server inter 3s fastinter 1s fall 3 rise 2 on-marked-down shutdown-sessions
