@@ -13,7 +13,7 @@
     host: "{{ cluster_vip }}"
     port: "{{ ansible_ssh_port | default(22) }}"
     state: started
-    retries: 30  # max wait time: 1 minute
+    timeout: 30  # max wait time: 1 minute
     delay: 2
   ignore_errors: true  # show the error and continue the playbook execution
   listen: "restart keepalived"
