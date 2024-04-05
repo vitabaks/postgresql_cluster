@@ -15,6 +15,7 @@
     state: started
     timeout: 60
     delay: 2
+  ignore_errors: true  # show the error and continue the playbook execution
   listen: "restart keepalived"
 
 ...
