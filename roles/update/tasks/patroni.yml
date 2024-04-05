@@ -14,8 +14,6 @@
       register: update_patroni_package_pip
   ignore_errors: true
   environment: "{{ proxy_env | default({}) }}"
-  vars:
-    ansible_python_interpreter: /usr/bin/python3
   when: installation_method == "repo" and patroni_installation_method == "pip"
 
 # patroni_installation_method: "rpm/deb"
