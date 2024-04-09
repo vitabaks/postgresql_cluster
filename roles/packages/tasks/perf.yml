@@ -49,6 +49,8 @@
     - name: Install required libraries
       ansible.builtin.package:
         name:
+          - pkg-config
+          - libzstd1
           - libdwarf-dev
           - libdw-dev
           - binutils-dev
@@ -58,9 +60,19 @@
           - python3-dev
           - libssl-dev
           - libunwind-dev
+          - libdwarf-dev
           - zlib1g-dev
           - liblzma-dev
           - libaio-dev
+          - libtraceevent-dev
+          - debuginfod
+          - libpfm4-dev
+          - libslang2-dev
+          - systemtap-sdt-dev
+          - libperl-dev
+          - binutils-dev
+          - libbabeltrace-dev
+          - libiberty-dev
           - libzstd-dev
         state: present
       when:
@@ -71,6 +83,8 @@
     - name: Install required libraries
       ansible.builtin.package:
         name:
+          - pkgconf
+          - libzstd
           - libdwarf-devel
           - elfutils-libelf-devel
           - binutils-devel
@@ -82,6 +96,11 @@
           - zlib-devel
           - xz-devel
           - libaio-devel
+          - libtraceevent-devel
+          - slang-devel
+          - systemtap-sdt-devel
+          - perl-devel
+          - libbabeltrace-devel
           - libzstd-devel
         state: present
       when:
