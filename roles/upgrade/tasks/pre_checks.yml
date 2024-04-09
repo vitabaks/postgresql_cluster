@@ -33,8 +33,6 @@
   environment:
     PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
     PIP_BREAK_SYSTEM_PACKAGES: "1"
-  vars:
-    ansible_python_interpreter: /usr/bin/python3
 
 - name: '[Pre-Check] Test PostgreSQL database access using a unix socket'
   ansible.builtin.command: >
@@ -394,14 +392,11 @@
 - name: Make sure that the cluster ip address (VIP) "{{ cluster_vip }}" is running
   ansible.builtin.wait_for:
     host: "{{ cluster_vip }}"
-    port: "{{ target_port }}"
+    port: "{{ pgbouncer_listen_port if pgbouncer_install | bool else postgresql_port }}"
     state: started
-    timeout: 3
+    timeout: 15  # max wait time: 30 seconds
     delay: 2
-  vars:
-    target_port: >-
-      {{ pgbouncer_listen_port if pgbouncer_install | bool
-      else (ansible_ssh_port | default(22)) }}
+  ignore_errors: true  # show the error and continue the playbook execution
   when:
     - cluster_vip | length > 0
 

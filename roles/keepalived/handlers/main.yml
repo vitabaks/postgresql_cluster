@@ -8,13 +8,26 @@
     state: restarted
   listen: "restart keepalived"
 
+# This task checks the cluster VIP's availability, selecting the appropriate port:
+# - during maintenance, it targets the database through PgBouncer or directly.
+# - otherwise, it defaults to SSH, applicable during deployment when the database is not yet available.
 - name: Wait for the cluster ip address (VIP) "{{ cluster_vip }}" is running
   ansible.builtin.wait_for:
     host: "{{ cluster_vip }}"
-    port: "{{ ansible_ssh_port | default(22) }}"
+    port: "{{ target_port }}"
     state: started
-    timeout: 60
+    timeout: 15  # max wait time: 30 seconds
     delay: 2
+  vars:
+    target_port: >-
+      {{
+        (postgresql_cluster_maintenance | default(false) | bool) |
+        ternary(
+          pgbouncer_listen_port if pgbouncer_install | bool else postgresql_port,
+          ansible_ssh_port | default(22)
+        )
+      }}
+  ignore_errors: true  # show the error and continue the playbook execution
   listen: "restart keepalived"
 
 ...

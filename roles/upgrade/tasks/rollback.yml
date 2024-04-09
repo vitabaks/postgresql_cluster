@@ -132,8 +132,6 @@
   ansible.builtin.command: "patronictl -c {{ patroni_config_file }} resume --wait {{ patroni_cluster_name }}"
   environment:
     PATH: "{{ ansible_env.PATH }}:/usr/bin:/usr/local/bin"
-  vars:
-    ansible_python_interpreter: /usr/bin/python3
   failed_when: false
 
 - name: '[Rollback] Check Patroni is healthy on the Leader'

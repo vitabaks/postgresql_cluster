@@ -67,8 +67,6 @@
       when: patroni_pip_package_repo | length < 1 and patroni_install_version != "latest"
   when: installation_method == "repo" and patroni_installation_method == "pip"
   environment: "{{ proxy_env | default({}) }}"
-  vars:
-    ansible_python_interpreter: /usr/bin/python3
   tags: patroni, patroni_install
 
 - block:  # when "patroni_pip_requirements_repo" and "patroni_pip_package_repo" is defined
@@ -114,8 +112,6 @@
         PIP_BREAK_SYSTEM_PACKAGES: "1"
       when: patroni_pip_package_repo | length > 0
   when: installation_method == "repo" and patroni_installation_method == "pip"
-  vars:
-    ansible_python_interpreter: /usr/bin/python3
   tags: patroni, patroni_install
 
 - block:  # installation_method: "file" and patroni_installation_method: "pip"
@@ -157,8 +153,6 @@
         PIP_BREAK_SYSTEM_PACKAGES: "1"
       when: patroni_pip_package_file | length > 0
   when: installation_method == "file" and patroni_installation_method == "pip"
-  vars:
-    ansible_python_interpreter: /usr/bin/python3
   tags: patroni, patroni_install
 
 - block:  # installation_method: "repo" and patroni_installation_method: "rpm/deb"
@@ -608,8 +602,6 @@
       environment:
         PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
         PIP_BREAK_SYSTEM_PACKAGES: "1"
-      vars:
-        ansible_python_interpreter: /usr/bin/python3
   # Run PITR
     - name: Stop patroni service on the Replica servers (if running)
       ansible.builtin.systemd:
@@ -640,8 +632,6 @@
       environment:
         PATH: "{{ ansible_env.PATH }}:/usr/bin:/usr/local/bin"
       when: is_master | bool
-      vars:
-        ansible_python_interpreter: /usr/bin/python3
 
     - block:  # for pgbackrest only (for use --delta restore)
         - name: Run "{{ pgbackrest_patroni_cluster_restore_command }}" on Master
@@ -736,8 +726,6 @@
         key: postgresql.parameters.archive_command
         value: "cd ."  # not doing anything yet with WAL-s
         content_type: json
-      vars:
-        ansible_python_interpreter: /usr/bin/python3
       when: patroni_dynamic_json.stat.exists and
             keep_patroni_dynamic_json|bool and disable_archive_command|bool
 
@@ -746,8 +734,6 @@
         src: /etc/patroni/patroni.yml
         key: bootstrap.dcs.postgresql.parameters.archive_command
         value: "cd ."  # not doing anything yet with WAL-s
-      vars:
-        ansible_python_interpreter: /usr/bin/python3
       when: disable_archive_command|bool
   when: patroni_cluster_bootstrap_method != "initdb" and
         (pgbackrest_install|bool or wal_g_install|bool) and
@@ -913,8 +899,6 @@
           - key: postgresql.authentication.superuser.password
             value: "{{ patroni_superuser_password }}"
         state: present
-      vars:
-        ansible_python_interpreter: /usr/bin/python3
       when: hostvars[groups['master'][0]]['postgresql_user_result'] is changed
   when: patroni_cluster_bootstrap_method != "initdb" and
         (pgbackrest_install|bool or wal_g_install|bool) and
