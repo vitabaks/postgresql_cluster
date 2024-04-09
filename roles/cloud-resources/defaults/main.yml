@@ -30,7 +30,7 @@ database_public_access: false  # Allow access to the database from the public ne
 database_public_allowed_ips: ""  # (comma-separated list of IP addresses in CIDR format) If empty, then public access is allowed for any IP address.
 
 # Load balancer
-cloud_load_balancer: true  # Create a Amazon Elastic Load Balancer (ELB) if 'cloud_provider=aws'.
+cloud_load_balancer: true  # Create a Load Balancer in the Cloud.
 
 # Backups (if 'pgbackrest_install' or 'wal_g_install' is 'true')
 aws_s3_bucket_create: true  # if 'cloud_provider=aws'
