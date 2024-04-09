@@ -13,7 +13,7 @@
     host: "{{ cluster_vip }}"
     port: "{{ pgbouncer_listen_port if pgbouncer_install | bool else postgresql_port }}"
     state: started
-    timeout: 30  # max wait time: 1 minute
+    timeout: 15  # max wait time: 30 seconds
     delay: 2
   ignore_errors: true  # show the error and continue the playbook execution
   listen: "restart vip-manager"
