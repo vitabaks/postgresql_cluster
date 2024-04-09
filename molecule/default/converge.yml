@@ -6,6 +6,7 @@
   tasks:
     - name: Set variables for PostgreSQL Cluster deployment test
       ansible.builtin.set_fact:
+        ansible_python_interpreter: "/usr/bin/env python3"
         firewall_enabled_at_boot: false
         firewall_enable_ipv6: false # Added to prevent test failures in CI.
         swap_file_create: false # Added to prevent test failures in CI.

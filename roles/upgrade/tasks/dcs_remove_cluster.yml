@@ -8,8 +8,6 @@
       (.*)"Yes I am aware": "Yes I am aware"
   environment:
     PATH: "{{ ansible_env.PATH }}:/usr/bin:/usr/local/bin"
-  vars:
-    ansible_python_interpreter: /usr/bin/python3
   when:
     - inventory_hostname in groups['primary']
 
