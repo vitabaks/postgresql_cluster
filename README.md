@@ -89,7 +89,7 @@ RedHat and Debian based distros (x86_64)
 
 ###### Supported Linux Distributions:
 - **Debian**: 10, 11, 12
-- **Ubuntu**: 18.04, 20.04, 22.04
+- **Ubuntu**: 20.04, 22.04
 - **CentOS**: 7, 8
 - **CentOS Stream**: 8, 9
 - **Oracle Linux**: 7, 8, 9

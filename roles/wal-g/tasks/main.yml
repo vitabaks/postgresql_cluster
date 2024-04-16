@@ -21,7 +21,7 @@
     - wal_g_installed_version.stdout == wal_g_version
   tags: wal-g, wal_g, wal_g_install
 
-# Install WAL-G from a precompiled binary for Ubuntu 18.04 and 20.04
+# Install WAL-G from a precompiled binary for Ubuntu 20.04
 - block:
     - name: "Download WAL-G v{{ wal_g_version }} binary"
       ansible.builtin.get_url:
@@ -48,11 +48,8 @@
   when:
     - installation_method == "repo"
     - wal_g_version is version('1.0', '>=')
-    - (wal_g_installed_version.stderr is search("command not found") or
-       wal_g_installed_version.stdout != wal_g_version)
-    - (ansible_distribution == 'Ubuntu' and
-       (ansible_distribution_version is version('18.04', '==') or
-        ansible_distribution_version is version('20.04', '==')))
+    - (wal_g_installed_version.stderr is search("command not found") or wal_g_installed_version.stdout != wal_g_version)
+    - (ansible_distribution == 'Ubuntu' and ansible_distribution_version == '20.04')
   tags: wal-g, wal_g, wal_g_install
 
 # Build WAL-G from source code for other Linux distributions
@@ -165,11 +162,8 @@
   when:
     - installation_method == "repo"
     - wal_g_version is version('1.0', '>=')
-    - (wal_g_installed_version.stderr is search("command not found") or
-       wal_g_installed_version.stdout != wal_g_version)
-    - not (ansible_distribution == 'Ubuntu' and
-           (ansible_distribution_version is version('18.04', '==') or
-            ansible_distribution_version is version('20.04', '==')))
+    - (wal_g_installed_version.stderr is search("command not found") or wal_g_installed_version.stdout != wal_g_version)
+    - not (ansible_distribution == 'Ubuntu' and ansible_distribution_version == '20.04')
   tags: wal-g, wal_g, wal_g_install
 
 # older versions of WAL-G (for compatibility)
