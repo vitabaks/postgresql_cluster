@@ -39,6 +39,9 @@ so_reuseport = 1
 client_tls_sslmode = {{ pgbouncer_client_tls_sslmode }}
 client_tls_key_file = {{ pgbouncer_client_tls_key_file }}
 client_tls_cert_file = {{ pgbouncer_client_tls_cert_file }}
+client_tls_ca_file = {{ pgbouncer_client_tls_ca_file }}
+client_tls_protocols = {{ pgbouncer_client_tls_protocols }}
+client_tls_ciphers = {{ pgbouncer_client_tls_ciphers }}
 {% endif %}
 log_connections = 0
 log_disconnections = 0
