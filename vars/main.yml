@@ -7,8 +7,7 @@ proxy_env: {}  # yamllint disable rule:braces
 # ---------------------------------------------------------------------
 
 # This flag disables automatic installation of public yum / apt repositories.
-airgapped_install_mode: false
-airgapped_install_libzstd_rpm_url: ""
+airgapped_install_preconfigured_repos: false
 
 # Cluster variables
 cluster_vip: ""  # IP address for client access to the databases in the cluster (optional).

@@ -174,7 +174,7 @@
     - role: resolv_conf
     - role: etc_hosts
     - role: add-repository
-      when: not airgapped_install_mode | bool
+      when: not airgapped_install_preconfigured_repos | bool
     - role: packages
     - role: sudo
     - role: swap

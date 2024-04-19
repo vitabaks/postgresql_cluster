@@ -22,7 +22,7 @@
         - name: Make sure pgdg repository is installed
           ansible.builtin.apt_repository:
             repo: "deb https://apt.postgresql.org/pub/repos/apt/ {{ ansible_distribution_release }}-pgdg main"
-      when: not airgapped_install_mode | bool
+      when: not airgapped_install_preconfigured_repos | bool
 
     - name: Update apt cache
       ansible.builtin.apt:
@@ -56,7 +56,7 @@
           until: package_status is success
           delay: 5
           retries: 3
-      when: not airgapped_install_mode | bool
+      when: not airgapped_install_preconfigured_repos | bool
 
     - name: Clean yum cache
       ansible.builtin.command: yum clean all
@@ -78,7 +78,7 @@
 - block:
     - name: Get libzstd rpm package from archived EPEL
       ansible.builtin.get_url:
-        url: "{{ airgapped_install_libzstd_rpm_url | default('https://dl.fedoraproject.org/pub/archive/epel/8.1/Everything/x86_64/Packages/l/libzstd-1.4.4-1.el8.x86_64.rpm') }}"
+        url: "{{ airgapped_install_libzstd_rpm_url }}"
         dest: /tmp/
         timeout: 120
         validate_certs: false
