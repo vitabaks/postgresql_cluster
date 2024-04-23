@@ -12,7 +12,7 @@
   register: pgbouncer_restart_result
   retries: 3
   delay: 5
-  until: "pgbouncer_restart_result.failed != true"
+  until: pgbouncer_restart_result is success
   listen: "restart pgbouncer"
 
 - name: Wait for port "{{ pgbouncer_listen_port }}" to become open on the host
