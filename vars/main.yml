@@ -18,8 +18,6 @@ patroni_superuser_username: "postgres"
 patroni_superuser_password: "postgres-pass"  # please change password
 patroni_replication_username: "replicator"
 patroni_replication_password: "replicator-pass"  # please change password
-patroni_restapi_username: "patroni"
-patroni_restapi_password: "restapi-pass"  # please change password
 
 synchronous_mode: false  # or 'true' for enable synchronous database replication
 synchronous_mode_strict: false  # if 'true' then block all client writes to the master, when a synchronous replica is not available
@@ -341,6 +339,8 @@ pgbouncer_pools:
 # Extended variables (optional)
 patroni_restapi_listen_addr: "0.0.0.0" # Listen on all interfaces. Or use "{{ inventory_hostname }}" to listen on a specific IP address.
 patroni_restapi_port: 8008
+patroni_restapi_username: "patroni"
+patroni_restapi_password: "restapi-pass"  # please change password
 patroni_ttl: 30
 patroni_loop_wait: 10
 patroni_retry_timeout: 10
