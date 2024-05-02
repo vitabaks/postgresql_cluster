@@ -3,6 +3,8 @@
   ansible.builtin.uri:
     url: http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/switchover
     method: POST
+    user: {{ patroni_restapi_username }}
+    password: {{ patroni_restapi_password }}
     body: '{"leader":"{{ ansible_hostname }}"}'
     body_format: json
   register: patroni_switchover_result
