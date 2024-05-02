@@ -44,8 +44,8 @@
       ansible.builtin.uri:
         url: http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/config
         method: PATCH
-        user: {{ patroni_restapi_username }}
-        password: {{ patroni_restapi_password }}
+        user: "{{ patroni_restapi_username }}"
+        password: "{{ patroni_restapi_password }}"
         body: '{"postgresql":{"parameters":{"{{ item.option }}":"{{ item.value }}"}}}'
         body_format: json
       loop: "{{ postgresql_parameters }}"
@@ -55,8 +55,8 @@
       ansible.builtin.uri:
         url: http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/config
         method: PATCH
-        user: {{ patroni_restapi_username }}
-        password: {{ patroni_restapi_password }}
+        user: "{{ patroni_restapi_username }}"
+        password: "{{ patroni_restapi_password }}"
         body: '{"postgresql":{"parameters":{"{{ item.option }}":null}}}'
         body_format: json
       loop: "{{ postgresql_parameters }}"
