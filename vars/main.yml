@@ -18,6 +18,8 @@ patroni_superuser_username: "postgres"
 patroni_superuser_password: "postgres-pass"  # please change password
 patroni_replication_username: "replicator"
 patroni_replication_password: "replicator-pass"  # please change password
+patroni_restapi_username: "patroni"
+patroni_restapi_password: "restapi-pass"  # please change password
 
 synchronous_mode: false  # or 'true' for enable synchronous database replication
 synchronous_mode_strict: false  # if 'true' then block all client writes to the master, when a synchronous replica is not available
