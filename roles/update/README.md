@@ -56,7 +56,7 @@ Note: About the expected downtime of the database during the update:
 
 When using load balancing for read-only traffic (the "Type A" and "Type C" schemes), zero downtime is expected (for read traffic), provided there is more than one replica in the cluster. For write traffic (to the Primary), the expected downtime is ~5-10 seconds.
 
-#### 1. PRE-UPDATE: Perform Pre-Checks
+#### 1. PRE-UPDATE: Perform pre-update tasks
 - Test PostgreSQL DB Access
 - Make sure that physical replication is active
   - Stop, if there are no active replicas
@@ -66,6 +66,8 @@ When using load balancing for read-only traffic (the "Type A" and "Type C" schem
 - Make sure there are no long-running transactions
   - no more than `max_transaction_sec`
   - Stop, if long-running transactions detected
+- Update the pgBackRest package on the backup server (Dedicated Repository Host).
+  - Note: This task runs only if the backup host is specified in the 'pgbackrest' group in the inventory file, and the variable `target` is set to '`system`'.
 #### 2. UPDATE: Secondary (one by one)
 - Stop read-only traffic
   - Enable `noloadbalance`, `nosync`, `nofailover` parameters in the patroni.yml
