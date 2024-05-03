@@ -71,6 +71,14 @@
       ansible.builtin.include_role:
         name: update
         tasks_from: pre_checks
+
+    # This task updates the pgBackRest package on the backup server (Dedicated Repository Host).
+    # It runs only if the 'pgbackrest' group is defined in the inventory and the update target is set to 'system'.
+    - name: Update pgBackRest package (Dedicated Repository Host)
+      ansible.builtin.include_role:
+        name: update
+        tasks_from: pgbackrest_host
+      when: groups['pgbackrest'] | default('') | length > 0 and target | lower == 'system'
   tags:
     - update
     - pre-checks
