@@ -1,6 +1,6 @@
 ---
 # Update pgbackrest package on the Dedicated Repository Host
-# if 'pgbackrest_repo_host' is defined and the host is specified in the pgbackrest group in the inventory file.
+# if 'pgbackrest_repo_host' is defined and the host is specified in the 'pgbackrest' group in the inventory file.
 - block:
     - name: Gather facts from pgbackrest server
       ansible.builtin.setup:
