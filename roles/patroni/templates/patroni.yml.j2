@@ -37,7 +37,7 @@ restapi:
 
 {% if not dcs_exists|bool and dcs_type == 'etcd' %}
 etcd3:
-  hosts: {% for host in groups['etcd_cluster'] %}{{ hostvars[host]['inventory_hostname'] }}:2379{% if not loop.last %},{% endif %}{% endfor %}
+  hosts: {% for host in etcd_hosts -%}{{ hostvars[host].ip | default(fallback_ips[host]) }}:2379{% if not loop.last %},{% endif %}{% endfor %}
 {% endif %}
 {% if dcs_exists|bool and dcs_type == 'etcd' %}
 etcd3:
@@ -141,7 +141,7 @@ bootstrap:
 
 postgresql:
   listen: {{ postgresql_listen_addr }}:{{ postgresql_port }}
-  connect_address: {{ inventory_hostname }}:{{ postgresql_port }}
+  connect_address: {{ postgresql_connect_address }}
 {% if patroni_superuser_username == 'postgres' %}
   use_unix_socket: true
 {% endif %}

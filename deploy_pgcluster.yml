@@ -241,6 +241,9 @@
       tags: always
 
   roles:
+    - role: pg_cluster_defaults
+      tags: always
+
     - role: wal-g
       when: wal_g_install|bool
 

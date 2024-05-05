@@ -128,7 +128,7 @@
     - name: Wait until the etcd cluster is healthy
       ansible.builtin.command: >
         /usr/local/bin/etcdctl endpoint health
-        --endpoints=http://{{ inventory_hostname }}:2379
+        --endpoints=http://{{ etcd_address }}:2379
       environment:
         ETCDCTL_API: "3"
       register: etcd_health_result

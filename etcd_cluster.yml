@@ -64,6 +64,8 @@
       tags: firewall
 
   roles:
+    - role: pg_cluster_defaults
+      tags: always
     - role: ansible-role-firewall
       environment: "{{ proxy_env | default({}) }}"
       vars:

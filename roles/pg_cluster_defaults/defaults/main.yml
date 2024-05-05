@@ -1,0 +1,25 @@
+access_address: "{{ ip | default(fallback_ips[inventory_hostname]) }}"
+# etcd group can be empty when etcd will be deployed on the same hosts
+etcd_hosts: "{{ groups['etcd'] | default(groups['postgres_cluster']) }}"
+
+# Vars for pointing to etcd endpoints
+etcd_address: "{{ access_address }}"
+etcd_peer_url: "http://{{ etcd_address }}:2380"
+etcd_client_url: "http://{{ etcd_address }}:2379"
+etcd_events_peer_url: "http://{{ etcd_events_access_address }}:2382"
+etcd_events_client_url: "http://{{ etcd_events_access_address }}:2383"
+etcd_peer_addresses: |-
+  {% for host in etcd_hosts -%}
+    {{ hostvars[host]['ansible_hostname'] }}=http://{{ hostvars[host].ip | default(fallback_ips[host]) }}:2380{% if not loop.last %},{% endif %}
+  {%- endfor %}
+
+postgresql_connect_address: "{{ access_address }}:{{ postgresql_port }}" # Or you can use the {{ inventory_hostname }}:{{ postgresql_port }}
+
+postgresql_replication_connections: |
+  {% for host in groups['postgres_cluster'] %}
+    host      replication              {{ patroni_replication_username }}               {{ hostvars[host].ip | default(fallback_ips[host]) + '/32' }}         {{ postgresql_password_encryption_algorithm }}
+  {% endfor %}
+postgresql_allow_cluster_connections: |
+  {% for host in groups['postgres_cluster'] %}
+    host      all                      all                      {{ hostvars[host].ip | default(fallback_ips[host]) + '/32' }}         {{ postgresql_password_encryption_algorithm }}
+  {% endfor %}
