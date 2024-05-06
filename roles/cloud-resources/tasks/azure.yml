@@ -29,15 +29,16 @@
     - name: Get ansible_collections path
       ansible.builtin.shell: >
         set -o pipefail;
-        ansible-galaxy collection list | grep ansible_collections
+        ansible-galaxy collection list | grep ansible_collections | head -n 1 | awk '{print $2}'
       args:
         executable: /bin/bash
       register: collections_path
       changed_when: false
+      when: ansible_collections_path is not defined
 
     - name: Ensure that Azure collection requirements is present on controlling host
       ansible.builtin.pip:
-        requirements: "{{ collections_path.stdout.split()[-1] }}/azure/azcollection/requirements-azure.txt"
+        requirements: "{{ ansible_collections_path | default(collections_path.stdout) }}/azure/azcollection/requirements-azure.txt"
         executable: pip3
         extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
         umask: "0022"
