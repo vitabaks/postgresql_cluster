@@ -51,7 +51,7 @@ keepalived_virtual_router_id: "{{ cluster_vip.split('.')[3] | int }}" # The last
 # virtual_router_id - must be unique in the network (available values are 0..255).
 
 # vip-manager (if 'cluster_vip' is specified and 'with_haproxy_load_balancing' is 'false')
-vip_manager_version: "2.3.0"  # version to install
+vip_manager_version: "2.4.0"  # version to install
 vip_manager_conf: "/etc/patroni/vip-manager.yml"
 vip_manager_interval: "1000"  # time (in milliseconds) after which vip-manager wakes up and checks if it needs to register or release ip addresses.
 vip_manager_iface: "{{ vip_interface }}"  # interface to which the virtual ip will be added
@@ -325,6 +325,9 @@ pgbouncer_auth_dbname: "postgres"
 pgbouncer_client_tls_sslmode: "disable"
 pgbouncer_client_tls_key_file: ""
 pgbouncer_client_tls_cert_file: ""
+pgbouncer_client_tls_ca_file: ""
+pgbouncer_client_tls_protocols: "secure" # allowed values: tlsv1.0, tlsv1.1, tlsv1.2, tlsv1.3, all, secure (tlsv1.2,tlsv1.3)
+pgbouncer_client_tls_ciphers: "default" # allowed values: default, secure, fast, normal, all (not recommended)
 
 pgbouncer_pools:
   - { name: "postgres", dbname: "postgres", pool_parameters: "" }
@@ -336,6 +339,8 @@ pgbouncer_pools:
 # Extended variables (optional)
 patroni_restapi_listen_addr: "0.0.0.0" # Listen on all interfaces. Or use "{{ inventory_hostname }}" to listen on a specific IP address.
 patroni_restapi_port: 8008
+patroni_restapi_username: "patroni"
+patroni_restapi_password: "restapi-pass"  # please change password
 patroni_ttl: 30
 patroni_loop_wait: 10
 patroni_retry_timeout: 10

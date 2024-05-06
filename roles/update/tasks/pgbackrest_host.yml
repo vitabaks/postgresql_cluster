@@ -1,0 +1,57 @@
+---
+# Update pgbackrest package on the Dedicated Repository Host
+# if 'pgbackrest_repo_host' is defined and the host is specified in the 'pgbackrest' group in the inventory file.
+- block:
+    - name: Gather facts from pgbackrest server
+      ansible.builtin.setup:
+      delegate_to: "{{ groups['pgbackrest'][0] }}"
+      run_once: true
+
+    - name: Update yum cache
+      delegate_to: "{{ groups['pgbackrest'][0] }}"
+      run_once: true
+      ansible.builtin.shell: yum clean all && yum -y makecache
+      args:
+        executable: /bin/bash
+      when:
+        - ansible_os_family == "RedHat"
+        - ansible_distribution_major_version == '7'
+
+    - name: Update dnf cache
+      delegate_to: "{{ groups['pgbackrest'][0] }}"
+      run_once: true
+      ansible.builtin.shell: dnf clean all && dnf -y makecache
+      args:
+        executable: /bin/bash
+      when:
+        - ansible_os_family == "RedHat"
+        - ansible_distribution_major_version >= '8'
+
+    - name: Update apt cache
+      delegate_to: "{{ groups['pgbackrest'][0] }}"
+      run_once: true
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+      register: apt_status
+      until: apt_status is success
+      delay: 5
+      retries: 3
+      when: ansible_os_family == "Debian"
+
+    - name: Install the latest version of pgbackrest package
+      delegate_to: "{{ groups['pgbackrest'][0] }}"
+      run_once: true
+      ansible.builtin.package:
+        name: pgbackrest
+        state: latest
+      register: update_pgbackrest_package
+      until: update_pgbackrest_package is success
+      delay: 5
+      retries: 3
+  when:
+    - pgbackrest_install | bool
+    - pgbackrest_repo_host | default('') | length > 0
+    - groups['pgbackrest'] | default([]) | length > 0
+
+...

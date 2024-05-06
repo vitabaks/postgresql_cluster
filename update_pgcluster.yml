@@ -6,6 +6,12 @@
   become_method: sudo
   any_errors_fatal: true
   pre_tasks:
+    - name: "Set variable: ansible_python_interpreter"
+      ansible.builtin.set_fact:
+        ansible_python_interpreter: "/usr/bin/env python3"
+      when: "'python3' not in (ansible_python_interpreter | default(''))"
+      tags: always
+
     - name: Include main variables
       ansible.builtin.include_vars: "vars/main.yml"
       tags: always
@@ -47,9 +53,9 @@
       when: inventory_hostname in groups['primary']
       tags: always
 
-- name: "(1/4) PRE-UPDATE: Perform Pre-Checks"
+- name: "(1/4) PRE-UPDATE: Perform pre-update tasks"
   hosts: "primary:secondary"
-  gather_facts: false
+  gather_facts: true
   become: true
   become_user: postgres
   any_errors_fatal: true
@@ -65,6 +71,14 @@
       ansible.builtin.include_role:
         name: update
         tasks_from: pre_checks
+
+    # This task updates the pgBackRest package on the backup server (Dedicated Repository Host).
+    # It runs only if the 'pgbackrest' group is defined in the inventory and the update target is set to 'system'.
+    - name: Update pgBackRest package (Dedicated Repository Host)
+      ansible.builtin.include_role:
+        name: update
+        tasks_from: pgbackrest_host
+      when: groups['pgbackrest'] | default([]) | length > 0 and target | lower == 'system'
   tags:
     - update
     - pre-checks
@@ -72,7 +86,7 @@
 - name: "(2/4) UPDATE: Secondary"
   hosts: secondary
   serial: 1 # update replicas one by one
-  gather_facts: false
+  gather_facts: true
   become: true
   become_method: sudo
   any_errors_fatal: true
@@ -128,7 +142,7 @@
 
 - name: "(3/4) UPDATE: Primary"
   hosts: primary
-  gather_facts: false
+  gather_facts: true
   become: true
   become_method: sudo
   any_errors_fatal: true
@@ -189,7 +203,7 @@
 
 - name: "(4/4) POST-UPDATE: Update extensions"
   hosts: postgres_cluster
-  gather_facts: false
+  gather_facts: true
   become: true
   become_user: postgres
   any_errors_fatal: true

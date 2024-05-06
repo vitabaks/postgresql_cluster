@@ -25,9 +25,15 @@ restapi:
   connect_address: {{ inventory_hostname }}:{{ patroni_restapi_port }}
 #  certfile: /etc/ssl/certs/ssl-cert-snakeoil.pem
 #  keyfile: /etc/ssl/private/ssl-cert-snakeoil.key
+{% if patroni_restapi_password | default('') | length > 0 %}
+  authentication:
+      username: {{ patroni_restapi_username | default('patroni') }}
+      password: {{ patroni_restapi_password }}
+{% else %}
 #  authentication:
 #    username: username
 #    password: password
+{% endif %}
 
 {% if not dcs_exists|bool and dcs_type == 'etcd' %}
 etcd3:
