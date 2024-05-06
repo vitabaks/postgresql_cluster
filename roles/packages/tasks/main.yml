@@ -245,13 +245,10 @@
   when: installation_method == "repo"
   tags: install_packages, install_postgres, install_extensions
 
-# Build perf from source code
-# if it was not installed from packages or if the 'build_perf' variable is 'true'.
-- name: Perf
+# Install perf (if 'install_perf' is 'true')
+- name: Install perf
   ansible.builtin.import_tasks: perf.yml
-  when:
-    - ((['linux-tools-common', 'linux-perf', 'perf'] | intersect(system_packages)) | length > 0)
-      or (build_perf | default(false) | bool)
+  when: install_perf | bool
   tags: install_packages, install_perf, perf
 
 ...

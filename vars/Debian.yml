@@ -58,7 +58,8 @@ system_packages:
   - acl
   - dnsutils
   - moreutils
-  - "{{ 'linux-tools-common' if ansible_distribution == 'Ubuntu' else 'linux-perf' }}" # perf
+
+install_perf: false  # or 'true' to install "perf" (Linux profiling with performance counters) and "FlameGraph".
 
 postgresql_packages:
   - postgresql-{{ postgresql_version }}

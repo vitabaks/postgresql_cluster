@@ -78,7 +78,8 @@ system_packages:
   - acl
   - bind-utils
   - moreutils
-  - perf
+
+install_perf: false  # or 'true' to install "perf" (Linux profiling with performance counters) and "FlameGraph".
 
 # The glibc-langpack package includes the basic information required to support the language in your applications.
 # for RHEL version 8 (only)
