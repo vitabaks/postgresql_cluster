@@ -42,8 +42,10 @@
 - block:
     - name: Update postgresql parameters in DCS
       ansible.builtin.uri:
-        url: http://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ patroni_restapi_port }}/config
+        url: http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/config
         method: PATCH
+        user: "{{ patroni_restapi_username | default(omit) }}"
+        password: "{{ patroni_restapi_password | default(omit) }}"
         body: '{"postgresql":{"parameters":{"{{ item.option }}":"{{ item.value }}"}}}'
         body_format: json
       loop: "{{ postgresql_parameters }}"
@@ -51,8 +53,10 @@
 
     - name: Delete postgresql parameters from DCS
       ansible.builtin.uri:
-        url: http://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ patroni_restapi_port }}/config
+        url: http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/config
         method: PATCH
+        user: "{{ patroni_restapi_username | default(omit) }}"
+        password: "{{ patroni_restapi_password | default(omit) }}"
         body: '{"postgresql":{"parameters":{"{{ item.option }}":null}}}'
         body_format: json
       loop: "{{ postgresql_parameters }}"

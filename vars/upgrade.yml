@@ -66,6 +66,8 @@ update_extensions: true  # if 'true', try to update extensions automatically
 
 vacuumdb_parallel_jobs: "{{ [ansible_processor_vcpus | int // 2, 1] | max }}"  # use 50% CPU cores
 vacuumdb_analyze_timeout: 3600  # seconds. The maximum duration of analyze command (soft limit, exceeding won't halt playbook)
+# terminate active queries that are longer than the specified time (in seconds) during the collection of statistics.
+vacuumdb_analyze_terminate_treshold: 0 # (0 = do not terminate active backends)
 
 # Do not perform an upgrade if
 max_replication_lag_bytes: 10485760  # 10 MiB - Maximum allowed replication lag in bytes
@@ -81,6 +83,8 @@ copy_files_to_all_server: []
 
 # if 'pgbouncer_install' is 'true'
 pgbouncer_pool_pause: true  # or 'false' if you don't want to pause pgbouncer pools during upgrade.
+# the maximum waiting time (in seconds) for the pool to be paused. For each iteration of the loop when trying to pause all pools.
+pgbouncer_pool_pause_timeout: 2
 # the time (in seconds) after which instead of waiting for the completion of the active queries, the script terminates the slow active queries.
 pgbouncer_pool_pause_terminate_after: 30
 # the time (in seconds) after which the script exit with an error if it was not possible to pause all pgbouncer pools.

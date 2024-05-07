@@ -6,8 +6,6 @@
   ansible.builtin.command: "patronictl -c {{ patroni_config_file }} pause --wait {{ patroni_cluster_name }}"
   environment:
     PATH: "{{ ansible_env.PATH }}:/usr/bin:/usr/local/bin"
-  vars:
-    ansible_python_interpreter: /usr/bin/python3
   register: pause_result
   failed_when: "'Cluster is already paused' not in pause_result.stderr and pause_result.rc != 0"
   when:

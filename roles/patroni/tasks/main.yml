@@ -67,8 +67,6 @@
       when: patroni_pip_package_repo | length < 1 and patroni_install_version != "latest"
   when: installation_method == "repo" and patroni_installation_method == "pip"
   environment: "{{ proxy_env | default({}) }}"
-  vars:
-    ansible_python_interpreter: /usr/bin/python3
   tags: patroni, patroni_install
 
 - block:  # when "patroni_pip_requirements_repo" and "patroni_pip_package_repo" is defined
@@ -114,8 +112,6 @@
         PIP_BREAK_SYSTEM_PACKAGES: "1"
       when: patroni_pip_package_repo | length > 0
   when: installation_method == "repo" and patroni_installation_method == "pip"
-  vars:
-    ansible_python_interpreter: /usr/bin/python3
   tags: patroni, patroni_install
 
 - block:  # installation_method: "file" and patroni_installation_method: "pip"
@@ -157,8 +153,6 @@
         PIP_BREAK_SYSTEM_PACKAGES: "1"
       when: patroni_pip_package_file | length > 0
   when: installation_method == "file" and patroni_installation_method == "pip"
-  vars:
-    ansible_python_interpreter: /usr/bin/python3
   tags: patroni, patroni_install
 
 - block:  # installation_method: "repo" and patroni_installation_method: "rpm/deb"
@@ -500,23 +494,11 @@
             - pg_ctl_status_result.rc != 0
             - pg_ctl_status_result.rc != 3
 
-          # "Debian"
         - name: Prepare PostgreSQL | start PostgreSQL on Master
           become: true
           become_user: postgres
-          ansible.builtin.command: "/usr/bin/pg_ctlcluster {{ postgresql_version }} {{ postgresql_cluster_name }} start"
-          register: pg_start_on_master
-          when: pg_ctl_status_result.rc == 3 and
-                (ansible_os_family == "Debian" and postgresql_packages|join(" ") is not search("postgrespro"))
-
-          # "RedHat" or PostgresPro
-        - name: Prepare PostgreSQL | start PostgreSQL on Master
-          become: true
-          become_user: postgres
-          ansible.builtin.command: "{{ postgresql_bin_dir }}/pg_ctl start -D {{ postgresql_data_dir }}"
-          register: pg_start_on_master
-          when: pg_ctl_status_result.rc == 3 and
-                (ansible_os_family == "RedHat" or postgresql_packages|join(" ") is search("postgrespro"))
+          ansible.builtin.command: "{{ postgresql_bin_dir }}/pg_ctl start -D {{ postgresql_data_dir }} -w -t 1800"
+          when: pg_ctl_status_result.rc == 3
 
         - name: Prepare PostgreSQL | check PostgreSQL is accepting connections
           become: true
@@ -589,21 +571,11 @@
       delay: 10
       when: pg_ctl_status_result.rc == 0
 
-      # "Debian"
     - name: Prepare PostgreSQL | stop PostgreSQL (will be managed by patroni)
       become: true
       become_user: postgres
-      ansible.builtin.command: "/usr/bin/pg_ctlcluster {{ postgresql_version }} {{ postgresql_cluster_name }} stop -m fast -- -w -t 600"
-      when: (checkpoint_result.rc is defined and checkpoint_result.rc == 0) and
-            (ansible_os_family == "Debian" and postgresql_packages|join(" ") is not search("postgrespro"))
-
-      # "RedHat" or PostgresPro
-    - name: Prepare PostgreSQL | stop PostgreSQL (will be managed by patroni)
-      become: true
-      become_user: postgres
-      ansible.builtin.command: "{{ postgresql_bin_dir }}/pg_ctl stop -D {{ postgresql_data_dir }} -m fast -w -t 600"
-      when: (checkpoint_result.rc is defined and checkpoint_result.rc == 0) and
-            (ansible_os_family == "RedHat" or postgresql_packages|join(" ") is search("postgrespro"))
+      ansible.builtin.command: "{{ postgresql_bin_dir }}/pg_ctl stop -D {{ postgresql_data_dir }} -m fast -w -t 1800"
+      when: checkpoint_result.rc is defined and checkpoint_result.rc == 0
 
     - name: Prepare PostgreSQL | check PostgreSQL is stopped
       become: true
@@ -630,8 +602,6 @@
       environment:
         PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
         PIP_BREAK_SYSTEM_PACKAGES: "1"
-      vars:
-        ansible_python_interpreter: /usr/bin/python3
   # Run PITR
     - name: Stop patroni service on the Replica servers (if running)
       ansible.builtin.systemd:
@@ -662,8 +632,6 @@
       environment:
         PATH: "{{ ansible_env.PATH }}:/usr/bin:/usr/local/bin"
       when: is_master | bool
-      vars:
-        ansible_python_interpreter: /usr/bin/python3
 
     - block:  # for pgbackrest only (for use --delta restore)
         - name: Run "{{ pgbackrest_patroni_cluster_restore_command }}" on Master
@@ -706,17 +674,9 @@
           failed_when: false
           when: not keep_patroni_dynamic_json|bool
 
-        - name: Start PostgreSQL for Recovery  # Debian
-          ansible.builtin.command: "/usr/bin/pg_ctlcluster {{ postgresql_version }} {{ postgresql_cluster_name }} start -o '-c hot_standby=off'"
-          when: ansible_os_family == "Debian" and
-                (is_master | bool or
-                (not is_master | bool and 'pgbackrest' in patroni_create_replica_methods))
-
-        - name: Start PostgreSQL for Recovery  # RedHat or PostgresPro
-          ansible.builtin.command: "{{ postgresql_bin_dir }}/pg_ctl start -D {{ postgresql_data_dir }} -o '-c hot_standby=off'"
-          when: (ansible_os_family == "RedHat" or postgresql_packages|join(" ") is search("postgrespro")) and
-                (is_master | bool or
-                (not is_master | bool and 'pgbackrest' in patroni_create_replica_methods))
+        - name: Start PostgreSQL for Recovery
+          ansible.builtin.command: "{{ postgresql_bin_dir }}/pg_ctl start -D {{ postgresql_data_dir }} -o '-c hot_standby=off' -w -t 1800"
+          when: is_master | bool or (not is_master | bool and 'pgbackrest' in patroni_create_replica_methods)
 
         - name: Waiting for PostgreSQL Recovery to complete (WAL apply)
           ansible.builtin.command: >-
@@ -728,8 +688,7 @@
           delay: 30
           changed_when: false
           failed_when: false
-          when: is_master | bool or
-                (not is_master | bool and 'pgbackrest' in patroni_create_replica_methods)
+          when: is_master | bool or (not is_master | bool and 'pgbackrest' in patroni_create_replica_methods)
 
         - name: Check that PostgreSQL is stopped
           ansible.builtin.command: "{{ postgresql_bin_dir }}/pg_ctl status -D {{ postgresql_data_dir }}"
@@ -737,15 +696,9 @@
           changed_when: false
           failed_when: false
 
-        - name: Stop PostgreSQL  # "Debian"
-          ansible.builtin.command: "/usr/bin/pg_ctlcluster {{ postgresql_version }} {{ postgresql_cluster_name }} stop -m fast -- -w -t 600"
-          when: ansible_os_family == "Debian" and
-                (pg_ctl_status_result.rc is defined and (pg_ctl_status_result.rc != 3 and pg_ctl_status_result.rc != 4))
-
-        - name: Stop PostgreSQL  # "RedHat" or PostgresPro
-          ansible.builtin.command: "{{ postgresql_bin_dir }}/pg_ctl stop -D {{ postgresql_data_dir }} -m fast -w -t 600"
-          when: (ansible_os_family == "RedHat" or postgresql_packages|join(" ") is search("postgrespro")) and
-                (pg_ctl_status_result.rc is defined and (pg_ctl_status_result.rc != 3 and pg_ctl_status_result.rc != 4))
+        - name: Stop PostgreSQL
+          ansible.builtin.command: "{{ postgresql_bin_dir }}/pg_ctl stop -D {{ postgresql_data_dir }} -m fast -w -t 1800"
+          when: pg_ctl_status_result.rc is defined and (pg_ctl_status_result.rc != 3 and pg_ctl_status_result.rc != 4)
       when: patroni_cluster_bootstrap_method == "pgbackrest"
       become: true
       become_user: postgres
@@ -773,8 +726,6 @@
         key: postgresql.parameters.archive_command
         value: "cd ."  # not doing anything yet with WAL-s
         content_type: json
-      vars:
-        ansible_python_interpreter: /usr/bin/python3
       when: patroni_dynamic_json.stat.exists and
             keep_patroni_dynamic_json|bool and disable_archive_command|bool
 
@@ -783,8 +734,6 @@
         src: /etc/patroni/patroni.yml
         key: bootstrap.dcs.postgresql.parameters.archive_command
         value: "cd ."  # not doing anything yet with WAL-s
-      vars:
-        ansible_python_interpreter: /usr/bin/python3
       when: disable_archive_command|bool
   when: patroni_cluster_bootstrap_method != "initdb" and
         (pgbackrest_install|bool or wal_g_install|bool) and
@@ -817,7 +766,7 @@
     - name: "Wait for port {{ patroni_restapi_port }} to become open on the host"
       ansible.builtin.wait_for:
         port: "{{ patroni_restapi_port }}"
-        host: "{{ hostvars[inventory_hostname]['inventory_hostname'] }}"
+        host: "{{ inventory_hostname }}"
         state: started
         timeout: 120
         delay: 10
@@ -850,7 +799,7 @@
 
     - name: Wait for the cluster to initialize (master is the leader with the lock)
       ansible.builtin.uri:
-        url: "http://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ patroni_restapi_port }}/leader"
+        url: "http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/leader"
         status_code: 200
       register: result
       until: result.status == 200
@@ -950,8 +899,6 @@
           - key: postgresql.authentication.superuser.password
             value: "{{ patroni_superuser_password }}"
         state: present
-      vars:
-        ansible_python_interpreter: /usr/bin/python3
       when: hostvars[groups['master'][0]]['postgresql_user_result'] is changed
   when: patroni_cluster_bootstrap_method != "initdb" and
         (pgbackrest_install|bool or wal_g_install|bool) and
@@ -992,7 +939,7 @@
     - name: "Wait for port {{ patroni_restapi_port }} to become open on the host"
       ansible.builtin.wait_for:
         port: "{{ patroni_restapi_port }}"
-        host: "{{ hostvars[inventory_hostname]['inventory_hostname'] }}"
+        host: "{{ inventory_hostname }}"
         state: started
         timeout: 120
         delay: 10
@@ -1000,7 +947,7 @@
 
     - name: Check that the patroni is healthy on the replica server
       ansible.builtin.uri:
-        url: "http://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ patroni_restapi_port }}/health"
+        url: "http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/health"
         status_code: 200
       register: replica_result
       until: replica_result.status == 200

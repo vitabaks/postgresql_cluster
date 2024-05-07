@@ -12,7 +12,7 @@ vip_interface: "{{ ansible_default_ipv4.interface }}"  # interface name (e.g., "
 # Note: VIP-based solutions such as keepalived or vip-manager may not function correctly in cloud environments like AWS.
 
 patroni_cluster_name: "postgres-cluster"  # the cluster name (must be unique for each cluster)
-patroni_install_version: "3.2.2"  # or 'latest'
+patroni_install_version: "3.3.0"  # or 'latest'
 
 patroni_superuser_username: "postgres"
 patroni_superuser_password: "postgres-pass"  # please change password
@@ -51,7 +51,7 @@ keepalived_virtual_router_id: "{{ cluster_vip.split('.')[3] | int }}" # The last
 # virtual_router_id - must be unique in the network (available values are 0..255).
 
 # vip-manager (if 'cluster_vip' is specified and 'with_haproxy_load_balancing' is 'false')
-vip_manager_version: "2.3.0"  # version to install
+vip_manager_version: "2.4.0"  # version to install
 vip_manager_conf: "/etc/patroni/vip-manager.yml"
 vip_manager_interval: "1000"  # time (in milliseconds) after which vip-manager wakes up and checks if it needs to register or release ip addresses.
 vip_manager_iface: "{{ vip_interface }}"  # interface to which the virtual ip will be added
@@ -79,8 +79,8 @@ patroni_etcd_password: "" # (optional) password for etcd authentication
 patroni_etcd_protocol: "" # (optional) http or https, if not specified http is used
 
 # more options you can specify in the roles/patroni/templates/patroni.yml.j2
-# https://patroni.readthedocs.io/en/latest/SETTINGS.html#etcd
-# https://patroni.readthedocs.io/en/latest/SETTINGS.html#consul
+# https://patroni.readthedocs.io/en/latest/yaml_configuration.html#etcd
+# https://patroni.readthedocs.io/en/latest/yaml_configuration.html#consul
 
 # if dcs_type: "consul"
 consul_version: "1.15.8"
@@ -146,6 +146,7 @@ consul_services:
 # PostgreSQL variables
 postgresql_version: "16"
 # postgresql_data_dir: see vars/Debian.yml or vars/RedHat.yml
+postgresql_listen_addr: "0.0.0.0" # Listen on all interfaces. Or use "{{ inventory_hostname }},127.0.0.1" to listen on a specific IP address.
 postgresql_port: "5432"
 postgresql_encoding: "UTF8"  # for bootstrap only (initdb)
 postgresql_locale: "en_US.UTF-8"  # for bootstrap only (initdb)
@@ -220,7 +221,7 @@ postgresql_parameters:
   - { option: "archive_command", value: "cd ." }  # not doing anything yet with WAL-s
 #  - { option: "archive_command", value: "{{ wal_g_archive_command }}" }  # archive WAL-s using WAL-G
 #  - { option: "archive_command", value: "{{ pgbackrest_archive_command }}" }  # archive WAL-s using pgbackrest
-  - { option: "wal_level", value: "replica" }
+  - { option: "wal_level", value: "logical" }
   - { option: "wal_keep_size", value: "2GB" }
   - { option: "max_wal_senders", value: "10" }
   - { option: "max_replication_slots", value: "10" }
@@ -305,7 +306,7 @@ pgbouncer_install: true  # or 'false' if you do not want to install and configur
 pgbouncer_processes: 1  # Number of pgbouncer processes to be used. Multiple processes use the so_reuseport option for better performance.
 pgbouncer_conf_dir: "/etc/pgbouncer"
 pgbouncer_log_dir: "/var/log/pgbouncer"
-pgbouncer_listen_addr: "0.0.0.0"
+pgbouncer_listen_addr: "0.0.0.0" # Listen on all interfaces. Or use "{{ inventory_hostname }}" to listen on a specific IP address.
 pgbouncer_listen_port: 6432
 pgbouncer_max_client_conn: 10000
 pgbouncer_max_db_connections: 1000
@@ -324,6 +325,9 @@ pgbouncer_auth_dbname: "postgres"
 pgbouncer_client_tls_sslmode: "disable"
 pgbouncer_client_tls_key_file: ""
 pgbouncer_client_tls_cert_file: ""
+pgbouncer_client_tls_ca_file: ""
+pgbouncer_client_tls_protocols: "secure" # allowed values: tlsv1.0, tlsv1.1, tlsv1.2, tlsv1.3, all, secure (tlsv1.2,tlsv1.3)
+pgbouncer_client_tls_ciphers: "default" # allowed values: default, secure, fast, normal, all (not recommended)
 
 pgbouncer_pools:
   - { name: "postgres", dbname: "postgres", pool_parameters: "" }
@@ -333,7 +337,10 @@ pgbouncer_pools:
 
 
 # Extended variables (optional)
+patroni_restapi_listen_addr: "0.0.0.0" # Listen on all interfaces. Or use "{{ inventory_hostname }}" to listen on a specific IP address.
 patroni_restapi_port: 8008
+patroni_restapi_username: "patroni"
+patroni_restapi_password: "restapi-pass"  # please change password
 patroni_ttl: 30
 patroni_loop_wait: 10
 patroni_retry_timeout: 10
@@ -341,7 +348,7 @@ patroni_master_start_timeout: 300
 patroni_maximum_lag_on_failover: 1048576 # (1MB) the maximum bytes a follower may lag to be able to participate in leader election.
 patroni_maximum_lag_on_replica: "100MB" # the maximum of lag that replica can be in order to be available for read-only queries.
 
-# https://patroni.readthedocs.io/en/latest/SETTINGS.html?highlight=callbacks#dynamic-configuration-settings
+# https://patroni.readthedocs.io/en/latest/yaml_configuration.html#postgresql
 patroni_callbacks: []
 #  - {action: "on_role_change", script: ""}
 #  - {action: "on_stop", script: ""}
@@ -359,6 +366,19 @@ patroni_standby_cluster:
 #  primary_slot_name: ""  # which slot on the remote master to use for replication (optional)
 #  restore_command: ""  # command to restore WAL records from the remote master to standby leader (optional)
 #  recovery_min_apply_delay: ""  # how long to wait before actually apply WAL records on a standby leader (optional)
+
+# Permanent replication slots.
+# These slots will be preserved during switchover/failover.
+# https://patroni.readthedocs.io/en/latest/dynamic_configuration.html
+patroni_slots: []
+#  - slot: "logical_replication_slot" # the name of the permanent replication slot.
+#    type: "logical" # the type of slot. Could be 'physical' or 'logical' (if the slot is logical, you have to define 'database' and 'plugin').
+#    plugin: "pgoutput" # the plugin name for the logical slot.
+#    database: "postgres" # the database name where logical slots should be created.
+#  - slot: "test_logical_replication_slot"
+#    type: "logical"
+#    plugin: "pgoutput"
+#    database: "test"
 
 patroni_log_destination: stderr  # or 'logfile'
 # if patroni_log_destination: logfile
@@ -441,7 +461,7 @@ pg_probackup_patroni_cluster_bootstrap_command: "{{ pg_probackup_command_parts |
 
 # WAL-G
 wal_g_install: false  # or 'true'
-wal_g_version: "2.0.1"
+wal_g_version: "3.0.0"
 wal_g_json:  # config https://github.com/wal-g/wal-g#configuration
   - { option: "AWS_ACCESS_KEY_ID", value: "{{ AWS_ACCESS_KEY_ID | default('') }}" }  # define values or pass via --extra-vars
   - { option: "AWS_SECRET_ACCESS_KEY", value: "{{ AWS_SECRET_ACCESS_KEY | default('') }}" }  # define values or pass via --extra-vars
@@ -520,6 +540,7 @@ pgbackrest_conf:
     - { option: "process-max", value: "4" }
     - { option: "log-level-console", value: "info" }
     - { option: "recovery-option", value: "recovery_target_action=promote" }
+    - { option: "pg1-socket-path", value: "{{ postgresql_unix_socket_dir }}" }
     - { option: "pg1-path", value: "{{ postgresql_data_dir }}" }
 #    - { option: "", value: "" }
 # (optional) dedicated backup server config (if "repo_host" is set)

@@ -98,7 +98,7 @@
     - name: "Wait for port {{ patroni_restapi_port }} to become open on the host"
       ansible.builtin.wait_for:
         port: "{{ patroni_restapi_port }}"
-        host: "{{ hostvars[inventory_hostname]['inventory_hostname'] }}"
+        host: "{{ inventory_hostname }}"
         state: started
         timeout: 120
         delay: 10
@@ -107,7 +107,7 @@
 
     - name: Check that the patroni is healthy (the leader with the lock)
       ansible.builtin.uri:
-        url: "http://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ patroni_restapi_port }}/leader"
+        url: "http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/leader"
         status_code: 200
       register: patroni_result
       until: patroni_result.status == 200
@@ -128,7 +128,7 @@
     - name: "Wait for port {{ patroni_restapi_port }} to become open on the host"
       ansible.builtin.wait_for:
         port: "{{ patroni_restapi_port }}"
-        host: "{{ hostvars[inventory_hostname]['inventory_hostname'] }}"
+        host: "{{ inventory_hostname }}"
         state: started
         timeout: 120
         delay: 10
@@ -137,7 +137,7 @@
 
     - name: Check that the patroni is healthy on the Replica
       ansible.builtin.uri:
-        url: "http://{{ hostvars[inventory_hostname]['inventory_hostname'] }}:{{ patroni_restapi_port }}/health"
+        url: "http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/health"
         status_code: 200
       register: patroni_result
       until: patroni_result.status == 200
