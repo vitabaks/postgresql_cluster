@@ -24,10 +24,10 @@
   run_once: true
   ansible.builtin.assert:
     that:
-      - wal_g_backup_command[0] == "[ $(curl -s -o /dev/null -w '%{http_code}' http://{{ inventory_hostname }}:{{ patroni_restapi_port }}) = '200' ]"
-      - wal_g_backup_command[1] == " && wal-g backup-push {{ postgresql_data_dir }} > {{ postgresql_log_dir }}/walg_backup.log 2>&1"
-      - wal_g_delete_command[0] == "[ $(curl -s -o /dev/null -w '%{http_code}' http://{{ inventory_hostname }}:{{ patroni_restapi_port }}) = '200' ]"
-      - wal_g_delete_command[1] == " && wal-g delete retain FULL 4 --confirm > {{ postgresql_log_dir }}/walg_delete.log 2>&1"
+      - wal_g_backup_command[0] == "curl -I -s http://{{ inventory_hostname }}:{{ patroni_restapi_port }} | grep 200"
+      - wal_g_backup_command[1] == " && wal-g --config {{ postgresql_home_dir }}/.walg.json backup-push {{ postgresql_data_dir }} > {{ postgresql_log_dir }}/walg_backup.log 2>&1"
+      - wal_g_delete_command[0] == "curl -I -s http://{{ inventory_hostname }}:{{ patroni_restapi_port }} | grep 200"
+      - wal_g_delete_command[1] == " && wal-g --config {{ postgresql_home_dir }}/.walg.json delete retain FULL 4 --confirm > {{ postgresql_log_dir }}/walg_delete.log 2>&1"
     fail_msg: "Test failed: wal_g_backup_command or wal_g_delete_command do not have the expected content."
     success_msg: "Test passed: wal_g_backup_command and wal_g_delete_command have the expected content."
 
@@ -45,7 +45,7 @@
 - name: Molecule.tests.variables.asserts.wal_g_cron_jobs | Debian | Define Expected First wal_g_cron Job
   run_once: true
   ansible.builtin.set_fact: # yamllint disable rule:line-length
-    origin_wal_g_cron_jobs_create_job: "[ $(curl -s -o /dev/null -w '%{http_code}' http://{{ inventory_hostname }}:{{ patroni_restapi_port }}) = '200' ] && wal-g backup-push {{ postgresql_data_dir }} > {{ postgresql_log_dir }}/walg_backup.log 2>&1"
+    origin_wal_g_cron_jobs_create_job: "curl -I -s http://{{ inventory_hostname }}:{{ patroni_restapi_port }} | grep 200 && wal-g --config {{ postgresql_home_dir }}/.walg.json backup-push {{ postgresql_data_dir }} > {{ postgresql_log_dir }}/walg_backup.log 2>&1"
 
 # 🖨️ Display the first wal_g_cron job for Debian for debugging purposes
 - name: Molecule.tests.variables.asserts.wal_g_cron_jobs | Debian | Debug First wal_g_cron Job
@@ -66,7 +66,7 @@
 - name: Molecule.tests.variables.asserts.wal_g_cron_jobs | Debian | Define Expected Second wal_g_cron Job
   run_once: true
   ansible.builtin.set_fact: # yamllint disable rule:line-length
-    origin_wal_g_cron_jobs_delete_job: "[ $(curl -s -o /dev/null -w '%{http_code}' http://{{ inventory_hostname }}:{{ patroni_restapi_port }}) = '200' ] && wal-g delete retain FULL 4 --confirm > {{ postgresql_log_dir }}/walg_delete.log 2>&1"
+    origin_wal_g_cron_jobs_delete_job: "curl -I -s http://{{ inventory_hostname }}:{{ patroni_restapi_port }} | grep 200 && wal-g --config {{ postgresql_home_dir }}/.walg.json delete retain FULL 4 --confirm > {{ postgresql_log_dir }}/walg_delete.log 2>&1"
 
 # 🖨️ Display the second wal_g_cron job for Debian for debugging purposes
 - name: Molecule.tests.variables.asserts.wal_g_cron_jobs | Debian | Debug Second wal_g_cron Job
@@ -97,7 +97,7 @@
 - name: Molecule.tests.variables.asserts.wal_g_cron_jobs | RedHat | Define Expected First wal_g_cron Job
   run_once: true
   ansible.builtin.set_fact: # yamllint disable rule:line-length
-    origin_wal_g_cron_jobs_create_job: "[ $(curl -s -o /dev/null -w '%{http_code}' http://{{ inventory_hostname }}:{{ patroni_restapi_port }}) = '200' ] && wal-g backup-push {{ postgresql_data_dir }} > {{ postgresql_log_dir }}/walg_backup.log 2>&1"
+    origin_wal_g_cron_jobs_create_job: "curl -I -s http://{{ inventory_hostname }}:{{ patroni_restapi_port }} | grep 200 && wal-g --config {{ postgresql_home_dir }}/.walg.json backup-push {{ postgresql_data_dir }} > {{ postgresql_log_dir }}/walg_backup.log 2>&1"
 
 # 🖨️ Display the first wal_g_cron job for RedHat for debugging purposes
 - name: Molecule.tests.variables.asserts.wal_g_cron_jobs | RedHat | Debug First wal_g_cron Job
@@ -118,7 +118,7 @@
 - name: Molecule.tests.variables.asserts.wal_g_cron_jobs | RedHat | Define Expected Second wal_g_cron Job
   run_once: true
   ansible.builtin.set_fact: # yamllint disable rule:line-length
-    origin_wal_g_cron_jobs_delete_job: "[ $(curl -s -o /dev/null -w '%{http_code}' http://{{ inventory_hostname }}:{{ patroni_restapi_port }}) = '200' ] && wal-g delete retain FULL 4 --confirm > {{ postgresql_log_dir }}/walg_delete.log 2>&1"
+    origin_wal_g_cron_jobs_delete_job: "curl -I -s http://{{ inventory_hostname }}:{{ patroni_restapi_port }} | grep 200 && wal-g --config {{ postgresql_home_dir }}/.walg.json delete retain FULL 4 --confirm > {{ postgresql_log_dir }}/walg_delete.log 2>&1"
 
 # 🖨️ Display the second wal_g_cron job for RedHat for debugging purposes
 - name: Molecule.tests.variables.asserts.wal_g_cron_jobs | RedHat | Debug Second wal_g_cron Job
