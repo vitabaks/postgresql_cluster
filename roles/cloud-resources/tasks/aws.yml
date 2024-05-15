@@ -211,8 +211,8 @@
         volumes:
           - device_name: /dev/sda1
             ebs:
-              volume_type: "{{ volume_type | default('gp3', true) }}"
-              volume_size: "{{ system_volume_size | int }}"
+              volume_type: "{{ system_volume_type | default('gp3', true) }}"
+              volume_size: "{{ system_volume_size | default(80) | int }}"
               delete_on_termination: true
           - device_name: /dev/sdb
             ebs:

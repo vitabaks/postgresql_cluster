@@ -289,8 +289,8 @@
           sku: "{{ azure_vm_image_sku | default('22_04-lts-gen2') }}"
           version: "{{ azure_vm_image_version | default('latest') }}"
         os_type: Linux
-        os_disk_size_gb: "{{ system_volume_size | default('40') }}"  # system disk size
-        managed_disk_type: "StandardSSD_LRS"
+        os_disk_size_gb: "{{ system_volume_size | default('80') }}"  # system disk size
+        managed_disk_type: "{{ system_volume_type | default('StandardSSD_LRS', true) }}"
         data_disks:
           - lun: 0
             disk_size_gb: "{{ volume_size | int }}"
