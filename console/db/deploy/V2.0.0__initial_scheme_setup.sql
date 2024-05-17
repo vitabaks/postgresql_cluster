@@ -2,7 +2,6 @@
 CREATE EXTENSION IF NOT EXISTS moddatetime SCHEMA extensions;
 
 -- cloud_providers
-
 CREATE TABLE public.cloud_providers (
     provider_name text NOT NULL,
     provider_description text NOT NULL
@@ -24,7 +23,6 @@ ALTER TABLE ONLY public.cloud_providers
 
 
 -- cloud_regions
-
 CREATE TABLE public.cloud_regions (
     cloud_provider text NOT NULL,
     region_group text NOT NULL,
@@ -183,7 +181,6 @@ ALTER TABLE ONLY public.cloud_regions
 
 
 -- cloud_instances
-
 CREATE TABLE public.cloud_instances (
     cloud_provider text NOT NULL,
     instance_group text NOT NULL,
@@ -194,7 +191,7 @@ CREATE TABLE public.cloud_instances (
     price_hourly numeric NOT NULL,
     price_monthly numeric NOT NULL,
     currency CHAR(1) DEFAULT '$' NOT NULL,
-    updated_at date DEFAULT CURRENT_DATE
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE public.cloud_instances IS 'Table containing cloud instances information for various cloud providers';
@@ -304,9 +301,12 @@ ALTER TABLE ONLY public.cloud_instances
 ALTER TABLE ONLY public.cloud_instances
     ADD CONSTRAINT cloud_instances_cloud_provider_fkey FOREIGN KEY (cloud_provider) REFERENCES public.cloud_providers(provider_name);
 
+-- this trigger will set the "updated_at" column to the current timestamp for every update
+CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.cloud_instances
+    FOR EACH ROW EXECUTE FUNCTION moddatetime (updated_at);
+
 
 -- cloud_volumes
-
 CREATE TABLE public.cloud_volumes (
     cloud_provider text NOT NULL,
     volume_type text NOT NULL,
@@ -315,7 +315,7 @@ CREATE TABLE public.cloud_volumes (
     volume_max_size integer NOT NULL,
     price_monthly numeric NOT NULL,
     currency CHAR(1) DEFAULT '$' NOT NULL,
-    updated_at date DEFAULT CURRENT_DATE
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE public.cloud_volumes IS 'Table containing cloud volume information for various cloud providers';
@@ -351,9 +351,11 @@ ALTER TABLE ONLY public.cloud_volumes
 ALTER TABLE ONLY public.cloud_volumes
     ADD CONSTRAINT cloud_volumes_cloud_provider_fkey FOREIGN KEY (cloud_provider) REFERENCES public.cloud_providers(provider_name);
 
+CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.cloud_volumes
+    FOR EACH ROW EXECUTE FUNCTION moddatetime (updated_at);
+
 
 -- cloud_images
-
 CREATE TABLE public.cloud_images (
     cloud_provider text NOT NULL,
     region text NOT NULL,
@@ -361,7 +363,7 @@ CREATE TABLE public.cloud_images (
     arch text DEFAULT 'amd64' NOT NULL,
     os_name text NOT NULL,
     os_version text NOT NULL,
-    updated_at date DEFAULT CURRENT_DATE
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE public.cloud_images IS 'Table containing cloud images information for various cloud providers';
@@ -414,3 +416,6 @@ ALTER TABLE ONLY public.cloud_images
 
 ALTER TABLE ONLY public.cloud_images
     ADD CONSTRAINT cloud_images_cloud_provider_fkey FOREIGN KEY (cloud_provider) REFERENCES public.cloud_providers(provider_name);
+
+CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.cloud_images
+    FOR EACH ROW EXECUTE FUNCTION moddatetime (updated_at);
