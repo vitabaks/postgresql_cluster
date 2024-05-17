@@ -127,7 +127,8 @@
         firewall_additional_rules: "{{ firewall_rules_dynamic_var | default([]) | unique }}"
       when: firewall_enabled_at_boot | bool
       tags: firewall
-
+    - role: pg_cluster_defaults
+      tags: always
     - role: hostname
     - role: resolv_conf
     - role: etc_hosts
