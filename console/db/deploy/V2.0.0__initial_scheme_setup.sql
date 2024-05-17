@@ -191,7 +191,7 @@ CREATE TABLE public.cloud_instances (
     price_hourly numeric NOT NULL,
     price_monthly numeric NOT NULL,
     currency CHAR(1) DEFAULT '$' NOT NULL,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at timestamp DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE public.cloud_instances IS 'Table containing cloud instances information for various cloud providers';
@@ -315,7 +315,7 @@ CREATE TABLE public.cloud_volumes (
     volume_max_size integer NOT NULL,
     price_monthly numeric NOT NULL,
     currency CHAR(1) DEFAULT '$' NOT NULL,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at timestamp DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE public.cloud_volumes IS 'Table containing cloud volume information for various cloud providers';
@@ -363,7 +363,7 @@ CREATE TABLE public.cloud_images (
     arch text DEFAULT 'amd64' NOT NULL,
     os_name text NOT NULL,
     os_version text NOT NULL,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at timestamp DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE public.cloud_images IS 'Table containing cloud images information for various cloud providers';
@@ -419,3 +419,133 @@ ALTER TABLE ONLY public.cloud_images
 
 CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.cloud_images
     FOR EACH ROW EXECUTE FUNCTION moddatetime (updated_at);
+
+
+-- Projects
+CREATE TABLE public.projects (
+    project_id bigserial PRIMARY KEY,
+    project_name text NOT NULL,
+    project_description text,
+    created_at timestamp DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp
+);
+
+COMMENT ON TABLE public.projects IS 'Table containing information about projects';
+COMMENT ON COLUMN public.projects.project_name IS 'The name of the project';
+COMMENT ON COLUMN public.projects.project_description IS 'A description of the project';
+COMMENT ON COLUMN public.projects.created_at IS 'The timestamp when the project was created';
+COMMENT ON COLUMN public.projects.updated_at IS 'The timestamp when the project was last updated';
+
+CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.projects
+    FOR EACH ROW EXECUTE FUNCTION moddatetime (updated_at);
+
+INSERT INTO public.projects (project_name) VALUES ('default');
+
+
+-- Environments
+CREATE TABLE public.environments (
+    environment_id bigserial PRIMARY KEY,
+    environment_name varchar(20) NOT NULL,
+    environment_description text,
+    created_at timestamp DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp
+);
+
+COMMENT ON TABLE public.environments IS 'Table containing information about environments';
+COMMENT ON COLUMN public.environments.environment_name IS 'The name of the environment';
+COMMENT ON COLUMN public.environments.environment_description IS 'A description of the environment';
+COMMENT ON COLUMN public.environments.created_at IS 'The timestamp when the environment was created';
+COMMENT ON COLUMN public.environments.updated_at IS 'The timestamp when the environment was last updated';
+
+CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.environments
+    FOR EACH ROW EXECUTE FUNCTION moddatetime (updated_at);
+
+CREATE INDEX environments_name_idx ON public.environments (environment_name);
+
+
+-- Clusters
+CREATE TABLE public.clusters (
+    cluster_id bigserial PRIMARY KEY,
+    project_id bigint REFERENCES public.projects(project_id),
+    environment_id bigint REFERENCES public.environments(environment_id),
+    cluster_name text NOT NULL UNIQUE,
+    cluster_description text,
+    cluster_details jsonb,
+    extra_vars jsonb,
+    location text,
+    server_count integer DEFAULT 0,
+    created_at timestamp DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp
+);
+
+COMMENT ON TABLE public.clusters IS 'Table containing information about Postgres clusters';
+COMMENT ON COLUMN public.clusters.project_id IS 'The ID of the project to which the cluster belongs';
+COMMENT ON COLUMN public.clusters.environment_id IS 'The environment in which the cluster is deployed (e.g., Production, Development)';
+COMMENT ON COLUMN public.clusters.cluster_name IS 'The name of the cluster (it must be unique)';
+COMMENT ON COLUMN public.clusters.cluster_description IS 'A description of the cluster (optional)';
+COMMENT ON COLUMN public.clusters.cluster_details IS 'Additional information about the cluster (cloud provider, instance type, postgres version, connection info, etc.)';
+COMMENT ON COLUMN public.clusters.extra_vars IS 'Extra variables for Ansible specific to this cluster';
+COMMENT ON COLUMN public.clusters.location IS 'The region/datacenter where the cluster is located';
+COMMENT ON COLUMN public.clusters.server_count IS 'The number of servers associated with the cluster';
+COMMENT ON COLUMN public.clusters.created_at IS 'The timestamp when the cluster was created';
+COMMENT ON COLUMN public.clusters.updated_at IS 'The timestamp when the cluster was last updated';
+
+CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.clusters
+    FOR EACH ROW EXECUTE FUNCTION moddatetime (updated_at);
+
+CREATE INDEX clusters_id_project_id_idx ON public.clusters (cluster_id, project_id);
+CREATE INDEX clusters_name_idx ON public.clusters (cluster_name);
+
+
+-- Cluster servers
+CREATE TABLE public.servers (
+    server_id bigserial PRIMARY KEY,
+    cluster_id bigint REFERENCES public.clusters(cluster_id),
+    server_name text NOT NULL,
+    server_location text,
+    ip_address inet NOT NULL,
+    postgresql_exists boolean DEFAULT false,
+    host_groups jsonb,
+    host_vars jsonb,
+    role text DEFAULT 'N/A',
+    status text DEFAULT 'N/A',
+    created_at timestamp DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp
+);
+
+COMMENT ON TABLE public.servers IS 'Table containing information about servers within a Postgres cluster';
+COMMENT ON COLUMN public.servers.cluster_id IS 'The ID of the cluster to which the server belongs';
+COMMENT ON COLUMN public.servers.server_name IS 'The name of the server';
+COMMENT ON COLUMN public.servers.server_location IS 'The physical or cloud location of the server';
+COMMENT ON COLUMN public.servers.ip_address IS 'The IP address of the server';
+COMMENT ON COLUMN public.servers.postgresql_exists IS 'Indicates whether Postgres database already exists (to convert a standard Postgres setup to a HA cluster)';
+COMMENT ON COLUMN public.servers.host_groups IS 'JSONB field containing the Ansible host groups to which the server belongs';
+COMMENT ON COLUMN public.servers.host_vars IS 'JSONB field containing Ansible host-specific variables';
+COMMENT ON COLUMN public.servers.role IS 'The role of the server (e.g., primary, replica)';
+COMMENT ON COLUMN public.servers.status IS 'The current status of the server';
+COMMENT ON COLUMN public.servers.created_at IS 'The timestamp when the server was created';
+COMMENT ON COLUMN public.servers.updated_at IS 'The timestamp when the server was last updated';
+
+CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.servers
+    FOR EACH ROW EXECUTE FUNCTION moddatetime (updated_at);
+
+CREATE INDEX servers_cluster_id_idx ON public.servers (cluster_id);
+
+-- Function to update server_count in clusters
+CREATE OR REPLACE FUNCTION update_server_count()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE public.clusters
+    SET server_count = (
+        SELECT COUNT(*)
+        FROM public.servers
+        WHERE public.servers.cluster_id = NEW.cluster_id
+    )
+    WHERE cluster_id = NEW.cluster_id;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger to update server_count on changes in servers
+CREATE TRIGGER update_server_count_trigger AFTER INSERT OR UPDATE OR DELETE ON public.servers
+    FOR EACH ROW EXECUTE FUNCTION update_server_count();
