@@ -7,7 +7,7 @@ This project uses [Flyway](https://flywaydb.org) for versioning and managing dat
 For more information on using Flyway from the command line, see the [Flyway CLI documentation](https://documentation.red-gate.com/flyway/flyway-cli-and-api/usage/command-line).
 
 ### Database Migrations
-Database migrations are SQL scripts that modify the schema of your database. Each migration script should be placed in the `console/db/deploy` directory and follow Flyway's naming convention to ensure they are applied in the correct order.
+Database migrations are SQL scripts that modify the schema of database. Each migration script should be placed in the `console/db/deploy` directory and follow Flyway's naming convention to ensure they are applied in the correct order.
 
 **Naming Convention**
 Flyway uses a specific naming convention to order and apply migrations:
@@ -36,7 +36,6 @@ Creating Schema History table "public"."flyway_schema_history" ...
 Current version of schema "public": << Empty Schema >>
 Migrating schema "public" to version "2.0.0 - initial scheme setup"
 Successfully applied 1 migration to schema "public", now at version v2.0.0 (execution time 00:17.123s)
-vitabaks@MacBook-Pro-Vitaliy postgresql_cluster % 
 ```
 
 ### Validating Migrations
