@@ -433,7 +433,7 @@ CREATE TABLE public.secrets (
 );
 
 COMMENT ON TABLE public.secrets IS 'Table containing secrets for accessing cloud providers and servers';
-COMMENT ON COLUMN public.secrets.secret_type IS 'The type of the secret (e.g., cloud_token, ssh_key, password)';
+COMMENT ON COLUMN public.secrets.secret_type IS 'The type of the secret (e.g., cloud_secret, ssh_key, password)';
 COMMENT ON COLUMN public.secrets.secret_name IS 'The name of the secret';
 COMMENT ON COLUMN public.secrets.secret_value IS 'The encrypted value of the secret';
 COMMENT ON COLUMN public.secrets.created_at IS 'The timestamp when the secret was created';
@@ -477,7 +477,7 @@ $$ LANGUAGE plpgsql;
 -- An example of using a function to insert a secret
 SELECT add_secret('ssh_key', '<NAME>', '{"private_key": "<CONTENT>"}', 'my_encryption_key');
 SELECT add_secret('password', '<NAME>', '{"username": "<CONTENT>", "password": "<CONTENT>"}', 'my_encryption_key');
-SELECT add_secret('cloud_token', '<NAME>', '{"AWS_ACCESS_KEY_ID": "<CONTENT>", "AWS_SECRET_ACCESS_KEY": "<CONTENT>"}', 'my_encryption_key');
+SELECT add_secret('cloud_secret', '<NAME>', '{"AWS_ACCESS_KEY_ID": "<CONTENT>", "AWS_SECRET_ACCESS_KEY": "<CONTENT>"}', 'my_encryption_key');
 
 -- An example of using a function to get a secret
 SELECT * FROM get_secret(1, 'my_encryption_key');

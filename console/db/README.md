@@ -82,7 +82,7 @@ Schema version: 2.0.0
 #### Functions:
 - `add_secret`
   - Function to add a secret
-    - Usage example: `SELECT add_secret('cloud_token', 'AWS', '{"AWS_ACCESS_KEY_ID": "<CONTENT>", "AWS_SECRET_ACCESS_KEY": "<CONTENT>"}', 'my_encryption_key');`
+    - Usage example: `SELECT add_secret('cloud_secret', 'AWS', '{"AWS_ACCESS_KEY_ID": "<CONTENT>", "AWS_SECRET_ACCESS_KEY": "<CONTENT>"}', 'my_encryption_key');`
 - `get_secret`
   - Function to get a secret value
     - Usage example: `SELECT * FROM get_secret(1, 'my_encryption_key');`
