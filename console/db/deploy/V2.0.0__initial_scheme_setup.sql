@@ -1,5 +1,6 @@
--- Automatically handle updated_at column
+-- Create extensions
 CREATE EXTENSION IF NOT EXISTS moddatetime SCHEMA extensions;
+CREATE EXTENSION IF NOT EXISTS pgcrypto SCHEMA extensions;
 
 -- cloud_providers
 CREATE TABLE public.cloud_providers (
@@ -421,6 +422,68 @@ CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.cloud_images
     FOR EACH ROW EXECUTE FUNCTION moddatetime (updated_at);
 
 
+-- Secrets
+CREATE TABLE public.secrets (
+    secret_id bigserial PRIMARY KEY,
+    secret_type text NOT NULL,
+    secret_name text NOT NULL,
+    secret_value bytea NOT NULL,  -- Encrypted data
+    created_at timestamp DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp
+);
+
+COMMENT ON TABLE public.secrets IS 'Table containing secrets for accessing cloud providers and servers';
+COMMENT ON COLUMN public.secrets.secret_type IS 'The type of the secret (e.g., cloud_token, ssh_key, password)';
+COMMENT ON COLUMN public.secrets.secret_name IS 'The name of the secret';
+COMMENT ON COLUMN public.secrets.secret_value IS 'The encrypted value of the secret';
+COMMENT ON COLUMN public.secrets.created_at IS 'The timestamp when the secret was created';
+COMMENT ON COLUMN public.secrets.updated_at IS 'The timestamp when the secret was last updated';
+
+CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.secrets
+    FOR EACH ROW EXECUTE FUNCTION moddatetime (updated_at);
+
+CREATE INDEX secrets_type_name_idx ON public.secrets (secret_type, secret_name);
+
+-- Function to add a secret
+CREATE OR REPLACE FUNCTION add_secret(p_secret_type text, p_secret_name text, p_secret_value text, p_encryption_key text)
+RETURNS bigint AS $$
+DECLARE
+    v_inserted_secret_id bigint;
+BEGIN
+    INSERT INTO public.secrets (secret_type, secret_name, secret_value)
+    VALUES (p_secret_type, p_secret_name, pgp_sym_encrypt(p_secret_value, p_encryption_key, 'cipher-algo=aes256'))
+    RETURNING secret_id INTO v_inserted_secret_id;
+    
+    RETURN v_inserted_secret_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to get a secret value
+CREATE OR REPLACE FUNCTION get_secret(p_secret_id bigint, p_encryption_key text)
+RETURNS json AS $$
+DECLARE
+    decrypted_value json;
+BEGIN
+    SELECT pgp_sym_decrypt(secret_value, p_encryption_key)::json
+    INTO decrypted_value
+    FROM public.secrets
+    WHERE secret_id = p_secret_id;
+    
+    RETURN decrypted_value;
+END;
+$$ LANGUAGE plpgsql;
+
+/*
+-- An example of using a function to insert a secret
+SELECT add_secret('ssh_key', '<NAME>', '{"private_key": "<CONTENT>"}', 'my_encryption_key');
+SELECT add_secret('password', '<NAME>', '{"username": "<CONTENT>", "password": "<CONTENT>"}', 'my_encryption_key');
+SELECT add_secret('cloud_token', '<NAME>', '{"AWS_ACCESS_KEY_ID": "<CONTENT>", "AWS_SECRET_ACCESS_KEY": "<CONTENT>"}', 'my_encryption_key');
+
+-- An example of using a function to get a secret
+SELECT * FROM get_secret(1, 'my_encryption_key');
+*/
+
+
 -- Projects
 CREATE TABLE public.projects (
     project_id bigserial PRIMARY KEY,
@@ -480,6 +543,7 @@ CREATE TABLE public.clusters (
     extra_vars jsonb,
     location text,
     server_count integer DEFAULT 0,
+    secret_id bigint REFERENCES public.secrets(secret_id),  -- link to the secret for accessing the cloud provider
     created_at timestamp DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp
 );
@@ -493,6 +557,7 @@ COMMENT ON COLUMN public.clusters.cluster_details IS 'Additional information abo
 COMMENT ON COLUMN public.clusters.extra_vars IS 'Extra variables for Ansible specific to this cluster';
 COMMENT ON COLUMN public.clusters.location IS 'The region/datacenter where the cluster is located';
 COMMENT ON COLUMN public.clusters.server_count IS 'The number of servers associated with the cluster';
+COMMENT ON COLUMN public.clusters.secret_id IS 'The ID of the secret for accessing the cloud provider';
 COMMENT ON COLUMN public.clusters.created_at IS 'The timestamp when the cluster was created';
 COMMENT ON COLUMN public.clusters.updated_at IS 'The timestamp when the cluster was last updated';
 
@@ -515,6 +580,7 @@ CREATE TABLE public.servers (
     host_vars jsonb,
     role text DEFAULT 'N/A',
     status text DEFAULT 'N/A',
+    secret_id bigint REFERENCES public.secrets(secret_id),  -- link to the secret for SSH access
     created_at timestamp DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp
 );
@@ -529,6 +595,7 @@ COMMENT ON COLUMN public.servers.host_groups IS 'JSONB field containing the Ansi
 COMMENT ON COLUMN public.servers.host_vars IS 'JSONB field containing Ansible host-specific variables';
 COMMENT ON COLUMN public.servers.role IS 'The role of the server (e.g., primary, replica)';
 COMMENT ON COLUMN public.servers.status IS 'The current status of the server';
+COMMENT ON COLUMN public.servers.secret_id IS 'The ID of the secret for accessing the server via SSH';
 COMMENT ON COLUMN public.servers.created_at IS 'The timestamp when the server was created';
 COMMENT ON COLUMN public.servers.updated_at IS 'The timestamp when the server was last updated';
 
