@@ -462,6 +462,12 @@ CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.environments
 
 CREATE INDEX environments_name_idx ON public.environments (environment_name);
 
+INSERT INTO public.environments (environment_name) VALUES ('production');
+INSERT INTO public.environments (environment_name) VALUES ('staging');
+INSERT INTO public.environments (environment_name) VALUES ('test');
+INSERT INTO public.environments (environment_name) VALUES ('dev');
+INSERT INTO public.environments (environment_name) VALUES ('benchmarking');
+
 
 -- Clusters
 CREATE TABLE public.clusters (
