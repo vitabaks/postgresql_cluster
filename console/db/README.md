@@ -24,30 +24,21 @@ flyway -url=jdbc:postgresql://<host>:5432/postgres \
   -locations=filesystem:./console/db/deploy \
   -baselineOnMigrate=true \
   migrate
-
-Flyway OSS Edition 10.13.0 by Redgate
-
-See release notes here: https://rd.gt/416ObMi
-
-Database: jdbc:postgresql://<host>:5432/postgres (PostgreSQL 15.1)
-Schema history table "public"."flyway_schema_history" does not exist yet
-Successfully validated 1 migration (execution time 00:00.816s)
-Creating Schema History table "public"."flyway_schema_history" ...
-Current version of schema "public": << Empty Schema >>
-Migrating schema "public" to version "2.0.0 - initial scheme setup"
-Successfully applied 1 migration to schema "public", now at version v2.0.0 (execution time 00:17.123s)
 ```
 
 ### Validating Migrations
 
 To check the status of migrations, run:
-```
+```shell
 flyway -url=jdbc:postgresql://<host>:5432/postgres \
-  -user=postgres.myrwwrwtmghpfvefarbf \
+  -user=postgres \
   -password=<password> \
   -locations=filesystem:./console/db/deploy \
   info
+```
 
+Output example:
+```
 Flyway OSS Edition 10.13.0 by Redgate
 
 See release notes here: https://rd.gt/416ObMi
@@ -61,3 +52,40 @@ Schema version: 2.0.0
 | Versioned | 2.0.0   | initial scheme setup | SQL  | 2024-05-17 10:08:34 | Success | No       |
 +-----------+---------+----------------------+------+---------------------+---------+----------+
 ```
+
+### Database Schema
+
+#### Tables:
+- `cloud_providers`
+  - Table containing cloud providers information
+- `cloud_regions`
+  - Table containing cloud regions information for various cloud providers
+- `cloud_instances`
+  - Table containing cloud instances information (including the approximate price) for various cloud providers
+- `cloud_volumes`
+  - Table containing cloud volume information (including the approximate price) for various cloud providers
+- `cloud_images`
+  - Table containing cloud images information for various cloud providers
+    - Note: For all cloud providers except AWS, the image is the same for all regions. For AWS, the image must be specified for each specific region.
+- `projects`
+  - Table containing information about projects
+- `environments`
+  - Table containing information about environments
+- `clusters`
+  - Table containing information about Postgres clusters
+- `servers`
+  - Table containing information about servers within a Postgres cluster
+- `secrets`
+  - Table containing secrets for accessing cloud providers and servers
+    - Note: The data is encrypted using the pgcrypto extension and a symmetric key. This symmetric key is generated at the application level and is unique for each installation.
+
+#### Functions:
+- `add_secret`
+  - Function to add a secret
+    - Usage example: `SELECT add_secret('cloud_token', 'AWS', '{"AWS_ACCESS_KEY_ID": "<CONTENT>", "AWS_SECRET_ACCESS_KEY": "<CONTENT>"}', 'my_encryption_key');`
+- `get_secret`
+  - Function to get a secret value
+    - Usage example: `SELECT * FROM get_secret(1, 'my_encryption_key');`
+- `update_server_count`
+  - Function to update the server_count column in the clusters table.
+    - Note: This function calculates the number of servers associated with a specific cluster and updates the server_count accordingly. The trigger `update_server_count_trigger` is automatically executed whenever there are INSERT, UPDATE, or DELETE operations on the servers table. This ensures that the server_count in the clusters table is always accurate and up-to-date.
