@@ -69,8 +69,10 @@ Schema version: 2.0.0
     - Note: For all cloud providers except AWS, the image is the same for all regions. For AWS, the image must be specified for each specific region.
 - `projects`
   - Table containing information about projects
+    - Default: 'default'
 - `environments`
   - Table containing information about environments
+    - Default: 'production', 'staging', 'test', 'dev', 'benchmarking'
 - `clusters`
   - Table containing information about Postgres clusters
 - `servers`
