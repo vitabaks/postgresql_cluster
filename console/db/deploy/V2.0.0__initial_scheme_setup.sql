@@ -700,7 +700,7 @@ INSERT INTO public.extensions (extension_name, extension_description, postgres_m
     ('uuid-ossp', 'generate universally unique identifiers (UUIDs)', NULL, NULL, NULL, NULL, true),
     ('xml2', 'XPath querying and XSLT', NULL, NULL, NULL, NULL, true),
     -- Third-Party Extensions
-    ('citus', 'Citus is a PostgreSQL extension that transforms Postgres into a distributed database—so you can achieve high performance at any scale.', 11, 16, 'https://github.com/citusdata/citus', 'images/citus.png', false),
+    ('citus', 'Citus is a PostgreSQL extension that transforms Postgres into a distributed database—so you can achieve high performance at any scale', 11, 16, 'https://github.com/citusdata/citus', 'images/citus.png', false),
     ('pgaudit', 'The PostgreSQL Audit Extension provides detailed session and/or object audit logging via the standard PostgreSQL logging facility', 10, 16, 'https://github.com/pgaudit/pgaudit', 'images/pgaudit.png', false),
     ('pg_cron', 'Job scheduler for PostgreSQL', 10, 16, 'https://github.com/citusdata/pg_cron', 'images/pg_cron.png', false),
     ('pg_partman', 'pg_partman is an extension to create and manage both time-based and number-based table partition sets', 10, 16, 'https://github.com/pgpartman/pg_partman', 'images/pg_partman.png', false),
