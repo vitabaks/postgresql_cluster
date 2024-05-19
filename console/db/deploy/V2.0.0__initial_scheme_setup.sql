@@ -629,10 +629,10 @@ CREATE TRIGGER update_server_count_trigger AFTER INSERT OR UPDATE OR DELETE ON p
 CREATE TABLE public.extensions (
     extension_name text PRIMARY KEY,
     extension_description VARCHAR(150) NOT NULL,
-    postgres_min_version text,
-    postgres_max_version text,
     extension_url text,
     extension_image_path text,
+    postgres_min_version text,
+    postgres_max_version text,
     contrib boolean NOT NULL
 );
 
@@ -721,7 +721,7 @@ BEGIN
     SELECT json_agg(row_to_json(e))
     INTO extensions
     FROM (
-        SELECT e.extension_name, e.extension_description, e.extension_url, e.extension_image_path
+        SELECT e.extension_name, e.extension_description, e.extension_url, e.extension_image_path, e.postgres_min_version, e.postgres_max_version, e.contrib
         FROM public.extensions e
         WHERE (e.postgres_min_version IS NULL OR e.postgres_min_version::float <= p_postgres_version)
           AND (e.postgres_max_version IS NULL OR e.postgres_max_version::float >= p_postgres_version)
