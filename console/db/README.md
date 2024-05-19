@@ -67,6 +67,9 @@ Schema version: 2.0.0
 - `cloud_images`
   - Table containing cloud images information for various cloud providers
     - Note: For all cloud providers except AWS, the image is the same for all regions. For AWS, the image must be specified for each specific region.
+- `secrets`
+  - Table containing secrets for accessing cloud providers and servers
+    - Note: The data is encrypted using the pgcrypto extension and a symmetric key. This symmetric key is generated at the application level and is unique for each installation.
 - `projects`
   - Table containing information about projects
     - Default: 'default'
@@ -77,9 +80,6 @@ Schema version: 2.0.0
   - Table containing information about Postgres clusters
 - `servers`
   - Table containing information about servers within a Postgres cluster
-- `secrets`
-  - Table containing secrets for accessing cloud providers and servers
-    - Note: The data is encrypted using the pgcrypto extension and a symmetric key. This symmetric key is generated at the application level and is unique for each installation.
 - `extensions`
   - The table stores information about Postgres extensions, including name, description, supported Postgres version range, and whether the extension is a contrib module or third-party.
   - 'postgres_min_version' and 'postgres_max_version' define the range of Postgres versions supported by extensions. If the postgres_max_version is NULL, it is assumed that the extension is still supported by new versions of Postgres.
