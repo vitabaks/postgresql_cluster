@@ -89,11 +89,17 @@ Schema version: 2.0.0
   - Function to update the server_count column in the clusters table.
     - Note: This function calculates the number of servers associated with a specific cluster and updates the server_count accordingly. The trigger `update_server_count_trigger` is automatically executed whenever there are INSERT, UPDATE, or DELETE operations on the servers table. This ensures that the server_count in the clusters table is always accurate and up-to-date.
 - `add_secret`
-  - Function to add a secret
-    - Usage example: `SELECT add_secret('cloud_secret', 'AWS', '{"AWS_ACCESS_KEY_ID": "<CONTENT>", "AWS_SECRET_ACCESS_KEY": "<CONTENT>"}', 'my_encryption_key');`
+  - Function to add a secret.
+    - Usage examples:
+      - `SELECT add_secret('ssh_key', '<NAME>', '{"private_key": "<CONTENT>"}', 'my_encryption_key');`
+      - `SELECT add_secret('password', '<NAME>', '{"username": "<CONTENT>", "password": "<CONTENT>"}', 'my_encryption_key');`
+      - `SELECT add_secret('cloud_secret', 'AWS', '{"AWS_ACCESS_KEY_ID": "<CONTENT>", "AWS_SECRET_ACCESS_KEY": "<CONTENT>"}', 'my_encryption_key');`
 - `get_secret`
-  - Function to get a secret value
+  - Function to get a secret value in JSON format.
     - Usage example: `SELECT get_secret(1, 'my_encryption_key');`
 - `get_extensions`
-  - Function to get a list of available extensions, all or 'contrib'/'third_party' only
-    - Usage example: `SELECT get_extensions(16);`, `SELECT get_extensions(16, 'contrib');`, `SELECT get_extensions(16, 'third_party');`
+  - Function to get a list of available extensions in JSON format. All or 'contrib'/'third_party' only (optional).
+    - Usage examples:
+      - `SELECT get_extensions(16);`
+      - `SELECT get_extensions(16, 'contrib');`
+      - `SELECT get_extensions(16, 'third_party');`
