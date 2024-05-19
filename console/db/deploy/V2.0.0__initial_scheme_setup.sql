@@ -627,9 +627,11 @@ CREATE TRIGGER update_server_count_trigger AFTER INSERT OR UPDATE OR DELETE ON p
 -- Extensions
 CREATE TABLE public.extensions (
     extension_name text PRIMARY KEY,
-    extension_description text,
+    extension_description VARCHAR(150) NOT NULL,
     postgres_min_version text,
     postgres_max_version text,
+    extension_url text,
+    extension_image_path text,
     contrib boolean NOT NULL
 );
 
@@ -647,56 +649,68 @@ postgres_min_version and postgres_max_version define the range of Postgres versi
 If the postgres_max_version is NULL, it is assumed that the extension is still supported by new versions of Postgres.
 */
 
-INSERT INTO public.extensions (extension_name, extension_description, postgres_min_version, postgres_max_version, contrib) VALUES
-    ('adminpack', 'administrative functions for PostgreSQL', NULL, NULL, true),
-    ('amcheck', 'functions for verifying relation integrity', NULL, NULL, true),
-    ('autoinc', 'functions for autoincrementing fields', NULL, NULL, true),
-    ('bloom', 'bloom access method - signature file based index', NULL, NULL, true),
-    ('btree_gin', 'support for indexing common datatypes in GIN', NULL, NULL, true),
-    ('btree_gist', 'support for indexing common datatypes in GiST', NULL, NULL, true),
-    ('chkpass', 'data type for auto-encrypted passwords', NULL, '10', true),
-    ('citext', 'data type for case-insensitive character strings', NULL, NULL, true),
-    ('cube', 'data type for multidimensional cubes', NULL, NULL, true),
-    ('dblink', 'connect to other PostgreSQL databases from within a database', NULL, NULL, true),
-    ('dict_int', 'text search dictionary template for integers', NULL, NULL, true),
-    ('dict_xsyn', 'text search dictionary template for extended synonym processing', NULL, NULL, true),
-    ('earthdistance', 'calculate great-circle distances on the surface of the Earth', NULL, NULL, true),
-    ('file_fdw', 'foreign-data wrapper for flat file access', NULL, NULL, true),
-    ('fuzzystrmatch', 'determine similarities and distance between strings', NULL, NULL, true),
-    ('hstore', 'data type for storing sets of (key, value) pairs', NULL, NULL, true),
-    ('insert_username', 'functions for tracking who changed a table', NULL, NULL, true),
-    ('intagg', 'integer aggregator and enumerator (obsolete)', NULL, NULL, true),
-    ('intarray', 'functions, operators, and index support for 1-D arrays of integers', NULL, NULL, true),
-    ('isn', 'data types for international product numbering standards', NULL, NULL, true),
-    ('lo', 'Large Object maintenance', NULL, NULL, true),
-    ('ltree', 'data type for hierarchical tree-like structures', NULL, NULL, true),
-    ('moddatetime', 'functions for tracking last modification time', NULL, NULL, true),
-    ('old_snapshot', 'utilities in support of old_snapshot_threshold', '14', NULL, true),
-    ('pageinspect', 'inspect the contents of database pages at a low level', NULL, NULL, true),
-    ('pg_buffercache', 'examine the shared buffer cache', NULL, NULL, true),
-    ('pg_freespacemap', 'examine the free space map (FSM)', NULL, NULL, true),
-    ('pg_prewarm', 'prewarm relation data', NULL, NULL, true),
-    ('pg_stat_statements', 'track planning and execution statistics of all SQL statements executed', NULL, NULL, true),
-    ('pg_surgery', 'extension to perform surgery on a damaged relation', '14', NULL, true),
-    ('pg_trgm', 'text similarity measurement and index searching based on trigrams', NULL, NULL, true),
-    ('pg_visibility', 'examine the visibility map (VM) and page-level visibility info', NULL, NULL, true),
-    ('pg_walinspect', 'functions to inspect contents of PostgreSQL Write-Ahead Log', '15', NULL, true),
-    ('pgcrypto', 'cryptographic functions', NULL, NULL, true),
-    ('pgrowlocks', 'show row-level locking information', NULL, NULL, true),
-    ('pgstattuple', 'show tuple-level statistics', NULL, NULL, true),
-    ('plpgsql', 'PL/pgSQL procedural language', NULL, NULL, true),
-    ('postgres_fdw', 'foreign-data wrapper for remote PostgreSQL servers', NULL, NULL, true),
-    ('refint', 'functions for implementing referential integrity (obsolete)', NULL, NULL, true),
-    ('seg', 'data type for representing line segments or floating-point intervals', NULL, NULL, true),
-    ('sslinfo', 'information about SSL certificates', NULL, NULL, true),
-    ('tablefunc', 'functions that manipulate whole tables, including crosstab', NULL, NULL, true),
-    ('tcn', 'Triggered change notifications', NULL, NULL, true),
-    ('timetravel', 'functions for implementing time travel', NULL, '11', true),
-    ('tsm_system_rows', 'TABLESAMPLE method which accepts number of rows as a limit', NULL, NULL, true),
-    ('tsm_system_time', 'TABLESAMPLE method which accepts time in milliseconds as a limit', NULL, NULL, true),
-    ('unaccent', 'text search dictionary that removes accents', NULL, NULL, true),
-    ('uuid-ossp', 'generate universally unique identifiers (UUIDs)', NULL, NULL, true),
-    ('xml2', 'XPath querying and XSLT', NULL, NULL, true);
+INSERT INTO public.extensions (extension_name, extension_description, postgres_min_version, postgres_max_version, extension_url, extension_image_path, contrib) VALUES
+    ('adminpack', 'administrative functions for PostgreSQL', NULL, NULL, NULL, NULL, true),
+    ('amcheck', 'functions for verifying relation integrity', NULL, NULL, NULL, NULL, true),
+    ('autoinc', 'functions for autoincrementing fields', NULL, NULL, NULL, NULL, true),
+    ('bloom', 'bloom access method - signature file based index', NULL, NULL, NULL, NULL, true),
+    ('btree_gin', 'support for indexing common datatypes in GIN', NULL, NULL, NULL, NULL, true),
+    ('btree_gist', 'support for indexing common datatypes in GiST', NULL, NULL, NULL, NULL, true),
+    ('chkpass', 'data type for auto-encrypted passwords', NULL, '10', NULL, NULL, true),
+    ('citext', 'data type for case-insensitive character strings', NULL, NULL, NULL, NULL, true),
+    ('cube', 'data type for multidimensional cubes', NULL, NULL, NULL, NULL, true),
+    ('dblink', 'connect to other PostgreSQL databases from within a database', NULL, NULL, NULL, NULL, true),
+    ('dict_int', 'text search dictionary template for integers', NULL, NULL, NULL, NULL, true),
+    ('dict_xsyn', 'text search dictionary template for extended synonym processing', NULL, NULL, NULL, NULL, true),
+    ('earthdistance', 'calculate great-circle distances on the surface of the Earth', NULL, NULL, NULL, NULL, true),
+    ('file_fdw', 'foreign-data wrapper for flat file access', NULL, NULL, NULL, NULL, true),
+    ('fuzzystrmatch', 'determine similarities and distance between strings', NULL, NULL, NULL, NULL, true),
+    ('hstore', 'data type for storing sets of (key, value) pairs', NULL, NULL, NULL, NULL, true),
+    ('insert_username', 'functions for tracking who changed a table', NULL, NULL, NULL, NULL, true),
+    ('intagg', 'integer aggregator and enumerator (obsolete)', NULL, NULL, NULL, NULL, true),
+    ('intarray', 'functions, operators, and index support for 1-D arrays of integers', NULL, NULL, NULL, NULL, true),
+    ('isn', 'data types for international product numbering standards', NULL, NULL, NULL, NULL, true),
+    ('lo', 'Large Object maintenance', NULL, NULL, NULL, NULL, true),
+    ('ltree', 'data type for hierarchical tree-like structures', NULL, NULL, NULL, NULL, true),
+    ('moddatetime', 'functions for tracking last modification time', NULL, NULL, NULL, NULL, true),
+    ('old_snapshot', 'utilities in support of old_snapshot_threshold', '14', NULL, NULL, NULL, true),
+    ('pageinspect', 'inspect the contents of database pages at a low level', NULL, NULL, NULL, NULL, true),
+    ('pg_buffercache', 'examine the shared buffer cache', NULL, NULL, NULL, NULL, true),
+    ('pg_freespacemap', 'examine the free space map (FSM)', NULL, NULL, NULL, NULL, true),
+    ('pg_prewarm', 'prewarm relation data', NULL, NULL, NULL, NULL, true),
+    ('pg_stat_statements', 'track planning and execution statistics of all SQL statements executed', NULL, NULL, NULL, NULL, true),
+    ('pg_surgery', 'extension to perform surgery on a damaged relation', '14', NULL, NULL, NULL, true),
+    ('pg_trgm', 'text similarity measurement and index searching based on trigrams', NULL, NULL, NULL, NULL, true),
+    ('pg_visibility', 'examine the visibility map (VM) and page-level visibility info', NULL, NULL, NULL, NULL, true),
+    ('pg_walinspect', 'functions to inspect contents of PostgreSQL Write-Ahead Log', '15', NULL, NULL, NULL, true),
+    ('pgcrypto', 'cryptographic functions', NULL, NULL, NULL, NULL, true),
+    ('pgrowlocks', 'show row-level locking information', NULL, NULL, NULL, NULL, true),
+    ('pgstattuple', 'show tuple-level statistics', NULL, NULL, NULL, NULL, true),
+    ('plpgsql', 'PL/pgSQL procedural language', NULL, NULL, NULL, NULL, true),
+    ('postgres_fdw', 'foreign-data wrapper for remote PostgreSQL servers', NULL, NULL, NULL, NULL, true),
+    ('refint', 'functions for implementing referential integrity (obsolete)', NULL, NULL, NULL, NULL, true),
+    ('seg', 'data type for representing line segments or floating-point intervals', NULL, NULL, NULL, NULL, true),
+    ('sslinfo', 'information about SSL certificates', NULL, NULL, NULL, NULL, true),
+    ('tablefunc', 'functions that manipulate whole tables, including crosstab', NULL, NULL, NULL, NULL, true),
+    ('tcn', 'Triggered change notifications', NULL, NULL, NULL, NULL, true),
+    ('timetravel', 'functions for implementing time travel', NULL, '11', NULL, NULL, true),
+    ('tsm_system_rows', 'TABLESAMPLE method which accepts number of rows as a limit', NULL, NULL, NULL, NULL, true),
+    ('tsm_system_time', 'TABLESAMPLE method which accepts time in milliseconds as a limit', NULL, NULL, NULL, NULL, true),
+    ('unaccent', 'text search dictionary that removes accents', NULL, NULL, NULL, NULL, true),
+    ('uuid-ossp', 'generate universally unique identifiers (UUIDs)', NULL, NULL, NULL, NULL, true),
+    ('xml2', 'XPath querying and XSLT', NULL, NULL, NULL, NULL, true),
+    -- Third-Party Extensions
+    ('citus', 'Citus is a PostgreSQL extension that transforms Postgres into a distributed database—so you can achieve high performance at any scale.', 11, 16, 'https://github.com/citusdata/citus', 'images/citus.png', false),
+    ('pgaudit', 'The PostgreSQL Audit Extension provides detailed session and/or object audit logging via the standard PostgreSQL logging facility', 10, 16, 'https://github.com/pgaudit/pgaudit', 'images/pgaudit.png', false),
+    ('pg_cron', 'Job scheduler for PostgreSQL', 10, 16, 'https://github.com/citusdata/pg_cron', 'images/pg_cron.png', false),
+    ('pg_partman', 'pg_partman is an extension to create and manage both time-based and number-based table partition sets', 10, 16, 'https://github.com/pgpartman/pg_partman', 'images/pg_partman.png', false),
+    ('pg_repack', 'Reorganize tables in PostgreSQL databases with minimal locks', 10, 16, 'https://github.com/reorg/pg_repack', 'images/pg_repack.png', false),
+    ('pg_stat_kcache', 'Gather statistics about physical disk access and CPU consumption done by backends', 10, 16, 'https://github.com/powa-team/pg_stat_kcache', NULL, false),
+    ('pg_wait_sampling', 'Sampling based statistics of wait events', 10, 16, 'https://github.com/postgrespro/pg_wait_sampling', NULL, false),
+    ('pgvector', 'Open-source vector similarity search for Postgres (vector data type and ivfflat and hnsw access methods)', 11, 16, 'https://github.com/pgvector/pgvector', 'images/pgvector.png', false),
+    ('postgis', 'PostGIS extends the capabilities of the PostgreSQL relational database by adding support for storing, indexing, and querying geospatial data', 10, 16, 'https://postgis.net', 'images/postgis.png', false),
+    ('pgrouting', 'pgRouting extends the PostGIS / PostgreSQL geospatial database to provide geospatial routing functionality', 10, 16, 'https://pgrouting.org', 'images/pgrouting.png', false),
+    ('timescaledb', 'TimescaleDB is an open-source database designed to make SQL scalable for time-series data (Community Edition)', 12, 16, 'https://github.com/timescale/timescaledb', 'images/timescaledb.png', false);
 
 CREATE OR REPLACE FUNCTION get_extensions(p_postgres_version float, p_extension_type text DEFAULT 'all')
 RETURNS json AS $$
@@ -706,11 +720,12 @@ BEGIN
     SELECT json_agg(row_to_json(e))
     INTO extensions
     FROM (
-        SELECT e.extension_name, e.extension_description
+        SELECT e.extension_name, e.extension_description, e.extension_url, e.extension_image_path
         FROM public.extensions e
         WHERE (e.postgres_min_version IS NULL OR e.postgres_min_version::float <= p_postgres_version)
           AND (e.postgres_max_version IS NULL OR e.postgres_max_version::float >= p_postgres_version)
           AND (p_extension_type = 'all' OR (p_extension_type = 'contrib' AND e.contrib = true) OR (p_extension_type = 'third_party' AND e.contrib = false))
+        ORDER BY e.contrib, e.extension_image_path IS NULL, e.extension_name
     ) e;
 
     RETURN extensions;
@@ -718,8 +733,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 /*
--- An example of using to get a list of available extensions
--- all or 'contrib'/'third_party' only
+-- An example of using a function to get a list of available extensions (all or 'contrib'/'third_party' only)
 SELECT get_extensions(16);
 SELECT get_extensions(16, 'contrib');
 SELECT get_extensions(16, 'third_party');
