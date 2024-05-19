@@ -480,7 +480,7 @@ SELECT add_secret('password', '<NAME>', '{"username": "<CONTENT>", "password": "
 SELECT add_secret('cloud_secret', '<NAME>', '{"AWS_ACCESS_KEY_ID": "<CONTENT>", "AWS_SECRET_ACCESS_KEY": "<CONTENT>"}', 'my_encryption_key');
 
 -- An example of using a function to get a secret
-SELECT * FROM get_secret(1, 'my_encryption_key');
+SELECT get_secret(1, 'my_encryption_key');
 */
 
 
@@ -622,3 +622,105 @@ $$ LANGUAGE plpgsql;
 -- Trigger to update server_count on changes in servers
 CREATE TRIGGER update_server_count_trigger AFTER INSERT OR UPDATE OR DELETE ON public.servers
     FOR EACH ROW EXECUTE FUNCTION update_server_count();
+
+
+-- Extensions
+CREATE TABLE public.extensions (
+    extension_name text PRIMARY KEY,
+    extension_description text,
+    postgres_min_version text,
+    postgres_max_version text,
+    contrib boolean NOT NULL
+);
+
+COMMENT ON TABLE public.extensions IS 'Table containing available extensions for different Postgres versions';
+COMMENT ON COLUMN public.extensions.extension_name IS 'The name of the extension';
+COMMENT ON COLUMN public.extensions.extension_description IS 'The description of the extension';
+COMMENT ON COLUMN public.extensions.postgres_min_version IS 'The minimum Postgres version where the extension is available';
+COMMENT ON COLUMN public.extensions.postgres_max_version IS 'The maximum Postgres version where the extension is available';
+COMMENT ON COLUMN public.extensions.contrib IS 'Indicates if the extension is a contrib module or third-party extension';
+
+/*
+The table stores information about Postgres extensions, including name, description, supported Postgres version range,
+and whether the extension is a contrib module or third-party.
+postgres_min_version and postgres_max_version define the range of Postgres versions supported by extensions.
+If the postgres_max_version is NULL, it is assumed that the extension is still supported by new versions of Postgres.
+*/
+
+INSERT INTO public.extensions (extension_name, extension_description, postgres_min_version, postgres_max_version, contrib) VALUES
+    ('adminpack', 'administrative functions for PostgreSQL', NULL, NULL, true),
+    ('amcheck', 'functions for verifying relation integrity', NULL, NULL, true),
+    ('autoinc', 'functions for autoincrementing fields', NULL, NULL, true),
+    ('bloom', 'bloom access method - signature file based index', NULL, NULL, true),
+    ('btree_gin', 'support for indexing common datatypes in GIN', NULL, NULL, true),
+    ('btree_gist', 'support for indexing common datatypes in GiST', NULL, NULL, true),
+    ('chkpass', 'data type for auto-encrypted passwords', NULL, '10', true),
+    ('citext', 'data type for case-insensitive character strings', NULL, NULL, true),
+    ('cube', 'data type for multidimensional cubes', NULL, NULL, true),
+    ('dblink', 'connect to other PostgreSQL databases from within a database', NULL, NULL, true),
+    ('dict_int', 'text search dictionary template for integers', NULL, NULL, true),
+    ('dict_xsyn', 'text search dictionary template for extended synonym processing', NULL, NULL, true),
+    ('earthdistance', 'calculate great-circle distances on the surface of the Earth', NULL, NULL, true),
+    ('file_fdw', 'foreign-data wrapper for flat file access', NULL, NULL, true),
+    ('fuzzystrmatch', 'determine similarities and distance between strings', NULL, NULL, true),
+    ('hstore', 'data type for storing sets of (key, value) pairs', NULL, NULL, true),
+    ('insert_username', 'functions for tracking who changed a table', NULL, NULL, true),
+    ('intagg', 'integer aggregator and enumerator (obsolete)', NULL, NULL, true),
+    ('intarray', 'functions, operators, and index support for 1-D arrays of integers', NULL, NULL, true),
+    ('isn', 'data types for international product numbering standards', NULL, NULL, true),
+    ('lo', 'Large Object maintenance', NULL, NULL, true),
+    ('ltree', 'data type for hierarchical tree-like structures', NULL, NULL, true),
+    ('moddatetime', 'functions for tracking last modification time', NULL, NULL, true),
+    ('old_snapshot', 'utilities in support of old_snapshot_threshold', '14', NULL, true),
+    ('pageinspect', 'inspect the contents of database pages at a low level', NULL, NULL, true),
+    ('pg_buffercache', 'examine the shared buffer cache', NULL, NULL, true),
+    ('pg_freespacemap', 'examine the free space map (FSM)', NULL, NULL, true),
+    ('pg_prewarm', 'prewarm relation data', NULL, NULL, true),
+    ('pg_stat_statements', 'track planning and execution statistics of all SQL statements executed', NULL, NULL, true),
+    ('pg_surgery', 'extension to perform surgery on a damaged relation', '14', NULL, true),
+    ('pg_trgm', 'text similarity measurement and index searching based on trigrams', NULL, NULL, true),
+    ('pg_visibility', 'examine the visibility map (VM) and page-level visibility info', NULL, NULL, true),
+    ('pg_walinspect', 'functions to inspect contents of PostgreSQL Write-Ahead Log', '15', NULL, true),
+    ('pgcrypto', 'cryptographic functions', NULL, NULL, true),
+    ('pgrowlocks', 'show row-level locking information', NULL, NULL, true),
+    ('pgstattuple', 'show tuple-level statistics', NULL, NULL, true),
+    ('plpgsql', 'PL/pgSQL procedural language', NULL, NULL, true),
+    ('postgres_fdw', 'foreign-data wrapper for remote PostgreSQL servers', NULL, NULL, true),
+    ('refint', 'functions for implementing referential integrity (obsolete)', NULL, NULL, true),
+    ('seg', 'data type for representing line segments or floating-point intervals', NULL, NULL, true),
+    ('sslinfo', 'information about SSL certificates', NULL, NULL, true),
+    ('tablefunc', 'functions that manipulate whole tables, including crosstab', NULL, NULL, true),
+    ('tcn', 'Triggered change notifications', NULL, NULL, true),
+    ('timetravel', 'functions for implementing time travel', NULL, '11', true),
+    ('tsm_system_rows', 'TABLESAMPLE method which accepts number of rows as a limit', NULL, NULL, true),
+    ('tsm_system_time', 'TABLESAMPLE method which accepts time in milliseconds as a limit', NULL, NULL, true),
+    ('unaccent', 'text search dictionary that removes accents', NULL, NULL, true),
+    ('uuid-ossp', 'generate universally unique identifiers (UUIDs)', NULL, NULL, true),
+    ('xml2', 'XPath querying and XSLT', NULL, NULL, true);
+
+CREATE OR REPLACE FUNCTION get_extensions(p_postgres_version float, p_extension_type text DEFAULT 'all')
+RETURNS json AS $$
+DECLARE
+    extensions json;
+BEGIN
+    SELECT json_agg(row_to_json(e))
+    INTO extensions
+    FROM (
+        SELECT e.extension_name, e.extension_description
+        FROM public.extensions e
+        WHERE (e.postgres_min_version IS NULL OR e.postgres_min_version::float <= p_postgres_version)
+          AND (e.postgres_max_version IS NULL OR e.postgres_max_version::float >= p_postgres_version)
+          AND (p_extension_type = 'all' OR (p_extension_type = 'contrib' AND e.contrib = true) OR (p_extension_type = 'third_party' AND e.contrib = false))
+    ) e;
+
+    RETURN extensions;
+END;
+$$ LANGUAGE plpgsql;
+
+/*
+-- An example of using to get a list of available extensions
+-- all or 'contrib'/'third_party' only
+SELECT get_extensions(16);
+SELECT get_extensions(16, 'contrib');
+SELECT get_extensions(16, 'third_party');
+*/
