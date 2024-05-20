@@ -2,55 +2,43 @@
 
 ### Introduction
 
-This project uses [Flyway](https://flywaydb.org) for versioning and managing database schema changes. Flyway is a database migration tool that enables database version control, much like Git does for source code. It allows to define and track changes in database schema over time, ensuring consistency and reproducibility.
+This project uses [Goose](https://github.com/pressly/goose) for versioning and managing database schema changes. Goose is a database migration tool that enables database version control, much like Git does for source code. It allows defining and tracking changes in the database schema over time, ensuring consistency and reproducibility. The backend service is responsible for applying migrations.
 
-For more information on using Flyway from the command line, see the [Flyway CLI documentation](https://documentation.red-gate.com/flyway/flyway-cli-and-api/usage/command-line).
+For more information on using Goose, see the [Goose documentation](https://github.com/pressly/goose).
 
 ### Database Migrations
-Database migrations are SQL scripts that modify the schema of database. Each migration script should be placed in the `console/db/deploy` directory and follow Flyway's naming convention to ensure they are applied in the correct order.
+Database migrations are SQL scripts that modify the schema of the database. Each migration script should be placed in the `console/db/migrations` directory and follow Goose's naming convention to ensure they are applied in the correct order.
 
 **Naming Convention**
-Flyway uses a specific naming convention to order and apply migrations:
+Goose uses a specific naming convention to order and apply migrations:
 
-- Versioned Migrations: These migrations have a version number and are applied in sequence. The naming format is `V<version>__<description>.sql`
-  - Example: `V2.0.0__initial_scheme_setup.sql`
-- Repeatable Migrations: These migrations do not have a version number and are applied every time they are changed. The naming format is `R__<description>.sql`
+- Versioned Migrations: These migrations have a version number and are applied in sequence. The naming format is `<version>_<description>.sql`
+  - Example: `20240520144338_initial_scheme_setup`
+  - Note: You can use the following command `goose create mogration_file_name sql` to create a new migration file.
 
 Example migrations:
 ```shell
-flyway -url=jdbc:postgresql://<host>:5432/postgres \
-  -user=postgres \
-  -password=<password> \
-  -locations=filesystem:./console/db/deploy \
-  -baselineOnMigrate=true \
-  migrate
+goose -dir ./console/db/migrations postgres \
+"host=<host> port=5432 user=postgres password=<password> dbname=<database>" \
+up
 ```
 
 ### Validating Migrations
 
 To check the status of migrations, run:
 ```shell
-flyway -url=jdbc:postgresql://<host>:5432/postgres \
-  -user=postgres \
-  -password=<password> \
-  -locations=filesystem:./console/db/deploy \
-  info
+goose -dir ./console/db/migrations postgres \
+"host=<host> port=5432 user=postgres password=<password> dbname=<database>" \
+status
 ```
 
 Output example:
 ```
-Flyway OSS Edition 10.13.0 by Redgate
+status
 
-See release notes here: https://rd.gt/416ObMi
-
-Database: jdbc:postgresql://<host>:5432/postgres (PostgreSQL 15.1)
-Schema version: 2.0.0
-
-+-----------+---------+----------------------+------+---------------------+---------+----------+
-| Category  | Version | Description          | Type | Installed On        | State   | Undoable |
-+-----------+---------+----------------------+------+---------------------+---------+----------+
-| Versioned | 2.0.0   | initial scheme setup | SQL  | 2024-05-17 10:08:34 | Success | No       |
-+-----------+---------+----------------------+------+---------------------+---------+----------+
+2024/05/20 17:50:33     Applied At                  Migration
+2024/05/20 17:50:33     =======================================
+2024/05/20 17:50:33     Mon May 20 14:49:26 2024 -- 20240520144338_2.0.0_initial_scheme_setup.sql
 ```
 
 ### Database Schema

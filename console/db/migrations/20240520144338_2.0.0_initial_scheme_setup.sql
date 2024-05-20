@@ -1,3 +1,5 @@
+-- +goose Up
+
 -- Create extensions
 CREATE EXTENSION IF NOT EXISTS moddatetime SCHEMA extensions;
 CREATE EXTENSION IF NOT EXISTS pgcrypto SCHEMA extensions;
@@ -445,7 +447,7 @@ CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.secrets
 
 CREATE INDEX secrets_type_name_idx ON public.secrets (secret_type, secret_name);
 
--- Function to add a secret
+-- +goose StatementBegin
 CREATE OR REPLACE FUNCTION add_secret(p_secret_type text, p_secret_name text, p_secret_value text, p_encryption_key text)
 RETURNS bigint AS $$
 DECLARE
@@ -458,8 +460,9 @@ BEGIN
     RETURN v_inserted_secret_id;
 END;
 $$ LANGUAGE plpgsql;
+-- +goose StatementEnd
 
--- Function to get a secret value
+-- +goose StatementBegin
 CREATE OR REPLACE FUNCTION get_secret(p_secret_id bigint, p_encryption_key text)
 RETURNS json AS $$
 DECLARE
@@ -473,16 +476,15 @@ BEGIN
     RETURN decrypted_value;
 END;
 $$ LANGUAGE plpgsql;
+-- +goose StatementEnd
 
-/*
 -- An example of using a function to insert a secret
-SELECT add_secret('ssh_key', '<NAME>', '{"private_key": "<CONTENT>"}', 'my_encryption_key');
-SELECT add_secret('password', '<NAME>', '{"username": "<CONTENT>", "password": "<CONTENT>"}', 'my_encryption_key');
-SELECT add_secret('cloud_secret', '<NAME>', '{"AWS_ACCESS_KEY_ID": "<CONTENT>", "AWS_SECRET_ACCESS_KEY": "<CONTENT>"}', 'my_encryption_key');
+-- SELECT add_secret('ssh_key', '<NAME>', '{"private_key": "<CONTENT>"}', 'my_encryption_key');
+-- SELECT add_secret('password', '<NAME>', '{"username": "<CONTENT>", "password": "<CONTENT>"}', 'my_encryption_key');
+-- SELECT add_secret('cloud_secret', '<NAME>', '{"AWS_ACCESS_KEY_ID": "<CONTENT>", "AWS_SECRET_ACCESS_KEY": "<CONTENT>"}', 'my_encryption_key');
 
 -- An example of using a function to get a secret
-SELECT get_secret(1, 'my_encryption_key');
-*/
+-- SELECT get_secret(1, 'my_encryption_key');
 
 
 -- Projects
@@ -605,7 +607,7 @@ CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.servers
 
 CREATE INDEX servers_cluster_id_idx ON public.servers (cluster_id);
 
--- Function to update server_count in clusters
+-- +goose StatementBegin
 CREATE OR REPLACE FUNCTION update_server_count()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -619,6 +621,7 @@ BEGIN
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+-- +goose StatementEnd
 
 -- Trigger to update server_count on changes in servers
 CREATE TRIGGER update_server_count_trigger AFTER INSERT OR UPDATE OR DELETE ON public.servers
@@ -643,12 +646,10 @@ COMMENT ON COLUMN public.extensions.postgres_min_version IS 'The minimum Postgre
 COMMENT ON COLUMN public.extensions.postgres_max_version IS 'The maximum Postgres version where the extension is available';
 COMMENT ON COLUMN public.extensions.contrib IS 'Indicates if the extension is a contrib module or third-party extension';
 
-/*
-The table stores information about Postgres extensions, including name, description, supported Postgres version range,
-and whether the extension is a contrib module or third-party.
-postgres_min_version and postgres_max_version define the range of Postgres versions supported by extensions.
-If the postgres_max_version is NULL, it is assumed that the extension is still supported by new versions of Postgres.
-*/
+-- The table stores information about Postgres extensions, including name, description, supported Postgres version range,
+-- and whether the extension is a contrib module or third-party.
+-- postgres_min_version and postgres_max_version define the range of Postgres versions supported by extensions.
+-- If the postgres_max_version is NULL, it is assumed that the extension is still supported by new versions of Postgres.
 
 INSERT INTO public.extensions (extension_name, extension_description, postgres_min_version, postgres_max_version, extension_url, extension_image_path, contrib) VALUES
     ('adminpack', 'administrative functions for PostgreSQL', NULL, NULL, NULL, NULL, true),
@@ -713,6 +714,7 @@ INSERT INTO public.extensions (extension_name, extension_description, postgres_m
     ('pgrouting', 'pgRouting extends the PostGIS / PostgreSQL geospatial database to provide geospatial routing functionality', 10, 16, 'https://pgrouting.org', 'images/pgrouting.png', false),
     ('timescaledb', 'TimescaleDB is an open-source database designed to make SQL scalable for time-series data (Community Edition)', 12, 16, 'https://github.com/timescale/timescaledb', 'images/timescaledb.png', false);
 
+-- +goose StatementBegin
 CREATE OR REPLACE FUNCTION get_extensions(p_postgres_version float, p_extension_type text DEFAULT 'all')
 RETURNS json AS $$
 DECLARE
@@ -732,10 +734,9 @@ BEGIN
     RETURN extensions;
 END;
 $$ LANGUAGE plpgsql;
+-- +goose StatementEnd
 
-/*
 -- An example of using a function to get a list of available extensions (all or 'contrib'/'third_party' only)
-SELECT get_extensions(16);
-SELECT get_extensions(16, 'contrib');
-SELECT get_extensions(16, 'third_party');
-*/
+-- SELECT get_extensions(16);
+-- SELECT get_extensions(16, 'contrib');
+-- SELECT get_extensions(16, 'third_party');
