@@ -740,3 +740,36 @@ $$ LANGUAGE plpgsql;
 -- SELECT get_extensions(16);
 -- SELECT get_extensions(16, 'contrib');
 -- SELECT get_extensions(16, 'third_party');
+
+
+-- +goose Down
+
+-- Drop triggers
+DROP TRIGGER update_server_count_trigger ON public.servers;
+DROP TRIGGER handle_updated_at ON public.servers;
+DROP TRIGGER handle_updated_at ON public.clusters;
+DROP TRIGGER handle_updated_at ON public.environments;
+DROP TRIGGER handle_updated_at ON public.projects;
+DROP TRIGGER handle_updated_at ON public.secrets;
+DROP TRIGGER handle_updated_at ON public.cloud_images;
+DROP TRIGGER handle_updated_at ON public.cloud_volumes;
+DROP TRIGGER handle_updated_at ON public.cloud_instances;
+
+-- Drop functions
+DROP FUNCTION update_server_count;
+DROP FUNCTION get_extensions;
+DROP FUNCTION get_secret;
+DROP FUNCTION add_secret;
+
+-- Drop tables
+DROP TABLE public.extensions;
+DROP TABLE public.servers;
+DROP TABLE public.clusters;
+DROP TABLE public.environments;
+DROP TABLE public.projects;
+DROP TABLE public.secrets;
+DROP TABLE public.cloud_images;
+DROP TABLE public.cloud_volumes;
+DROP TABLE public.cloud_instances;
+DROP TABLE public.cloud_regions;
+DROP TABLE public.cloud_providers;
