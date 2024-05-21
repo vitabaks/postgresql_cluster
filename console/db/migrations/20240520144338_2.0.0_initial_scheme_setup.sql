@@ -8,19 +8,19 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto SCHEMA extensions;
 CREATE TABLE public.cloud_providers (
     provider_name text NOT NULL,
     provider_description text NOT NULL,
-    provider_image_path text
+    provider_image text
 );
 
 COMMENT ON TABLE public.cloud_providers IS 'Table containing cloud providers information';
 COMMENT ON COLUMN public.cloud_providers.provider_name IS 'The name of the cloud provider';
 COMMENT ON COLUMN public.cloud_providers.provider_description IS 'A description of the cloud provider';
 
-INSERT INTO public.cloud_providers (provider_name, provider_description, provider_image_path) VALUES
-    ('aws', 'Amazon Web Services', 'images/aws.png'),
-    ('gcp', 'Google Cloud Platform', 'images/gcp.png'),
-    ('azure', 'Microsoft Azure', 'images/azure.png'),
-    ('digitalocean', 'DigitalOcean', 'images/digitalocean.png'),
-    ('hetzner', 'Hetzner Cloud', 'images/hetzner.png');
+INSERT INTO public.cloud_providers (provider_name, provider_description, provider_image) VALUES
+    ('aws', 'Amazon Web Services', 'aws.png'),
+    ('gcp', 'Google Cloud Platform', 'gcp.png'),
+    ('azure', 'Microsoft Azure', 'azure.png'),
+    ('digitalocean', 'DigitalOcean', 'digitalocean.png'),
+    ('hetzner', 'Hetzner Cloud', 'hetzner.png');
 
 ALTER TABLE ONLY public.cloud_providers
     ADD CONSTRAINT cloud_providers_pkey PRIMARY KEY (provider_name);
@@ -633,7 +633,7 @@ CREATE TABLE public.extensions (
     extension_name text PRIMARY KEY,
     extension_description VARCHAR(150) NOT NULL,
     extension_url text,
-    extension_image_path text,
+    extension_image text,
     postgres_min_version text,
     postgres_max_version text,
     contrib boolean NOT NULL
@@ -651,7 +651,7 @@ COMMENT ON COLUMN public.extensions.contrib IS 'Indicates if the extension is a 
 -- postgres_min_version and postgres_max_version define the range of Postgres versions supported by extensions.
 -- If the postgres_max_version is NULL, it is assumed that the extension is still supported by new versions of Postgres.
 
-INSERT INTO public.extensions (extension_name, extension_description, postgres_min_version, postgres_max_version, extension_url, extension_image_path, contrib) VALUES
+INSERT INTO public.extensions (extension_name, extension_description, postgres_min_version, postgres_max_version, extension_url, extension_image, contrib) VALUES
     ('adminpack', 'administrative functions for PostgreSQL', NULL, NULL, NULL, NULL, true),
     ('amcheck', 'functions for verifying relation integrity', NULL, NULL, NULL, NULL, true),
     ('autoinc', 'functions for autoincrementing fields', NULL, NULL, NULL, NULL, true),
@@ -702,17 +702,17 @@ INSERT INTO public.extensions (extension_name, extension_description, postgres_m
     ('uuid-ossp', 'generate universally unique identifiers (UUIDs)', NULL, NULL, NULL, NULL, true),
     ('xml2', 'XPath querying and XSLT', NULL, NULL, NULL, NULL, true),
     -- Third-Party Extensions
-    ('citus', 'Citus is a PostgreSQL extension that transforms Postgres into a distributed database—so you can achieve high performance at any scale', 11, 16, 'https://github.com/citusdata/citus', 'images/citus.png', false),
-    ('pgaudit', 'The PostgreSQL Audit Extension provides detailed session and/or object audit logging via the standard PostgreSQL logging facility', 10, 16, 'https://github.com/pgaudit/pgaudit', 'images/pgaudit.png', false),
-    ('pg_cron', 'Job scheduler for PostgreSQL', 10, 16, 'https://github.com/citusdata/pg_cron', 'images/pg_cron.png', false),
-    ('pg_partman', 'pg_partman is an extension to create and manage both time-based and number-based table partition sets', 10, 16, 'https://github.com/pgpartman/pg_partman', 'images/pg_partman.png', false),
-    ('pg_repack', 'Reorganize tables in PostgreSQL databases with minimal locks', 10, 16, 'https://github.com/reorg/pg_repack', 'images/pg_repack.png', false),
+    ('citus', 'Citus is a PostgreSQL extension that transforms Postgres into a distributed database—so you can achieve high performance at any scale', 11, 16, 'https://github.com/citusdata/citus', 'citus.png', false),
+    ('pgaudit', 'The PostgreSQL Audit Extension provides detailed session and/or object audit logging via the standard PostgreSQL logging facility', 10, 16, 'https://github.com/pgaudit/pgaudit', 'pgaudit.png', false),
+    ('pg_cron', 'Job scheduler for PostgreSQL', 10, 16, 'https://github.com/citusdata/pg_cron', 'pg_cron.png', false),
+    ('pg_partman', 'pg_partman is an extension to create and manage both time-based and number-based table partition sets', 10, 16, 'https://github.com/pgpartman/pg_partman', 'pg_partman.png', false),
+    ('pg_repack', 'Reorganize tables in PostgreSQL databases with minimal locks', 10, 16, 'https://github.com/reorg/pg_repack', 'pg_repack.png', false),
     ('pg_stat_kcache', 'Gather statistics about physical disk access and CPU consumption done by backends', 10, 16, 'https://github.com/powa-team/pg_stat_kcache', NULL, false),
     ('pg_wait_sampling', 'Sampling based statistics of wait events', 10, 16, 'https://github.com/postgrespro/pg_wait_sampling', NULL, false),
-    ('pgvector', 'Open-source vector similarity search for Postgres (vector data type and ivfflat and hnsw access methods)', 11, 16, 'https://github.com/pgvector/pgvector', 'images/pgvector.png', false),
-    ('postgis', 'PostGIS extends the capabilities of the PostgreSQL relational database by adding support for storing, indexing, and querying geospatial data', 10, 16, 'https://postgis.net', 'images/postgis.png', false),
-    ('pgrouting', 'pgRouting extends the PostGIS / PostgreSQL geospatial database to provide geospatial routing functionality', 10, 16, 'https://pgrouting.org', 'images/pgrouting.png', false),
-    ('timescaledb', 'TimescaleDB is an open-source database designed to make SQL scalable for time-series data (Community Edition)', 12, 16, 'https://github.com/timescale/timescaledb', 'images/timescaledb.png', false);
+    ('pgvector', 'Open-source vector similarity search for Postgres (vector data type and ivfflat and hnsw access methods)', 11, 16, 'https://github.com/pgvector/pgvector', 'pgvector.png', false),
+    ('postgis', 'PostGIS extends the capabilities of the PostgreSQL relational database by adding support for storing, indexing, and querying geospatial data', 10, 16, 'https://postgis.net', 'postgis.png', false),
+    ('pgrouting', 'pgRouting extends the PostGIS / PostgreSQL geospatial database to provide geospatial routing functionality', 10, 16, 'https://pgrouting.org', 'pgrouting.png', false),
+    ('timescaledb', 'TimescaleDB is an open-source database designed to make SQL scalable for time-series data (Community Edition)', 12, 16, 'https://github.com/timescale/timescaledb', 'timescaledb.png', false);
 
 -- +goose StatementBegin
 CREATE OR REPLACE FUNCTION get_extensions(p_postgres_version float, p_extension_type text DEFAULT 'all')
@@ -723,12 +723,12 @@ BEGIN
     SELECT json_agg(row_to_json(e))
     INTO extensions
     FROM (
-        SELECT e.extension_name, e.extension_description, e.extension_url, e.extension_image_path, e.postgres_min_version, e.postgres_max_version, e.contrib
+        SELECT e.extension_name, e.extension_description, e.extension_url, e.extension_image, e.postgres_min_version, e.postgres_max_version, e.contrib
         FROM public.extensions e
         WHERE (e.postgres_min_version IS NULL OR e.postgres_min_version::float <= p_postgres_version)
           AND (e.postgres_max_version IS NULL OR e.postgres_max_version::float >= p_postgres_version)
           AND (p_extension_type = 'all' OR (p_extension_type = 'contrib' AND e.contrib = true) OR (p_extension_type = 'third_party' AND e.contrib = false))
-        ORDER BY e.contrib, e.extension_image_path IS NULL, e.extension_name
+        ORDER BY e.contrib, e.extension_image IS NULL, e.extension_name
     ) e;
 
     RETURN extensions;
