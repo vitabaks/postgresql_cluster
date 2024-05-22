@@ -307,7 +307,6 @@ ALTER TABLE ONLY public.cloud_instances
 
 -- this trigger will set the "updated_at" column to the current timestamp for every update
 CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.cloud_instances
-    FOR EACH ROW EXECUTE FUNCTION moddatetime (updated_at);
     FOR EACH ROW EXECUTE FUNCTION extensions.moddatetime (updated_at);
 
 
