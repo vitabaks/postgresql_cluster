@@ -308,6 +308,7 @@ ALTER TABLE ONLY public.cloud_instances
 -- this trigger will set the "updated_at" column to the current timestamp for every update
 CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.cloud_instances
     FOR EACH ROW EXECUTE FUNCTION moddatetime (updated_at);
+    FOR EACH ROW EXECUTE FUNCTION extensions.moddatetime (updated_at);
 
 
 -- cloud_volumes
@@ -356,7 +357,7 @@ ALTER TABLE ONLY public.cloud_volumes
     ADD CONSTRAINT cloud_volumes_cloud_provider_fkey FOREIGN KEY (cloud_provider) REFERENCES public.cloud_providers(provider_name);
 
 CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.cloud_volumes
-    FOR EACH ROW EXECUTE FUNCTION moddatetime (updated_at);
+    FOR EACH ROW EXECUTE FUNCTION extensions.moddatetime (updated_at);
 
 
 -- cloud_images
@@ -422,7 +423,7 @@ ALTER TABLE ONLY public.cloud_images
     ADD CONSTRAINT cloud_images_cloud_provider_fkey FOREIGN KEY (cloud_provider) REFERENCES public.cloud_providers(provider_name);
 
 CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.cloud_images
-    FOR EACH ROW EXECUTE FUNCTION moddatetime (updated_at);
+    FOR EACH ROW EXECUTE FUNCTION extensions.moddatetime (updated_at);
 
 
 -- Secrets
@@ -443,7 +444,7 @@ COMMENT ON COLUMN public.secrets.created_at IS 'The timestamp when the secret wa
 COMMENT ON COLUMN public.secrets.updated_at IS 'The timestamp when the secret was last updated';
 
 CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.secrets
-    FOR EACH ROW EXECUTE FUNCTION moddatetime (updated_at);
+    FOR EACH ROW EXECUTE FUNCTION extensions.moddatetime (updated_at);
 
 CREATE INDEX secrets_type_name_idx ON public.secrets (secret_type, secret_name);
 
@@ -503,7 +504,7 @@ COMMENT ON COLUMN public.projects.created_at IS 'The timestamp when the project 
 COMMENT ON COLUMN public.projects.updated_at IS 'The timestamp when the project was last updated';
 
 CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.projects
-    FOR EACH ROW EXECUTE FUNCTION moddatetime (updated_at);
+    FOR EACH ROW EXECUTE FUNCTION extensions.moddatetime (updated_at);
 
 INSERT INTO public.projects (project_name) VALUES ('default');
 
@@ -524,7 +525,7 @@ COMMENT ON COLUMN public.environments.created_at IS 'The timestamp when the envi
 COMMENT ON COLUMN public.environments.updated_at IS 'The timestamp when the environment was last updated';
 
 CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.environments
-    FOR EACH ROW EXECUTE FUNCTION moddatetime (updated_at);
+    FOR EACH ROW EXECUTE FUNCTION extensions.moddatetime (updated_at);
 
 CREATE INDEX environments_name_idx ON public.environments (environment_name);
 
@@ -565,7 +566,7 @@ COMMENT ON COLUMN public.clusters.created_at IS 'The timestamp when the cluster 
 COMMENT ON COLUMN public.clusters.updated_at IS 'The timestamp when the cluster was last updated';
 
 CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.clusters
-    FOR EACH ROW EXECUTE FUNCTION moddatetime (updated_at);
+    FOR EACH ROW EXECUTE FUNCTION extensions.moddatetime (updated_at);
 
 CREATE INDEX clusters_id_project_id_idx ON public.clusters (cluster_id, project_id);
 CREATE INDEX clusters_name_idx ON public.clusters (cluster_name);
@@ -603,7 +604,7 @@ COMMENT ON COLUMN public.servers.created_at IS 'The timestamp when the server wa
 COMMENT ON COLUMN public.servers.updated_at IS 'The timestamp when the server was last updated';
 
 CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.servers
-    FOR EACH ROW EXECUTE FUNCTION moddatetime (updated_at);
+    FOR EACH ROW EXECUTE FUNCTION extensions.moddatetime (updated_at);
 
 CREATE INDEX servers_cluster_id_idx ON public.servers (cluster_id);
 
