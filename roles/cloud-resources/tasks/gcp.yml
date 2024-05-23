@@ -226,13 +226,13 @@
               disk_name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-system"
               source_image: "{{ server_image }}"
               disk_size_gb: "{{ system_volume_size | default('80') }}"  # system disk size
-              type: "{{ system_volume_type | default('pd-ssd', true) }}"
+              disk_type: "{{ system_volume_type | default('pd-ssd', true) }}"
           - device_name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-storage"
             auto_delete: true
             initialize_params:
               disk_name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-storage"
               disk_size_gb: "{{ volume_size | int }}"
-              type: "{{ volume_type | default('pd-ssd', true) }}"
+              disk_type: "{{ volume_type | default('pd-ssd', true) }}"
         network_interfaces:
           - network:
               selfLink: "global/networks/{{ gcp_network_name }}"
