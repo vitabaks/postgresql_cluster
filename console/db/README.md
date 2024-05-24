@@ -71,6 +71,9 @@ status
 - `extensions`
   - The table stores information about Postgres extensions, including name, description, supported Postgres version range, and whether the extension is a contrib module or third-party.
   - 'postgres_min_version' and 'postgres_max_version' define the range of Postgres versions supported by extensions. If the postgres_max_version is NULL, it is assumed that the extension is still supported by new versions of Postgres.
+- `operations`
+   - Table containing logs of operations performed on cluster.
+     - Note: The migration includes a DO block that checks for the presence of the timescaledb extension. If the extension is installed, the operations table is converted into a hypertable with monthly partitioning. Additionally, the block checks the timescaledb license. If the license is a Community license (timescale), a hypertable compression policy is created for partitions older than one month.
 
 #### Functions:
 - `update_server_count`
