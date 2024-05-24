@@ -631,7 +631,7 @@ CREATE TRIGGER update_server_count_trigger AFTER INSERT OR UPDATE OR DELETE ON p
 -- Extensions
 CREATE TABLE public.extensions (
     extension_name text PRIMARY KEY,
-    extension_description VARCHAR(150) NOT NULL,
+    extension_description varchar(150) NOT NULL,
     extension_url text,
     extension_image text,
     postgres_min_version text,
@@ -742,6 +742,64 @@ $$ LANGUAGE plpgsql;
 -- SELECT get_extensions(16, 'third_party');
 
 
+-- Operations
+CREATE TABLE public.operations (
+    id bigint NOT NULL,
+    cluster_id bigint REFERENCES public.clusters(cluster_id),
+    operation_type text NOT NULL,
+    operation_status text NOT NULL CHECK (operation_status IN ('in_progress', 'success', 'failed')),
+    operation_log text NOT NULL,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp with time zone
+);
+
+COMMENT ON TABLE public.operations IS 'Table containing logs of operations performed on clusters';
+COMMENT ON COLUMN public.operations.id IS 'The ID of the operation from the backend';
+COMMENT ON COLUMN public.operations.operation_type IS 'The type of operation performed (e.g., deploy, edit, update, restart, delete, etc.)';
+COMMENT ON COLUMN public.operations.operation_status IS 'The status of the operation (in_progress, success, failed)';
+COMMENT ON COLUMN public.operations.operation_log IS 'The log details of the operation';
+COMMENT ON COLUMN public.operations.cluster_id IS 'The ID of the cluster related to the operation';
+COMMENT ON COLUMN public.operations.created_at IS 'The timestamp when the operation was created';
+COMMENT ON COLUMN public.operations.updated_at IS 'The timestamp when the operation was last updated';
+
+CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.operations
+    FOR EACH ROW EXECUTE FUNCTION extensions.moddatetime (updated_at);
+
+-- add created_at as part of the primary key to be able to create a hypertable
+ALTER TABLE ONLY public.operations
+    ADD CONSTRAINT operations_pkey PRIMARY KEY (created_at, id);
+
+CREATE INDEX operations_type_status_idx ON public.operations (operation_type, operation_status, created_at, id);
+
+-- Check if the timescaledb extension is available and create hypertable if it is
+-- +goose StatementBegin
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'timescaledb') THEN
+        -- Convert the operations table to a hypertable
+        PERFORM create_hypertable('public.operations', 'created_at', chunk_time_interval => interval '1 month');
+        
+        -- Check if the license allows compression policy
+        IF current_setting('timescaledb.license', true) = 'timescale' THEN
+            -- Enable compression on the operations hypertable, segmenting by cluster_id
+            ALTER TABLE public.operations SET (
+                timescaledb.compress,
+                timescaledb.compress_orderby = 'created_at DESC, id DESC, operation_type, operation_status',
+                timescaledb.compress_segmentby = 'cluster_id'
+            );
+            -- ompressing chunks older than one month
+            PERFORM add_compression_policy('public.operations', interval '1 month');
+        ELSE
+            RAISE NOTICE 'Timescaledb license does not support compression policy. Skipping compression setup.';
+        END IF;
+    ELSE
+        RAISE NOTICE 'Timescaledb extension is not available. Skipping hypertable and compression setup.';
+    END IF;
+END
+$$;
+-- +goose StatementEnd
+
+
 -- +goose Down
 
 -- Drop triggers
@@ -754,6 +812,7 @@ DROP TRIGGER handle_updated_at ON public.secrets;
 DROP TRIGGER handle_updated_at ON public.cloud_images;
 DROP TRIGGER handle_updated_at ON public.cloud_volumes;
 DROP TRIGGER handle_updated_at ON public.cloud_instances;
+DROP TRIGGER handle_updated_at ON public.operations;
 
 -- Drop functions
 DROP FUNCTION update_server_count;
@@ -762,6 +821,7 @@ DROP FUNCTION get_secret;
 DROP FUNCTION add_secret;
 
 -- Drop tables
+DROP TABLE public.operations;
 DROP TABLE public.extensions;
 DROP TABLE public.servers;
 DROP TABLE public.clusters;
