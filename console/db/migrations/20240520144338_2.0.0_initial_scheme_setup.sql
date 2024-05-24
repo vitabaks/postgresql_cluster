@@ -748,7 +748,7 @@ CREATE TABLE public.operations (
     cluster_id bigint REFERENCES public.clusters(cluster_id),
     operation_type text NOT NULL,
     operation_status text NOT NULL CHECK (operation_status IN ('in_progress', 'success', 'failed')),
-    operation_log text NOT NULL,
+    operation_log text,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp with time zone
 );
@@ -787,7 +787,7 @@ BEGIN
                 timescaledb.compress_orderby = 'created_at DESC, id DESC, operation_type, operation_status',
                 timescaledb.compress_segmentby = 'cluster_id'
             );
-            -- ompressing chunks older than one month
+            -- Compressing chunks older than one month
             PERFORM add_compression_policy('public.operations', interval '1 month');
         ELSE
             RAISE NOTICE 'Timescaledb license does not support compression policy. Skipping compression setup.';
