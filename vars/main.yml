@@ -493,7 +493,7 @@ wal_g_cron_jobs:
     user: "postgres"
     file: /etc/cron.d/walg
     minute: "00"
-    hour: "3"
+    hour: "{{ WALG_BACKUP_HOUR | default('3') }}"
     day: "*"
     month: "*"
     weekday: "*"
@@ -581,7 +581,7 @@ pgbackrest_cron_jobs:
     file: "/etc/cron.d/pgbackrest-{{ patroni_cluster_name }}"
     user: "postgres"
     minute: "00"
-    hour: "3"
+    hour: "{{ PGBACKREST_BACKUP_HOUR | default('3') }}"
     day: "*"
     month: "*"
     weekday: "0"
