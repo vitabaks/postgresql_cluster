@@ -425,68 +425,6 @@ CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.cloud_images
     FOR EACH ROW EXECUTE FUNCTION extensions.moddatetime (updated_at);
 
 
--- Secrets
-CREATE TABLE public.secrets (
-    secret_id bigserial PRIMARY KEY,
-    secret_type text NOT NULL,
-    secret_name text NOT NULL UNIQUE,
-    secret_value bytea NOT NULL,  -- Encrypted data
-    created_at timestamp DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp
-);
-
-COMMENT ON TABLE public.secrets IS 'Table containing secrets for accessing cloud providers and servers';
-COMMENT ON COLUMN public.secrets.secret_type IS 'The type of the secret (e.g., cloud_secret, ssh_key, password)';
-COMMENT ON COLUMN public.secrets.secret_name IS 'The name of the secret';
-COMMENT ON COLUMN public.secrets.secret_value IS 'The encrypted value of the secret';
-COMMENT ON COLUMN public.secrets.created_at IS 'The timestamp when the secret was created';
-COMMENT ON COLUMN public.secrets.updated_at IS 'The timestamp when the secret was last updated';
-
-CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.secrets
-    FOR EACH ROW EXECUTE FUNCTION extensions.moddatetime (updated_at);
-
-CREATE INDEX secrets_type_name_idx ON public.secrets (secret_type, secret_name);
-
--- +goose StatementBegin
-CREATE OR REPLACE FUNCTION add_secret(p_secret_type text, p_secret_name text, p_secret_value text, p_encryption_key text)
-RETURNS bigint AS $$
-DECLARE
-    v_inserted_secret_id bigint;
-BEGIN
-    INSERT INTO public.secrets (secret_type, secret_name, secret_value)
-    VALUES (p_secret_type, p_secret_name, pgp_sym_encrypt(p_secret_value, p_encryption_key, 'cipher-algo=aes256'))
-    RETURNING secret_id INTO v_inserted_secret_id;
-    
-    RETURN v_inserted_secret_id;
-END;
-$$ LANGUAGE plpgsql;
--- +goose StatementEnd
-
--- +goose StatementBegin
-CREATE OR REPLACE FUNCTION get_secret(p_secret_id bigint, p_encryption_key text)
-RETURNS json AS $$
-DECLARE
-    decrypted_value json;
-BEGIN
-    SELECT pgp_sym_decrypt(secret_value, p_encryption_key)::json
-    INTO decrypted_value
-    FROM public.secrets
-    WHERE secret_id = p_secret_id;
-    
-    RETURN decrypted_value;
-END;
-$$ LANGUAGE plpgsql;
--- +goose StatementEnd
-
--- An example of using a function to insert a secret
--- SELECT add_secret('ssh_key', '<NAME>', '{"private_key": "<CONTENT>"}', 'my_encryption_key');
--- SELECT add_secret('password', '<NAME>', '{"username": "<CONTENT>", "password": "<CONTENT>"}', 'my_encryption_key');
--- SELECT add_secret('cloud_secret', '<NAME>', '{"AWS_ACCESS_KEY_ID": "<CONTENT>", "AWS_SECRET_ACCESS_KEY": "<CONTENT>"}', 'my_encryption_key');
-
--- An example of using a function to get a secret
--- SELECT get_secret(1, 'my_encryption_key');
-
-
 -- Projects
 CREATE TABLE public.projects (
     project_id bigserial PRIMARY KEY,
@@ -533,6 +471,71 @@ INSERT INTO public.environments (environment_name) VALUES ('staging');
 INSERT INTO public.environments (environment_name) VALUES ('test');
 INSERT INTO public.environments (environment_name) VALUES ('dev');
 INSERT INTO public.environments (environment_name) VALUES ('benchmarking');
+
+
+-- Secrets
+CREATE TABLE public.secrets (
+    secret_id bigserial PRIMARY KEY,
+    project_id bigint REFERENCES public.projects(project_id),
+    secret_type text NOT NULL,
+    secret_name text NOT NULL UNIQUE,
+    secret_value bytea NOT NULL,  -- Encrypted data
+    created_at timestamp DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp
+);
+
+COMMENT ON TABLE public.secrets IS 'Table containing secrets for accessing cloud providers and servers';
+COMMENT ON COLUMN public.secrets.project_id IS 'The ID of the project to which the secret belongs';
+COMMENT ON COLUMN public.secrets.secret_type IS 'The type of the secret (e.g., cloud_secret, ssh_key, password)';
+COMMENT ON COLUMN public.secrets.secret_name IS 'The name of the secret';
+COMMENT ON COLUMN public.secrets.secret_value IS 'The encrypted value of the secret';
+COMMENT ON COLUMN public.secrets.created_at IS 'The timestamp when the secret was created';
+COMMENT ON COLUMN public.secrets.updated_at IS 'The timestamp when the secret was last updated';
+
+CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.secrets
+    FOR EACH ROW EXECUTE FUNCTION extensions.moddatetime (updated_at);
+
+CREATE INDEX secrets_type_name_idx ON public.secrets (secret_type, secret_name);
+CREATE INDEX secrets_id_project_idx ON public.secrets (secret_id, project_id);
+
+-- +goose StatementBegin
+CREATE OR REPLACE FUNCTION add_secret(p_project_id bigint, p_secret_type text, p_secret_name text, p_secret_value text, p_encryption_key text)
+RETURNS bigint AS $$
+DECLARE
+    v_inserted_secret_id bigint;
+BEGIN
+    INSERT INTO public.secrets (project_id, secret_type, secret_name, secret_value)
+    VALUES (p_project_id, p_secret_type, p_secret_name, pgp_sym_encrypt(p_secret_value, p_encryption_key, 'cipher-algo=aes256'))
+    RETURNING secret_id INTO v_inserted_secret_id;
+    
+    RETURN v_inserted_secret_id;
+END;
+$$ LANGUAGE plpgsql;
+-- +goose StatementEnd
+
+-- +goose StatementBegin
+CREATE OR REPLACE FUNCTION get_secret(p_project_id bigint, p_secret_id bigint, p_encryption_key text)
+RETURNS json AS $$
+DECLARE
+    decrypted_value json;
+BEGIN
+    SELECT pgp_sym_decrypt(secret_value, p_encryption_key)::json
+    INTO decrypted_value
+    FROM public.secrets
+    WHERE secret_id = p_secret_id AND project_id = p_project_id;
+    
+    RETURN decrypted_value;
+END;
+$$ LANGUAGE plpgsql;
+-- +goose StatementEnd
+
+-- An example of using a function to insert a secret
+-- SELECT add_secret(1, 'ssh_key', '<NAME>', '{"private_key": "<CONTENT>"}', 'my_encryption_key');
+-- SELECT add_secret(1, 'password', '<NAME>', '{"username": "<CONTENT>", "password": "<CONTENT>"}', 'my_encryption_key');
+-- SELECT add_secret(1, 'cloud_secret', '<NAME>', '{"AWS_ACCESS_KEY_ID": "<CONTENT>", "AWS_SECRET_ACCESS_KEY": "<CONTENT>"}', 'my_encryption_key');
+
+-- An example of using a function to get a secret
+-- SELECT get_secret(1, 1, 'my_encryption_key');
 
 
 -- Clusters

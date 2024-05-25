@@ -81,13 +81,14 @@ status
     - Note: This function calculates the number of servers associated with a specific cluster and updates the server_count accordingly. The trigger `update_server_count_trigger` is automatically executed whenever there are INSERT, UPDATE, or DELETE operations on the servers table. This ensures that the server_count in the clusters table is always accurate and up-to-date.
 - `add_secret`
   - Function to add a secret.
-    - Usage examples:
-      - `SELECT add_secret('ssh_key', '<NAME>', '{"private_key": "<CONTENT>"}', 'my_encryption_key');`
-      - `SELECT add_secret('password', '<NAME>', '{"username": "<CONTENT>", "password": "<CONTENT>"}', 'my_encryption_key');`
-      - `SELECT add_secret('cloud_secret', 'AWS', '{"AWS_ACCESS_KEY_ID": "<CONTENT>", "AWS_SECRET_ACCESS_KEY": "<CONTENT>"}', 'my_encryption_key');`
+    - Usage examples (project_id, secret_type, secret_name, secret_value, encryption_key):
+      - `SELECT add_secret(1, 'ssh_key', '<NAME>', '{"private_key": "<CONTENT>"}', 'my_encryption_key');`
+      - `SELECT add_secret(1, 'password', '<NAME>', '{"username": "<CONTENT>", "password": "<CONTENT>"}', 'my_encryption_key');`
+      - `SELECT add_secret(1, 'cloud_secret', '<NAME>', '{"AWS_ACCESS_KEY_ID": "<CONTENT>", "AWS_SECRET_ACCESS_KEY": "<CONTENT>"}', 'my_encryption_key');`
 - `get_secret`
   - Function to get a secret value in JSON format.
-    - Usage example: `SELECT get_secret(1, 'my_encryption_key');`
+    - Usage example (project_id, secret_id, encryption_key):
+      - `SELECT get_secret(1, 1, 'my_encryption_key');`
 - `get_extensions`
   - Function to get a list of available extensions in JSON format. All or 'contrib'/'third_party' only (optional).
     - Usage examples:
