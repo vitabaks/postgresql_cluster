@@ -429,7 +429,7 @@ CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.cloud_images
 CREATE TABLE public.secrets (
     secret_id bigserial PRIMARY KEY,
     secret_type text NOT NULL,
-    secret_name text NOT NULL,
+    secret_name text NOT NULL UNIQUE,
     secret_value bytea NOT NULL,  -- Encrypted data
     created_at timestamp DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp
