@@ -635,6 +635,7 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER update_server_count_trigger AFTER INSERT OR UPDATE OR DELETE ON public.servers
     FOR EACH ROW EXECUTE FUNCTION update_server_count();
 
+
 -- Views
 CREATE VIEW public.v_secrets_list AS
 SELECT
@@ -665,6 +666,7 @@ LEFT JOIN LATERAL (
 ) srv ON true
 GROUP BY
     s.project_id, s.secret_id, s.secret_name, s.secret_type, s.created_at, s.updated_at;
+
 
 -- Extensions
 CREATE TABLE public.extensions (
