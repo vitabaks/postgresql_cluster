@@ -636,7 +636,7 @@ CREATE TRIGGER update_server_count_trigger AFTER INSERT OR UPDATE OR DELETE ON p
     FOR EACH ROW EXECUTE FUNCTION update_server_count();
 
 
--- Views
+-- Secrets view
 CREATE VIEW public.v_secrets_list AS
 SELECT
     s.project_id,
@@ -864,6 +864,7 @@ JOIN
     public.projects pr ON op.project_id = pr.project_id
 JOIN 
     public.environments env ON cl.environment_id = env.environment_id;
+
 
 -- +goose Down
 
