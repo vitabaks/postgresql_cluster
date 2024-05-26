@@ -75,6 +75,10 @@ status
    - Table containing logs of operations performed on cluster.
      - Note: The migration includes a DO block that checks for the presence of the timescaledb extension. If the extension is installed, the operations table is converted into a hypertable with monthly partitioning. Additionally, the block checks the timescaledb license. If the license is a Community license (timescale), a hypertable compression policy is created for partitions older than one month.
 
+#### Views:
+- `v_secrets_list`
+  - Displays a list of secrets (without revealing secret values) along with additional metadata such as creation and update timestamps. It also includes information about whether each secret is in use and, if so, provides details on which clusters and servers are utilizing the secret.
+
 #### Functions:
 - `update_server_count`
   - Function to update the server_count column in the clusters table.

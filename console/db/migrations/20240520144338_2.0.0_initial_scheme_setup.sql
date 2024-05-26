@@ -572,6 +572,7 @@ CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.clusters
 
 CREATE INDEX clusters_id_project_id_idx ON public.clusters (cluster_id, project_id);
 CREATE INDEX clusters_name_idx ON public.clusters (cluster_name);
+CREATE INDEX clusters_secret_id_idx ON public.clusters (secret_id);
 
 
 -- Cluster servers
@@ -609,6 +610,7 @@ CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.servers
     FOR EACH ROW EXECUTE FUNCTION extensions.moddatetime (updated_at);
 
 CREATE INDEX servers_cluster_id_idx ON public.servers (cluster_id);
+CREATE INDEX servers_secret_id_idx ON public.servers (secret_id);
 
 -- +goose StatementBegin
 CREATE OR REPLACE FUNCTION update_server_count()
@@ -630,6 +632,36 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER update_server_count_trigger AFTER INSERT OR UPDATE OR DELETE ON public.servers
     FOR EACH ROW EXECUTE FUNCTION update_server_count();
 
+-- Views
+CREATE VIEW public.v_secrets_list AS
+SELECT
+    s.project_id,
+    s.secret_id,
+    s.secret_name,
+    s.secret_type,
+    s.created_at,
+    s.updated_at,
+    CASE 
+        WHEN COUNT(c.secret_id) > 0 OR COUNT(srv.secret_id) > 0 THEN true
+        ELSE false
+    END AS used,
+    COALESCE(string_agg(DISTINCT c.cluster_name, ', '), '') AS used_by_clusters,
+    COALESCE(string_agg(DISTINCT srv.server_name, ', '), '') AS used_by_servers
+FROM
+    public.secrets s
+LEFT JOIN LATERAL (
+    SELECT cluster_name, secret_id 
+    FROM public.clusters 
+    WHERE secret_id = s.secret_id AND project_id = s.project_id
+) c ON true
+LEFT JOIN LATERAL (
+    SELECT srv.server_name, srv.secret_id 
+    FROM public.servers srv
+    JOIN public.clusters cl ON srv.cluster_id = cl.cluster_id
+    WHERE srv.secret_id = s.secret_id AND cl.project_id = s.project_id
+) srv ON true
+GROUP BY
+    s.project_id, s.secret_id, s.secret_name, s.secret_type, s.created_at, s.updated_at;
 
 -- Extensions
 CREATE TABLE public.extensions (
@@ -823,14 +855,17 @@ DROP FUNCTION get_extensions;
 DROP FUNCTION get_secret;
 DROP FUNCTION add_secret;
 
+-- Drop views
+DROP VIEW public.v_secrets_list;
+
 -- Drop tables
 DROP TABLE public.operations;
 DROP TABLE public.extensions;
 DROP TABLE public.servers;
 DROP TABLE public.clusters;
+DROP TABLE public.secrets;
 DROP TABLE public.environments;
 DROP TABLE public.projects;
-DROP TABLE public.secrets;
 DROP TABLE public.cloud_images;
 DROP TABLE public.cloud_volumes;
 DROP TABLE public.cloud_instances;
