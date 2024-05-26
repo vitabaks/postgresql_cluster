@@ -497,6 +497,7 @@ CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.secrets
 
 CREATE INDEX secrets_type_name_idx ON public.secrets (secret_type, secret_name);
 CREATE INDEX secrets_id_project_idx ON public.secrets (secret_id, project_id);
+CREATE INDEX secrets_project_idx ON public.secrets (project_id);
 
 -- +goose StatementBegin
 CREATE OR REPLACE FUNCTION add_secret(p_project_id bigint, p_secret_type text, p_secret_name text, p_secret_value text, p_encryption_key text)
@@ -571,6 +572,8 @@ CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.clusters
     FOR EACH ROW EXECUTE FUNCTION extensions.moddatetime (updated_at);
 
 CREATE INDEX clusters_id_project_id_idx ON public.clusters (cluster_id, project_id);
+CREATE INDEX clusters_project_idx ON public.clusters (project_id);
+CREATE INDEX clusters_environment_idx ON public.clusters (environment_id);
 CREATE INDEX clusters_name_idx ON public.clusters (cluster_name);
 CREATE INDEX clusters_secret_id_idx ON public.clusters (secret_id);
 
@@ -805,6 +808,7 @@ ALTER TABLE ONLY public.operations
     ADD CONSTRAINT operations_pkey PRIMARY KEY (created_at, id);
 
 CREATE INDEX operations_type_status_idx ON public.operations (operation_type, operation_status, created_at, id);
+CREATE INDEX operations_cluster_id_idx ON public.operations (cluster_id);
 
 -- Check if the timescaledb extension is available and create hypertable if it is
 -- +goose StatementBegin
