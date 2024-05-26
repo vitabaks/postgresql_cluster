@@ -785,6 +785,7 @@ $$ LANGUAGE plpgsql;
 -- Operations
 CREATE TABLE public.operations (
     id bigint NOT NULL,
+    project_id bigint REFERENCES public.projects(project_id),
     cluster_id bigint REFERENCES public.clusters(cluster_id),
     operation_type text NOT NULL,
     operation_status text NOT NULL CHECK (operation_status IN ('in_progress', 'success', 'failed')),
@@ -795,10 +796,11 @@ CREATE TABLE public.operations (
 
 COMMENT ON TABLE public.operations IS 'Table containing logs of operations performed on clusters';
 COMMENT ON COLUMN public.operations.id IS 'The ID of the operation from the backend';
+COMMENT ON COLUMN public.clusters.project_id IS 'The ID of the project to which the operation belongs';
+COMMENT ON COLUMN public.operations.cluster_id IS 'The ID of the cluster related to the operation';
 COMMENT ON COLUMN public.operations.operation_type IS 'The type of operation performed (e.g., deploy, edit, update, restart, delete, etc.)';
 COMMENT ON COLUMN public.operations.operation_status IS 'The status of the operation (in_progress, success, failed)';
 COMMENT ON COLUMN public.operations.operation_log IS 'The log details of the operation';
-COMMENT ON COLUMN public.operations.cluster_id IS 'The ID of the cluster related to the operation';
 COMMENT ON COLUMN public.operations.created_at IS 'The timestamp when the operation was created';
 COMMENT ON COLUMN public.operations.updated_at IS 'The timestamp when the operation was last updated';
 
@@ -809,8 +811,10 @@ CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.operations
 ALTER TABLE ONLY public.operations
     ADD CONSTRAINT operations_pkey PRIMARY KEY (created_at, id);
 
-CREATE INDEX operations_type_status_idx ON public.operations (operation_type, operation_status, created_at, id);
+CREATE INDEX operations_project_id_idx ON public.operations (project_id);
 CREATE INDEX operations_cluster_id_idx ON public.operations (cluster_id);
+CREATE INDEX operations_project_cluster_id_idx ON public.operations (project_id, cluster_id, created_at);
+CREATE INDEX operations_project_cluster_id_operation_type_idx ON public.operations (project_id, cluster_id, operation_type, created_at);
 
 -- Check if the timescaledb extension is available and create hypertable if it is
 -- +goose StatementBegin
@@ -822,11 +826,11 @@ BEGIN
         
         -- Check if the license allows compression policy
         IF current_setting('timescaledb.license', true) = 'timescale' THEN
-            -- Enable compression on the operations hypertable, segmenting by cluster_id
+            -- Enable compression on the operations hypertable, segmenting by project_id and cluster_id
             ALTER TABLE public.operations SET (
                 timescaledb.compress,
                 timescaledb.compress_orderby = 'created_at DESC, id DESC, operation_type, operation_status',
-                timescaledb.compress_segmentby = 'cluster_id'
+                timescaledb.compress_segmentby = 'project_id, cluster_id'
             );
             -- Compressing chunks older than one month
             PERFORM add_compression_policy('public.operations', interval '1 month');
