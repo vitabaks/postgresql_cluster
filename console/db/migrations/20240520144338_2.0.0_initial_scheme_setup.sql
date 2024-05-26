@@ -844,6 +844,26 @@ END
 $$;
 -- +goose StatementEnd
 
+CREATE OR REPLACE VIEW public.v_operations AS
+SELECT 
+    op.project_id,
+    op.cluster_id,
+    op.id,
+    op.created_at AS "started",
+    op.updated_at AS "finished",
+    op.operation_type AS "type",
+    op.operation_status AS "status",
+    cl.cluster_name AS "cluster",
+    env.environment_name AS "environment",
+    op.operation_log AS "log"
+FROM 
+    public.operations op
+JOIN 
+    public.clusters cl ON op.cluster_id = cl.cluster_id
+JOIN 
+    public.projects pr ON op.project_id = pr.project_id
+JOIN 
+    public.environments env ON cl.environment_id = env.environment_id;
 
 -- +goose Down
 
@@ -866,6 +886,7 @@ DROP FUNCTION get_secret;
 DROP FUNCTION add_secret;
 
 -- Drop views
+DROP VIEW public.v_operations;
 DROP VIEW public.v_secrets_list;
 
 -- Drop tables

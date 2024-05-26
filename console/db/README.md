@@ -78,6 +78,8 @@ status
 #### Views:
 - `v_secrets_list`
   - Displays a list of secrets (without revealing secret values) along with additional metadata such as creation and update timestamps. It also includes information about whether each secret is in use and, if so, provides details on which clusters and servers are utilizing the secret.
+- `v_operations`
+  - Displays a list of operations, with additional columns such as the name of the cluster and environment.
 
 #### Functions:
 - `update_server_count`
