@@ -16,7 +16,7 @@
 - name: Molecule.tests.roles.patroni.variables.custom_wal_dir | Set pg_wal_dir based on postgresql_version
   run_once: true
   ansible.builtin.set_fact:
-    pg_wal_dir: "{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }}"
+    pg_wal_dir: "{{ 'pg_wal' if postgresql_version | int >= 10 else 'pg_xlog' }}"
 
 # 🔄 Determine the name based on postgresql_version
 - name: Molecule.tests.roles.patroni.variables.custom_wal_dir | Determine name for scenario 1
@@ -74,7 +74,7 @@
 - name: Molecule.tests.roles.patroni.variables.custom_wal_dir | Set pg_wal_dir based on postgresql_version
   run_once: true
   ansible.builtin.set_fact:
-    pg_wal_dir: "{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }}"
+    pg_wal_dir: "{{ 'pg_wal' if postgresql_version | int >= 10 else 'pg_xlog' }}"
 
 # 🔄 Determine the name based on postgresql_version
 - name: Molecule.tests.roles.patroni.variables.custom_wal_dir | Determine name for scenario 2

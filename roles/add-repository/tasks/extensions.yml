@@ -47,7 +47,7 @@
       when: ansible_os_family == "Debian"
   when:
     - enable_citus | default(false) | bool
-    - postgresql_version is version('11', '>=')
+    - postgresql_version | int >= 11
   tags: add_repo, citus
 
 ...

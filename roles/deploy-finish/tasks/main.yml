@@ -240,7 +240,7 @@
     libpq_haproxy_host_port_master: "{{ haproxy_ip_adresses.split(',') | map('regex_replace', '$', ':' + haproxy_listen_port.master | string) | join(',') }}"
     libpq_haproxy_host_port_replica: "{{ haproxy_ip_adresses.split(',') | map('regex_replace', '$', ':' + haproxy_listen_port.replicas | string) | join(',') }}"
     libpq_postgres_host_port: "{{ postgres_ip_adresses.split(',') | map('regex_replace', '$', ':' + postgresql_port | string) | join(',') }}"
-    libpq_load_balance: "{% if postgresql_version is version('16', '>=') %}&load_balance_hosts=random{% endif %}"
+    libpq_load_balance: "{% if postgresql_version | int >= 16 %}&load_balance_hosts=random{% endif %}"
   when:
     - (cluster_vip is not defined or cluster_vip | length < 1)
     - dcs_type == "etcd"

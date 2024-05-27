@@ -29,13 +29,13 @@
   loop: "{{ citus_package }}"
   vars:
     citus_package: >-
-      [{% if ansible_os_family == 'Debian' and postgresql_version >= "14" %}
+      [{% if ansible_os_family == 'Debian' and postgresql_version | int >= 14 %}
       "postgresql-{{ postgresql_version }}-citus-{{ citus_version | default('12.1') }}"
-      {% elif ansible_os_family == 'Debian' and postgresql_version == "13" %}
+      {% elif ansible_os_family == 'Debian' and postgresql_version | int == 13 %}
       "postgresql-{{ postgresql_version }}-citus-11.3"
-      {% elif ansible_os_family == 'Debian' and postgresql_version == "12" %}
+      {% elif ansible_os_family == 'Debian' and postgresql_version | int == 12 %}
       "postgresql-{{ postgresql_version }}-citus-10.2"
-      {% elif ansible_os_family == 'Debian' and postgresql_version == "11" %}
+      {% elif ansible_os_family == 'Debian' and postgresql_version | int == 11 %}
       "postgresql-{{ postgresql_version }}-citus-10.0"
       {% else %}
       "citus_{{ postgresql_version }}"
@@ -46,8 +46,8 @@
   retries: 3
   when:
     - enable_citus | default(false) | bool
-    - (ansible_os_family == 'Debian' and postgresql_version is version('11', '>=')) or
-      (ansible_os_family == 'RedHat' and postgresql_version is version('12', '>='))
+    - (ansible_os_family == 'Debian' and postgresql_version | int >= 11) or
+      (ansible_os_family == 'RedHat' and postgresql_version | int >= 12)
   tags: citus
 
 # pg_repack (if 'enable_pg_repack' is 'true')
@@ -97,17 +97,17 @@
     pgaudit_package: >-
       {% if ansible_os_family == 'Debian' %}
       postgresql-{{ postgresql_version }}-pgaudit
-      {% elif ansible_os_family == 'RedHat' and postgresql_version >= "16" %}
+      {% elif ansible_os_family == 'RedHat' and postgresql_version | int >= 16 %}
       pgaudit_{{ postgresql_version }}
-      {% elif ansible_os_family == 'RedHat' and postgresql_version == "15" %}
+      {% elif ansible_os_family == 'RedHat' and postgresql_version | int == 15 %}
       pgaudit17_{{ postgresql_version }}
-      {% elif ansible_os_family == 'RedHat' and postgresql_version == "14" %}
+      {% elif ansible_os_family == 'RedHat' and postgresql_version | int == 14 %}
       pgaudit16_{{ postgresql_version }}
-      {% elif ansible_os_family == 'RedHat' and postgresql_version == "13" %}
+      {% elif ansible_os_family == 'RedHat' and postgresql_version | int == 13 %}
       pgaudit15_{{ postgresql_version }}
-      {% elif ansible_os_family == 'RedHat' and postgresql_version == "12" %}
+      {% elif ansible_os_family == 'RedHat' and postgresql_version | int == 12 %}
       pgaudit14_{{ postgresql_version }}
-      {% elif ansible_os_family == 'RedHat' and postgresql_version == "11" %}
+      {% elif ansible_os_family == 'RedHat' and postgresql_version | int == 11 %}
       pgaudit13_{{ postgresql_version }}
       {% endif %}
   register: package_status
@@ -135,8 +135,8 @@
   retries: 3
   when:
     - enable_pgvector | default(false)| bool
-    - (ansible_os_family == 'Debian' and postgresql_version is version('11', '>=')) or
-      (ansible_os_family == 'RedHat' and postgresql_version is version('12', '>='))
+    - (ansible_os_family == 'Debian' and postgresql_version | int >= 11) or
+      (ansible_os_family == 'RedHat' and postgresql_version | int >= 12)
   tags: pgvector
 
 # postgis (if 'enable_postgis' is 'true')
@@ -148,7 +148,7 @@
     postgis_package: >-
       {% if ansible_os_family == 'Debian' %}
       postgresql-{{ postgresql_version }}-postgis-3
-      {% elif ansible_os_family == 'RedHat' and postgresql_version == "16" %}
+      {% elif ansible_os_family == 'RedHat' and postgresql_version | int == 16 %}
       postgis34_{{ postgresql_version }}
       {% else %}
       postgis33_{{ postgresql_version }}
