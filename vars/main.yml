@@ -481,12 +481,11 @@ wal_g_patroni_cluster_bootstrap_command: "wal-g backup-fetch {{ postgresql_data_
 # Define job_parts outside of wal_g_cron_jobs
 # ⚠️ Ensure there is a space at the beginning of each part to prevent commands from concatenating.
 wal_g_backup_command:
-  - "[ $(curl -s -o /dev/null -w '%{http_code}' http://{{ inventory_hostname }}:{{ patroni_restapi_port }}) = '200' ]"
+  - "curl -I -s http://{{ inventory_hostname }}:{{ patroni_restapi_port }} | grep 200"
   - " && wal-g backup-push {{ postgresql_data_dir }} > {{ postgresql_log_dir }}/walg_backup.log 2>&1"
 wal_g_delete_command:
-  - "[ $(curl -s -o /dev/null -w '%{http_code}' http://{{ inventory_hostname }}:{{ patroni_restapi_port }}) = '200' ]"
-  - " && wal-g delete retain FULL {{ WAL_G_RETENTION_FULL | default('4') }} --confirm > {{ postgresql_log_dir }}/walg_delete.log 2>&1"
-# retain 4 full backups (adjust according to your company's backup retention policy)
+  - "curl -I -s http://{{ inventory_hostname }}:{{ patroni_restapi_port }} | grep 200"
+  - " && wal-g delete retain FULL 4 --confirm > {{ postgresql_log_dir }}/walg_delete.log 2>&1"
 
 wal_g_cron_jobs:
   - name: "WAL-G: Create daily backup"
