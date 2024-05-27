@@ -25,10 +25,13 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/partial \
        /root/.ansible/collections/ansible_collections/azure/azcollection/requirements-azure.txt \
     && apt-get autoremove -y --purge gnupg git python3.10-dev gcc g++ cmake make libssl-dev \
     && apt-get clean -y autoclean \
-    && rm -rf /var/lib/apt/lists/* /tmp/*
+    && rm -rf /var/lib/apt/lists/* /tmp/* \
+    && chmod +x /postgresql_cluster/entrypoint.sh
 
 # Set environment variable for Ansible collections paths
 ENV ANSIBLE_COLLECTIONS_PATH=/root/.ansible/collections/ansible_collections:/usr/local/lib/python3.10/dist-packages/ansible_collections
 ENV USER=root
 
 WORKDIR /postgresql_cluster
+
+ENTRYPOINT ["./entrypoint.sh"]
