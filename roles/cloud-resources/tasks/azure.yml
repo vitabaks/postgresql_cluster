@@ -278,6 +278,7 @@
         started: true
         location: "{{ server_location }}"
         vm_size: "{{ server_type }}"
+        priority: "{{ 'Spot' if server_spot | default(false) | bool else 'None' }}"
         admin_username: azureadmin
         ssh_public_keys:
           - path: /home/azureadmin/.ssh/authorized_keys
