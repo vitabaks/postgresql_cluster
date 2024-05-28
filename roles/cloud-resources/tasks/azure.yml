@@ -279,6 +279,7 @@
         location: "{{ server_location }}"
         vm_size: "{{ server_type }}"
         priority: "{{ 'Spot' if server_spot | default(false) | bool else 'None' }}"
+        eviction_policy: "{{ 'Deallocate' if server_spot | default(false) | bool else omit }}"
         admin_username: "{{ azure_admin_username | default('azureadmin') }}"
         ssh_public_keys:
           - path: /home/azureadmin/.ssh/authorized_keys
