@@ -242,7 +242,7 @@
         metadata:
           ssh-keys: "root:{{ ssh_key_content }}"
         scheduling:
-          preemptible: "{{ gcp_compute_instance_preemptible | default(false) | bool }}"
+          preemptible: "{{ server_spot | default(gcp_compute_instance_preemptible | default(false)) | bool }}"
         tags:
           items:
             - "{{ patroni_cluster_name }}"

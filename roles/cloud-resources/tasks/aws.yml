@@ -229,9 +229,9 @@
         - server_result.instances[0].public_ip_address | length > 0
       retries: 3
       delay: 10
-      when: not aws_ec2_spot_instance | default(false) | bool
+      when: not server_spot | default(aws_ec2_spot_instance | default(false)) | bool
 
-    # Spot instance (if 'aws_ec2_spot_instance' is 'true')
+    # Spot instance (if 'server_spot' is 'true')
     - block:
         - name: "AWS: Gather information about EC2 Spot instances"
           amazon.aws.ec2_instance_info:
@@ -318,7 +318,7 @@
           ansible.builtin.set_fact:
             server_result: "{{ ec2_spot_instance_info }}"
           when: not ec2_spot_instance_result.changed | default(false)
-      when: aws_ec2_spot_instance | default(false) | bool
+      when: server_spot | default(aws_ec2_spot_instance | default(false)) | bool
 
     - name: Wait for EC2 instance to be available via SSH
       ansible.builtin.wait_for:
