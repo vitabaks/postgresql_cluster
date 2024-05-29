@@ -1,6 +1,7 @@
 -- +goose Up
 
 -- Create extensions
+CREATE SCHEMA IF NOT EXISTS extensions;
 CREATE EXTENSION IF NOT EXISTS moddatetime SCHEMA extensions;
 CREATE EXTENSION IF NOT EXISTS pgcrypto SCHEMA extensions;
 
