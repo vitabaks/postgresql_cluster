@@ -6,6 +6,9 @@ ENV POSTGRES_VERSION=${POSTGRES_VERSION:-16}
 ARG POSTGRES_PORT
 ENV POSTGRES_PORT=${POSTGRES_PORT:-5432}
 
+ARG POSTGRES_PASSWORD
+ENV POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-"postgres-pass"}
+
 ARG PGDATA
 ENV PGDATA=${PGDATA:-"/var/lib/postgresql/${POSTGRES_VERSION}/main"}
 
@@ -52,8 +55,10 @@ RUN echo "#!/bin/bash" > /pg_start.sh && chmod a+x /pg_start.sh \
     && echo "chown -R postgres:postgres \${PGDATA} \${PG_UNIX_SOCKET_DIR} /etc/postgresql/\${POSTGRES_VERSION}/main" >> /pg_start.sh \
     && echo "sudo -Eu postgres /usr/lib/postgresql/\${POSTGRES_VERSION}/bin/postgres -D \${PGDATA} -k \${PG_UNIX_SOCKET_DIR} -p \${POSTGRES_PORT} -c config_file=/etc/postgresql/\${POSTGRES_VERSION}/main/postgresql.conf &" >> /pg_start.sh \
     && echo "for i in {1..300}; do pg_isready -h ${PG_UNIX_SOCKET_DIR} -p \${POSTGRES_PORT} && break || echo 'Postgres is not ready yet'; sleep 1; done" >> /pg_start.sh \
+    # Reset postgres password
+    && echo "psql -h ${PG_UNIX_SOCKET_DIR} -p \${POSTGRES_PORT} -U postgres -d postgres -c \"ALTER USER postgres WITH PASSWORD '\${POSTGRES_PASSWORD}';\"" >> /pg_start.sh \
     # Create timescaledb extension
-    && echo "psql -h ${PG_UNIX_SOCKET_DIR} -p \${POSTGRES_PORT} -U postgres -d postgres -c 'CREATE EXTENSION IF NOT EXISTS timescaledb;'" >> /pg_start.sh \
+    && echo "psql -h ${PG_UNIX_SOCKET_DIR} -p \${POSTGRES_PORT} -U postgres -d postgres -c \"CREATE EXTENSION IF NOT EXISTS timescaledb;\"" >> /pg_start.sh \
     # Infinite sleep to allow restarting Postgres
     && echo "/bin/bash -c \"trap : TERM INT; sleep infinity & wait\"" >> /pg_start.sh
 
