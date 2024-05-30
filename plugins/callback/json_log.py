@@ -76,19 +76,8 @@ class CallbackModule(CallbackBase):
         self._record_task_result(result)
 
     def v2_runner_item_on_skipped(self, result):
-        # Records the result of a skipped task item.
-        self._record_task_result(result)
-
-    def v2_playbook_on_stats(self, stats):
-        # Closes the JSON array in the log file when the playbook execution is complete.
-        if not self.log_file_path:
-            return
-
-        try:
-            with open(self.log_file_path, 'a') as log_file:
-                log_file.write('\n]\n')
-        except IOError as e:
-            self._display.warning(f"Failed to write to log file {self.log_file_path}: {e}")
+        # Do not record the result of a skipped task item.
+        pass
 
     def v2_runner_on_ok(self, result):
         # Records the result of a successfully executed task.
@@ -101,3 +90,14 @@ class CallbackModule(CallbackBase):
     def v2_runner_on_unreachable(self, result):
         # Records the result of a task that failed because the host was unreachable.
         self._record_task_result(result)
+
+    def v2_playbook_on_stats(self, stats):
+        # Closes the JSON array in the log file when the playbook execution is complete.
+        if not self.log_file_path:
+            return
+
+        try:
+            with open(self.log_file_path, 'a') as log_file:
+                log_file.write('\n]\n')
+        except IOError as e:
+            self._display.warning(f"Failed to write to log file {self.log_file_path}: {e}")
