@@ -3,6 +3,7 @@ import os
 from datetime import datetime
 from ansible.plugins.callback import CallbackBase
 
+
 # This Ansible callback plugin logs playbook results in JSON format.
 # The log file path can be specified using the environment variable ANSIBLE_JSON_LOG_FILE.
 # The log level can be controlled via the environment variable ANSIBLE_JSON_LOG_LEVEL.
