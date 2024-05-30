@@ -429,7 +429,7 @@ CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.cloud_images
 -- Projects
 CREATE TABLE public.projects (
     project_id bigserial PRIMARY KEY,
-    project_name text NOT NULL,
+    project_name text NOT NULL UNIQUE,
     project_description text,
     created_at timestamp DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp
