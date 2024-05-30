@@ -1,5 +1,6 @@
 import json
 import os
+from datetime import datetime
 from ansible.plugins.callback import CallbackBase
 
 # This Ansible callback plugin logs playbook results in JSON format.
@@ -29,8 +30,9 @@ class CallbackModule(CallbackBase):
         if not self.log_file_path:
             return
 
-        # Build the basic result structure with task and host
+        # Build the basic result structure with task, host, and timestamp
         base_result = {
+            'time': datetime.now().isoformat(),
             'task': result._task.get_name(),
             'host': result._host.get_name()
         }
