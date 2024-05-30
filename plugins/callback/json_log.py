@@ -6,7 +6,7 @@ from ansible.plugins.callback import CallbackBase
 # This Ansible callback plugin logs playbook results in JSON format.
 # The log file path can be specified using the environment variable ANSIBLE_JSON_LOG_FILE.
 # The log level can be controlled via the environment variable ANSIBLE_JSON_LOG_LEVEL.
-# Available log levels: INFO (default) and DEBUG.
+# Available log levels: INFO (default), DETAIL, and DEBUG.
 
 class CallbackModule(CallbackBase):
     CALLBACK_VERSION = 1.0
@@ -47,13 +47,20 @@ class CallbackModule(CallbackBase):
         if self.log_level == 'DEBUG':
             full_result = {**base_result, **result._result}
             self._write_result_to_file(full_result)
-        else:
-            basic_result = {
+        elif self.log_level == 'DETAIL':
+            detailed_result = {
                 'changed': result._result.get('changed', False),
                 'failed': result._result.get('failed', False),
                 'msg': result._result.get('msg', ''),
                 'stdout': result._result.get('stdout', ''),
                 'stderr': result._result.get('stderr', '')
+            }
+            self._write_result_to_file({**base_result, **detailed_result})
+        else:
+            basic_result = {
+                'changed': result._result.get('changed', False),
+                'failed': result._result.get('failed', False),
+                'msg': result._result.get('msg', '')
             }
             self._write_result_to_file({**base_result, **basic_result})
 
