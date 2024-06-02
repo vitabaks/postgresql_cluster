@@ -39,7 +39,7 @@
       ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
       tags: always
 
-    - name: System information
+    - name: System info
       ansible.builtin.debug:
         var: system_info
       vars:
