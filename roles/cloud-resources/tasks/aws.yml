@@ -392,16 +392,16 @@
   when: state == 'present'
 
 # Info
-- name: Show EC2 instance info
+- name: Server info
   ansible.builtin.debug:
     msg:
-      - "ID: {{ item.instances[0].instance_id }}"
-      - "Name: {{ item.instances[0].tags.Name }}"
-      - "Image: {{ item.instances[0].image_id }}"
-      - "Type: {{ item.instances[0].instance_type }}"
-      - "Volume Size: {{ volume_size }} GB"
-      - "Public IP: {{ item.instances[0].public_ip_address }}"
-      - "Private IP: {{ item.instances[0].private_ip_address }}"
+      id: "{{ item.instances[0].instance_id }}"
+      name: "{{ item.instances[0].tags.Name }}"
+      image: "{{ item.instances[0].image_id }}"
+      type: "{{ item.instances[0].instance_type }}"
+      volume_size: "{{ volume_size }} GB"
+      public_ip: "{{ item.instances[0].public_ip_address }}"
+      private_ip: "{{ item.instances[0].private_ip_address }}"
   loop: "{{ server_result.results }}"
   loop_control:
     label: "{{ item.instances[0].public_ip_address | default('N/A') }}"

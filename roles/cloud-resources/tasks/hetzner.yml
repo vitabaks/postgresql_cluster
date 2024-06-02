@@ -607,16 +607,16 @@
   when: state == 'present'
 
 # Info
-- name: Show Server info
+- name: Server info
   ansible.builtin.debug:
     msg:
-      - "ID: {{ item.hcloud_server.id }}"
-      - "Name: {{ item.hcloud_server.name }}"
-      - "Image: {{ item.hcloud_server.image }}"
-      - "Type: {{ item.hcloud_server.server_type }}"
-      - "Volume Size: {{ volume_size }} GB"
-      - "Public IP: {{ item.hcloud_server.ipv4_address }}"
-      - "Private IP: {{ item.hcloud_server.private_networks_info[0].ip }}"
+      id: "{{ item.hcloud_server.id }}"
+      name: "{{ item.hcloud_server.name }}"
+      image: "{{ item.hcloud_server.image }}"
+      type: "{{ item.hcloud_server.server_type }}"
+      volume_size: "{{ volume_size }} GB"
+      public_ip: "{{ item.hcloud_server.ipv4_address }}"
+      private_ip: "{{ item.hcloud_server.private_networks_info[0].ip }}"
   loop: "{{ server_result.results }}"
   loop_control:
     index_var: idx

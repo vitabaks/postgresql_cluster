@@ -581,16 +581,16 @@
   when: state == 'present'
 
 # Info
-- name: Show Droplet info
+- name: Server info
   ansible.builtin.debug:
     msg:
-      - "ID: {{ item.data.droplet.id }}"
-      - "Name: {{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
-      - "Image: {{ item.data.droplet.image.description }}"
-      - "Type: {{ server_type }}"
-      - "Volume Size: {{ volume_size }} GB"
-      - "Public IP: {{ (item.data.droplet.networks.v4 | selectattr('type', 'equalto', 'public')).0.ip_address }}"
-      - "Private IP: {{ (item.data.droplet.networks.v4 | selectattr('type', 'equalto', 'private')).0.ip_address }}"
+      id: "{{ item.data.droplet.id }}"
+      name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
+      image: "{{ item.data.droplet.image.description }}"
+      type: "{{ server_type }}"
+      volume_size: "{{ volume_size }} GB"
+      public_ip: "{{ (item.data.droplet.networks.v4 | selectattr('type', 'equalto', 'public')).0.ip_address }}"
+      private_ip: "{{ (item.data.droplet.networks.v4 | selectattr('type', 'equalto', 'private')).0.ip_address }}"
   loop: "{{ droplet_result.results }}"
   loop_control:
     index_var: idx

@@ -269,16 +269,16 @@
     - item.networkInterfaces is defined
 
 # Info
-- name: Show GCP instance info
+- name: Server info
   ansible.builtin.debug:
     msg:
-      - "ID: {{ item.id }}"
-      - "Name: {{ item.name }}"
-      - "Image: {{ item.disks[0].licenses[0] | basename }}"
-      - "Type: {{ item.machineType | basename }}"
-      - "Volume Size: {{ volume_size }} GB"
-      - "Public IP: {{ item.networkInterfaces[0].accessConfigs[0].natIP }}"
-      - "Private IP: {{ item.networkInterfaces[0].networkIP }}"
+      id: "{{ item.id }}"
+      name: "{{ item.name }}"
+      image: "{{ item.disks[0].licenses[0] | basename }}"
+      type: "{{ item.machineType | basename }}"
+      volume_size: "{{ volume_size }} GB"
+      public_ip: "{{ item.networkInterfaces[0].accessConfigs[0].natIP }}"
+      private_ip: "{{ item.networkInterfaces[0].networkIP }}"
   loop: "{{ server_result.results }}"
   loop_control:
     label: "{{ item.networkInterfaces[0].accessConfigs[0].natIP | default('N/A') }}"
