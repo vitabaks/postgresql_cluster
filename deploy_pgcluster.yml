@@ -41,17 +41,15 @@
 
     - name: System info
       ansible.builtin.debug:
-        var: system_info
-      vars:
-        system_info:
-          OS: "{{ ansible_distribution | default('N/A') }} {{ ansible_distribution_version | default('N/A') }}"
-          Kernel: "{{ ansible_kernel | default('N/A') }}"
-          CPU model: >-
-            {{ ansible_processor[2] | default('N/A') }},
-            count: {{ ansible_processor_count | default('N/A') }},
-            cores: {{ ansible_processor_cores | default('N/A') }}
-          Memory: "{{ (ansible_memtotal_mb / 1024) | round(2) if ansible_memtotal_mb is defined else 'N/A' }} GB"
-          Disk space total: >-
+        msg:
+          os: "{{ ansible_distribution | default('N/A') }} {{ ansible_distribution_version | default('N/A') }}"
+          kernel: "{{ ansible_kernel | default('N/A') }}"
+          cpu:
+            model: "{{ ansible_processor[2] | default('N/A') }}"
+            count: "{{ ansible_processor_count | default('N/A') }}"
+            cores: "{{ ansible_processor_cores | default('N/A') }}"
+          memory: "{{ (ansible_memtotal_mb / 1024) | round(2) if ansible_memtotal_mb is defined else 'N/A' }} GB"
+          disk_space_total: >-
             {{
               (ansible_mounts
                 | map(attribute='size_total')
@@ -60,9 +58,9 @@
               )
               | round(2) if ansible_mounts is defined else 'N/A'
             }} GB
-          Architecture: "{{ ansible_architecture | default('N/A') }}"
-          Virtualization type: "{{ ansible_virtualization_type | default('N/A') }}"
-          Product name: "{{ ansible_product_name | default('N/A') }}"
+          architecture: "{{ ansible_architecture | default('N/A') }}"
+          virtualization_type: "{{ ansible_virtualization_type | default('N/A') }}"
+          product_name: "{{ ansible_product_name | default('N/A') }}"
       tags: always
 
   roles:
