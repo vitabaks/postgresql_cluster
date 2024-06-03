@@ -89,7 +89,7 @@
       ansible.builtin.debug:
         msg:
           address: "{{ cluster_vip }}"
-          port: "{% if pgbouncer_install %}{{ pgbouncer_listen_port }}{% else %}{{ postgresql_port }}{% endif %}"
+          port: "{{ pgbouncer_listen_port if pgbouncer_install else postgresql_port }}"
           superuser: "{{ superuser_username }}"
           password: "{{ superuser_password }}"
       when: not with_haproxy_load_balancing | bool
@@ -173,7 +173,7 @@
         replica: "replica.{{ patroni_cluster_name }}.service.consul"
         replica_sync: "{{ 'sync-replica.' ~ patroni_cluster_name ~ '.service.consul' if synchronous_mode | bool else omit }}"
         replica_async: "{{ 'async-replica.' ~ patroni_cluster_name ~ '.service.consul' if synchronous_mode | bool else omit }}"
-      port: "{% if pgbouncer_install %}{{ pgbouncer_listen_port }}{% else %}{{ postgresql_port }}{% endif %}"
+      port: "{{ pgbouncer_listen_port if pgbouncer_install else postgresql_port }}"
       superuser: "{{ superuser_username }}"
       password: "{{ superuser_password }}"
   ignore_errors: true
@@ -196,7 +196,7 @@
         primary: "{{ load_balancer_primary }}"
         replica: "{{ load_balancer_replica if load_balancer_replica != 'N/A' else omit }}"
         replica_sync: "{{ load_balancer_replica_sync if synchronous_mode | bool else omit }}"
-      port: "{% if pgbouncer_install %}{{ pgbouncer_listen_port }}{% else %}{{ postgresql_port }}{% endif %}"
+      port: "{{ pgbouncer_listen_port if pgbouncer_install else postgresql_port }}"
       superuser: "{{ superuser_username }}"
       password: "{{ superuser_password }}"
   ignore_errors: true
@@ -226,7 +226,7 @@
     load_balancer_primary: "{{ (hostvars['localhost']['digitalocean_load_balancer']['data'] | selectattr('name', 'equalto', patroni_cluster_name + '-primary') | first).ip | default('N/A') }}"
     load_balancer_replica: "{{ (hostvars['localhost']['digitalocean_load_balancer']['data'] | selectattr('name', 'equalto', patroni_cluster_name + '-replica') | first).ip | default('N/A') }}"
     load_balancer_replica_sync: "{{ (hostvars['localhost']['digitalocean_load_balancer']['data'] | selectattr('name', 'equalto', patroni_cluster_name + '-sync') | first).ip | default('N/A') }}"
-    database_port: "{% if pgbouncer_install %}{{ pgbouncer_listen_port }}{% else %}{{ postgresql_port }}{% endif %}"
+    database_port: "{{ pgbouncer_listen_port if pgbouncer_install else postgresql_port }}"
     superuser_username: "{{ patroni_superuser_username }}"
     superuser_password: "{{ '********' if mask_password | default(false) | bool else patroni_superuser_password }}"
   when: cloud_provider | default('') | lower  == 'digitalocean' and cloud_load_balancer | default(false) | bool
@@ -252,7 +252,7 @@
     lb_replica_private: "{{ (hostvars['localhost']['hetzner_load_balancer']['hcloud_load_balancer_info'] | selectattr('name', 'equalto', patroni_cluster_name + '-replica') | first).private_ipv4_address | default('N/A') }}"
     lb_replica_sync_public: "{{ (hostvars['localhost']['hetzner_load_balancer']['hcloud_load_balancer_info'] | selectattr('name', 'equalto', patroni_cluster_name + '-sync') | first).ipv4_address | default('N/A') }}"
     lb_replica_sync_private: "{{ (hostvars['localhost']['hetzner_load_balancer']['hcloud_load_balancer_info'] | selectattr('name', 'equalto', patroni_cluster_name + '-sync') | first).private_ipv4_address | default('N/A') }}"
-    database_port: "{% if pgbouncer_install %}{{ pgbouncer_listen_port }}{% else %}{{ postgresql_port }}{% endif %}"
+    database_port: "{{ pgbouncer_listen_port if pgbouncer_install else postgresql_port }}"
     superuser_username: "{{ patroni_superuser_username }}"
     superuser_password: "{{ '********' if mask_password | default(false) | bool else patroni_superuser_password }}"
   when: cloud_provider | default('') | lower == 'hetzner' and cloud_load_balancer | default(false) | bool
