@@ -66,54 +66,41 @@
 # Connection info
 # Note: if the variable 'mask_password' is 'true', do not print the superuser password in connection info.
 
-- block:  # if 'cluster_vip' is defined
+# if 'cluster_vip' is defined
+- block:
+    # if 'with_haproxy_load_balancing' is 'true'
     - name: Connection info
       run_once: true
       ansible.builtin.debug:
         msg:
-          - +------------------------------------------------+
-          - "address: (VIP) {{ cluster_vip }}"
-          - "port: {{ haproxy_listen_port.master }} master"
-          - "port: {{ haproxy_listen_port.replicas }} all replicas"
-          - "port: {{ haproxy_listen_port.replicas_sync }} synchronous replica only"
-          - "port: {{ haproxy_listen_port.replicas_async }} asynchronous replicas only"
-          - "superuser: {{ superuser_username }}"
-          - "password: {{ superuser_password }}"
-          - +------------------------------------------------+
-      when: with_haproxy_load_balancing | bool and synchronous_mode | bool
+          address: "{{ cluster_vip }}"
+          port:
+            primary: "{{ haproxy_listen_port.master }}"
+            replica: "{{ haproxy_listen_port.replicas }}"
+            replica_sync: "{{ haproxy_listen_port.replicas_sync if synchronous_mode | bool else omit }}"
+            replica_async: "{{ haproxy_listen_port.replicas_async if synchronous_mode | bool else omit }}"
+          superuser: "{{ superuser_username }}"
+          password: "{{ superuser_password }}"
+      when: with_haproxy_load_balancing | bool
 
+    # if 'with_haproxy_load_balancing' is 'false'
     - name: Connection info
       run_once: true
       ansible.builtin.debug:
         msg:
-          - +------------------------------------------------+
-          - "address: (VIP) {{ cluster_vip }}"
-          - "port: {{ haproxy_listen_port.master }} master"
-          - "port: {{ haproxy_listen_port.replicas }} all replicas"
-          - "superuser: {{ superuser_username }}"
-          - "password: {{ superuser_password }}"
-          - +------------------------------------------------+
-      when: with_haproxy_load_balancing | bool and not synchronous_mode | bool
-
-    - name: Connection info
-      run_once: true
-      ansible.builtin.debug:
-        msg:
-          - +------------------------------------------------+
-          - "address: (VIP) {{ cluster_vip }}"
-          - "port: {% if pgbouncer_install %}{{ pgbouncer_listen_port }}{% else %}{{ postgresql_port }}{% endif %}"
-          - "superuser: {{ superuser_username }}"
-          - "password: {{ superuser_password }}"
-          - +------------------------------------------------+
+          address: "{{ cluster_vip }}"
+          port: "{% if pgbouncer_install %}{{ pgbouncer_listen_port }}{% else %}{{ postgresql_port }}{% endif %}"
+          superuser: "{{ superuser_username }}"
+          password: "{{ superuser_password }}"
       when: not with_haproxy_load_balancing | bool
+  ignore_errors: true
   vars:
     superuser_username: "{{ patroni_superuser_username }}"
     superuser_password: "{{ '********' if mask_password | default(false) | bool else patroni_superuser_password }}"
   when:
-    - (cluster_vip is defined and cluster_vip | length > 0)
+    - cluster_vip is defined and cluster_vip | length > 0
     - dcs_type == "etcd"
     - (cloud_provider | default('') | length < 1 or not cloud_load_balancer | default(false) | bool)
-  ignore_errors: true
   tags: conn_info, cluster_info, cluster_status
 
 # if 'cluster_vip' is not defined
