@@ -238,9 +238,9 @@
   ansible.builtin.debug:
     msg:
       address:
-        primary: "{{ lb_primary_public if database_public_access | bool else lb_primary_private }}"
-        replica: "{{ (lb_replica_public if lb_replica_public != 'N/A' else omit) if database_public_access | bool else (lb_replica_private if lb_replica_private != 'N/A' else omit) }}"
-        replica_sync: "{{ (lb_replica_sync_public if database_public_access | bool else lb_replica_sync_private) if synchronous_mode | bool else omit }}"
+        primary: "{{ lb_primary_public if database_public_access | default(false) | bool else lb_primary_private }}"
+        replica: "{{ (lb_replica_public if lb_replica_public != 'N/A' else omit) if database_public_access | default(false) | bool else (lb_replica_private if lb_replica_private != 'N/A' else omit) }}"
+        replica_sync: "{{ (lb_replica_sync_public if database_public_access | default(false) | bool else lb_replica_sync_private) if synchronous_mode | bool else omit }}"
       port: "{{ hetzner_load_balancer_port | default(database_port) }}"
       superuser: "{{ superuser_username }}"
       password: "{{ superuser_password }}"
