@@ -516,6 +516,58 @@ $$ LANGUAGE plpgsql;
 -- +goose StatementEnd
 
 -- +goose StatementBegin
+CREATE OR REPLACE FUNCTION update_secret(
+    p_secret_id bigint,
+    p_secret_type text DEFAULT NULL,
+    p_secret_name text DEFAULT NULL,
+    p_secret_value text DEFAULT NULL,
+    p_encryption_key text DEFAULT NULL
+)
+RETURNS TABLE (
+    project_id bigint,
+    secret_id bigint,
+    secret_type text,
+    secret_name text,
+    created_at timestamp,
+    updated_at timestamp,
+    used boolean,
+    used_by_clusters text,
+    used_by_servers text
+) AS $$
+BEGIN
+    IF p_secret_value IS NOT NULL AND p_encryption_key IS NULL THEN
+        RAISE EXCEPTION 'Encryption key must be provided when updating secret value';
+    END IF;
+
+    UPDATE public.secrets
+    SET 
+        secret_name = COALESCE(p_secret_name, public.secrets.secret_name),
+        secret_type = COALESCE(p_secret_type, public.secrets.secret_type),
+        secret_value = CASE 
+                          WHEN p_secret_value IS NOT NULL THEN extensions.pgp_sym_encrypt(p_secret_value, p_encryption_key, 'cipher-algo=aes256')
+                          ELSE public.secrets.secret_value 
+                       END
+    WHERE public.secrets.secret_id = p_secret_id;
+
+    RETURN QUERY
+    SELECT 
+        s.project_id,
+        s.secret_id,
+        s.secret_type,
+        s.secret_name,
+        s.created_at,
+        s.updated_at,
+        s.used,
+        s.used_by_clusters,
+        s.used_by_servers
+    FROM
+        public.v_secrets_list s
+    WHERE s.secret_id = p_secret_id;
+END;
+$$ LANGUAGE plpgsql;
+-- +goose StatementEnd
+
+-- +goose StatementBegin
 CREATE OR REPLACE FUNCTION get_secret(p_secret_id bigint, p_encryption_key text)
 RETURNS json AS $$
 DECLARE
@@ -535,6 +587,9 @@ $$ LANGUAGE plpgsql;
 -- SELECT add_secret(<project_id>, 'ssh_key', '<secret_name>', '{"private_key": "<CONTENT>"}', '<encryption_key>');
 -- SELECT add_secret(<project_id>, 'password', '<secret_name>', '{"username": "<CONTENT>", "password": "<CONTENT>"}', '<encryption_key>');
 -- SELECT add_secret(<project_id>, 'aws', '<secret_name>', '{"AWS_ACCESS_KEY_ID": "<CONTENT>", "AWS_SECRET_ACCESS_KEY": "<CONTENT>"}', '<encryption_key>');
+
+-- An example of using the function to update a secret
+-- SELECT update_secret(<secret_id>, '<new_secret_type>', '<new_secret_name>', '<new_secret_value>', '<encryption_key>');
 
 -- An example of using a function to get a secret
 -- SELECT get_secret(<secret_id>, '<encryption_key>');

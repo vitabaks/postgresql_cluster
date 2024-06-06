@@ -91,6 +91,10 @@ status
       - `SELECT add_secret(1, 'ssh_key', '<NAME>', '{"private_key": "<CONTENT>"}', 'my_encryption_key');`
       - `SELECT add_secret(1, 'password', '<NAME>', '{"username": "<CONTENT>", "password": "<CONTENT>"}', 'my_encryption_key');`
       - `SELECT add_secret(1, 'cloud_secret', '<NAME>', '{"AWS_ACCESS_KEY_ID": "<CONTENT>", "AWS_SECRET_ACCESS_KEY": "<CONTENT>"}', 'my_encryption_key');`
+- `update_secret`
+  - Function to update a secret.
+    - Usage example:
+      - `SELECT update_secret(<secret_id>, '<new_secret_type>', '<new_secret_name>', '<new_secret_value>', '<encryption_key>');`
 - `get_secret`
   - Function to get a secret value in JSON format.
     - Usage example (project_id, secret_id, encryption_key):
