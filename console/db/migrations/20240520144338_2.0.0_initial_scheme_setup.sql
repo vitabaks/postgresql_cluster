@@ -506,13 +506,6 @@ RETURNS bigint AS $$
 DECLARE
     v_inserted_secret_id bigint;
 BEGIN
-    -- checking the JSON
-    BEGIN
-        PERFORM p_secret_value::json;
-    EXCEPTION WHEN others THEN
-        RAISE EXCEPTION 'Invalid JSON format for secret value';
-    END;
-
     INSERT INTO public.secrets (project_id, secret_type, secret_name, secret_value)
     VALUES (p_project_id, p_secret_type, p_secret_name, extensions.pgp_sym_encrypt(p_secret_value::text, p_encryption_key, 'cipher-algo=aes256'))
     RETURNING secret_id INTO v_inserted_secret_id;
@@ -545,15 +538,6 @@ BEGIN
     IF p_secret_value IS NOT NULL AND p_encryption_key IS NULL THEN
         RAISE EXCEPTION 'Encryption key must be provided when updating secret value';
     END IF;
-
-    -- checking the JSON
-    BEGIN
-        IF p_secret_value IS NOT NULL THEN
-            PERFORM p_secret_value::json;
-        END IF;
-    EXCEPTION WHEN others THEN
-        RAISE EXCEPTION 'Invalid JSON format for secret value';
-    END;
 
     UPDATE public.secrets
     SET
