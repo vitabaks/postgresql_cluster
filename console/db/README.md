@@ -97,8 +97,8 @@ status
       - `SELECT update_secret(<secret_id>, '<new_secret_type>', '<new_secret_name>', '<new_secret_value>', '<encryption_key>');`
 - `get_secret`
   - Function to get a secret value in JSON format.
-    - Usage example (project_id, secret_id, encryption_key):
-      - `SELECT get_secret(1, 1, 'my_encryption_key');`
+    - Usage example (secret_id, encryption_key):
+      - `SELECT get_secret(1, 'my_encryption_key');`
 - `get_extensions`
   - Function to get a list of available extensions in JSON format. All or 'contrib'/'third_party' only (optional).
     - Usage examples:
