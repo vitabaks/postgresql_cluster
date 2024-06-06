@@ -516,7 +516,7 @@ $$ LANGUAGE plpgsql;
 -- +goose StatementEnd
 
 -- +goose StatementBegin
-CREATE OR REPLACE FUNCTION get_secret(p_project_id bigint, p_secret_id bigint, p_encryption_key text)
+CREATE OR REPLACE FUNCTION get_secret(p_secret_id bigint, p_encryption_key text)
 RETURNS json AS $$
 DECLARE
     decrypted_value json;
@@ -524,20 +524,20 @@ BEGIN
     SELECT extensions.pgp_sym_decrypt(secret_value, p_encryption_key)::json
     INTO decrypted_value
     FROM public.secrets
-    WHERE secret_id = p_secret_id AND project_id = p_project_id;
+    WHERE secret_id = p_secret_id;
     
     RETURN decrypted_value;
 END;
 $$ LANGUAGE plpgsql;
 -- +goose StatementEnd
 
--- An example of using a function to insert a secret
--- SELECT add_secret(1, 'ssh_key', '<NAME>', '{"private_key": "<CONTENT>"}', 'my_encryption_key');
--- SELECT add_secret(1, 'password', '<NAME>', '{"username": "<CONTENT>", "password": "<CONTENT>"}', 'my_encryption_key');
--- SELECT add_secret(1, 'cloud_secret', '<NAME>', '{"AWS_ACCESS_KEY_ID": "<CONTENT>", "AWS_SECRET_ACCESS_KEY": "<CONTENT>"}', 'my_encryption_key');
+-- An example of using a function to insert a secret (value in JSON format)
+-- SELECT add_secret(<project_id>, 'ssh_key', '<secret_name>', '{"private_key": "<CONTENT>"}', '<encryption_key>');
+-- SELECT add_secret(<project_id>, 'password', '<secret_name>', '{"username": "<CONTENT>", "password": "<CONTENT>"}', '<encryption_key>');
+-- SELECT add_secret(<project_id>, 'aws', '<secret_name>', '{"AWS_ACCESS_KEY_ID": "<CONTENT>", "AWS_SECRET_ACCESS_KEY": "<CONTENT>"}', '<encryption_key>');
 
 -- An example of using a function to get a secret
--- SELECT get_secret(1, 1, 'my_encryption_key');
+-- SELECT get_secret(<secret_id>, '<encryption_key>');
 
 
 -- Clusters
