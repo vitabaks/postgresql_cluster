@@ -501,13 +501,20 @@ CREATE INDEX secrets_id_project_idx ON public.secrets (secret_id, project_id);
 CREATE INDEX secrets_project_idx ON public.secrets (project_id);
 
 -- +goose StatementBegin
-CREATE OR REPLACE FUNCTION add_secret(p_project_id bigint, p_secret_type text, p_secret_name text, p_secret_value text, p_encryption_key text)
+CREATE OR REPLACE FUNCTION add_secret(p_project_id bigint, p_secret_type text, p_secret_name text, p_secret_value json, p_encryption_key text)
 RETURNS bigint AS $$
 DECLARE
     v_inserted_secret_id bigint;
 BEGIN
+    -- checking the JSON
+    BEGIN
+        PERFORM p_secret_value::json;
+    EXCEPTION WHEN others THEN
+        RAISE EXCEPTION 'Invalid JSON format for secret value';
+    END;
+
     INSERT INTO public.secrets (project_id, secret_type, secret_name, secret_value)
-    VALUES (p_project_id, p_secret_type, p_secret_name, extensions.pgp_sym_encrypt(p_secret_value, p_encryption_key, 'cipher-algo=aes256'))
+    VALUES (p_project_id, p_secret_type, p_secret_name, extensions.pgp_sym_encrypt(p_secret_value::text, p_encryption_key, 'cipher-algo=aes256'))
     RETURNING secret_id INTO v_inserted_secret_id;
     
     RETURN v_inserted_secret_id;
@@ -520,7 +527,7 @@ CREATE OR REPLACE FUNCTION update_secret(
     p_secret_id bigint,
     p_secret_type text DEFAULT NULL,
     p_secret_name text DEFAULT NULL,
-    p_secret_value text DEFAULT NULL,
+    p_secret_value json DEFAULT NULL,
     p_encryption_key text DEFAULT NULL
 )
 RETURNS TABLE (
@@ -539,12 +546,21 @@ BEGIN
         RAISE EXCEPTION 'Encryption key must be provided when updating secret value';
     END IF;
 
+    -- checking the JSON
+    BEGIN
+        IF p_secret_value IS NOT NULL THEN
+            PERFORM p_secret_value::json;
+        END IF;
+    EXCEPTION WHEN others THEN
+        RAISE EXCEPTION 'Invalid JSON format for secret value';
+    END;
+
     UPDATE public.secrets
-    SET 
+    SET
         secret_name = COALESCE(p_secret_name, public.secrets.secret_name),
         secret_type = COALESCE(p_secret_type, public.secrets.secret_type),
         secret_value = CASE 
-                          WHEN p_secret_value IS NOT NULL THEN extensions.pgp_sym_encrypt(p_secret_value, p_encryption_key, 'cipher-algo=aes256')
+                          WHEN p_secret_value IS NOT NULL THEN extensions.pgp_sym_encrypt(p_secret_value::text, p_encryption_key, 'cipher-algo=aes256')
                           ELSE public.secrets.secret_value 
                        END
     WHERE public.secrets.secret_id = p_secret_id;
