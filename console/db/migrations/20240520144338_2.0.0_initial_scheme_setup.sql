@@ -507,7 +507,7 @@ DECLARE
     v_inserted_secret_id bigint;
 BEGIN
     INSERT INTO public.secrets (project_id, secret_type, secret_name, secret_value)
-    VALUES (p_project_id, p_secret_type, p_secret_name, pgp_sym_encrypt(p_secret_value, p_encryption_key, 'cipher-algo=aes256'))
+    VALUES (p_project_id, p_secret_type, p_secret_name, extensions.pgp_sym_encrypt(p_secret_value, p_encryption_key, 'cipher-algo=aes256'))
     RETURNING secret_id INTO v_inserted_secret_id;
     
     RETURN v_inserted_secret_id;
@@ -521,7 +521,7 @@ RETURNS json AS $$
 DECLARE
     decrypted_value json;
 BEGIN
-    SELECT pgp_sym_decrypt(secret_value, p_encryption_key)::json
+    SELECT extensions.pgp_sym_decrypt(secret_value, p_encryption_key)::json
     INTO decrypted_value
     FROM public.secrets
     WHERE secret_id = p_secret_id AND project_id = p_project_id;
