@@ -48,9 +48,6 @@ jobs:
           - distro: centosstream9
             tag: latest
             namespace: glillico
-          - distro: centosstream8
-            tag: latest
-            namespace: glillico
 
     steps:
       - name: Set TERM environment variable
