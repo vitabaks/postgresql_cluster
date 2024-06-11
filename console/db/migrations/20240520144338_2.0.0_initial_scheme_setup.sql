@@ -840,9 +840,11 @@ $$ LANGUAGE plpgsql;
 
 -- Operations
 CREATE TABLE public.operations (
-    id bigint NOT NULL,
+    id bigserial,
     project_id bigint REFERENCES public.projects(project_id),
     cluster_id bigint REFERENCES public.clusters(cluster_id),
+    docker_code varchar(80) NOT NULL,
+    cid uuid,
     operation_type text NOT NULL,
     operation_status text NOT NULL CHECK (operation_status IN ('in_progress', 'success', 'failed')),
     operation_log text,
@@ -854,6 +856,8 @@ COMMENT ON TABLE public.operations IS 'Table containing logs of operations perfo
 COMMENT ON COLUMN public.operations.id IS 'The ID of the operation from the backend';
 COMMENT ON COLUMN public.clusters.project_id IS 'The ID of the project to which the operation belongs';
 COMMENT ON COLUMN public.operations.cluster_id IS 'The ID of the cluster related to the operation';
+COMMENT ON COLUMN public.operations.docker_code IS 'The CODE of the operation related to the docker daemon';
+COMMENT ON COLUMN public.operations.cid IS 'The correlation_id related to the operation';
 COMMENT ON COLUMN public.operations.operation_type IS 'The type of operation performed (e.g., deploy, edit, update, restart, delete, etc.)';
 COMMENT ON COLUMN public.operations.operation_status IS 'The status of the operation (in_progress, success, failed)';
 COMMENT ON COLUMN public.operations.operation_log IS 'The log details of the operation';
