@@ -7,7 +7,7 @@ proxy_env: {}  # yamllint disable rule:braces
 # ---------------------------------------------------------------------
 
 # Cluster variables
-cluster_vip: ""  # IP address for client access to the databases in the cluster (optional).
+cluster_vip: "192.168.136.208"  # IP address for client access to the databases in the cluster (optional).
 vip_interface: "{{ ansible_default_ipv4.interface }}"  # interface name (e.g., "ens32").
 # Note: VIP-based solutions such as keepalived or vip-manager may not function correctly in cloud environments like AWS.
 
@@ -15,16 +15,27 @@ patroni_cluster_name: "postgres-cluster"  # the cluster name (must be unique for
 patroni_install_version: "3.3.0"  # or 'latest'
 
 patroni_superuser_username: "postgres"
-patroni_superuser_password: "postgres-pass"  # please change password
+patroni_superuser_password: !vault |
+          $ANSIBLE_VAULT;1.1;AES256
+          37383664303964343766303839616435333534376331363935373266663563626261363132623238
+          3137366131383432303439373262356537376365393136390a313033663334383832356662653736
+          35303763613062633639323562343833643239303361353563663231373635646431633035666438
+          6561653535366135390a333963343033613665386534393934366330333636616531633730336166
+          38636439363539363839373564653831616566653532346366313637626633323565
 patroni_replication_username: "replicator"
-patroni_replication_password: "replicator-pass"  # please change password
-
+patroni_replication_password: !vault |
+          $ANSIBLE_VAULT;1.1;AES256
+          63633939323462646633393464646137333231626362326437646134313834306163396630396263
+          6262626535333763616536386239303861646462336539660a303434636438613364353961363365
+          34343863303637613838663466643633623462386165326661633465366566646465653739343039
+          3366333865623664320a396635303138303162616565346363333465376266323334323261383339
+          63643132616366366263646333393264663065323466373633613362353139313937
 synchronous_mode: false  # or 'true' for enable synchronous database replication
 synchronous_mode_strict: false  # if 'true' then block all client writes to the master, when a synchronous replica is not available
 synchronous_node_count: 1  # number of synchronous standby databases
 
 # Load Balancing
-with_haproxy_load_balancing: false  # or 'true' if you want to install and configure the load-balancing
+with_haproxy_load_balancing: true  # or 'true' if you want to install and configure the load-balancing
 haproxy_listen_port:
   master: 5000
   replicas: 5001
@@ -64,7 +75,7 @@ dcs_exists: false  # or 'true' if you don't want to deploy a new etcd cluster
 dcs_type: "etcd"  # or 'consul'
 
 # if dcs_type: "etcd" and dcs_exists: false
-etcd_version: "3.5.11"  # version for deploy etcd cluster
+etcd_version: "3.5.14"  # version for deploy etcd cluster
 etcd_data_dir: "/var/lib/etcd"
 etcd_cluster_name: "etcd-{{ patroni_cluster_name }}"  # ETCD_INITIAL_CLUSTER_TOKEN
 
@@ -144,12 +155,12 @@ consul_services:
 
 
 # PostgreSQL variables
-postgresql_version: "16"
+postgresql_version: "14"
 # postgresql_data_dir: see vars/Debian.yml or vars/RedHat.yml
 postgresql_listen_addr: "0.0.0.0" # Listen on all interfaces. Or use "{{ inventory_hostname }},127.0.0.1" to listen on a specific IP address.
 postgresql_port: "5432"
 postgresql_encoding: "UTF8"  # for bootstrap only (initdb)
-postgresql_locale: "en_US.UTF-8"  # for bootstrap only (initdb)
+postgresql_locale: "ru_RU.UTF-8"  # for bootstrap only (initdb)
 postgresql_data_checksums: true  # for bootstrap only (initdb)
 postgresql_password_encryption_algorithm: "scram-sha-256"  # or "md5" if your clients do not work with passwords encrypted with SCRAM-SHA-256
 

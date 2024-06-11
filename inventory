@@ -11,33 +11,42 @@
 
 # if dcs_exists: false and dcs_type: "etcd"
 [etcd_cluster]  # recommendation: 3, or 5-7 nodes
-10.128.64.140
-10.128.64.142
-10.128.64.143
+#10.128.64.140
+#10.128.64.142
+#10.128.64.143
+192.168.136.204  
+192.168.136.205  
+192.168.136.206  
 
 # if dcs_exists: false and dcs_type: "consul"
 [consul_instances]  # recommendation: 3 or 5-7 nodes
-10.128.64.140 consul_node_role=server consul_bootstrap_expect=true consul_datacenter=dc1
-10.128.64.142 consul_node_role=server consul_bootstrap_expect=true consul_datacenter=dc1
-10.128.64.143 consul_node_role=server consul_bootstrap_expect=true consul_datacenter=dc1
+#10.128.64.140 consul_node_role=server consul_bootstrap_expect=true consul_datacenter=dc1
+#10.128.64.142 consul_node_role=server consul_bootstrap_expect=true consul_datacenter=dc1
+#10.128.64.143 consul_node_role=server consul_bootstrap_expect=true consul_datacenter=dc1
 #10.128.64.144 consul_node_role=client consul_datacenter=dc2
 #10.128.64.145 consul_node_role=client consul_datacenter=dc2
 
 # if with_haproxy_load_balancing: true
 [balancers]
-10.128.64.140 # balancer_tags="datacenter=dc1"
-10.128.64.142 # balancer_tags="datacenter=dc1"
-10.128.64.143 # balancer_tags="datacenter=dc1"
+#10.128.64.140 # balancer_tags="datacenter=dc1"
+#10.128.64.142 # balancer_tags="datacenter=dc1"
+#10.128.64.143 # balancer_tags="datacenter=dc1"
+192.168.136.204   # balancer_tags="datacenter=dc1"
+192.168.136.205   # balancer_tags="datacenter=dc1"
+192.168.136.206   # balancer_tags="datacenter=dc1"
 #10.128.64.144 balancer_tags="datacenter=dc2"
 #10.128.64.145 balancer_tags="datacenter=dc2" new_node=true
 
 # PostgreSQL nodes
 [master]
-10.128.64.140 hostname=pgnode01 postgresql_exists=false # patroni_tags="datacenter=dc1"
+#10.128.64.140 hostname=pgnode01 postgresql_exists=false # patroni_tags="datacenter=dc1"
+192.168.136.204 hostname=pgnode1 postgresql_exists=false # patroni_tags="datacenter=dc1"
 
 [replica]
-10.128.64.142 hostname=pgnode02 postgresql_exists=false # patroni_tags="datacenter=dc1"
-10.128.64.143 hostname=pgnode03 postgresql_exists=false # patroni_tags="datacenter=dc1"
+192.168.136.205 hostname=pgnode2 postgresql_exists=false # patroni_tags="datacenter=dc1
+192.168.136.206 hostname=pgnode3 postgresql_exists=false # patroni_tags="datacenter=dc1"
+#10.128.64.142 hostname=pgnode02 postgresql_exists=false # patroni_tags="datacenter=dc1"
+#10.128.64.143 hostname=pgnode03 postgresql_exists=false # patroni_tags="datacenter=dc1"
 #10.128.64.144 hostname=pgnode04 postgresql_exists=false patroni_tags="datacenter=dc2"
 #10.128.64.145 hostname=pgnode04 postgresql_exists=false patroni_tags="datacenter=dc2" new_node=true
 
@@ -53,12 +62,14 @@ replica
 [all:vars]
 ansible_connection='ssh'
 ansible_ssh_port='22'
-ansible_user='root'
-ansible_ssh_pass='secretpassword'  # "sshpass" package is required for use "ansible_ssh_pass"
+#ansible_user='root'
+#ansible_ssh_pass='secretpassword'  # "sshpass" package is required for use "ansible_ssh_pass"
 #ansible_ssh_private_key_file=
 ansible_python_interpreter='/usr/bin/env python3'
+ansible_ssh_private_key_file=/home/kirill/.ssh/id_rsa
+ansible_user=obpadmin
+ansible_become=true
 
 [pgbackrest:vars]
 #ansible_user='postgres'
 #ansible_ssh_pass='secretpassword'
-
