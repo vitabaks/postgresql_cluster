@@ -15,10 +15,10 @@ ntp_servers: []
 #  - "10.128.64.44"
 #  - "10.128.64.45"
 
-timezone: ""
+# timezone: ""
 # timezone: "Etc/UTC"
 # timezone: "America/New_York"
-# timezone: "Europe/Moscow"
+timezone: "Europe/Moscow"
 # timezone: "Europe/Berlin"
 
 # Generate locale
@@ -30,7 +30,7 @@ locale_gen:
 #  - { language_country: "", encoding: "" }
 
 # Set system locale (LANG,LC_ALL)
-locale: "en_US.utf-8"
+locale: "ru_RU.utf-8"
 
 # Configure swap space (if not already exists)
 swap_file_create: true  # or 'false'

@@ -40,11 +40,11 @@
 # PostgreSQL nodes
 [master]
 #10.128.64.140 hostname=pgnode01 postgresql_exists=false # patroni_tags="datacenter=dc1"
-192.168.136.204 hostname=pgnode1 postgresql_exists=false # patroni_tags="datacenter=dc1"
+192.168.136.204 hostname=pgnode1.kropalik.local postgresql_exists=false # patroni_tags="datacenter=dc1"
 
 [replica]
-192.168.136.205 hostname=pgnode2 postgresql_exists=false # patroni_tags="datacenter=dc1
-192.168.136.206 hostname=pgnode3 postgresql_exists=false # patroni_tags="datacenter=dc1"
+192.168.136.205 hostname=pgnode2.kropalik.local postgresql_exists=false # patroni_tags="datacenter=dc1
+192.168.136.206 hostname=pgnode3.kropalik.local postgresql_exists=false # patroni_tags="datacenter=dc1"
 #10.128.64.142 hostname=pgnode02 postgresql_exists=false # patroni_tags="datacenter=dc1"
 #10.128.64.143 hostname=pgnode03 postgresql_exists=false # patroni_tags="datacenter=dc1"
 #10.128.64.144 hostname=pgnode04 postgresql_exists=false patroni_tags="datacenter=dc2"
