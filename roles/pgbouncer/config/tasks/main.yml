@@ -19,7 +19,7 @@
   loop_control:
     index_var: idx
     label: "{{ 'pgbouncer' if idx == 0 else 'pgbouncer-%d' % (idx + 1) }}"
-  notify: "restart pgbouncer"
+  notify: "reload pgbouncer"
   when: existing_pgcluster is not defined or not existing_pgcluster|bool
   tags: pgbouncer, pgbouncer_conf
 
