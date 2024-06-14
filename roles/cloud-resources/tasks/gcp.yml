@@ -339,10 +339,10 @@
             http_health_check:
               port: "{{ patroni_restapi_port }}"
               request_path: "/{{ item }}"
-            check_interval_sec: 3
-            timeout_sec: 2
-            unhealthy_threshold: 2
-            healthy_threshold: 3
+            check_interval_sec: "{{ gcp_compute_health_check_interval_sec | default(3) }}"
+            timeout_sec: "{{ gcp_compute_health_check_check_timeout_sec | default(2) }}"
+            unhealthy_threshold: "{{ gcp_compute_health_check_unhealthy_threshold | default(2) }}"
+            healthy_threshold: "{{ gcp_compute_health_check_healthy_threshold | default(3) }}"
             state: present
           loop:
             - "primary"
@@ -371,7 +371,7 @@
                 max_connections_per_instance: "{{ gcp_lb_max_connections | default(10000) }}"
             health_checks:
               - "/global/healthChecks/{{ patroni_cluster_name }}-{{ item }}-hc"
-            timeout_sec: 5  # How many seconds to wait for the backend before considering it a failed request.
+            timeout_sec: "{{ gcp_compute_backend_service_timeout_sec | default(5) }}"
             log_config:
               enable: "{{ gcp_compute_backend_service_log_enable | default(false) }}"
             state: present
