@@ -209,6 +209,28 @@
   when: cloud_provider | default('') | lower == 'aws' and cloud_load_balancer | default(false) | bool
   tags: conn_info, cluster_info, cluster_status
 
+# GCP
+- name: Connection info
+  run_once: true
+  ansible.builtin.debug:
+    msg:
+      address:
+        primary: "{{ load_balancer_primary }}"
+        replica: "{{ load_balancer_replica if load_balancer_replica != 'N/A' else omit }}"
+        replica_sync: "{{ load_balancer_replica_sync if synchronous_mode | bool else omit }}"
+      port: "{{ pgbouncer_listen_port if pgbouncer_install else postgresql_port }}"
+      superuser: "{{ superuser_username }}"
+      password: "{{ superuser_password }}"
+  ignore_errors: true
+  vars:
+    load_balancer_primary: "{{ (hostvars['localhost']['gcp_load_balancer']['results'] | selectattr('item', 'equalto', 'primary') | first).IPAddress | default('N/A') }}"
+    load_balancer_replica: "{{ (hostvars['localhost']['gcp_load_balancer']['results'] | selectattr('item', 'equalto', 'replica') | first).IPAddress | default('N/A') }}"
+    load_balancer_replica_sync: "{{ (hostvars['localhost']['gcp_load_balancer']['results'] | selectattr('item', 'equalto', 'sync') | first).IPAddress | default('N/A') }}"
+    superuser_username: "{{ patroni_superuser_username }}"
+    superuser_password: "{{ '********' if mask_password | default(false) | bool else patroni_superuser_password }}"
+  when: cloud_provider | default('') | lower == 'gcp' and cloud_load_balancer | default(false) | bool
+  tags: conn_info, cluster_info, cluster_status
+
 # DigitalOcean
 - name: Connection info
   run_once: true
