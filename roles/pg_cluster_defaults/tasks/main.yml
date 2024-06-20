@@ -1,0 +1,8 @@
+---
+- name: Set facts variables
+  tags:
+    - always
+  block:
+    - name: Set fallback_ips
+      import_tasks: fallback_ips.yml
+      when: fallback_ips is not defined

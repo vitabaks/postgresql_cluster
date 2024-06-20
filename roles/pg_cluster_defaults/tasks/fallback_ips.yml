@@ -1,0 +1,18 @@
+---
+- name: Create fallback_ips_base
+  set_fact:
+    fallback_ips_base: |
+      ---
+      {% for item in (groups['etcd_cluster'] | default([]) + groups['postgres_cluster'] | default([])) | unique %}
+      {% set found = hostvars[item].get('ansible_default_ipv4') %}
+      {{ item }}: "{{ found.get('address', '127.0.0.1') }}"
+      {% endfor %}
+  delegate_to: localhost
+  connection: local
+  delegate_facts: yes
+  become: no
+  run_once: yes
+
+- name: Set fallback_ips
+  set_fact:
+    fallback_ips: "{{ hostvars.localhost.fallback_ips_base | from_yaml }}"

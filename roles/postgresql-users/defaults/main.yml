@@ -1,0 +1,9 @@
+---
+# (optional) list of users to be created (if not already exists)
+postgresql_users:
+  - { name: "{{ pgbouncer_auth_username }}", password: "{{ pgbouncer_auth_password }}", flags: "LOGIN", role: "" }
+#  - { name: "monitoring_auth_username", password: "monitoring_user_password", flags: "LOGIN", role: "pg_monitor" } # monitoring Service Account
+#  - { name: "mydb-user", password: "mydb-user-pass", flags: "SUPERUSER" }
+#  - { name: "", password: "", flags: "NOSUPERUSER" }
+#  - { name: "", password: "", flags: "NOSUPERUSER" }
+#  - { name: "", password: "", flags: "NOLOGIN" }
