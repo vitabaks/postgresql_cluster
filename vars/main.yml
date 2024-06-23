@@ -422,7 +422,7 @@ pgbackrest:
   - { option: "keep_data", value: "True" }
   - { option: "no_params", value: "True" }
 wal_g:
-  - { option: "command", value: "wal-g backup-fetch {{ postgresql_data_dir }} LATEST" }
+  - { option: "command", value: "{{ wal_g_path }} backup-fetch {{ postgresql_data_dir }} LATEST" }
   - { option: "no_params", value: "True" }
 basebackup:
   - { option: "max-rate", value: "100M" }
@@ -434,7 +434,7 @@ pg_probackup:
 
 # "restore_command" written to recovery.conf when configuring follower (create replica)
 postgresql_restore_command: ""
-# postgresql_restore_command: "wal-g wal-fetch %f %p"  # restore WAL-s using WAL-G
+# postgresql_restore_command: "{{ wal_g_path }} wal-fetch %f %p"  # restore WAL-s using WAL-G
 # postgresql_restore_command: "pgbackrest --stanza={{ pgbackrest_stanza }} archive-get %f %p"  # restore WAL-s using pgbackrest
 
 # postgresql_restore_command: "pg_probackup-{{ pg_probackup_version }} archive-get -B
@@ -462,6 +462,7 @@ pg_probackup_patroni_cluster_bootstrap_command: "{{ pg_probackup_command_parts |
 # WAL-G
 wal_g_install: false  # or 'true'
 wal_g_version: "3.0.0"
+wal_g_path: "/usr/local/bin/wal-g"
 wal_g_json:  # config https://github.com/wal-g/wal-g#configuration
   - { option: "AWS_ACCESS_KEY_ID", value: "{{ AWS_ACCESS_KEY_ID | default('') }}" }  # define values or pass via --extra-vars
   - { option: "AWS_SECRET_ACCESS_KEY", value: "{{ AWS_SECRET_ACCESS_KEY | default('') }}" }  # define values or pass via --extra-vars
@@ -475,17 +476,17 @@ wal_g_json:  # config https://github.com/wal-g/wal-g#configuration
 #  - { option: "AWS_S3_FORCE_PATH_STYLE", value: "true" }  # to use Minio.io S3-compatible storage
 #  - { option: "AWS_ENDPOINT", value: "http://minio:9000" }  # to use Minio.io S3-compatible storage
 #  - { option: "", value: "" }
-wal_g_archive_command: "wal-g wal-push %p"
-wal_g_patroni_cluster_bootstrap_command: "wal-g backup-fetch {{ postgresql_data_dir }} LATEST"
+wal_g_archive_command: "{{ wal_g_path }} wal-push %p"
+wal_g_patroni_cluster_bootstrap_command: "{{ wal_g_path }} backup-fetch {{ postgresql_data_dir }} LATEST"
 
 # Define job_parts outside of wal_g_cron_jobs
 # ⚠️ Ensure there is a space at the beginning of each part to prevent commands from concatenating.
 wal_g_backup_command:
   - "curl -I -s http://{{ inventory_hostname }}:{{ patroni_restapi_port }} | grep 200"
-  - " && /usr/local/bin/wal-g backup-push {{ postgresql_data_dir }} > {{ postgresql_log_dir }}/walg_backup.log 2>&1"
+  - " && {{ wal_g_path }} backup-push {{ postgresql_data_dir }} > {{ postgresql_log_dir }}/walg_backup.log 2>&1"
 wal_g_delete_command:
   - "curl -I -s http://{{ inventory_hostname }}:{{ patroni_restapi_port }} | grep 200"
-  - " && /usr/local/bin/wal-g delete retain FULL 4 --confirm > {{ postgresql_log_dir }}/walg_delete.log 2>&1"
+  - " && {{ wal_g_path }} delete retain FULL 4 --confirm > {{ postgresql_log_dir }}/walg_delete.log 2>&1"
 
 wal_g_cron_jobs:
   - name: "WAL-G: Create daily backup"
