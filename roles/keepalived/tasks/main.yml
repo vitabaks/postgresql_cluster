@@ -28,6 +28,7 @@
     state: directory
     owner: root
     group: root
+    mode: "0750"
   tags: keepalived_conf, keepalived
 
 - name: Create vrrp_script "/usr/libexec/keepalived/haproxy_check.sh"
@@ -42,15 +43,29 @@
   notify: "restart keepalived"
   tags: keepalived_conf, keepalived
 
+- name: Parse keepalived_instances as YAML
+  ansible.builtin.set_fact:
+    keepalived_instances_parsed: "{{ keepalived_instances | from_yaml }}"
+  when: add_balancer is not defined or not add_balancer|bool
+  tags: keepalived_conf, keepalived
+
 - name: Generate conf file "/etc/keepalived/keepalived.conf"
   ansible.builtin.template:
     src: templates/keepalived.conf.j2
     dest: /etc/keepalived/keepalived.conf
+    owner: root
+    group: root
+    mode: "0644"
   notify: "restart keepalived"
+  vars:
+    keepalived_instances: "{{ keepalived_instances_parsed }}"
   when: add_balancer is not defined or not add_balancer|bool
   tags: keepalived_conf, keepalived
 
-- block:  # for add_balancer.yml
+- name: Generate conf file "/etc/keepalived/keepalived.conf" for add_balancer
+  when: add_balancer is defined and add_balancer|bool
+  tags: keepalived_conf, keepalived
+  block:  # for add_balancer.yml
     - name: "Fetch keepalived.conf conf file from {{ groups.balancers[0] }}"
       run_once: true
       ansible.builtin.fetch:
@@ -64,6 +79,9 @@
       ansible.builtin.copy:
         src: files/keepalived.conf
         dest: /etc/keepalived/keepalived.conf
+        owner: root
+        group: root
+        mode: "0750"
       notify: "restart keepalived"
 
     - name: Remove keepalived.conf file from localhost
@@ -81,20 +99,18 @@
         line: "{{ item.line }}"
         backrefs: true
       loop:
-        - { regexp: '^.*interface', line: '   interface {{ vip_interface }}' }
+        - {regexp: '^.*interface', line: '   interface {{ vip_interface }}'}
       loop_control:
         label: "{{ item.line }}"
       notify: "restart keepalived"
-  when: add_balancer is defined and add_balancer|bool
-  tags: keepalived_conf, keepalived
 
-- name: selinux | change the keepalived_t domain to permissive
+- name: Selinux | Change the keepalived_t domain to permissive
   community.general.selinux_permissive:
     name: keepalived_t
     permissive: true
   when: ansible_selinux.status is defined and
         ansible_selinux.status == 'enabled'
-  ignore_errors: true
+  ignore_errors: true  # noqa ignore-errors
   tags: keepalived, keepalived_selinux
 
 ...
