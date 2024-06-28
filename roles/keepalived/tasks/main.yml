@@ -99,7 +99,7 @@
         line: "{{ item.line }}"
         backrefs: true
       loop:
-        - {regexp: '^.*interface', line: '   interface {{ vip_interface }}'}
+        - { regexp: '^.*interface', line: '   interface {{ vip_interface }}' }
       loop_control:
         label: "{{ item.line }}"
       notify: "restart keepalived"
