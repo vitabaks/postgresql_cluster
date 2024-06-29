@@ -12,4 +12,4 @@ keepalived_instances:
       auth_type: PASS
       auth_pass: "1ce24b6e"
     virtual_ipaddresses:
-      - "{{ cluster_vip  }}"
+      - "{{ cluster_vip }}"
