@@ -6,9 +6,8 @@ global_defs {
 
 {% for instance in keepalived_instances %}
 {% if instance.check_status_command is defined %}
-
 vrrp_script chk_command_{{ instance.virtual_router_id }} {
-   script "{{ instance.check_status_command }} "
+   script "{{ instance.check_status_command }}"
    interval 2
    weight 2
 }
@@ -21,15 +20,15 @@ vrrp_instance {{ instance.name }} {
   advert_int {{ instance.advert_int }}
   state {{ instance.state }}
   virtual_ipaddress {
-  {% for ip in instance.virtual_ipaddresses %}
-  {{ ip }}
-{% endfor %}
+    {% for ip in instance.virtual_ipaddresses %}
+    {{ ip }}
+    {% endfor %}
   }
-{% if instance.check_status_command is defined %}
+  {% if instance.check_status_command is defined %}
   track_script {
     chk_command_{{ instance.virtual_router_id }}
-}
-{% endif %}
+  }
+  {% endif %}
   authentication {
     auth_type {{ instance.authentication.auth_type }}
     auth_pass {{ instance.authentication.auth_pass }}
