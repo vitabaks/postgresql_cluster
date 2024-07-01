@@ -224,20 +224,6 @@
         state: present
       when: cloud_load_balancer | bool
 
-    # GCS Bucket
-    - name: "GCP: Create bucket '{{ gcp_bucket_name }}'"
-      google.cloud.gcp_storage_bucket:
-        auth_kind: "serviceaccount"
-        service_account_contents: "{{ gcp_service_account_contents }}"
-        project: "{{ gcp_project | default(project_info.resources[0].projectNumber) }}"
-        name: "{{ gcp_bucket_name }}"
-        state: present
-        storage_class: "{{ gcp_bucket_storage_class }}"
-        predefined_default_object_acl: "{{ gcp_bucket_default_object_acl }}"
-      when:
-        - (pgbackrest_install | bool or wal_g_install | bool)
-        - gcp_bucket_create | bool
-
     # Server and volume
     - name: "GCP: Create or modify VM instance"
       google.cloud.gcp_compute_instance:
@@ -407,7 +393,7 @@
             - "sync"
           loop_control:
             label: "{{ patroni_cluster_name }}-{{ item }}-proxy"
-          register: reserved_ip
+          register: target_tcp_proxy
           when: item == 'primary' or
                 (item == 'replica' and server_count | int > 1) or
                 (item in ['sync', 'async'] and server_count | int > 1 and synchronous_mode | bool)
@@ -457,6 +443,20 @@
                 (item == 'replica' and server_count | int > 1) or
                 (item in ['sync', 'async'] and server_count | int > 1 and synchronous_mode | bool)
       when: cloud_load_balancer | bool
+
+    # GCS Bucket
+    - name: "GCP: Create bucket '{{ gcp_bucket_name }}'"
+      google.cloud.gcp_storage_bucket:
+        auth_kind: "serviceaccount"
+        service_account_contents: "{{ gcp_service_account_contents }}"
+        project: "{{ gcp_project | default(project_info.resources[0].projectNumber) }}"
+        name: "{{ gcp_bucket_name }}"
+        state: present
+        storage_class: "{{ gcp_bucket_storage_class }}"
+        predefined_default_object_acl: "{{ gcp_bucket_default_object_acl }}"
+      when:
+        - (pgbackrest_install | bool or wal_g_install | bool)
+        - gcp_bucket_create | bool
   when: state == 'present'
 
 - name: Wait for host to be available via SSH
