@@ -43,12 +43,6 @@
   notify: "restart keepalived"
   tags: keepalived_conf, keepalived
 
-- name: Parse keepalived_instances as YAML
-  ansible.builtin.set_fact:
-    keepalived_instances_parsed: "{{ keepalived_instances | from_yaml }}"
-  when: add_balancer is not defined or not add_balancer|bool
-  tags: keepalived_conf, keepalived
-
 - name: Generate conf file "/etc/keepalived/keepalived.conf"
   ansible.builtin.template:
     src: templates/keepalived.conf.j2
@@ -57,8 +51,6 @@
     group: root
     mode: "0644"
   notify: "restart keepalived"
-  vars:
-    keepalived_instances: "{{ keepalived_instances_parsed }}"
   when: add_balancer is not defined or not add_balancer|bool
   tags: keepalived_conf, keepalived
 
