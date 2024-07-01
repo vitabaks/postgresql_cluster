@@ -22,7 +22,7 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/partial \
        /postgresql_cluster/roles/consul/requirements.yml \
     && ansible-galaxy collection list \
     && pip3 install --no-cache-dir -r \
-       /root/.ansible/collections/ansible_collections/azure/azcollection/requirements-azure.txt \
+       /root/.ansible/collections/ansible_collections/azure/azcollection/requirements.txt \
     && apt-get autoremove -y --purge gnupg git python3.10-dev gcc g++ cmake make libssl-dev \
     && apt-get clean -y autoclean \
     && rm -rf /var/lib/apt/lists/* /tmp/* \
