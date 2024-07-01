@@ -28,6 +28,7 @@
     state: directory
     owner: root
     group: root
+    mode: "0750"
   tags: keepalived_conf, keepalived
 
 - name: Create vrrp_script "/usr/libexec/keepalived/haproxy_check.sh"
@@ -46,6 +47,9 @@
   ansible.builtin.template:
     src: templates/keepalived.conf.j2
     dest: /etc/keepalived/keepalived.conf
+    owner: root
+    group: root
+    mode: "0644"
   notify: "restart keepalived"
   when: add_balancer is not defined or not add_balancer|bool
   tags: keepalived_conf, keepalived
@@ -88,13 +92,13 @@
   when: add_balancer is defined and add_balancer|bool
   tags: keepalived_conf, keepalived
 
-- name: selinux | change the keepalived_t domain to permissive
+- name: Selinux | Change the keepalived_t domain to permissive
   community.general.selinux_permissive:
     name: keepalived_t
     permissive: true
   when: ansible_selinux.status is defined and
         ansible_selinux.status == 'enabled'
-  ignore_errors: true
+  ignore_errors: true  # noqa ignore-errors
   tags: keepalived, keepalived_selinux
 
 ...
