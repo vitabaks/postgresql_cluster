@@ -38,7 +38,7 @@
 
     - name: Ensure that Azure collection requirements is present on controlling host
       ansible.builtin.pip:
-        requirements: "{{ ansible_collections_path | default(collections_path.stdout) }}/azure/azcollection/requirements-azure.txt"
+        requirements: "{{ ansible_collections_path | default(collections_path.stdout) }}/azure/azcollection/requirements.txt"
         executable: pip3
         extra_args: "--trusted-host=pypi.python.org --trusted-host=pypi.org --trusted-host=files.pythonhosted.org"
         umask: "0022"
@@ -96,66 +96,6 @@
         index_var: idx
         label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-public-ip"
       register: public_ip_address
-
-    # Load Balancer
-    - name: "Azure: Create public IP address for Load Balancer"
-      azure.azcollection.azure_rm_publicipaddress:
-        resource_group: "{{ azure_resource_group | default('postgres-cluster-resource-group' ~ '-' ~ server_location) }}"
-        name: "{{ patroni_cluster_name }}-{{ item }}-public-ip"
-        allocation_method: "Static"
-        sku: "Standard"
-      loop:
-        - "primary"
-        - "replica"
-        - "sync"
-      loop_control:
-        label: "{{ patroni_cluster_name }}-{{ item }}-public-ip"
-      register: loadbalancer_public_ip_address
-      when: database_public_access | bool and cloud_load_balancer | bool and
-            (item == 'primary' or
-            (item == 'replica' and server_count | int > 1) or
-            (item in ['sync', 'async'] and server_count | int > 1 and synchronous_mode | bool))
-
-    - name: "Azure: Create or modify Load Balancer"
-      azure.azcollection.azure_rm_loadbalancer:
-        resource_group: "{{ azure_resource_group | default('postgres-cluster-resource-group' ~ '-' ~ server_location) }}"
-        name: "{{ patroni_cluster_name }}-{{ item }}"
-        location: "{{ server_location }}"
-        frontend_ip_configurations:
-          - name: "{{ patroni_cluster_name }}-{{ item }}-frontend"
-            public_ip_address: "{{ database_public_access | bool | ternary(patroni_cluster_name ~ '-' ~ item ~ '-public-ip', omit) }}"
-            subnet: "{{ database_public_access | bool | ternary(omit, network_info.virtualnetworks[0].subnets[0].id) }}"
-        backend_address_pools:
-          - name: "{{ patroni_cluster_name }}-{{ item }}-backend"
-        probes:
-          - name: "{{ patroni_cluster_name }}-{{ item }}-health-probe"
-            protocol: "Http"
-            port: "{{ patroni_restapi_port }}"
-            request_path: "/{{ item }}"
-            interval: 5
-            fail_count: 2
-        load_balancing_rules:
-          - name: "{{ patroni_cluster_name }}-{{ item }}-rule"
-            frontend_ip_configuration: "{{ patroni_cluster_name }}-{{ item }}-frontend"
-            backend_address_pool: "{{ patroni_cluster_name }}-{{ item }}-backend"
-            probe: "{{ patroni_cluster_name }}-{{ item }}-health-probe"
-            backend_port: "{{ pgbouncer_listen_port | default('6432') if pgbouncer_install | bool else postgresql_port | default('5432') }}"
-            frontend_port: "{{ pgbouncer_listen_port | default('6432') if pgbouncer_install | bool else postgresql_port | default('5432') }}"
-            protocol: "Tcp"
-            idle_timeout: 10 # in minutes
-            enable_floating_ip: true
-        sku: "Standard"
-      loop:
-        - "primary"
-        - "replica"
-        - "sync"
-      loop_control:
-        label: "{{ patroni_cluster_name }}-{{ item }}"
-      register: azure_loadbalancer
-      when: cloud_load_balancer | bool and
-            (item == 'primary' or
-            (item == 'replica' and server_count | int > 1) or
-            (item in ['sync', 'async'] and server_count | int > 1 and synchronous_mode | bool))
 
     # Security Group (Firewall)
     - name: "Azure: Create or modify Security Group"
@@ -241,6 +181,74 @@
           }}
       when: firewall | bool
 
+    # Load Balancer
+    - name: "Azure: Create public IP address for Load Balancer"
+      azure.azcollection.azure_rm_publicipaddress:
+        resource_group: "{{ azure_resource_group | default('postgres-cluster-resource-group' ~ '-' ~ server_location) }}"
+        name: "{{ patroni_cluster_name }}-{{ item }}-public-ip"
+        allocation_method: "Static"
+        sku: "Standard"
+      loop:
+        - "primary"
+        - "replica"
+        - "sync"
+      loop_control:
+        label: "{{ patroni_cluster_name }}-{{ item }}-public-ip"
+      register: azure_load_balancer_public_ip
+      when: database_public_access | bool and cloud_load_balancer | bool and
+            (item == 'primary' or
+            (item == 'replica' and server_count | int > 1) or
+            (item in ['sync', 'async'] and server_count | int > 1 and synchronous_mode | bool))
+
+    - name: "Azure: Create or modify Load Balancer"
+      azure.azcollection.azure_rm_loadbalancer:
+        resource_group: "{{ azure_resource_group | default('postgres-cluster-resource-group' ~ '-' ~ server_location) }}"
+        name: "{{ patroni_cluster_name }}-{{ item }}"
+        location: "{{ server_location }}"
+        frontend_ip_configurations:
+          - name: "{{ patroni_cluster_name }}-{{ item }}-frontend"
+            public_ip_address: "{{ database_public_access | bool | ternary(patroni_cluster_name ~ '-' ~ item ~ '-public-ip', omit) }}"
+            subnet: "{{ database_public_access | bool | ternary(omit, network_info.virtualnetworks[0].subnets[0].id) }}"
+        backend_address_pools:
+          - name: "{{ patroni_cluster_name }}-{{ item }}-backend"
+        probes:
+          - name: "{{ patroni_cluster_name }}-{{ item }}-health-probe"
+            protocol: "Http"
+            port: "{{ patroni_restapi_port }}"
+            request_path: "/{{ item }}"
+            interval: 5
+            fail_count: 2
+        load_balancing_rules:
+          - name: "{{ patroni_cluster_name }}-{{ item }}-rule"
+            frontend_ip_configuration: "{{ patroni_cluster_name }}-{{ item }}-frontend"
+            frontend_port: "{{ pgbouncer_listen_port | default('6432') if pgbouncer_install | bool else postgresql_port | default('5432') }}"
+            backend_address_pool: "{{ patroni_cluster_name }}-{{ item }}-backend"
+            backend_port: "{{ pgbouncer_listen_port | default('6432') if pgbouncer_install | bool else postgresql_port | default('5432') }}"
+            probe: "{{ patroni_cluster_name }}-{{ item }}-health-probe"
+            protocol: "Tcp"
+            idle_timeout: 10  # in minutes
+            enable_floating_ip: true
+        sku: "Standard"
+      loop:
+        - "primary"
+        - "replica"
+        - "sync"
+      loop_control:
+        label: "{{ patroni_cluster_name }}-{{ item }}"
+      register: azure_load_balancer
+      when: cloud_load_balancer | bool and
+            (item == 'primary' or
+            (item == 'replica' and server_count | int > 1) or
+            (item in ['sync', 'async'] and server_count | int > 1 and synchronous_mode | bool))
+
+    - name: Debug azure_load_balancer_ip
+      ansible.builtin.debug:
+        var: azure_load_balancer_public_ip
+
+    - name: Debug azure_load_balancer
+      ansible.builtin.debug:
+        var: azure_load_balancer
+
     # Network interface
     - name: "Azure: Create network interface"
       azure.azcollection.azure_rm_networkinterface:
@@ -263,7 +271,7 @@
       vars:
         load_balancer_backend_ids: >-
           {{
-            (azure_loadbalancer.results | selectattr('state.backend_address_pools', 'defined')
+            (azure_load_balancer.results | selectattr('state.backend_address_pools', 'defined')
             | map(attribute='state.backend_address_pools')
             | map('first')
             | map(attribute='id') if cloud_load_balancer | bool else [])
