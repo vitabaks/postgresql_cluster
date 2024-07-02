@@ -104,8 +104,22 @@ class CallbackModule(CallbackBase):
         if not self.log_file_path:
             return
 
+        summary = {
+            'time': datetime.now().isoformat(),
+            'summary': {},
+            'status': 'success'
+        }
+
+        for host in stats.processed.keys():
+            host_summary = stats.summarize(host)
+            summary['summary'][host] = host_summary
+            if host_summary['failures'] > 0 or host_summary['unreachable'] > 0:
+                summary['status'] = 'failed'
+
         try:
             with open(self.log_file_path, 'a') as log_file:
+                log_file.write(',\n')
+                json.dump(summary, log_file, indent=4)
                 log_file.write('\n]\n')
         except IOError as e:
             self._display.warning(f"Failed to write to log file {self.log_file_path}: {e}")
