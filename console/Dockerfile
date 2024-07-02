@@ -21,7 +21,9 @@ FROM nginx:1.26-bookworm
 COPY --from=api-builder /go/src/pg-console/pg-console /usr/local/bin/
 COPY --from=api-builder /go/src/pg-console/db/migrations /etc/db/migrations
 COPY --from=ui-builder /usr/src/pg-console/dist /var/www/html/
-COPY --from=ui-builder /usr/src/pg-console/nginx.conf /etc/nginx/nginx.conf
+
+#COPY console/db/migrations /etc/db/migrations
+COPY console/nginx.conf /etc/nginx/nginx.conf
 
 ARG POSTGRES_VERSION
 ENV POSTGRES_VERSION=${POSTGRES_VERSION:-16}
