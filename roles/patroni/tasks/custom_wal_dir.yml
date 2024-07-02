@@ -3,7 +3,7 @@
 # 🔄 Determine base pg_wal_dir name
 - name: Roles.patroni.custom_wal_dir | Set pg_wal_dir based on postgresql_version
   ansible.builtin.set_fact:
-    pg_wal_dir: "{{ 'pg_wal' if postgresql_version is version('10', '>=') else 'pg_xlog' }}"
+    pg_wal_dir: "{{ 'pg_wal' if postgresql_version | int >= 10 else 'pg_xlog' }}"
 
 - name: "Make sure {{ postgresql_data_dir }}/{{ pg_wal_dir }} is symlink"
   ansible.builtin.stat:

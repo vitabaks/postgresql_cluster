@@ -16,7 +16,7 @@
     --jobs={{ ansible_processor_vcpus }}
     --link
   args:
-    chdir: "{{ pg_upper_datadir }}"
+    chdir: "/tmp"
   vars:
     shared_preload_libraries: "-c shared_preload_libraries='{{ pg_shared_preload_libraries_value }}'"
     timescaledb_restoring: "{{ \"-c timescaledb.restoring='on'\" if 'timescaledb' in pg_shared_preload_libraries_value else '' }}"
