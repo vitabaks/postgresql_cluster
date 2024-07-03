@@ -6,24 +6,22 @@ COPY console/service/ .
 
 RUN make build_in_docker
 
-FROM node:20-alpine as ui-builder
+FROM node:20-bookworm as ui-builder
 WORKDIR /usr/src/pg-console
 
 COPY console/ui/ .
 
-RUN npm install yarn@1.22.22 \
-   && yarn install --frozen-lockfile \
-   && yarn vite build
+RUN yarn install --frozen-lockfile --network-timeout 1000000 && yarn vite build
 
 # Build the console image
 FROM nginx:1.26-bookworm
 
 COPY --from=api-builder /go/src/pg-console/pg-console /usr/local/bin/
 COPY --from=api-builder /go/src/pg-console/db/migrations /etc/db/migrations
-COPY --from=ui-builder /usr/src/pg-console/dist /var/www/html/
-
-#COPY console/db/migrations /etc/db/migrations
-COPY console/nginx.conf /etc/nginx/nginx.conf
+COPY --from=ui-builder /usr/src/pg-console/dist /usr/share/nginx/html/
+COPY --from=ui-builder /usr/src/pg-console/nginx/nginx.conf /etc/nginx/
+COPY --from=ui-builder /usr/src/pg-console/env.sh /usr/src/pg-console/.env /usr/src/pg-console/.env.production /usr/share/nginx/html/
+RUN chmod +x /usr/share/nginx/html/env.sh
 
 ARG POSTGRES_VERSION
 ENV POSTGRES_VERSION=${POSTGRES_VERSION:-16}
@@ -44,7 +42,7 @@ ARG PG_CONSOLE_API_PORT
 ENV PG_CONSOLE_API_PORT=${PG_CONSOLE_API_PORT:-8080}
 
 ARG PG_CONSOLE_UI_PORT
-ENV PG_CONSOLE_UI_PORT=${PG_CONSOLE_UI_PORT:-3000}
+ENV PG_CONSOLE_UI_PORT=${PG_CONSOLE_UI_PORT:-80}
 
 # Set SHELL to /bin/bash
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -52,7 +50,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN apt-get clean && rm -rf /var/lib/apt/lists/partial \
    && apt-get update -o Acquire::CompressionTypes::Order::=gz \
    && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
-      gnupg postgresql-common apt-transport-https lsb-release openssh-client ca-certificates wget curl vim-tiny sudo \
+      gnupg postgresql-common apt-transport-https lsb-release openssh-client ca-certificates wget curl vim \
    # PostgreSQL
    && install -d /usr/share/postgresql-common/pgdg \
    && curl -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail https://www.postgresql.org/media/keys/ACCC4CF8.asc \
