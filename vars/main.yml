@@ -46,7 +46,7 @@ haproxy_timeout:
   client: "60m"
   server: "60m"
 # Optionally declare log format for haproxy.
-# Uncommend following lines for JSON structured log format.
+# Uncomment following lines for JSON structured log format.
 # haproxy_log_format: "{
 #   \"pid\":%pid,\
 #   \"haproxy_frontend_type\":\"tcp\",\
