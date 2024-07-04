@@ -640,7 +640,7 @@ CREATE INDEX clusters_name_idx ON public.clusters (cluster_name);
 CREATE INDEX clusters_secret_id_idx ON public.clusters (secret_id);
 
 
--- Cluster servers
+-- Servers
 CREATE TABLE public.servers (
     server_id bigserial PRIMARY KEY,
     cluster_id bigint REFERENCES public.clusters(cluster_id),
