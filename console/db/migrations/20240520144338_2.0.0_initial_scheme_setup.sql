@@ -644,15 +644,15 @@ CREATE INDEX clusters_secret_id_idx ON public.clusters (secret_id);
 CREATE TABLE public.servers (
     server_id bigserial PRIMARY KEY,
     cluster_id bigint REFERENCES public.clusters(cluster_id),
+    secret_id bigint REFERENCES public.secrets(secret_id),  -- link to the secret for SSH access
     server_name text NOT NULL,
     server_location text,
+    server_role text DEFAULT 'N/A',
+    server_status text DEFAULT 'N/A',
     ip_address inet NOT NULL,
-    postgresql_exists boolean DEFAULT false,
     host_groups jsonb,
     host_vars jsonb,
-    role text DEFAULT 'N/A',
-    status text DEFAULT 'N/A',
-    secret_id bigint REFERENCES public.secrets(secret_id),  -- link to the secret for SSH access
+    postgresql_exists boolean DEFAULT false,
     created_at timestamp DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp
 );
@@ -661,12 +661,12 @@ COMMENT ON TABLE public.servers IS 'Table containing information about servers w
 COMMENT ON COLUMN public.servers.cluster_id IS 'The ID of the cluster to which the server belongs';
 COMMENT ON COLUMN public.servers.server_name IS 'The name of the server';
 COMMENT ON COLUMN public.servers.server_location IS 'The physical or cloud location of the server';
+COMMENT ON COLUMN public.servers.server_role IS 'The role of the server (e.g., primary, replica)';
+COMMENT ON COLUMN public.servers.server_status IS 'The current status of the server';
 COMMENT ON COLUMN public.servers.ip_address IS 'The IP address of the server';
 COMMENT ON COLUMN public.servers.postgresql_exists IS 'Indicates whether Postgres database already exists (to convert a standard Postgres setup to a HA cluster)';
 COMMENT ON COLUMN public.servers.host_groups IS 'JSONB field containing the Ansible host groups to which the server belongs';
 COMMENT ON COLUMN public.servers.host_vars IS 'JSONB field containing Ansible host-specific variables';
-COMMENT ON COLUMN public.servers.role IS 'The role of the server (e.g., primary, replica)';
-COMMENT ON COLUMN public.servers.status IS 'The current status of the server';
 COMMENT ON COLUMN public.servers.secret_id IS 'The ID of the secret for accessing the server via SSH';
 COMMENT ON COLUMN public.servers.created_at IS 'The timestamp when the server was created';
 COMMENT ON COLUMN public.servers.updated_at IS 'The timestamp when the server was last updated';
