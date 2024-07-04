@@ -604,7 +604,7 @@ CREATE TABLE public.clusters (
     environment_id bigint REFERENCES public.environments(environment_id),
     cluster_name text NOT NULL UNIQUE,
     cluster_description text,
-    cluster_details jsonb,
+    connection_info jsonb,
     extra_vars jsonb,
     location text,
     server_count integer DEFAULT 0,
@@ -618,7 +618,7 @@ COMMENT ON COLUMN public.clusters.project_id IS 'The ID of the project to which 
 COMMENT ON COLUMN public.clusters.environment_id IS 'The environment in which the cluster is deployed (e.g., Production, Development)';
 COMMENT ON COLUMN public.clusters.cluster_name IS 'The name of the cluster (it must be unique)';
 COMMENT ON COLUMN public.clusters.cluster_description IS 'A description of the cluster (optional)';
-COMMENT ON COLUMN public.clusters.cluster_details IS 'Additional information about the cluster (cloud provider, instance type, postgres version, connection info, etc.)';
+COMMENT ON COLUMN public.clusters.connection_info IS 'The cluster connection Info)';
 COMMENT ON COLUMN public.clusters.extra_vars IS 'Extra variables for Ansible specific to this cluster';
 COMMENT ON COLUMN public.clusters.location IS 'The region/datacenter where the cluster is located';
 COMMENT ON COLUMN public.clusters.server_count IS 'The number of servers associated with the cluster';
