@@ -604,10 +604,11 @@ CREATE TABLE public.clusters (
     environment_id bigint REFERENCES public.environments(environment_id),
     secret_id bigint REFERENCES public.secrets(secret_id),  -- link to the secret for accessing the cloud provider
     cluster_name text NOT NULL UNIQUE,
+    cluster_status text DEFAULT 'deploying',
     cluster_description text,
+    cluster_location text,
     connection_info jsonb,
     extra_vars jsonb,
-    location text,
     server_count integer DEFAULT 0,
     postgres_version integer,
     created_at timestamp DEFAULT CURRENT_TIMESTAMP,
@@ -618,10 +619,11 @@ COMMENT ON TABLE public.clusters IS 'Table containing information about Postgres
 COMMENT ON COLUMN public.clusters.project_id IS 'The ID of the project to which the cluster belongs';
 COMMENT ON COLUMN public.clusters.environment_id IS 'The environment in which the cluster is deployed (e.g., production, development, etc)';
 COMMENT ON COLUMN public.clusters.cluster_name IS 'The name of the cluster (it must be unique)';
+COMMENT ON COLUMN public.clusters.cluster_status IS 'The status of the cluster (e.q., deploying, failed, healthy, unhealthy, degraded)';
 COMMENT ON COLUMN public.clusters.cluster_description IS 'A description of the cluster (optional)';
 COMMENT ON COLUMN public.clusters.connection_info IS 'The cluster connection info)';
 COMMENT ON COLUMN public.clusters.extra_vars IS 'Extra variables for Ansible specific to this cluster';
-COMMENT ON COLUMN public.clusters.location IS 'The region/datacenter where the cluster is located';
+COMMENT ON COLUMN public.clusters.cluster_location IS 'The region/datacenter where the cluster is located';
 COMMENT ON COLUMN public.clusters.server_count IS 'The number of servers associated with the cluster';
 COMMENT ON COLUMN public.clusters.postgres_version IS 'The Postgres major version';
 COMMENT ON COLUMN public.clusters.secret_id IS 'The ID of the secret for accessing the cloud provider';
