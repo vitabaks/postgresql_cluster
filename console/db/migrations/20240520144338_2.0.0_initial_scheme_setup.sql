@@ -621,7 +621,7 @@ COMMENT ON COLUMN public.clusters.environment_id IS 'The environment in which th
 COMMENT ON COLUMN public.clusters.cluster_name IS 'The name of the cluster (it must be unique)';
 COMMENT ON COLUMN public.clusters.cluster_status IS 'The status of the cluster (e.q., deploying, failed, healthy, unhealthy, degraded)';
 COMMENT ON COLUMN public.clusters.cluster_description IS 'A description of the cluster (optional)';
-COMMENT ON COLUMN public.clusters.connection_info IS 'The cluster connection info)';
+COMMENT ON COLUMN public.clusters.connection_info IS 'The cluster connection info';
 COMMENT ON COLUMN public.clusters.extra_vars IS 'Extra variables for Ansible specific to this cluster';
 COMMENT ON COLUMN public.clusters.cluster_location IS 'The region/datacenter where the cluster is located';
 COMMENT ON COLUMN public.clusters.server_count IS 'The number of servers associated with the cluster';
