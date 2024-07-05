@@ -658,7 +658,7 @@ CREATE TABLE public.servers (
 COMMENT ON TABLE public.servers IS 'Table containing information about servers within a Postgres cluster';
 COMMENT ON COLUMN public.servers.cluster_id IS 'The ID of the cluster to which the server belongs';
 COMMENT ON COLUMN public.servers.server_name IS 'The name of the server';
-COMMENT ON COLUMN public.servers.server_location IS 'The physical or cloud location of the server';
+COMMENT ON COLUMN public.servers.server_location IS 'The region/datacenter where the server is located';
 COMMENT ON COLUMN public.servers.server_role IS 'The role of the server (e.g., primary, replica)';
 COMMENT ON COLUMN public.servers.server_status IS 'The current status of the server';
 COMMENT ON COLUMN public.servers.ip_address IS 'The IP address of the server';
