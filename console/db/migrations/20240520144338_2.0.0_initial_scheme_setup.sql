@@ -602,7 +602,7 @@ CREATE TABLE public.clusters (
     cluster_id bigserial PRIMARY KEY,
     project_id bigint REFERENCES public.projects(project_id),
     environment_id bigint REFERENCES public.environments(environment_id),
-    secret_id bigint REFERENCES public.secrets(secret_id),  -- link to the secret for accessing the cloud provider
+    secret_id bigint REFERENCES public.secrets(secret_id),
     cluster_name text NOT NULL UNIQUE,
     cluster_status text DEFAULT 'deploying',
     cluster_description text,
@@ -644,7 +644,6 @@ CREATE INDEX clusters_secret_id_idx ON public.clusters (secret_id);
 CREATE TABLE public.servers (
     server_id bigserial PRIMARY KEY,
     cluster_id bigint REFERENCES public.clusters(cluster_id),
-    secret_id bigint REFERENCES public.secrets(secret_id),  -- link to the secret for SSH access
     server_name text NOT NULL,
     server_location text,
     server_role text DEFAULT 'N/A',
@@ -667,7 +666,6 @@ COMMENT ON COLUMN public.servers.ip_address IS 'The IP address of the server';
 COMMENT ON COLUMN public.servers.postgresql_exists IS 'Indicates whether Postgres database already exists (to convert a standard Postgres setup to a HA cluster)';
 COMMENT ON COLUMN public.servers.host_groups IS 'JSONB field containing the Ansible host groups to which the server belongs';
 COMMENT ON COLUMN public.servers.host_vars IS 'JSONB field containing Ansible host-specific variables';
-COMMENT ON COLUMN public.servers.secret_id IS 'The ID of the secret for accessing the server via SSH';
 COMMENT ON COLUMN public.servers.created_at IS 'The timestamp when the server was created';
 COMMENT ON COLUMN public.servers.updated_at IS 'The timestamp when the server was last updated';
 
@@ -675,7 +673,6 @@ CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.servers
     FOR EACH ROW EXECUTE FUNCTION extensions.moddatetime (updated_at);
 
 CREATE INDEX servers_cluster_id_idx ON public.servers (cluster_id);
-CREATE INDEX servers_secret_id_idx ON public.servers (secret_id);
 
 -- +goose StatementBegin
 CREATE OR REPLACE FUNCTION update_server_count()
@@ -708,11 +705,10 @@ SELECT
     s.created_at,
     s.updated_at,
     CASE 
-        WHEN COUNT(c.secret_id) > 0 OR COUNT(srv.secret_id) > 0 THEN true
+        WHEN COUNT(c.secret_id) > 0 THEN true
         ELSE false
     END AS used,
-    COALESCE(string_agg(DISTINCT c.cluster_name, ', '), '') AS used_by_clusters,
-    COALESCE(string_agg(DISTINCT srv.server_name, ', '), '') AS used_by_servers
+    COALESCE(string_agg(DISTINCT c.cluster_name, ', '), '') AS used_by_clusters
 FROM
     public.secrets s
 LEFT JOIN LATERAL (
@@ -720,12 +716,6 @@ LEFT JOIN LATERAL (
     FROM public.clusters 
     WHERE secret_id = s.secret_id AND project_id = s.project_id
 ) c ON true
-LEFT JOIN LATERAL (
-    SELECT srv.server_name, srv.secret_id 
-    FROM public.servers srv
-    JOIN public.clusters cl ON srv.cluster_id = cl.cluster_id
-    WHERE srv.secret_id = s.secret_id AND cl.project_id = s.project_id
-) srv ON true
 GROUP BY
     s.project_id, s.secret_id, s.secret_name, s.secret_type, s.created_at, s.updated_at;
 
