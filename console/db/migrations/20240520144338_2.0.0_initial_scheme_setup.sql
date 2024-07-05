@@ -940,6 +940,27 @@ INSERT INTO public.postgres_versions (major_version, release_date, end_of_life) 
     (16, '2023-09-14', '2028-11-09');
 
 
+-- Settings
+CREATE TABLE public.settings (
+    id bigserial PRIMARY KEY,
+    setting_name text NOT NULL UNIQUE,
+    setting_value jsonb NOT NULL,
+    created_at timestamp DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp
+);
+
+COMMENT ON TABLE public.settings IS 'Table containing configuration parameters, including console and other component settings';
+COMMENT ON COLUMN public.settings.setting_name IS 'The key of the setting';
+COMMENT ON COLUMN public.settings.setting_value IS 'The value of the setting';
+COMMENT ON COLUMN public.settings.created_at IS 'The timestamp when the setting was created';
+COMMENT ON COLUMN public.settings.updated_at IS 'The timestamp when the setting was last updated';
+
+CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.settings
+    FOR EACH ROW EXECUTE FUNCTION extensions.moddatetime (updated_at);
+
+CREATE INDEX settings_name_idx ON public.settings (setting_name);
+
+
 -- +goose Down
 
 -- Drop triggers
@@ -978,3 +999,4 @@ DROP TABLE public.cloud_volumes;
 DROP TABLE public.cloud_instances;
 DROP TABLE public.cloud_regions;
 DROP TABLE public.cloud_providers;
+DROP TABLE public.settings;
