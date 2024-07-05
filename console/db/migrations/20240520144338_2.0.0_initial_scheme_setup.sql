@@ -918,6 +918,28 @@ JOIN
     public.environments env ON cl.environment_id = env.environment_id;
 
 
+-- Postgres versions
+CREATE TABLE public.postgres_versions (
+    major_version integer PRIMARY KEY,
+    release_date date,
+    end_of_life date
+);
+
+COMMENT ON TABLE public.postgres_versions IS 'Table containing supported major versions of PostgreSQL by the postgresql_cluster';
+COMMENT ON COLUMN public.postgres_versions.major_version IS 'The major version of PostgreSQL';
+COMMENT ON COLUMN public.postgres_versions.release_date IS 'The release date of the PostgreSQL version';
+COMMENT ON COLUMN public.postgres_versions.end_of_life IS 'The end of life date for the PostgreSQL version';
+
+INSERT INTO public.postgres_versions (major_version, release_date, end_of_life) VALUES
+    (10, '2017-10-05', '2022-11-10'),
+    (11, '2018-10-18', '2023-11-09'),
+    (12, '2019-10-03', '2024-11-14'),
+    (13, '2020-09-24', '2025-11-13'),
+    (14, '2021-09-30', '2026-11-12'),
+    (15, '2022-10-13', '2027-11-11'),
+    (16, '2023-09-14', '2028-11-09');
+
+
 -- +goose Down
 
 -- Drop triggers
@@ -943,6 +965,7 @@ DROP VIEW public.v_operations;
 DROP VIEW public.v_secrets_list;
 
 -- Drop tables
+DROP TABLE public.postgres_versions;
 DROP TABLE public.operations;
 DROP TABLE public.extensions;
 DROP TABLE public.servers;
