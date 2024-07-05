@@ -649,9 +649,6 @@ CREATE TABLE public.servers (
     server_role text DEFAULT 'N/A',
     server_status text DEFAULT 'N/A',
     ip_address inet NOT NULL,
-    host_groups jsonb,
-    host_vars jsonb,
-    postgresql_exists boolean DEFAULT false,
     created_at timestamp DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp
 );
@@ -663,9 +660,6 @@ COMMENT ON COLUMN public.servers.server_location IS 'The physical or cloud locat
 COMMENT ON COLUMN public.servers.server_role IS 'The role of the server (e.g., primary, replica)';
 COMMENT ON COLUMN public.servers.server_status IS 'The current status of the server';
 COMMENT ON COLUMN public.servers.ip_address IS 'The IP address of the server';
-COMMENT ON COLUMN public.servers.postgresql_exists IS 'Indicates whether Postgres database already exists (to convert a standard Postgres setup to a HA cluster)';
-COMMENT ON COLUMN public.servers.host_groups IS 'JSONB field containing the Ansible host groups to which the server belongs';
-COMMENT ON COLUMN public.servers.host_vars IS 'JSONB field containing Ansible host-specific variables';
 COMMENT ON COLUMN public.servers.created_at IS 'The timestamp when the server was created';
 COMMENT ON COLUMN public.servers.updated_at IS 'The timestamp when the server was last updated';
 
