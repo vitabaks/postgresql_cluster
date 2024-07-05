@@ -925,7 +925,7 @@ CREATE TABLE public.postgres_versions (
     end_of_life date
 );
 
-COMMENT ON TABLE public.postgres_versions IS 'Table containing supported major versions of PostgreSQL by the postgresql_cluster';
+COMMENT ON TABLE public.postgres_versions IS 'Table containing the major PostgreSQL versions supported by the postgresql_cluster';
 COMMENT ON COLUMN public.postgres_versions.major_version IS 'The major version of PostgreSQL';
 COMMENT ON COLUMN public.postgres_versions.release_date IS 'The release date of the PostgreSQL version';
 COMMENT ON COLUMN public.postgres_versions.end_of_life IS 'The end of life date for the PostgreSQL version';
