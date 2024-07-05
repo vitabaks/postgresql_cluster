@@ -651,6 +651,10 @@ CREATE TABLE public.servers (
     server_role text DEFAULT 'N/A',
     server_status text DEFAULT 'N/A',
     ip_address inet NOT NULL,
+    timeline bigint,
+    lag bigint,
+    tags text,
+    pending_restart boolean DEFAULT false,
     created_at timestamp DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp
 );
@@ -662,6 +666,10 @@ COMMENT ON COLUMN public.servers.server_location IS 'The region/datacenter where
 COMMENT ON COLUMN public.servers.server_role IS 'The role of the server (e.g., primary, replica)';
 COMMENT ON COLUMN public.servers.server_status IS 'The current status of the server';
 COMMENT ON COLUMN public.servers.ip_address IS 'The IP address of the server';
+COMMENT ON COLUMN public.servers.timeline IS 'The timeline of the Postgres';
+COMMENT ON COLUMN public.servers.lag IS 'The lag in MB of the Postgres';
+COMMENT ON COLUMN public.servers.tags IS 'The tags associated with the server';
+COMMENT ON COLUMN public.servers.pending_restart IS 'Indicates whether a restart is pending for the Postgres';
 COMMENT ON COLUMN public.servers.created_at IS 'The timestamp when the server was created';
 COMMENT ON COLUMN public.servers.updated_at IS 'The timestamp when the server was last updated';
 
