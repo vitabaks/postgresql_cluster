@@ -1,5 +1,4 @@
 ---
-
 - name: Deploy PostgreSQL HA Cluster (based on "Patroni")
   hosts: all
   become: true
@@ -97,9 +96,9 @@
       when: ansible_os_family == "Debian"
 
     # Ansible requires the iproute package for network facts to be populated
-    - name: Make sure that the iproute is installed
+    - name: Make sure that the {{ firewall_type }} is installed
       ansible.builtin.package:
-        name: iproute
+        name: "{{ firewall_type }}"
         state: present
       register: package_status
       until: package_status is success
@@ -107,9 +106,9 @@
       retries: 3
       when: ansible_os_family == "RedHat"
 
-    - name: Make sure that the iproute is installed
+    - name: Make sure that the {{ firewall_type }} is installed
       ansible.builtin.apt:
-        name: iproute2
+        name: "{% if firewall_type == 'iproute' %}iproute2{% else %}{{firewall_type}}{% endif %}"
         state: present
       register: apt_status
       until: apt_status is success
@@ -168,7 +167,7 @@
       when: dcs_type == "consul" and consul_dnsmasq_enable | bool and ('127.0.0.1' not in (nameservers | default([])))
 
   roles:
-    - role: ansible-role-firewall
+    - role: "fw_{{ firewall_type }}"
       environment: "{{ proxy_env | default({}) }}"
       vars:
         firewall_allowed_tcp_ports: "{{ firewall_ports_dynamic_var | default([]) | unique }}"
