@@ -609,6 +609,7 @@ CREATE TABLE public.clusters (
     cluster_location text,
     connection_info jsonb,
     extra_vars jsonb,
+    inventory jsonb,
     server_count integer DEFAULT 0,
     postgres_version integer,
     created_at timestamp DEFAULT CURRENT_TIMESTAMP,
@@ -623,6 +624,7 @@ COMMENT ON COLUMN public.clusters.cluster_status IS 'The status of the cluster (
 COMMENT ON COLUMN public.clusters.cluster_description IS 'A description of the cluster (optional)';
 COMMENT ON COLUMN public.clusters.connection_info IS 'The cluster connection info';
 COMMENT ON COLUMN public.clusters.extra_vars IS 'Extra variables for Ansible specific to this cluster';
+COMMENT ON COLUMN public.clusters.inventory IS 'The Ansible inventory for this cluster';
 COMMENT ON COLUMN public.clusters.cluster_location IS 'The region/datacenter where the cluster is located';
 COMMENT ON COLUMN public.clusters.server_count IS 'The number of servers associated with the cluster';
 COMMENT ON COLUMN public.clusters.postgres_version IS 'The Postgres major version';
