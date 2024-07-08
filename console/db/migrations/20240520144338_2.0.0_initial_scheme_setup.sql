@@ -931,8 +931,7 @@ SELECT
     op.operation_type AS "type",
     op.operation_status AS "status",
     cl.cluster_name AS "cluster",
-    env.environment_name AS "environment",
-    op.operation_log AS "log"
+    env.environment_name AS "environment"
 FROM 
     public.operations op
 JOIN 
