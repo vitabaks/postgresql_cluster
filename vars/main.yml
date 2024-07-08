@@ -45,6 +45,35 @@ haproxy_maxconn:
 haproxy_timeout:
   client: "60m"
   server: "60m"
+# Optionally declare log format for haproxy.
+# Uncomment following lines (and remove extra space in front of variable definition) for JSON structured log format.
+# haproxy_log_format: "{
+#  \"pid\":%pid,\
+#  \"haproxy_frontend_type\":\"tcp\",\
+#  \"haproxy_process_concurrent_connections\":%ac,\
+#  \"haproxy_frontend_concurrent_connections\":%fc,\
+#  \"haproxy_backend_concurrent_connections\":%bc,\
+#  \"haproxy_server_concurrent_connections\":%sc,\
+#  \"haproxy_backend_queue\":%bq,\
+#  \"haproxy_server_queue\":%sq,\
+#  \"haproxy_queue_wait_time\":%Tw,\
+#  \"haproxy_server_wait_time\":%Tc,\
+#  \"response_time\":%Td,\
+#  \"session_duration\":%Tt,\
+#  \"request_termination_state\":\"%tsc\",\
+#  \"haproxy_server_connection_retries\":%rc,\
+#  \"remote_addr\":\"%ci\",\
+#  \"remote_port\":%cp,\
+#  \"frontend_addr\":\"%fi\",\
+#  \"frontend_port\":%fp,\
+#  \"frontend_ssl_version\":\"%sslv\",\
+#  \"frontend_ssl_ciphers\":\"%sslc\",\
+#  \"haproxy_frontend_name\":\"%f\",\
+#  \"haproxy_backend_name\":\"%b\",\
+#  \"haproxy_server_name\":\"%s\",\
+#  \"response_size\":%B,\
+#  \"request_size\":%U\
+#  }"
 
 # keepalived (if 'cluster_vip' is specified and 'with_haproxy_load_balancing' is 'true')
 keepalived_virtual_router_id: "{{ cluster_vip.split('.')[3] | int }}" # The last octet of 'cluster_vip' IP address is used by default.
