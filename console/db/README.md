@@ -109,3 +109,8 @@ status
       - `SELECT get_extensions(16);`
       - `SELECT get_extensions(16, 'contrib');`
       - `SELECT get_extensions(16, 'third_party');`
+- `get_cluster_name`
+  - Function to generate a unique name for a new PostgreSQL cluster.
+    - Note: This function generates names in the format `postgres-cluster-XX`, where `XX` is a sequential number starting from 01. It checks the existing cluster names to ensure the generated name is unique.
+  - Usage example:
+    - `SELECT get_cluster_name();`

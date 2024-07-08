@@ -641,6 +641,23 @@ CREATE INDEX clusters_environment_idx ON public.clusters (environment_id);
 CREATE INDEX clusters_name_idx ON public.clusters (cluster_name);
 CREATE INDEX clusters_secret_id_idx ON public.clusters (secret_id);
 
+-- +goose StatementBegin
+CREATE OR REPLACE FUNCTION get_cluster_name() RETURNS text AS $$
+DECLARE
+    new_name text;
+    counter int := 1;
+BEGIN
+    LOOP
+        new_name := 'postgres-cluster-' || to_char(counter, 'FM00');
+        -- Check if such a cluster name already exists
+        IF NOT EXISTS (SELECT 1 FROM public.clusters WHERE cluster_name = new_name) THEN
+            RETURN new_name;
+        END IF;
+        counter := counter + 1;
+    END LOOP;
+END;
+$$ LANGUAGE plpgsql;
+-- +goose StatementEnd
 
 -- Servers
 CREATE TABLE public.servers (
@@ -988,6 +1005,7 @@ DROP FUNCTION update_server_count;
 DROP FUNCTION get_extensions;
 DROP FUNCTION get_secret;
 DROP FUNCTION add_secret;
+DROP FUNCTION get_cluster_name;
 
 -- Drop views
 DROP VIEW public.v_operations;
