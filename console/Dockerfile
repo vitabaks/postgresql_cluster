@@ -83,7 +83,7 @@ RUN chmod +x /pg_start.sh
 # supervisord [https://docs.docker.com/engine/admin/using_supervisord/]
 COPY console/supervisord.conf /etc/supervisor/supervisord.conf
 
-VOLUME ${PGDATA}
+VOLUME /var/lib/postgresql
 
 # Console DB
 EXPOSE ${POSTGRES_PORT}

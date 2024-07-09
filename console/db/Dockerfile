@@ -49,7 +49,7 @@ COPY console/db/pg_hba.conf /var/tmp/pg_hba.conf
 COPY console/db/pg_start.sh /pg_start.sh
 RUN chmod +x /pg_start.sh
 
-VOLUME ${PGDATA}
+VOLUME /var/lib/postgresql
 
 EXPOSE ${POSTGRES_PORT}
 
