@@ -613,7 +613,8 @@ CREATE TABLE public.clusters (
     server_count integer DEFAULT 0,
     postgres_version integer,
     created_at timestamp DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp
+    updated_at timestamp,
+    deleted_at timestamp
 );
 
 COMMENT ON TABLE public.clusters IS 'Table containing information about Postgres clusters';
@@ -631,6 +632,7 @@ COMMENT ON COLUMN public.clusters.postgres_version IS 'The Postgres major versio
 COMMENT ON COLUMN public.clusters.secret_id IS 'The ID of the secret for accessing the cloud provider';
 COMMENT ON COLUMN public.clusters.created_at IS 'The timestamp when the cluster was created';
 COMMENT ON COLUMN public.clusters.updated_at IS 'The timestamp when the cluster was last updated';
+COMMENT ON COLUMN public.clusters.deleted_at IS 'The timestamp when the cluster was (soft) deleted';
 
 CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.clusters
     FOR EACH ROW EXECUTE FUNCTION extensions.moddatetime (updated_at);
