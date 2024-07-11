@@ -1,5 +1,5 @@
 ---
 
-ssh_public_keys: ""
+ssh_public_keys: []
 
 ...

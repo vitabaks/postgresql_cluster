@@ -114,6 +114,8 @@ ssh_key_user: "postgres"
 ssh_key_state: "present"
 ssh_known_hosts: "{{ groups['postgres_cluster'] }}"
 
+# List of public SSH keys. These keys will be added to the database server's  ~/.ssh/authorized_keys  file.
+ssh_public_keys: []
 
 # sudo
 sudo_users:
