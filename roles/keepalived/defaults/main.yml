@@ -1,0 +1,15 @@
+---
+
+keepalived_instances:
+  - name: VI_1
+    state: BACKUP
+    interface: "{{ vip_interface }}"
+    virtual_router_id: "{{ keepalived_virtual_router_id | default(123) }}"
+    priority: 100
+    advert_int: 2
+    check_status_command: /usr/libexec/keepalived/haproxy_check.sh
+    authentication:
+      auth_type: PASS
+      auth_pass: "1ce24b6e"
+    virtual_ipaddresses:
+      - "{{ cluster_vip }}"

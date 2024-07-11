@@ -3,27 +3,35 @@ global_defs {
    enable_script_security
    script_user root
 }
- 
-vrrp_script haproxy_check {
-   script "/usr/libexec/keepalived/haproxy_check.sh"
+
+{% for instance in keepalived_instances %}
+{% if instance.check_status_command is defined %}
+vrrp_script chk_command_{{ instance.virtual_router_id }} {
+   script "{{ instance.check_status_command }}"
    interval 2
    weight 2
 }
- 
-vrrp_instance VI_1 {
-   interface {{ vip_interface }}
-   virtual_router_id {{ keepalived_virtual_router_id | default(123) }}
-   priority  100
-   advert_int 2
-   state  BACKUP
-   virtual_ipaddress {
-       {{ cluster_vip  }}
-   }
-   track_script {
-       haproxy_check
-   }
-   authentication {
-      auth_type PASS
-      auth_pass 1ce24b6e
-   }
+{% endif %}
+
+vrrp_instance {{ instance.name }} {
+  interface {{ instance.interface }}
+  virtual_router_id {{ instance.virtual_router_id }}
+  priority {{ instance.priority }}
+  advert_int {{ instance.advert_int }}
+  state {{ instance.state }}
+  virtual_ipaddress {
+    {% for ip in instance.virtual_ipaddresses %}
+    {{ ip }}
+    {% endfor %}
+  }
+  {% if instance.check_status_command is defined %}
+  track_script {
+    chk_command_{{ instance.virtual_router_id }}
+  }
+  {% endif %}
+  authentication {
+    auth_type {{ instance.authentication.auth_type }}
+    auth_pass {{ instance.authentication.auth_pass }}
+  }
 }
+{% endfor %}

@@ -133,7 +133,7 @@
   loop_control:
     index_var: idx
     label: "{{ 'pgbouncer' if idx == 0 else 'pgbouncer-%d' % (idx + 1) }}"
-  notify: "restart pgbouncer"
+  notify: "reload pgbouncer"
   when: existing_pgcluster is not defined or not existing_pgcluster|bool
   tags: pgbouncer_conf, pgbouncer
 
@@ -225,7 +225,7 @@
       loop_control:
         index_var: idx
         label: "{{ 'pgbouncer' if idx == 0 else 'pgbouncer-%d' % (idx + 1) }}"
-      notify: "restart pgbouncer"
+      notify: "reload pgbouncer"
       when: pgbouncer_listen_addr != "0.0.0.0"
   when: existing_pgcluster is defined and existing_pgcluster|bool
   tags: pgbouncer_conf, pgbouncer
