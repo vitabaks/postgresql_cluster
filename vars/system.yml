@@ -211,9 +211,6 @@ cron_jobs: []
 #    weekday: "*"
 #    job: "echo 'example job two command'"
 
-# (optional) SSH public keys (one per line).
-ssh_public_keys: ""  # These SSH public keys will be added to the server's  ~/.ssh/authorized_keys file.
-
 # (optional) Configure mount points in /etc/fstab and mount the file system (if 'mount.src' is defined)
 mount:
   - path: "/pgdata"
