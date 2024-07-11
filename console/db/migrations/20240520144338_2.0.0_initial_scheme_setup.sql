@@ -376,7 +376,7 @@ CREATE TABLE public.cloud_images (
 COMMENT ON TABLE public.cloud_images IS 'Table containing cloud images information for various cloud providers';
 COMMENT ON COLUMN public.cloud_images.cloud_provider IS 'The name of the cloud provider';
 COMMENT ON COLUMN public.cloud_images.region IS 'The region where the image is available';
-COMMENT ON COLUMN public.cloud_images.image IS 'The image details in JSON format';
+COMMENT ON COLUMN public.cloud_images.image IS 'The image details in JSON format {"variable_name": "value"}';
 COMMENT ON COLUMN public.cloud_images.arch IS 'The architecture of the operating system (default: amd64)';
 COMMENT ON COLUMN public.cloud_images.os_name IS 'The name of the operating system';
 COMMENT ON COLUMN public.cloud_images.os_version IS 'The version of the operating system';
@@ -384,7 +384,10 @@ COMMENT ON COLUMN public.cloud_images.updated_at IS 'The date when the image inf
 
 -- For all cloud providers except AWS, the image is the same for all regions.
 -- For AWS, the image must be specified for each specific region.
--- The value of the "image" column is set in the format: '{"variable_name": "volume"}'
+-- The value of the "image" column is set in the format: '{"variable_name": "value"}'
+-- This format provides flexibility to specify different variables for different cloud providers. 
+-- For example, Azure requires four variables instead of a single "server_image":
+-- azure_vm_image_offer, azure_vm_image_publisher, azure_vm_image_sku, azure_vm_image_version.
 INSERT INTO public.cloud_images (cloud_provider, region, image, arch, os_name, os_version, updated_at) VALUES
     ('aws', 'af-south-1', '{"server_image": "ami-078b3985bbc361448"}', 'amd64', 'Ubuntu', '22.04 LTS', '2024-05-15'),
     ('aws', 'ap-east-1', '{"server_image": "ami-09527147898b28c8f"}', 'amd64', 'Ubuntu', '22.04 LTS', '2024-05-15'),
