@@ -12,12 +12,14 @@
         user: "{{ system_user.stdout }}"
         key: "{{ item }}"
         state: present
-      loop: >
-        {% if ssh_public_keys is string %}
-          {{ ssh_public_keys.splitlines() }}
-        {% else %}
-          {{ ssh_public_keys }}
-        {% endif %}
+      loop: "{{ ssh_public_keys_list }}"
+      vars:
+        ssh_public_keys_list: "\
+          {% if ssh_public_keys is string %}\
+            {{ ssh_public_keys.splitlines() }}\
+          {% else %}\
+            {{ ssh_public_keys }}\
+          {% endif %}"
   when:
     - ssh_public_keys is defined
     - ssh_public_keys | length > 0
