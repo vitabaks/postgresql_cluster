@@ -384,6 +384,7 @@ COMMENT ON COLUMN public.cloud_images.updated_at IS 'The date when the image inf
 
 -- For all cloud providers except AWS, the image is the same for all regions.
 -- For AWS, the image must be specified for each specific region.
+-- The value of the "image" column is set in the format: '{"variable_name": "volume"}'
 INSERT INTO public.cloud_images (cloud_provider, region, image, arch, os_name, os_version, updated_at) VALUES
     ('aws', 'af-south-1', '{"server_image": "ami-078b3985bbc361448"}', 'amd64', 'Ubuntu', '22.04 LTS', '2024-05-15'),
     ('aws', 'ap-east-1', '{"server_image": "ami-09527147898b28c8f"}', 'amd64', 'Ubuntu', '22.04 LTS', '2024-05-15'),
