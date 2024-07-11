@@ -13,7 +13,6 @@
         key: "{{ item }}"
         state: present
       loop: "{{ ssh_public_keys.splitlines() }}"
-      no_log: true  # do not output public keys to the ansible log
   when:
     - ssh_public_keys is defined
     - ssh_public_keys | length > 0
