@@ -612,7 +612,7 @@ pgbackrest_cron_jobs:
     day: "*"
     month: "*"
     weekday: "0"
-    job: "pgbackrest --type=full --stanza={{ pgbackrest_stanza }} backup"
+    job: "pgbackrest --stanza={{ pgbackrest_stanza }} --type=full backup"
     # job: "if [ $(psql -tAXc 'select pg_is_in_recovery()') = 'f' ]; then pgbackrest --type=full --stanza={{ pgbackrest_stanza }} backup; fi"
   - name: "pgBackRest: Diff Backup"
     file: "/etc/cron.d/pgbackrest-{{ patroni_cluster_name }}"
@@ -622,7 +622,7 @@ pgbackrest_cron_jobs:
     day: "*"
     month: "*"
     weekday: "1-6"
-    job: "pgbackrest --type=diff --stanza={{ pgbackrest_stanza }} backup"
+    job: "pgbackrest --stanza={{ pgbackrest_stanza }} --type=diff backup"
     # job: "if [ $(psql -tAXc 'select pg_is_in_recovery()') = 'f' ]; then pgbackrest --type=diff --stanza={{ pgbackrest_stanza }} backup; fi"
 
 
