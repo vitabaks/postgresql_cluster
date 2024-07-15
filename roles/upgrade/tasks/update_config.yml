@@ -7,6 +7,12 @@
     dest: "{{ patroni_config_file }}.bkp"
     remote_src: true
 
+# https://github.com/vitabaks/postgresql_cluster/issues/666
+- name: Remove patroni.dynamic.json file
+  ansible.builtin.file:
+    path: "{{ pg_old_datadir }}/patroni.dynamic.json"
+    state: absent
+
 # Update the directory path to a new version of PostgresSQL
 - name: "Edit patroni.yml | update parameters: data_dir, bin_dir, config_dir"
   ansible.builtin.replace:
