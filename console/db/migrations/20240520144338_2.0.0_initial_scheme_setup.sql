@@ -676,7 +676,7 @@ CREATE TABLE public.servers (
     ip_address inet NOT NULL,
     timeline bigint,
     lag bigint,
-    tags text,
+    tags jsonb,
     pending_restart boolean DEFAULT false,
     created_at timestamp DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp
