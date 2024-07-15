@@ -1,6 +1,6 @@
 ---
 
-- name: Gather facts for hosts postres_cluster
+- name: Gather facts from postgres_cluster hosts
   ansible.builtin.setup:
   delegate_to: "{{ item }}"
   delegate_facts: true
