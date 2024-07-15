@@ -12,7 +12,7 @@ vip_interface: "{{ ansible_default_ipv4.interface }}"  # interface name (e.g., "
 # Note: VIP-based solutions such as keepalived or vip-manager may not function correctly in cloud environments.
 
 patroni_cluster_name: "postgres-cluster"  # the cluster name (must be unique for each cluster)
-patroni_install_version: "3.3.0"  # or 'latest'
+patroni_install_version: "3.3.2"  # or 'latest'
 
 patroni_superuser_username: "postgres"
 patroni_superuser_password: ""  # Please specify a password. If not defined, will be generated automatically during deployment.
@@ -45,13 +45,42 @@ haproxy_maxconn:
 haproxy_timeout:
   client: "60m"
   server: "60m"
+# Optionally declare log format for haproxy.
+# Uncomment following lines (and remove extra space in front of variable definition) for JSON structured log format.
+# haproxy_log_format: "{
+#  \"pid\":%pid,\
+#  \"haproxy_frontend_type\":\"tcp\",\
+#  \"haproxy_process_concurrent_connections\":%ac,\
+#  \"haproxy_frontend_concurrent_connections\":%fc,\
+#  \"haproxy_backend_concurrent_connections\":%bc,\
+#  \"haproxy_server_concurrent_connections\":%sc,\
+#  \"haproxy_backend_queue\":%bq,\
+#  \"haproxy_server_queue\":%sq,\
+#  \"haproxy_queue_wait_time\":%Tw,\
+#  \"haproxy_server_wait_time\":%Tc,\
+#  \"response_time\":%Td,\
+#  \"session_duration\":%Tt,\
+#  \"request_termination_state\":\"%tsc\",\
+#  \"haproxy_server_connection_retries\":%rc,\
+#  \"remote_addr\":\"%ci\",\
+#  \"remote_port\":%cp,\
+#  \"frontend_addr\":\"%fi\",\
+#  \"frontend_port\":%fp,\
+#  \"frontend_ssl_version\":\"%sslv\",\
+#  \"frontend_ssl_ciphers\":\"%sslc\",\
+#  \"haproxy_frontend_name\":\"%f\",\
+#  \"haproxy_backend_name\":\"%b\",\
+#  \"haproxy_server_name\":\"%s\",\
+#  \"response_size\":%B,\
+#  \"request_size\":%U\
+#  }"
 
 # keepalived (if 'cluster_vip' is specified and 'with_haproxy_load_balancing' is 'true')
 keepalived_virtual_router_id: "{{ cluster_vip.split('.')[3] | int }}" # The last octet of 'cluster_vip' IP address is used by default.
 # virtual_router_id - must be unique in the network (available values are 0..255).
 
 # vip-manager (if 'cluster_vip' is specified and 'with_haproxy_load_balancing' is 'false')
-vip_manager_version: "2.4.0"  # version to install
+vip_manager_version: "2.5.0"  # version to install
 vip_manager_conf: "/etc/patroni/vip-manager.yml"
 vip_manager_interval: "1000"  # time (in milliseconds) after which vip-manager wakes up and checks if it needs to register or release ip addresses.
 vip_manager_iface: "{{ vip_interface }}"  # interface to which the virtual ip will be added
@@ -422,7 +451,7 @@ pgbackrest:
   - { option: "keep_data", value: "True" }
   - { option: "no_params", value: "True" }
 wal_g:
-  - { option: "command", value: "wal-g backup-fetch {{ postgresql_data_dir }} LATEST" }
+  - { option: "command", value: "{{ wal_g_path }} backup-fetch {{ postgresql_data_dir }} LATEST" }
   - { option: "no_params", value: "True" }
 basebackup:
   - { option: "max-rate", value: "1000M" }
@@ -434,7 +463,7 @@ pg_probackup:
 
 # "restore_command" written to recovery.conf when configuring follower (create replica)
 postgresql_restore_command: ""
-# postgresql_restore_command: "wal-g wal-fetch %f %p"  # restore WAL-s using WAL-G
+# postgresql_restore_command: "{{ wal_g_path }} wal-fetch %f %p"  # restore WAL-s using WAL-G
 # postgresql_restore_command: "pgbackrest --stanza={{ pgbackrest_stanza }} archive-get %f %p"  # restore WAL-s using pgbackrest
 
 # postgresql_restore_command: "pg_probackup-{{ pg_probackup_version }} archive-get -B
@@ -461,7 +490,8 @@ pg_probackup_patroni_cluster_bootstrap_command: "{{ pg_probackup_command_parts |
 
 # WAL-G
 wal_g_install: false  # or 'true'
-wal_g_version: "3.0.0"
+wal_g_version: "3.0.2"
+wal_g_path: "/usr/local/bin/wal-g"
 wal_g_json:  # config https://github.com/wal-g/wal-g#configuration
   - { option: "AWS_ACCESS_KEY_ID", value: "{{ AWS_ACCESS_KEY_ID | default('') }}" }  # define values or pass via --extra-vars
   - { option: "AWS_SECRET_ACCESS_KEY", value: "{{ AWS_SECRET_ACCESS_KEY | default('') }}" }  # define values or pass via --extra-vars
@@ -475,17 +505,17 @@ wal_g_json:  # config https://github.com/wal-g/wal-g#configuration
 #  - { option: "AWS_S3_FORCE_PATH_STYLE", value: "true" }  # to use Minio.io S3-compatible storage
 #  - { option: "AWS_ENDPOINT", value: "http://minio:9000" }  # to use Minio.io S3-compatible storage
 #  - { option: "", value: "" }
-wal_g_archive_command: "wal-g wal-push %p"
-wal_g_patroni_cluster_bootstrap_command: "wal-g backup-fetch {{ postgresql_data_dir }} LATEST"
+wal_g_archive_command: "{{ wal_g_path }} wal-push %p"
+wal_g_patroni_cluster_bootstrap_command: "{{ wal_g_path }} backup-fetch {{ postgresql_data_dir }} LATEST"
 
 # Define job_parts outside of wal_g_cron_jobs
 # ⚠️ Ensure there is a space at the beginning of each part to prevent commands from concatenating.
 wal_g_backup_command:
   - "curl -I -s http://{{ inventory_hostname }}:{{ patroni_restapi_port }} | grep 200"
-  - " && wal-g backup-push {{ postgresql_data_dir }} > {{ postgresql_log_dir }}/walg_backup.log 2>&1"
+  - " && {{ wal_g_path }} backup-push {{ postgresql_data_dir }} > {{ postgresql_log_dir }}/walg_backup.log 2>&1"
 wal_g_delete_command:
   - "curl -I -s http://{{ inventory_hostname }}:{{ patroni_restapi_port }} | grep 200"
-  - " && wal-g delete retain FULL 4 --confirm > {{ postgresql_log_dir }}/walg_delete.log 2>&1"
+  - " && {{ wal_g_path }} delete retain FULL 4 --confirm > {{ postgresql_log_dir }}/walg_delete.log 2>&1"
 
 wal_g_cron_jobs:
   - name: "WAL-G: Create daily backup"

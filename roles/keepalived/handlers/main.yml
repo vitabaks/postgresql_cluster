@@ -27,7 +27,7 @@
           ansible_ssh_port | default(22)
         )
       }}
-  ignore_errors: true  # show the error and continue the playbook execution
+  ignore_errors: true  # noqa ignore-errors # show the error and continue the playbook execution
   listen: "restart keepalived"
 
 ...

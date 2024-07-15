@@ -57,7 +57,7 @@
       become_user: "{{ pgbackrest_repo_user }}"
       delegate_to: "{{ groups['pgbackrest'][0] }}"
       run_once: true
-      ansible.builtin.command: "pgbackrest --stanza={{ pgbackrest_stanza }} stanza-create"
+      ansible.builtin.command: "pgbackrest --stanza={{ pgbackrest_stanza }} --no-online stanza-create"
       register: stanza_create_result
       changed_when:
         - stanza_create_result.rc == 0
