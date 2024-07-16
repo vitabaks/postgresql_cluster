@@ -699,7 +699,7 @@ COMMENT ON COLUMN public.servers.updated_at IS 'The timestamp when the server wa
 CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.servers
     FOR EACH ROW EXECUTE FUNCTION extensions.moddatetime (updated_at);
 
-CREATE INDEX servers_cluster_id_idx ON public.servers (cluster_id);
+CREATE UNIQUE INDEX servers_cluster_id_ip_address_idx ON public.servers (cluster_id, ip_address);
 
 -- +goose StatementBegin
 CREATE OR REPLACE FUNCTION update_server_count()
