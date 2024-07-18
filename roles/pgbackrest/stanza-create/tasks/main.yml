@@ -12,7 +12,7 @@
         state: directory
         owner: postgres
         group: postgres
-        mode: "0755"
+        mode: "0750"
       when: repo1_path | length > 0
 
     - name: Create stanza "{{ pgbackrest_stanza }}"
@@ -47,7 +47,7 @@
         state: directory
         owner: "{{ pgbackrest_repo_user }}"
         group: "{{ pgbackrest_repo_user }}"
-        mode: "0755"
+        mode: "0750"
       when: repo1_path | length > 0
 
     - name: Create stanza "{{ pgbackrest_stanza }}"
