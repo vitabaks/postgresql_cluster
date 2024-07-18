@@ -3,7 +3,7 @@
 - name: Check if WAL-G is already installed
   ansible.builtin.shell: |
     set -o pipefail;
-    wal-g --version | awk {'print $3'} | tr -d 'v'
+    "{{ wal_g_path }}" --version | awk {'print $3'} | tr -d 'v'
   args:
     executable: /bin/bash
   changed_when: false
@@ -42,7 +42,7 @@
     - name: Copy WAL-G binary file to /usr/local/bin/
       ansible.builtin.copy:
         src: "/tmp/wal-g-pg-ubuntu-{{ ansible_distribution_version }}-amd64"
-        dest: /usr/local/bin/wal-g
+        dest: "{{ wal_g_path }}"
         mode: u+x,g+x,o+x
         remote_src: true
   when:
@@ -132,6 +132,13 @@
         version: v{{ wal_g_version }}
         dest: /tmp/wal-g
 
+    - name: Run go mod tidy to ensure dependencies are correct
+      ansible.builtin.command: go mod tidy
+      args:
+        chdir: /tmp/wal-g
+      environment:
+        PATH: "{{ ansible_env.PATH }}:/usr/local/go/bin"
+
     - name: Build WAL-G deps
       become: true
       become_user: root
@@ -184,10 +191,10 @@
           - --no-same-owner
         remote_src: true
 
-    - name: Copy WAL-G binary file to /usr/local/bin/
+    - name: Copy WAL-G binary file to "{{ wal_g_path }}"
       ansible.builtin.copy:
         src: "/tmp/wal-g"
-        dest: /usr/local/bin/
+        dest: "{{ wal_g_path }}"
         mode: u+x,g+x,o+x
         remote_src: true
   when:
@@ -208,10 +215,10 @@
         extra_opts:
           - --no-same-owner
 
-    - name: Copy WAL-G binary file to /usr/local/bin/
+    - name: Copy WAL-G binary file to "{{ wal_g_path }}"
       ansible.builtin.copy:
         src: "/tmp/{{ wal_g_package_file.split('.tar.gz')[0] | basename }}"
-        dest: /usr/local/bin/wal-g
+        dest: "{{ wal_g_path }}"
         mode: u+x,g+x,o+x
         remote_src: true
   when:
@@ -231,10 +238,10 @@
         extra_opts:
           - --no-same-owner
 
-    - name: Copy WAL-G binary file to /usr/local/bin/
+    - name: Copy WAL-G binary file to "{{ wal_g_path }}"
       ansible.builtin.copy:
         src: "/tmp/wal-g"
-        dest: /usr/local/bin/
+        dest: "{{ wal_g_path }}"
         mode: u+x,g+x,o+x
         remote_src: true
   when:

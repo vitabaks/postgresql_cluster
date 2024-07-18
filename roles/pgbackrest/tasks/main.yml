@@ -106,7 +106,31 @@
   tags: pgbackrest, pgbackrest_install
 
 - block:
-    - name: Ensure spool directory exist
+    - name: Ensure log directory exists
+      ansible.builtin.file:
+        path: "{{ item.value }}"
+        state: directory
+        owner: postgres
+        group: postgres
+        mode: "0755"
+      loop: "{{ pgbackrest_conf.global }}"
+      when: item.option == 'log-path'
+      loop_control:
+        label: "{{ item.value }}"
+
+    - name: Ensure repo directory exists
+      ansible.builtin.file:
+        path: "{{ item.value }}"
+        state: directory
+        owner: postgres
+        group: postgres
+        mode: "0750"
+      loop: "{{ pgbackrest_conf.global }}"
+      when: item.option == 'repo1-path' and pgbackrest_repo_host | length < 1
+      loop_control:
+        label: "{{ item.value }}"
+
+    - name: Ensure spool directory exists
       ansible.builtin.file:
         path: "{{ item.value }}"
         state: directory
@@ -118,12 +142,13 @@
       loop_control:
         label: "{{ item.value }}"
 
-    - name: Ensure config directory exist
+    - name: Ensure config directory exists
       ansible.builtin.file:
         path: "{{ pgbackrest_conf_file | dirname }}"
         state: directory
         owner: postgres
         group: postgres
+        mode: "0750"
 
     - name: "Generate conf file {{ pgbackrest_conf_file }}"
       ansible.builtin.template:
@@ -137,19 +162,45 @@
 
 # Dedicated pgbackrest server (if "repo_host" is set)
 - block:
-    - name: Ensure config directory exist
+    - name: Ensure log directory exists
+      ansible.builtin.file:
+        path: "{{ item.value }}"
+        state: directory
+        owner: "{{ pgbackrest_repo_user }}"
+        group: "{{ pgbackrest_repo_user }}"
+        mode: "0755"
+      loop: "{{ pgbackrest_server_conf.global }}"
+      when: item.option == 'log-path'
+      loop_control:
+        label: "{{ item.value }}"
+
+    - name: Ensure repo directory exists
+      ansible.builtin.file:
+        path: "{{ item.value }}"
+        state: directory
+        owner: "{{ pgbackrest_repo_user }}"
+        group: "{{ pgbackrest_repo_user }}"
+        mode: "0750"
+      loop: "{{ pgbackrest_server_conf.global }}"
+      when: item.option == 'repo1-path'
+      loop_control:
+        label: "{{ item.value }}"
+
+    - name: Ensure config directory exists
       ansible.builtin.file:
         path: "{{ pgbackrest_conf_file | dirname }}"
         state: directory
         owner: "{{ pgbackrest_repo_user }}"
         group: "{{ pgbackrest_repo_user }}"
+        mode: "0750"
 
-    - name: Ensure stanza config directory exist
+    - name: Ensure stanza config directory exists
       ansible.builtin.file:
         path: "{{ pgbackrest_conf_file | dirname }}/conf.d"
         state: directory
         owner: "{{ pgbackrest_repo_user }}"
         group: "{{ pgbackrest_repo_user }}"
+        mode: "0750"
 
     - name: "Generate global conf file {{ pgbackrest_conf_file }}"
       ansible.builtin.template:
@@ -174,8 +225,10 @@
 
 # if 'pgbackrest_repo_host' or 'backup-standby' are specified
 - ansible.builtin.import_tasks: ssh_keys.yml
-  when: (pgbackrest_repo_host is defined and pgbackrest_repo_host | length > 0) or
-        (pgbackrest_conf.global | selectattr('option', 'equalto', 'backup-standby') | map(attribute='value') | list | last | default('') == 'y')
+  when:
+    - (pgbackrest_repo_host is defined and pgbackrest_repo_host | length > 0) or
+      (pgbackrest_conf.global | selectattr('option', 'equalto', 'backup-standby') | map(attribute='value') | list | last | default('') == 'y')
+    - not ansible_check_mode
   tags: pgbackrest, pgbackrest_ssh_keys
 
 - ansible.builtin.import_tasks: cron.yml
