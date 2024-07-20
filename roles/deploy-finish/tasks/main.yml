@@ -206,7 +206,7 @@
     load_balancer_replica_sync: "{{ (hostvars['localhost']['aws_elb_classic_lb']['results'] | selectattr('item', 'equalto', 'sync') | first).elb.dns_name | default('N/A') }}"
     superuser_username: "{{ patroni_superuser_username }}"
     superuser_password: "{{ '********' if mask_password | default(false) | bool else patroni_superuser_password }}"
-  when: cloud_provider | default('') | lower == 'aws' and cloud_load_balancer | default(false) | bool
+  when: cloud_provider | default('') | lower == 'aws' and cloud_load_balancer | default(true) | bool
   tags: conn_info, cluster_info, cluster_status
 
 # GCP
@@ -228,7 +228,7 @@
     load_balancer_replica_sync: "{{ (hostvars['localhost']['gcp_load_balancer']['results'] | selectattr('item', 'equalto', 'sync') | first).IPAddress | default('N/A') }}"
     superuser_username: "{{ patroni_superuser_username }}"
     superuser_password: "{{ '********' if mask_password | default(false) | bool else patroni_superuser_password }}"
-  when: cloud_provider | default('') | lower == 'gcp' and cloud_load_balancer | default(false) | bool
+  when: cloud_provider | default('') | lower == 'gcp' and cloud_load_balancer | default(true) | bool
   tags: conn_info, cluster_info, cluster_status
 
 # DigitalOcean
@@ -251,7 +251,7 @@
     database_port: "{{ pgbouncer_listen_port if pgbouncer_install else postgresql_port }}"
     superuser_username: "{{ patroni_superuser_username }}"
     superuser_password: "{{ '********' if mask_password | default(false) | bool else patroni_superuser_password }}"
-  when: cloud_provider | default('') | lower  == 'digitalocean' and cloud_load_balancer | default(false) | bool
+  when: cloud_provider | default('') | lower  == 'digitalocean' and cloud_load_balancer | default(true) | bool
   tags: conn_info, cluster_info, cluster_status
 
 # Hetzner Cloud
@@ -277,7 +277,7 @@
     database_port: "{{ pgbouncer_listen_port if pgbouncer_install else postgresql_port }}"
     superuser_username: "{{ patroni_superuser_username }}"
     superuser_password: "{{ '********' if mask_password | default(false) | bool else patroni_superuser_password }}"
-  when: cloud_provider | default('') | lower == 'hetzner' and cloud_load_balancer | default(false) | bool
+  when: cloud_provider | default('') | lower == 'hetzner' and cloud_load_balancer | default(true) | bool
   tags: conn_info, cluster_info, cluster_status
 
 ...
