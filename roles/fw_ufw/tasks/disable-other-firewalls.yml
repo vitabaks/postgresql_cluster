@@ -1,0 +1,14 @@
+---
+- name: Disable iptables/firewall service.
+  ansible.builtin.service:
+    name: firewall
+    state: stopped
+    enabled: false
+  when: ansible_facts.services['firewall.service'] is defined
+
+- name: Disable firewalld service.
+  ansible.builtin.service:
+    name: firewalld
+    state: stopped
+    enabled: false
+  when: ansible_facts.services['firewalld.service'] is defined

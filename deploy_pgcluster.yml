@@ -96,9 +96,9 @@
       when: ansible_os_family == "Debian"
 
     # Ansible requires the iproute package for network facts to be populated
-    - name: Make sure that the {{ firewall_type }} is installed
+    - name: Make sure that the iproute is installed
       ansible.builtin.package:
-        name: "{{ firewall_type }}"
+        name: "iproute"
         state: present
       register: package_status
       until: package_status is success
@@ -106,9 +106,9 @@
       retries: 3
       when: ansible_os_family == "RedHat"
 
-    - name: Make sure that the {{ firewall_type }} is installed
+    - name: Make sure that the iproute is installed
       ansible.builtin.apt:
-        name: "{% if firewall_type == 'iproute' %}iproute2{% else %}{{firewall_type}}{% endif %}"
+        name: "iproute2"
         state: present
       register: apt_status
       until: apt_status is success

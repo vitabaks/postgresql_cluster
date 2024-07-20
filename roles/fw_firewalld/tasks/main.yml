@@ -8,6 +8,12 @@
   delay: 5
   retries: 3
 
+- name: Configure the firewalld service.
+  ansible.builtin.service:
+    name: firewalld
+    state: "{{ firewall_state }}"
+    enabled: "{{ firewall_enabled_at_boot }}"
+
 - name: Configure the firewall service.
   ansible.posix.firewalld:
     port: "{{ item }}/tcp"
@@ -15,4 +21,10 @@
     permanent: true
     state: enabled
   with_items: "{{ firewall_allowed_tcp_ports }}"
+  notify: Reload firewall
 
+- name: Get services status.
+  ansible.builtin.service_facts:
+
+- ansible.builtin.import_tasks: disable-other-firewalls.yml
+  when: ansible_facts.services['firewall.service'] is defined or ansible_facts.services['ufw.service'] is defined
