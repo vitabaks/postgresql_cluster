@@ -100,7 +100,7 @@
   when:
     - cluster_vip is defined and cluster_vip | length > 0
     - dcs_type == "etcd"
-    - (cloud_provider | default('') | length < 1 or not cloud_load_balancer | default(false) | bool)
+    - (cloud_provider | default('') | length < 1 or not cloud_load_balancer | default(true) | bool)
   tags: conn_info, cluster_info, cluster_status
 
 # if 'cluster_vip' is not defined
@@ -160,7 +160,7 @@
   when:
     - (cluster_vip is not defined or cluster_vip | length < 1)
     - dcs_type == "etcd"
-    - (cloud_provider | default('') | length < 1 or not cloud_load_balancer | default(false) | bool)
+    - (cloud_provider | default('') | length < 1 or not cloud_load_balancer | default(true) | bool)
   tags: conn_info, cluster_info, cluster_status
 
 # if dcs_type: "consul"
@@ -182,7 +182,7 @@
     superuser_password: "{{ '********' if mask_password | default(false) | bool else patroni_superuser_password }}"
   when:
     - dcs_type == "consul"
-    - (cloud_provider | default('') | length < 1 or not cloud_load_balancer | default(false) | bool)
+    - (cloud_provider | default('') | length < 1 or not cloud_load_balancer | default(true) | bool)
   tags: conn_info, cluster_info, cluster_status
 
 # if 'cloud_provider' and `cloud_load_balancer` is defined
