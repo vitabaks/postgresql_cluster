@@ -127,7 +127,7 @@ sudo_users:
 
 # Firewall
 firewall_enabled_at_boot: false  # or 'true' for configure firewall
-firewall_type: "iptables" # available 'iptables','firewalld','ufw'
+firewall_type: "iptables"  # available 'iptables','firewalld','ufw'
 
 firewall_allowed_tcp_ports_for:
   master: []
