@@ -21,7 +21,7 @@
     permanent: true
     state: enabled
   with_items: "{{ firewall_allowed_tcp_ports }}"
-  notify: Reload firewall
+  notify: reload firewalld
 
 - name: Get services status.
   ansible.builtin.service_facts:
