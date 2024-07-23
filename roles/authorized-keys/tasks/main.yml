@@ -12,7 +12,7 @@
         user: "{{ system_user.stdout }}"
         key: "{{ item }}"
         state: present
-      loop: "{{ ssh_public_keys_list }}"
+      loop: "{{ ssh_public_keys_list | map('replace', '\"', '') | map('replace', \"'\", \"\") | list }}"
       vars:
         ssh_public_keys_list: >-
           {{
