@@ -14,12 +14,15 @@
         state: present
       loop: "{{ ssh_public_keys_list }}"
       vars:
-        ssh_public_keys_list: "\
-          {% if ssh_public_keys is string %}\
-            {{ ssh_public_keys.splitlines() }}\
-          {% else %}\
-            {{ ssh_public_keys }}\
-          {% endif %}"
+        ssh_public_keys_list: >-
+          {{
+            (ssh_public_keys
+            | replace('\n', ',')
+            | split(',')
+            | map('trim')
+            | list) 
+            if ssh_public_keys is string else ssh_public_keys
+          }}
   when:
     - ssh_public_keys is defined
     - ssh_public_keys | length > 0
