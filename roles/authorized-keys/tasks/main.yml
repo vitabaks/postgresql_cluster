@@ -20,7 +20,7 @@
             | replace('\n', ',')
             | split(',')
             | map('trim')
-            | list) 
+            | list)
             if ssh_public_keys is string else ssh_public_keys
           }}
   when:
