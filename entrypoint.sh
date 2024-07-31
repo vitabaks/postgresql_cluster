@@ -34,7 +34,15 @@ if [[ -n "${SSH_PRIVATE_KEY_CONTENT}" ]]; then
     echo "Creating SSH private key file with the content of SSH_PRIVATE_KEY_CONTENT"
     echo "${SSH_PRIVATE_KEY_CONTENT}" > /root/.ssh/id_rsa
   fi
+
   chmod 600 /root/.ssh/id_rsa
+
+  # Ensure the key file ends with a newline
+  sed -i -e '$a\' /root/.ssh/id_rsa
+
+  echo "Checking SSH private key with ssh-keygen:"
+  ssh-keygen -y -f /root/.ssh/id_rsa
+
   # Set ANSIBLE_PRIVATE_KEY_FILE environment variable
   export ANSIBLE_PRIVATE_KEY_FILE=/root/.ssh/id_rsa
 fi
