@@ -40,8 +40,8 @@ if [[ -n "${SSH_PRIVATE_KEY_CONTENT}" ]]; then
   # Ensure the key file ends with a newline
   sed -i -e '$a\' /root/.ssh/id_rsa
 
-  echo "Checking SSH private key with ssh-keygen:"
-  ssh-keygen -y -f /root/.ssh/id_rsa
+  echo "Checking SSH private key with ssh-keygen"
+  ssh-keygen -y -f /root/.ssh/id_rsa > /dev/null
 
   # Set ANSIBLE_PRIVATE_KEY_FILE environment variable
   export ANSIBLE_PRIVATE_KEY_FILE=/root/.ssh/id_rsa
