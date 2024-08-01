@@ -1,24 +1,19 @@
-FROM node:20-alpine as build
+FROM node:20-bookworm AS build
 
-WORKDIR /usr/src/${PROJECT_NAME}
+WORKDIR /usr/src/pg-console
 
-COPY . ./
+COPY console/ui/ .
 
-RUN yarn install --frozen-lockfile --network-timeout 1000000
+RUN yarn install --frozen-lockfile --network-timeout 1000000 && yarn vite build
 
-RUN yarn vite build
-
-FROM registry.gs-labs.tv/casdevops/base_images:nginx1.21-alpine as runtime
-ARG PROJECT_NAME
-
-COPY nginx/nginx.conf /etc/nginx/
+FROM nginx:1.26-bookworm AS runtime
 
 WORKDIR /usr/share/nginx/html
-COPY --from=build /usr/src/${PROJECT_NAME}/dist ./
-COPY env.sh .env ./
 
-RUN apk update && apk add bash  && \
-    chmod +x env.sh
+COPY --from=build /usr/src/pg-console/dist ./
+COPY console/ui/nginx/nginx.conf /etc/nginx/
+COPY console/ui/env.sh console/ui/.env console/ui/.env.production ./
+
+RUN chmod +x ./env.sh
 
 CMD ["/bin/bash", "-c", "/usr/share/nginx/html/env.sh && nginx -g \"daemon off;\""]
-
