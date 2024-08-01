@@ -10,4 +10,4 @@ FROM debian:bookworm-slim
 COPY --from=builder /go/src/pg-console/pg-console /usr/local/bin/
 COPY --from=builder /go/src/pg-console/db/migrations /etc/db/migrations
 
-CMD ${PROJECT_NAME}
+CMD ["/usr/local/bin/pg-console"]
