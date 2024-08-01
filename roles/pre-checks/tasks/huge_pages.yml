@@ -79,17 +79,16 @@
           }}
       when:
         - shared_buffers_gb | default(0) | int >= (min_shared_buffers_gb | default(8))
+        - sysctl_set
 
     - name: "HugePages | info"
       ansible.builtin.debug:
-        var: hugepages_info
-      vars:
-        hugepages_info:
+        msg:
           shared_buffers_gb: "{{ shared_buffers_gb }}"
           huge_page_size_kb: "{{ huge_page_size.stdout | int | default(2048) }}"
           huge_pages_total: "{{ huge_pages_total.stdout | int | default(0) }}"
           huge_pages_required: "{{ huge_pages_required }}"
-          huge_pages_sufficient: "{{ sysctl_conf_vm_nr_hugepages_sufficient }}"
+          huge_pages_sufficient: "{{ sysctl_conf_vm_nr_hugepages_sufficient | default(omit) }}"
       when:
         - shared_buffers_gb | default(0) | int >= (min_shared_buffers_gb | default(8))
 
@@ -107,8 +106,9 @@
       when:
         - shared_buffers_gb | default(0) | int >= (min_shared_buffers_gb | default(8))
         - huge_pages_total.stdout | int | default(0) < huge_pages_required | int
-        - not sysctl_conf_vm_nr_hugepages_sufficient
+        - not sysctl_conf_vm_nr_hugepages_sufficient | default(false)
         - huge_pages_auto_conf | bool
+        - sysctl_set | bool
 
     # Stop, if the current vm.nr_hugepages value is insufficient in sysctl_conf variable and huge_pages_auto_conf is false
     - name: "HugePages | The current HugePages setting is insufficient"
@@ -119,15 +119,16 @@
       vars:
         huge_pages_current: >-
           {{
-            (sysctl_conf_vm_nr_hugepages
-            if sysctl_conf_vm_nr_hugepages | int > 0
-            else huge_pages_total.stdout | int) | default(0)
+            (sysctl_conf_vm_nr_hugepages | default(0)
+            if sysctl_conf_vm_nr_hugepages | default(0) | int > huge_pages_total.stdout | default(0) | int
+            else huge_pages_total.stdout | default(0) | int)
           }}
       when:
         - shared_buffers_gb | default(0) | int >= (min_shared_buffers_gb | default(8))
-        - huge_pages_total.stdout | int | default(0) < huge_pages_required | int
-        - not sysctl_conf_vm_nr_hugepages_sufficient
-        - not huge_pages_auto_conf | bool
+        - huge_pages_total.stdout | default(0) | int < huge_pages_required | int
+        - not sysctl_conf_vm_nr_hugepages_sufficient | default(false)
+        - (not huge_pages_auto_conf | bool or (not sysctl_set | bool and
+            (postgresql_parameters | selectattr('option', 'equalto', 'huge_pages') | map(attribute='value') | first | default('try')) == 'on'))
   when:
-    - sysctl_set | bool
     - (postgresql_parameters | selectattr('option', 'equalto', 'huge_pages') | map(attribute='value') | first | default('try')) != 'off'
+    - (sysctl_set | bool or (postgresql_parameters | selectattr('option', 'equalto', 'huge_pages') | map(attribute='value') | first | default('try')) == 'on')
