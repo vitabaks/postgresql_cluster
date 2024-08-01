@@ -56,7 +56,7 @@
         huge_pages_required: >-
           {{
             ((shared_buffers_gb | default(0) | int + (additional_huge_pages_gb | default(1)))
-            * 1024 * 1024) // huge_page_size.stdout | int | default(2048)
+            * 1024 * 1024) // huge_page_size.stdout | default(2048) | int
           }}
       when:
         - shared_buffers_gb | default(0) | int >= (min_shared_buffers_gb | default(8))
@@ -85,8 +85,8 @@
       ansible.builtin.debug:
         msg:
           shared_buffers_gb: "{{ shared_buffers_gb }}"
-          huge_page_size_kb: "{{ huge_page_size.stdout | int | default(2048) }}"
-          huge_pages_total: "{{ huge_pages_total.stdout | int | default(0) }}"
+          huge_page_size_kb: "{{ huge_page_size.stdout | default(2048) | int }}"
+          huge_pages_total: "{{ huge_pages_total.stdout | default(0) | int }}"
           huge_pages_required: "{{ huge_pages_required }}"
           huge_pages_sufficient: "{{ sysctl_conf_vm_nr_hugepages_sufficient | default(omit) }}"
       when:
@@ -105,7 +105,7 @@
             }}
       when:
         - shared_buffers_gb | default(0) | int >= (min_shared_buffers_gb | default(8))
-        - huge_pages_total.stdout | int | default(0) < huge_pages_required | int
+        - huge_pages_total.stdout | default(0) | int  < huge_pages_required | int
         - not sysctl_conf_vm_nr_hugepages_sufficient | default(false)
         - huge_pages_auto_conf | bool
         - sysctl_set | bool
