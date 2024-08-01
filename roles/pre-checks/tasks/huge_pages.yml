@@ -50,7 +50,7 @@
       register: huge_pages_total
       when:
         - shared_buffers_gb | default(0) | int >= (min_shared_buffers_gb | default(8))
-  
+
     - name: "HugePages | Calculate required HugePages"
       ansible.builtin.set_fact:
         huge_pages_required: >-
