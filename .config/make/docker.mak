@@ -37,23 +37,23 @@ docker-build: docker-build-console-db docker-build-console-api docker-build-cons
 
 #docker-build-automation: ## Build automation image
 #	@echo "Build automation docker image with tag $(TAG)";
-#	docker build --no-cache --tag postgresql_cluster:$(TAG) --file Dockerfile .
+#	docker build --no-cache --platform linux/amd64 --tag postgresql_cluster:$(TAG) --file Dockerfile .
 
 docker-build-console-db: ## Build console db image
 	@echo "Build console db docker image with tag $(TAG)"
-	docker build --no-cache --tag postgresql_cluster_console_db:$(TAG) --file console/db/Dockerfile .
+	docker build --no-cache --platform linux/amd64 --tag postgresql_cluster_console_db:$(TAG) --file console/db/Dockerfile .
 
 docker-build-console-api: ## Build console api image
 	@echo "Build console api docker image with tag $(TAG)"
-	docker build --no-cache --tag postgresql_cluster_console_api:$(TAG) --file console/service/Dockerfile .
+	docker build --no-cache --platform linux/amd64 --tag postgresql_cluster_console_api:$(TAG) --file console/service/Dockerfile .
 
 docker-build-console-ui: ## Build console ui image
 	@echo "Build console ui docker image with tag $(TAG)"
-	docker build --no-cache --tag postgresql_cluster_console_ui:$(TAG) --file console/ui/Dockerfile .
+	docker build --no-cache --platform linux/amd64 --tag postgresql_cluster_console_ui:$(TAG) --file console/ui/Dockerfile .
 
 docker-build-console: ## Build console image (all services)
 	@echo "Build console docker image with tag $(TAG)"
-	docker build --no-cache --tag postgresql_cluster_console:$(TAG) --file console/Dockerfile .
+	docker build --no-cache --platform linux/amd64 --tag postgresql_cluster_console:$(TAG) --file console/Dockerfile .
 
 .PHONY: docker-push docker-push-console-db docker-push-console-api docker-push-console-ui
 docker-push: docker-push-console-db docker-push-console ## Push all images to Dockerhub (example: make docker-push TAG=my_tag DOCKER_REGISTRY=my_repo DOCKER_REGISTRY_USER="my_username" DOCKER_REGISTRY_PASSWORD="my_password")
