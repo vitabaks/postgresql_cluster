@@ -1,4 +1,4 @@
-FROM node:20-bookworm AS build
+FROM node:20-bookworm AS builder
 
 WORKDIR /usr/src/pg-console
 
@@ -10,7 +10,7 @@ FROM nginx:1.26-bookworm AS runtime
 
 WORKDIR /usr/share/nginx/html
 
-COPY --from=build /usr/src/pg-console/dist ./
+COPY --from=builder /usr/src/pg-console/dist ./
 COPY console/ui/nginx/nginx.conf /etc/nginx/
 COPY console/ui/env.sh console/ui/.env console/ui/.env.production ./
 
