@@ -12,6 +12,10 @@ global
 defaults
     mode               tcp
     log                global
+    option             tcplog
+{% if haproxy_log_format is defined %}
+    log-format         '{{ haproxy_log_format }}'
+{% endif %}
     retries            2
     timeout queue      5s
     timeout connect    5s
@@ -32,7 +36,6 @@ listen master
     bind {{ inventory_hostname }}:{{ haproxy_listen_port.master }}
 {% endif %}
     maxconn {{ haproxy_maxconn.master }}
-    option tcplog
     option httpchk OPTIONS /primary
     http-check expect status 200
     default-server inter 3s fastinter 1s fall 3 rise 4 on-marked-down shutdown-sessions
@@ -53,7 +56,6 @@ listen master_direct
     bind {{ inventory_hostname }}:{{ haproxy_listen_port.master_direct }}
 {% endif %}
     maxconn {{ haproxy_maxconn.master }}
-    option tcplog
     option httpchk OPTIONS /primary
     http-check expect status 200
     default-server inter 3s fastinter 1s fall 3 rise 4 on-marked-down shutdown-sessions
@@ -68,7 +70,6 @@ listen replicas
     bind {{ inventory_hostname }}:{{ haproxy_listen_port.replicas }}
 {% endif %}
     maxconn {{ haproxy_maxconn.replica }}
-    option tcplog
     {% if balancer_tags | default('') | length > 0 %}
     option httpchk OPTIONS /replica?lag={{ patroni_maximum_lag_on_replica }}{{ '&' + balancer_tags.split(',') | map('trim') | map('regex_replace', '([^=]+)=(.*)', 'tag_\\1=\\2') | join('&') }}
     {% else %}
@@ -94,7 +95,6 @@ listen replicas_direct
     bind {{ inventory_hostname }}:{{ haproxy_listen_port.replicas_direct }}
 {% endif %}
     maxconn {{ haproxy_maxconn.replica }}
-    option tcplog
     {% if balancer_tags | default('') | length > 0 %}
     option httpchk OPTIONS /replica?lag={{ patroni_maximum_lag_on_replica }}{{ '&' + balancer_tags.split(',') | map('trim') | map('regex_replace', '([^=]+)=(.*)', 'tag_\\1=\\2') | join('&') }}
     {% else %}
@@ -114,7 +114,6 @@ listen replicas_sync
     bind {{ inventory_hostname }}:{{ haproxy_listen_port.replicas_sync }}
 {% endif %}
     maxconn {{ haproxy_maxconn.replica }}
-    option tcplog
     {% if balancer_tags | default('') | length > 0 %}
     option httpchk OPTIONS /sync{{ '?' + balancer_tags.split(',') | map('trim') | map('regex_replace', '([^=]+)=(.*)', 'tag_\\1=\\2') | join('&') }}
     {% else %}
@@ -140,7 +139,6 @@ listen replicas_sync_direct
     bind {{ inventory_hostname }}:{{ haproxy_listen_port.replicas_sync_direct }}
 {% endif %}
     maxconn {{ haproxy_maxconn.replica }}
-    option tcplog
     {% if balancer_tags | default('') | length > 0 %}
     option httpchk OPTIONS /sync{{ '?' + balancer_tags.split(',') | map('trim') | map('regex_replace', '([^=]+)=(.*)', 'tag_\\1=\\2') | join('&') }}
     {% else %}
@@ -160,7 +158,6 @@ listen replicas_async
     bind {{ inventory_hostname }}:{{ haproxy_listen_port.replicas_async }}
 {% endif %}
     maxconn {{ haproxy_maxconn.replica }}
-    option tcplog
     {% if balancer_tags | default('') | length > 0 %}
     option httpchk OPTIONS /async?lag={{ patroni_maximum_lag_on_replica }}{{ '&' + balancer_tags.split(',') | map('trim') | map('regex_replace', '([^=]+)=(.*)', 'tag_\\1=\\2') | join('&') }}
     {% else %}
@@ -186,7 +183,6 @@ listen replicas_async_direct
     bind {{ inventory_hostname }}:{{ haproxy_listen_port.replicas_async_direct }}
 {% endif %}
     maxconn {{ haproxy_maxconn.replica }}
-    option tcplog
     {% if balancer_tags | default('') | length > 0 %}
     option httpchk OPTIONS /async?lag={{ patroni_maximum_lag_on_replica }}{{ '&' + balancer_tags.split(',') | map('trim') | map('regex_replace', '([^=]+)=(.*)', 'tag_\\1=\\2') | join('&') }}
     {% else %}
