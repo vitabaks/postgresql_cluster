@@ -119,7 +119,8 @@
       vars:
         huge_pages_current: >-
           {{
-            (sysctl_conf_vm_nr_hugepages if sysctl_conf_vm_nr_hugepages | int > huge_pages_total.stdout | int
+            (sysctl_conf_vm_nr_hugepages
+            if sysctl_conf_vm_nr_hugepages | int > 0
             else huge_pages_total.stdout | int) | default(0)
           }}
       when:
