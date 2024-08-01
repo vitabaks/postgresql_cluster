@@ -222,7 +222,7 @@ postgresql_parameters:
   - { option: "password_encryption", value: "{{ postgresql_password_encryption_algorithm }}" }
   - { option: "max_locks_per_transaction", value: "512" }
   - { option: "max_prepared_transactions", value: "0" }
-  - { option: "huge_pages", value: "try" }  # or "on" if you set "vm_nr_hugepages" in kernel parameters
+  - { option: "huge_pages", value: "try" }  # "vm.nr_hugepages" is auto-configured for shared_buffers >= 8GB (if huge_pages_auto_conf is true)
   - { option: "shared_buffers", value: "{{ (ansible_memtotal_mb * 0.25) | int }}MB" }  # by default, 25% of RAM
   - { option: "effective_cache_size", value: "{{ (ansible_memtotal_mb * 0.75) | int }}MB" }  # by default, 75% of RAM
   - { option: "work_mem", value: "128MB" }  # please change this value
