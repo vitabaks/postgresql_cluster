@@ -73,9 +73,11 @@ vip_manager_package_repo:
 
 installation_method: "repo"  # "repo" (default) or "file"
 
-# Patroni package will be installed from the pip (by default).
-# You also have the option of choosing an patroni installation method using the deb package.
+# The Patroni package will be installed from the deb package by default.
+# You also have the option of choosing an installation method using the pip package.
 patroni_installation_method: "deb"  # "deb" (default) or "pip"
+# if patroni_installation_method: "pip"
+patroni_install_version: "3.3.2"  # or 'latest'
 
 # if patroni_installation_method: "deb"
 patroni_packages:
@@ -149,7 +151,8 @@ haproxy_compile_requirements:
 # Packages from this directory will be used for installation.
 
 # if installation_method: "file" and patroni_installation_method: "deb"
-patroni_deb_package_file: "patroni_3.3.0-1.pgdg22.04%2B1_all.deb"  # (package for Ubuntu 22.04) https://apt.postgresql.org/pub/repos/apt/pool/main/p/patroni/
+patroni_deb_package_file: "patroni_3.3.0-1.pgdg22.04%2B1_all.deb"
+# (package for Ubuntu 22.04) https://apt.postgresql.org/pub/repos/apt/pool/main/p/patroni/
 
 # if installation_method: "file" and patroni_installation_method: "pip"
 pip_package_file: "pip-24.2.tar.gz"  # https://pypi.org/project/pip/#files
