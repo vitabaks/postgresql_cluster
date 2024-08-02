@@ -1,0 +1,134 @@
+---
+# Automatically configure "vm.nr_hugepages" for shared_buffers of 8GB or more,
+# if 'sysctl_set' is 'true', "vm.nr_hugepages" is undefined or insufficient in sysctl_conf,
+# and "huge_pages" is not 'off' in postgresql_parameters.
+
+- block:
+    - name: "HugePages | Get shared_buffers value from postgresql_parameters variable"
+      ansible.builtin.set_fact:
+        shared_buffers: "{{ postgresql_parameters_shared_buffers }}"
+        shared_buffers_value: "{{ postgresql_parameters_shared_buffers | regex_search('[0-9]+') | int }}"
+        shared_buffers_unit: "{{ postgresql_parameters_shared_buffers | regex_search('[A-Za-z]+') | lower }}"
+      vars:
+        postgresql_parameters_shared_buffers: >-
+          {{
+            (postgresql_parameters
+            | selectattr('option', 'equalto', 'shared_buffers')
+            | map(attribute='value')
+            | first | default('128MB'))
+          }}
+
+    - name: "HugePages | Set variable: shared_buffers_gb"
+      ansible.builtin.set_fact:
+        shared_buffers_gb: "{{ (shared_buffers_value | int) // 1024 }}"
+      when: shared_buffers_unit == 'mb'
+
+    - name: "HugePages | Set variable: shared_buffers_gb"
+      ansible.builtin.set_fact:
+        shared_buffers_gb: "{{ shared_buffers_value }}"
+      when: shared_buffers_unit == 'gb'
+
+    - name: "HugePages | No configuration is required"
+      run_once: true
+      ansible.builtin.debug:
+        msg: >-
+          Current shared_buffers size: {{ shared_buffers }} (less than {{ min_shared_buffers_gb | default(8) }}GB).
+          No HugePages configuration is required.
+      when:
+        - (shared_buffers_gb | default(0) | int) < (min_shared_buffers_gb | default(8) | int)
+
+    - name: "HugePages | Get Hugepagesize value from /proc/meminfo"
+      ansible.builtin.command: "awk '/Hugepagesize/ {print $2}' /proc/meminfo"
+      changed_when: false
+      register: huge_page_size
+      when:
+        - shared_buffers_gb | default(0) | int >= (min_shared_buffers_gb | default(8))
+
+    - name: "HugePages | Get HugePages_Total value from /proc/meminfo"
+      ansible.builtin.command: "awk '/HugePages_Total/ {print $2}' /proc/meminfo"
+      changed_when: false
+      register: huge_pages_total
+      when:
+        - shared_buffers_gb | default(0) | int >= (min_shared_buffers_gb | default(8))
+
+    - name: "HugePages | Calculate required HugePages"
+      ansible.builtin.set_fact:
+        huge_pages_required: >-
+          {{
+            ((shared_buffers_gb | default(0) | int + (additional_huge_pages_gb | default(1)))
+            * 1024 * 1024) // huge_page_size.stdout | default(2048) | int
+          }}
+      when:
+        - shared_buffers_gb | default(0) | int >= (min_shared_buffers_gb | default(8))
+
+    - name: "HugePages | Check if vm.nr_hugepages is already set sufficiently in sysctl_conf variable"
+      ansible.builtin.set_fact:
+        sysctl_conf_vm_nr_hugepages: >-
+          {{
+            (sysctl_conf.postgres_cluster
+            | selectattr('name', 'equalto', 'vm.nr_hugepages')
+            | map(attribute='value')
+            | first | default('0') | int)
+          }}
+        sysctl_conf_vm_nr_hugepages_sufficient: >-
+          {{
+            (sysctl_conf.postgres_cluster
+            | selectattr('name', 'equalto', 'vm.nr_hugepages')
+            | map(attribute='value')
+            | first | default('0') | int) >= huge_pages_required | int
+          }}
+      when:
+        - shared_buffers_gb | default(0) | int >= (min_shared_buffers_gb | default(8))
+        - sysctl_set
+
+    - name: "HugePages | info"
+      ansible.builtin.debug:
+        msg:
+          shared_buffers_gb: "{{ shared_buffers_gb }}"
+          huge_page_size_kb: "{{ huge_page_size.stdout | default(2048) | int }}"
+          huge_pages_total: "{{ huge_pages_total.stdout | default(0) | int }}"
+          huge_pages_required: "{{ huge_pages_required }}"
+          huge_pages_sufficient: "{{ sysctl_conf_vm_nr_hugepages_sufficient | default(omit) }}"
+      when:
+        - shared_buffers_gb | default(0) | int >= (min_shared_buffers_gb | default(8))
+
+    # if huge_pages_auto_conf is true
+    - name: "HugePages | Specify \"vm.nr_hugepages\" with value \"{{ huge_pages_required }}\" in sysctl_conf variable"
+      ansible.builtin.set_fact:
+        sysctl_conf:
+          postgres_cluster: >-
+            {{
+              (sysctl_conf.postgres_cluster
+              | rejectattr('name', 'equalto', 'vm.nr_hugepages')
+              | list)
+              + [ { 'name': 'vm.nr_hugepages', 'value': huge_pages_required } ]
+            }}
+      when:
+        - shared_buffers_gb | default(0) | int >= (min_shared_buffers_gb | default(8))
+        - huge_pages_total.stdout | default(0) | int  < huge_pages_required | int
+        - not sysctl_conf_vm_nr_hugepages_sufficient | default(false)
+        - huge_pages_auto_conf | bool
+        - sysctl_set | bool
+
+    # Stop, if the current vm.nr_hugepages value is insufficient in sysctl_conf variable and huge_pages_auto_conf is false
+    - name: "HugePages | The current HugePages setting is insufficient"
+      ansible.builtin.fail:
+        msg: >-
+          Insufficient HugePages. Current: {{ huge_pages_current }}. Required: {{ huge_pages_required }}.
+          Please adjust the vm.nr_hugepages kernel parameter.
+      vars:
+        huge_pages_current: >-
+          {{
+            (sysctl_conf_vm_nr_hugepages | default(0)
+            if sysctl_conf_vm_nr_hugepages | default(0) | int > huge_pages_total.stdout | default(0) | int
+            else huge_pages_total.stdout | default(0) | int)
+          }}
+      when:
+        - shared_buffers_gb | default(0) | int >= (min_shared_buffers_gb | default(8))
+        - huge_pages_total.stdout | default(0) | int < huge_pages_required | int
+        - not sysctl_conf_vm_nr_hugepages_sufficient | default(false)
+        - (not huge_pages_auto_conf | bool or (not sysctl_set | bool and
+            (postgresql_parameters | selectattr('option', 'equalto', 'huge_pages') | map(attribute='value') | first | default('try')) == 'on'))
+  when:
+    - (postgresql_parameters | selectattr('option', 'equalto', 'huge_pages') | map(attribute='value') | first | default('try')) != 'off'
+    - (sysctl_set | bool or (postgresql_parameters | selectattr('option', 'equalto', 'huge_pages') | map(attribute='value') | first | default('try')) == 'on')
