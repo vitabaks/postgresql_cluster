@@ -85,7 +85,6 @@ paths:
           description: Error
           schema:
             $ref: "#/definitions/Response.Error"
-
   /environments:
     get:
       summary: "Get environments list"
