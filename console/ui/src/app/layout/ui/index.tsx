@@ -5,7 +5,7 @@ import Main from '@widgets/main';
 
 const Layout: FC = () => {
   return (
-    <div style={{ display: 'flex', overflow: 'auto', minHeight: '100vh' }}>
+    <div style={{ display: 'flex', overflow: 'auto', height: '100vh' }}>
       <Header />
       <Sidebar />
       <Main />
