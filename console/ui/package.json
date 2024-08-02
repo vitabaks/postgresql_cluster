@@ -1,7 +1,7 @@
 {
   "name": "postgres-cluster-console-ui",
   "private": true,
-  "version": "0.0.47",
+  "version": "0.0.48",
   "type": "module",
   "scripts": {
     "dev": "vite --open",

@@ -1,10 +1,11 @@
 import { FC } from 'react';
 import BreadcrumbsItem from '@entities/breadcumb-item';
 import useBreadcrumbs from '@/features/bradcrumbs/hooks/useBreadcrumbs.tsx';
-import { Breadcrumbs as MaterialBreadcrumbs, Icon, Link, Typography } from '@mui/material';
+import { Breadcrumbs as MaterialBreadcrumbs, Icon, Typography } from '@mui/material';
 import RouterPaths from '@app/router/routerPathsConfig';
 import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
 import { generateAbsoluteRouterPath } from '@shared/lib/functions.ts';
+import { Link } from 'react-router-dom';
 
 const Breadcrumbs: FC = () => {
   const breadcrumbs = useBreadcrumbs();
@@ -12,9 +13,8 @@ const Breadcrumbs: FC = () => {
   return (
     <MaterialBreadcrumbs>
       <Link
-        underline="hover"
-        color="inherit"
-        href={generateAbsoluteRouterPath(RouterPaths.clusters.absolutePath).pathname}>
+        style={{ textDecoration: 'none', color: 'rgba(0, 0, 0, 0.87)' }}
+        to={generateAbsoluteRouterPath(RouterPaths.clusters.absolutePath).pathname}>
         <Icon>
           <HomeOutlinedIcon />
         </Icon>
