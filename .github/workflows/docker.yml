@@ -5,6 +5,8 @@ on:
   push:
     branches:
       - master
+    tags:
+      - '*'
   pull_request:
     branches:
       - master
@@ -17,6 +19,24 @@ jobs:
       - name: Set TERM environment variable
         run: echo "TERM=xterm" >> $GITHUB_ENV
 
+      - name: Extract branch or tag name
+        run: |
+          if [[ -n "${GITHUB_HEAD_REF}" ]]; then
+            # This is a PR, use the source branch name
+            echo "REF_NAME=${GITHUB_HEAD_REF}" >> $GITHUB_ENV
+          else
+            # This is a push, use the branch or tag name from GITHUB_REF
+            echo "REF_NAME=${GITHUB_REF##*/}" >> $GITHUB_ENV
+          fi
+
+      - name: Set TAG
+        run: |
+          if [[ "${{ env.REF_NAME }}" == "master" ]]; then
+            echo "TAG=latest" >> $GITHUB_ENV
+          else
+            echo "TAG=${{ env.REF_NAME }}" >> $GITHUB_ENV
+          fi
+
       - name: Checkout
         uses: actions/checkout@v3
 
@@ -28,5 +48,17 @@ jobs:
       - name: Install dependencies
         run: make bootstrap-dev
 
-      - name: Run Docker tests
-        run: make docker-tests
+      - name: Run Docker lint
+        run: make docker-lint
+
+      - name: Run Docker build
+        run: make docker-build
+        env:
+          TAG: ${{ env.TAG }}
+
+      - name: Run Docker push
+        run: make docker-push
+        env:
+          TAG: ${{ env.TAG }}
+          DOCKER_REGISTRY_USER: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_REGISTRY_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}

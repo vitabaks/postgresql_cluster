@@ -1,3 +1,4 @@
+---
 swagger: '2.0'
 info:
   title: PG Console
@@ -50,41 +51,40 @@ paths:
 
   /database/extensions:
     get:
-     summary: "Info about available database extensions"
-     tags:
-       - dictionary
-     parameters:
-       - name: offset
-         in: query
-         required: false
-         type: integer
-       - name: limit
-         in: query
-         required: false
-         type: integer
-       - name: extension_type
-         in: query
-         required: false
-         type: string
-         default: "all"
-         enum:
-          - "all"
-          - "contrib"
-          - "third_party"
-       - name: postgres_version
-         in: query
-         required: false
-         type: string
-     responses:
-       '200':
-         description: OK
-         schema:
-           $ref: "#/definitions/Response.DatabaseExtensions"
-       '400':
-         description: Error
-         schema:
-           $ref: "#/definitions/Response.Error"
-
+      summary: "Info about available database extensions"
+      tags:
+        - dictionary
+      parameters:
+        - name: offset
+          in: query
+          required: false
+          type: integer
+        - name: limit
+          in: query
+          required: false
+          type: integer
+        - name: extension_type
+          in: query
+          required: false
+          type: string
+          default: "all"
+          enum:
+            - "all"
+            - "contrib"
+            - "third_party"
+        - name: postgres_version
+          in: query
+          required: false
+          type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: "#/definitions/Response.DatabaseExtensions"
+        '400':
+          description: Error
+          schema:
+            $ref: "#/definitions/Response.Error"
   /environments:
     get:
       summary: "Get environments list"
