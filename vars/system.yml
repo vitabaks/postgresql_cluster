@@ -78,6 +78,11 @@ sysctl_conf:
 #   - { name: "net.netfilter.nf_conntrack_max", value: "1048576" }
 #   - { name: "", value: "" }
 
+# Huge Pages
+# this setting will automatically configure "vm.nr_hugepages" for shared_buffers of 8GB or more
+# if 'sysctl_set' is 'true', "vm.nr_hugepages" is undefined or insufficient in sysctl_conf,
+# and "huge_pages" is not 'off' in postgresql_parameters.
+huge_pages_auto_conf: true
 
 # Transparent Huge Pages
 disable_thp: true  # or 'false'

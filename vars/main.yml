@@ -80,7 +80,7 @@ keepalived_virtual_router_id: "{{ cluster_vip.split('.')[3] | int }}" # The last
 # virtual_router_id - must be unique in the network (available values are 0..255).
 
 # vip-manager (if 'cluster_vip' is specified and 'with_haproxy_load_balancing' is 'false')
-vip_manager_version: "2.5.0"  # version to install
+vip_manager_version: "2.6.0"  # version to install
 vip_manager_conf: "/etc/patroni/vip-manager.yml"
 vip_manager_interval: "1000"  # time (in milliseconds) after which vip-manager wakes up and checks if it needs to register or release ip addresses.
 vip_manager_iface: "{{ vip_interface }}"  # interface to which the virtual ip will be added
@@ -93,7 +93,7 @@ dcs_exists: false  # or 'true' if you don't want to deploy a new etcd cluster
 dcs_type: "etcd"  # or 'consul'
 
 # if dcs_type: "etcd" and dcs_exists: false
-etcd_version: "3.5.11"  # version for deploy etcd cluster
+etcd_version: "3.5.15"  # version for deploy etcd cluster
 etcd_data_dir: "/var/lib/etcd"
 etcd_cluster_name: "etcd-{{ patroni_cluster_name }}"  # ETCD_INITIAL_CLUSTER_TOKEN
 
@@ -222,7 +222,7 @@ postgresql_parameters:
   - { option: "password_encryption", value: "{{ postgresql_password_encryption_algorithm }}" }
   - { option: "max_locks_per_transaction", value: "512" }
   - { option: "max_prepared_transactions", value: "0" }
-  - { option: "huge_pages", value: "try" }  # or "on" if you set "vm_nr_hugepages" in kernel parameters
+  - { option: "huge_pages", value: "try" }  # "vm.nr_hugepages" is auto-configured for shared_buffers >= 8GB (if huge_pages_auto_conf is true)
   - { option: "shared_buffers", value: "{{ (ansible_memtotal_mb * 0.25) | int }}MB" }  # by default, 25% of RAM
   - { option: "effective_cache_size", value: "{{ (ansible_memtotal_mb * 0.75) | int }}MB" }  # by default, 75% of RAM
   - { option: "work_mem", value: "128MB" }  # please change this value

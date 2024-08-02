@@ -29,6 +29,11 @@
   when:
     - inventory_hostname in groups['postgres_cluster']
 
+- name: Perform pre-checks for huge_pages
+  ansible.builtin.import_tasks: huge_pages.yml
+  when:
+    - inventory_hostname in groups['postgres_cluster']
+
 - name: Perform pre-checks for pgbackrest
   ansible.builtin.import_tasks: pgbackrest.yml
   when:
