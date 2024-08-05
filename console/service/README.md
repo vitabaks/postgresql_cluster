@@ -1,4 +1,4 @@
-# PostgeSQL Cluster Console API service
+# PostgreSQL Cluster Console API service
 
 Server-side component for PostgreSQL Cluster Console. This REST service implements the API for UI integration.
 

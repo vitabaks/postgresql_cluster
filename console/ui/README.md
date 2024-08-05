@@ -1,4 +1,4 @@
-# PostgeSQL Cluster Console UI
+# PostgreSQL Cluster Console UI
 
 The UI part of PostgreSQL Cluster Console. This project provides a user-friendly web interface for managing, monitoring, and configuring Postgres clusters.
 
