@@ -16,7 +16,7 @@ basePath: "/api/v1"
 paths:
   /version:
     get:
-      summary: Get version of server
+      summary: Get version of API service
       tags:
         - system
       responses:
@@ -377,7 +377,7 @@ paths:
             $ref: "#/definitions/Response.Error"
 
     delete:
-      summary: "Delete cluster"
+      summary: "Delete cluster (from the console database)"
       tags:
         - cluster
       parameters:
@@ -395,7 +395,7 @@ paths:
 
   /servers/{id}:
     delete:
-      summary: "Delete server from cluster"
+      summary: "Delete server (from the console database)"
       tags:
         - cluster
       parameters:
@@ -416,7 +416,7 @@ paths:
 
   /clusters/{id}/refresh:
     post:
-      summary: "Refresh cluster info"
+      summary: "Refresh cluster info (from Patroni API)"
       tags:
         - cluster
       parameters:
