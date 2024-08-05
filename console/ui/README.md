@@ -1,26 +1,16 @@
-# postgres-cluster-console-ui
+# PostgeSQL Cluster Console UI
 
-UI part of **postgresql-cluster-console**. This project provides a user-friendly web interface for managing,
-monitoring, and configuring database clusters.
-
-## Table of Contents
-
-- [Features](#features)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Technology Stack](#technology-stack)
-- [Configuration](#configuration)
-- [Architecture](#architecture)
-- [Contact](#contact)
+The UI part of PostgreSQL Cluster Console. This project provides a user-friendly web interface for managing, monitoring, and configuring Postgres clusters.
 
 ## Features
 
-- **Cluster management**: Add, remove, and monitor cloud provider clusters as well as clusters on your own machines.
-- **Cluster overview**: View general information and status of cluster instances.
+- **Cluster management**: Create Postgres clusters for multiple cloud providers or your own machines.
+- **Cluster overview**: View general information and status of Postgres cluster.
 - **Operations**: View cluster operations and deployment logs.
-- **Projects**: Deploy multiple projects with different clusters.
-- **Settings**: Use proxy servers to deploy clusters.
-- **Credential control**: Easily manage multiple credentials for different cloud providers and your own machines.
+- **Projects**: Create multiple projects with different clusters.
+- **Environments**: Create multiple environments for clusters.
+- **Settings**: Use proxy servers to deploy clusters (optional).
+- **Secrets**: Easily manage multiple credentials, including cloud secrets, SSH keys, and passwords.
 
 ## Installation
 
@@ -127,14 +117,3 @@ responsibility, to promote isolation, reusability, and easy maintenance.
 - Description: This is the foundational layer. It includes utilities, shared components, constants, and other reusable
   elements that can be used across features, entities, or pages.
 - Contents: Common components (CopyIcon, DefaultTable, Spinner), constants and types, utility functions.
-
-## Contact
-
-For additional questions, feedback, or issues, you can reach us at:
-
-- GitHub Issues: Issue Tracker (https://github.com/vitabaks/postgresql_cluster/issues)
-
----
-
-Thank you for using and contributing to **postgres-cluster-console**! Your support helps make this project
-better.
