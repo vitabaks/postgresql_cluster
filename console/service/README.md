@@ -1,6 +1,6 @@
 # PostgeSQL Cluster Console API service
 
-Server-side component for PostgreSQL Cluster Console. This REST service implements the API for web integration.
+Server-side component for PostgreSQL Cluster Console. This REST service implements the API for UI integration.
 
 The project is written in `Go` and uses [Swagger](https://github.com/go-swagger/go-swagger) for server-side code generation. The server receives requests from the web to create and manage clusters. Under the hood, the server uses Docker to run `postgresql_cluster` image with Ansible playbooks for cluster deployment logic.
 
