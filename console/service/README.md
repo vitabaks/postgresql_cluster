@@ -1,30 +1,28 @@
-# postgesql-cluster-console server
+# PostgeSQL Cluster Console API service
 
-Server side for postgresql-cluster-console.
-REST service that implements API for WEB integration.
-Project is written on `golang` and used [swagger](https://github.com/go-swagger/go-swagger) for server-side auto generation.
-Server is received requests from WEB for creation and manage clusters.
-Under the hood server uses docker for running ansible scripts with cluster deploy logic.
+Server-side component for PostgreSQL Cluster Console. This REST service implements the API for web integration.
+
+The project is written in `Go` and uses [Swagger](https://github.com/go-swagger/go-swagger) for server-side code generation. The server receives requests from the web to create and manage clusters. Under the hood, the server uses Docker to run `postgresql_cluster` image with Ansible playbooks for cluster deployment logic.
 
 ## Build
-Swagger specification is used for creating server REST API. First of all you need to install swagger tool to build auto generated go-files.
+Swagger specification is used for creating the server REST API. First, you need to install the Swagger tool to build the auto-generated Go files.
 ```
 export dir=$$(mktemp -d)
 git clone https://github.com/go-swagger/go-swagger "$$dir"
 cd "$$dir"
 go install ./cmd/swagger
 ```
-Then you need to generate server side files:
+Then, you need to generate the server-side files:
 ```
 swagger generate server --name DbConsole --spec api/swagger.yaml --principal interface{} --exclude-main
 ```
 
-After that you can build server with following command:
+After that, you can build the server with the following command:
 ```
 go build -o pg-console main.go
 ```
 
-The project also contains makefile with all commands. So you can just do next steps:
+The project also contains a Makefile with all commands, so you can simply run the following steps:
 ```
 make swagger_install
 make swagger
@@ -66,39 +64,42 @@ PG_CONSOLE_CLUSTERWATCHER_RUNEVERY    Duration            1m                    
 PG_CONSOLE_CLUSTERWATCHER_POOLSIZE    Integer             4                                                Amount of async request from ClusterWatcher
 ```
 
-## Project architecture
+Note: Be attention to use `TRACE` level of logging. With `TRACE` level some kind of secrets can be present in logs.
+
+## Project structure
 ```
-|-api - swagger specification
-|-internal - folder with all internal logic
-| |-controllers - REST fuctions and basic logic for handlers
-| | |-cluster - REST API for clusters objects
-| | |-dictionary - REST API for dictionaries objects
-| | |-operation - REST API for operations objects
-| | |-project - REST API for projects objects
-| | |-secret - REST API for secrets objects
-| |-convert - functions for convert DB model for REST model
-| |-db - base DB functions
-| |-service - common logic for aggrigation all server logic
+|-api - Swagger specification
+|-internal - Folder with all internal logic
+| |-configuration - Configuration
+| |-controllers - REST functions and basic logic for handlers
+| | |-cluster - REST API for cluster objects
+| | |-dictionary - REST API for dictionary objects
+| | |-environment - REST API for environment objects
+| | |-operation - REST API for operation objects
+| | |-project - REST API for project objects
+| | |-secret - REST API for secret objects
+| | |-setting - REST API for setting objects
+| |-convert - Functions for converting DB model to REST model
+| |-db - Basic DB functions
+| |-service - Common logic for aggregating all server logic
 | |-storage - DB logic
-| |-watcher - async watchers
-| | |-log_collector.go - collecting logs from running docker container
+| |-watcher - Async watchers
+| | |-log_collector.go - Collecting logs from running Docker containers
 | | |-log_watcher.go - JSON container log parser
-| | |-server_watcher.go - collecting servers statuses  
-| |-xdocker - basic logic for docker
-|-middleware - common REST middlewares for server
-|-migrations - DB migrations logic   
-|-pkg - folder with common logic
-| |-patroni - client for patroni integration
-| |-tracer - base structure for tracing
-|-*models - auto-generated files with REST models
-|-*restapi - auto-generated files with REST server
-|-main.go - entry point
+| | |-cluster_watcher.go - Collecting cluster statuses  
+| |-xdocker - Basic logic for Docker
+|-middleware - Common REST middleware for the server
+|-migrations - DB migration logic   
+|-pkg - Folder with common logic
+| |-patroni - Client for Patroni integration
+| |-tracer - Base structure for tracing
+|-*models - Auto-generated files with REST models
+|-*restapi - Auto-generated files with REST server
+|-main.go - Entry point
 ```
 
 ## Secrets
-Server handles different kind of secrets, such as:
-* cloud secrets, that uses for cloud connections
-* ssh keys and passwords for connection to owm machine servers
-* database secrets
+The server handles different kinds of secrets, such as:
 
-Be attention to use `TRACE` level of logging. With `TRACE` level some kind of secrets can be present in logs.
+* Cloud secrets used for cloud connections
+* SSH keys and passwords for connection to own machine servers
