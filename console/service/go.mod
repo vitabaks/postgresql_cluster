@@ -1,4 +1,4 @@
-module postgesql-cluster-console
+module postgresql-cluster-console
 
 go 1.21
 

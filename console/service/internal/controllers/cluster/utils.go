@@ -3,10 +3,11 @@ package cluster
 import (
 	"context"
 	"encoding/json"
+	"postgresql-cluster-console/internal/storage"
+	"postgresql-cluster-console/models"
+	"postgresql-cluster-console/pkg/tracer"
+
 	"github.com/rs/zerolog"
-	"postgesql-cluster-console/internal/storage"
-	"postgesql-cluster-console/models"
-	"postgesql-cluster-console/pkg/tracer"
 )
 
 type ParamLocation uint8

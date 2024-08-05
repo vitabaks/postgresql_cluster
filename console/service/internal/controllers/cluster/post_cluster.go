@@ -3,20 +3,21 @@ package cluster
 import (
 	"encoding/json"
 	"fmt"
+	"postgresql-cluster-console/internal/configuration"
+	"postgresql-cluster-console/internal/controllers"
+	"postgresql-cluster-console/internal/storage"
+	"postgresql-cluster-console/internal/watcher"
+	"postgresql-cluster-console/internal/xdocker"
+	"postgresql-cluster-console/models"
+	"postgresql-cluster-console/pkg/tracer"
+	"postgresql-cluster-console/restapi/operations/cluster"
+	"strconv"
+	"strings"
+
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/rs/zerolog"
 	"github.com/segmentio/asm/base64"
 	"go.openly.dev/pointy"
-	"postgesql-cluster-console/internal/configuration"
-	"postgesql-cluster-console/internal/controllers"
-	"postgesql-cluster-console/internal/storage"
-	"postgesql-cluster-console/internal/watcher"
-	"postgesql-cluster-console/internal/xdocker"
-	"postgesql-cluster-console/models"
-	"postgesql-cluster-console/pkg/tracer"
-	"postgesql-cluster-console/restapi/operations/cluster"
-	"strconv"
-	"strings"
 )
 
 type postClusterHandler struct {

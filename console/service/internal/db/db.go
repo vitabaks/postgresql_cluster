@@ -3,7 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
-	"postgesql-cluster-console/internal/configuration"
+	"postgresql-cluster-console/internal/configuration"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"

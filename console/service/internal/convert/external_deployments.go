@@ -1,11 +1,12 @@
 package convert
 
 import (
+	"postgresql-cluster-console/internal/storage"
+	"postgresql-cluster-console/models"
+	"sort"
+
 	"github.com/go-openapi/strfmt"
 	"go.openly.dev/pointy"
-	"postgesql-cluster-console/internal/storage"
-	"postgesql-cluster-console/models"
-	"sort"
 )
 
 func ProviderInfoToSwagger(providerInfo *storage.CloudProviderInfo, description, image string) *models.ResponseDeploymentInfo {

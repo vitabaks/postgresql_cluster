@@ -1,10 +1,11 @@
 package operation
 
 import (
+	"postgresql-cluster-console/internal/controllers"
+	"postgresql-cluster-console/internal/storage"
+	"postgresql-cluster-console/restapi/operations/operation"
+
 	"github.com/go-openapi/runtime/middleware"
-	"postgesql-cluster-console/internal/controllers"
-	"postgesql-cluster-console/internal/storage"
-	"postgesql-cluster-console/restapi/operations/operation"
 )
 
 type getOperationLogHandler struct {

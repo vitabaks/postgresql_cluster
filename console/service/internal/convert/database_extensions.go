@@ -1,8 +1,8 @@
 package convert
 
 import (
-	"postgesql-cluster-console/internal/storage"
-	"postgesql-cluster-console/models"
+	"postgresql-cluster-console/internal/storage"
+	"postgresql-cluster-console/models"
 )
 
 func DbExtensionToSwagger(ext *storage.Extension) *models.ResponseDatabaseExtension {

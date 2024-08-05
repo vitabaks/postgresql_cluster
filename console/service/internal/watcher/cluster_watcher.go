@@ -2,17 +2,18 @@ package watcher
 
 import (
 	"context"
+	"postgresql-cluster-console/internal/configuration"
+	"postgresql-cluster-console/internal/storage"
+	"postgresql-cluster-console/pkg/patroni"
+	"postgresql-cluster-console/pkg/tracer"
+	"sync"
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"go.openly.dev/pointy"
 	"golang.org/x/sync/semaphore"
-	"postgesql-cluster-console/internal/configuration"
-	"postgesql-cluster-console/internal/storage"
-	"postgesql-cluster-console/pkg/patroni"
-	"postgesql-cluster-console/pkg/tracer"
-	"sync"
-	"time"
 )
 
 type ClusterWatcher interface {

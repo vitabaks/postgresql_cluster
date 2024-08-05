@@ -1,11 +1,12 @@
 package project
 
 import (
+	"postgresql-cluster-console/internal/controllers"
+	"postgresql-cluster-console/internal/convert"
+	"postgresql-cluster-console/internal/storage"
+	"postgresql-cluster-console/restapi/operations/project"
+
 	"github.com/go-openapi/runtime/middleware"
-	"postgesql-cluster-console/internal/controllers"
-	"postgesql-cluster-console/internal/convert"
-	"postgesql-cluster-console/internal/storage"
-	"postgesql-cluster-console/restapi/operations/project"
 )
 
 type patchProjectHandler struct {

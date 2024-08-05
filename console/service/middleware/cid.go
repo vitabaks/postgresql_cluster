@@ -2,9 +2,10 @@ package middleware
 
 import (
 	"context"
-	"github.com/google/uuid"
 	"net/http"
-	"postgesql-cluster-console/pkg/tracer"
+	"postgresql-cluster-console/pkg/tracer"
+
+	"github.com/google/uuid"
 )
 
 func SetCorrelationId(next http.Handler) http.Handler {

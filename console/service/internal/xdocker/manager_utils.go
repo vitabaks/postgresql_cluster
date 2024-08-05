@@ -2,11 +2,12 @@ package xdocker
 
 import (
 	"context"
+	"io"
+	"postgresql-cluster-console/pkg/tracer"
+	"strings"
+
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/errdefs"
-	"io"
-	"postgesql-cluster-console/pkg/tracer"
-	"strings"
 )
 
 func (m *dockerManager) pullImage(ctx context.Context, dockerImage string) error {

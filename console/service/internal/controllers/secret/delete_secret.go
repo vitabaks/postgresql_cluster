@@ -1,10 +1,11 @@
 package secret
 
 import (
+	"postgresql-cluster-console/internal/controllers"
+	"postgresql-cluster-console/internal/storage"
+	"postgresql-cluster-console/restapi/operations/secret"
+
 	"github.com/go-openapi/runtime/middleware"
-	"postgesql-cluster-console/internal/controllers"
-	"postgesql-cluster-console/internal/storage"
-	"postgesql-cluster-console/restapi/operations/secret"
 )
 
 type deleteSecretHandler struct {

@@ -3,16 +3,17 @@ package watcher
 import (
 	"context"
 	"encoding/json"
+	"os"
+	"postgresql-cluster-console/internal/configuration"
+	"postgresql-cluster-console/internal/storage"
+	"postgresql-cluster-console/internal/xdocker"
+	"postgresql-cluster-console/pkg/tracer"
+	"sync"
+	"time"
+
 	"github.com/mitchellh/mapstructure"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"os"
-	"postgesql-cluster-console/internal/configuration"
-	"postgesql-cluster-console/internal/storage"
-	"postgesql-cluster-console/internal/xdocker"
-	"postgesql-cluster-console/pkg/tracer"
-	"sync"
-	"time"
 )
 
 type LogWatcher interface {

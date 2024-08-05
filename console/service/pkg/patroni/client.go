@@ -3,11 +3,12 @@ package patroni
 import (
 	"context"
 	"encoding/json"
-	"github.com/rs/zerolog"
 	"io"
 	"net/http"
-	"postgesql-cluster-console/pkg/tracer"
+	"postgresql-cluster-console/pkg/tracer"
 	"time"
+
+	"github.com/rs/zerolog"
 )
 
 type IClient interface {

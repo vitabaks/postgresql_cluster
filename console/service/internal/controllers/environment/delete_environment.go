@@ -2,12 +2,13 @@ package environment
 
 import (
 	"errors"
+	"postgresql-cluster-console/internal/controllers"
+	"postgresql-cluster-console/internal/storage"
+	"postgresql-cluster-console/pkg/tracer"
+	"postgresql-cluster-console/restapi/operations/environment"
+
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/rs/zerolog"
-	"postgesql-cluster-console/internal/controllers"
-	"postgesql-cluster-console/internal/storage"
-	"postgesql-cluster-console/pkg/tracer"
-	"postgesql-cluster-console/restapi/operations/environment"
 )
 
 type deleteEnvironmentsHandler struct {

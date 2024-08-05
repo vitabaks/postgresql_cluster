@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"postgesql-cluster-console/pkg/tracer"
+	"postgresql-cluster-console/pkg/tracer"
 	"strings"
 	"time"
 

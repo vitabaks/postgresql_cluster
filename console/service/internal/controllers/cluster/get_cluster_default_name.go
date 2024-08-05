@@ -1,12 +1,13 @@
 package cluster
 
 import (
+	"postgresql-cluster-console/internal/controllers"
+	"postgresql-cluster-console/internal/storage"
+	"postgresql-cluster-console/models"
+	"postgresql-cluster-console/restapi/operations/cluster"
+
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/rs/zerolog"
-	"postgesql-cluster-console/internal/controllers"
-	"postgesql-cluster-console/internal/storage"
-	"postgesql-cluster-console/models"
-	"postgesql-cluster-console/restapi/operations/cluster"
 )
 
 type getClusterDefaultNameHandler struct {

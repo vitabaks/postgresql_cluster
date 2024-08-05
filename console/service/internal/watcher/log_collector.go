@@ -2,12 +2,13 @@ package watcher
 
 import (
 	"context"
+	"postgresql-cluster-console/internal/storage"
+	"postgresql-cluster-console/internal/xdocker"
+	"postgresql-cluster-console/pkg/tracer"
+	"sync"
+
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"postgesql-cluster-console/internal/storage"
-	"postgesql-cluster-console/internal/xdocker"
-	"postgesql-cluster-console/pkg/tracer"
-	"sync"
 )
 
 type LogCollector interface {

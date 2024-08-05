@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"postgesql-cluster-console/models"
+	"postgresql-cluster-console/models"
 	"strings"
 )
 

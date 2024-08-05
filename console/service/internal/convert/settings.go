@@ -1,9 +1,10 @@
 package convert
 
 import (
+	"postgresql-cluster-console/internal/storage"
+	"postgresql-cluster-console/models"
+
 	"github.com/go-openapi/strfmt"
-	"postgesql-cluster-console/internal/storage"
-	"postgesql-cluster-console/models"
 )
 
 func SettingToSwagger(s *storage.Setting) *models.ResponseSetting {

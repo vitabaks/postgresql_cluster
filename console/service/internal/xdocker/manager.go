@@ -3,15 +3,16 @@ package xdocker
 import (
 	"bufio"
 	"context"
+	"net/http"
+	"postgresql-cluster-console/pkg/tracer"
+	"time"
+
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
 	"github.com/goombaio/namegenerator"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"net/http"
-	"postgesql-cluster-console/pkg/tracer"
-	"time"
 )
 
 type dockerManager struct {

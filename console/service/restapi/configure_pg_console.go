@@ -10,11 +10,11 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
 
-	localmid "postgesql-cluster-console/middleware"
-	"postgesql-cluster-console/restapi/operations"
-	"postgesql-cluster-console/restapi/operations/cluster"
-	"postgesql-cluster-console/restapi/operations/dictionary"
-	"postgesql-cluster-console/restapi/operations/system"
+	localmid "postgresql-cluster-console/middleware"
+	"postgresql-cluster-console/restapi/operations"
+	"postgresql-cluster-console/restapi/operations/cluster"
+	"postgresql-cluster-console/restapi/operations/dictionary"
+	"postgresql-cluster-console/restapi/operations/system"
 )
 
 //go:generate swagger generate server --target ../../pg_console --name PgConsole --spec ../api/swagger.yaml --principal interface{} --exclude-main

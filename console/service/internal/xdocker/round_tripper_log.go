@@ -2,12 +2,13 @@ package xdocker
 
 import (
 	"bytes"
+	"io"
+	"net/http"
+	"postgresql-cluster-console/pkg/tracer"
+
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/sockets"
 	"github.com/rs/zerolog"
-	"io"
-	"net/http"
-	"postgesql-cluster-console/pkg/tracer"
 )
 
 type roundTripperLog struct {
