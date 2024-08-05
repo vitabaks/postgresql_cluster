@@ -90,31 +90,31 @@ responsibility, to promote isolation, reusability, and easy maintenance.
 
 1. **App Layer**
 
-- Description: This is the top-level layer, responsible for initializing the application, setting up providers (like
-  routers, states, etc.), and global styles.
-- Contents:
-- App: Main application component that integrates all providers and initializes the app.
-- providers: Context providers such as Redux Provider, Router, Theme, etc.
-- styles: Global styles and theming.
+   - Description: This is the top-level layer, responsible for initializing the application, setting up providers (like
+     routers, states, etc.), and global styles.
+   - Contents:
+   - App: Main application component that integrates all providers and initializes the app.
+   - providers: Context providers such as Redux Provider, Router, Theme, etc.
+   - styles: Global styles and theming.
 
 2. **Pages Layer**
 
-- Description: Represents the application screens or pages. Each page can consist of multiple features and/or entities.
-- Contents: Page components like AddCluster, Login, 404, etc.
+   - Description: Represents the application screens or pages. Each page can consist of multiple features and/or entities.
+   - Contents: Page components like AddCluster, Login, 404, etc.
 
 3. **Features Layer**
 
-- Description: This layer contains interactive components such as buttons, modals, etc.
-- Contents: Feature components like AddSecret, LogoutButton, OperationsTableRowActions, etc.
+   - Description: This layer contains interactive components such as buttons, modals, etc.
+   - Contents: Feature components like AddSecret, LogoutButton, OperationsTableRowActions, etc.
 
 4. **Entities Layer**
 
-- Description: Contains core business entities of the application. Additionally, reusable form parts are also made
-  entities.
-- Contents: Entities like SidebarItem, SecretFormBlock, etc.
+   - Description: Contains core business entities of the application. Additionally, reusable form parts are also made
+     entities.
+   - Contents: Entities like SidebarItem, SecretFormBlock, etc.
 
 5. **Shared Layer**
 
-- Description: This is the foundational layer. It includes utilities, shared components, constants, and other reusable
-  elements that can be used across features, entities, or pages.
-- Contents: Common components (CopyIcon, DefaultTable, Spinner), constants and types, utility functions.
+   - Description: This is the foundational layer. It includes utilities, shared components, constants, and other reusable
+     elements that can be used across features, entities, or pages.
+   - Contents: Common components (CopyIcon, DefaultTable, Spinner), constants and types, utility functions.
