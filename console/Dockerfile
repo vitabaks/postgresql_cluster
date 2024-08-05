@@ -15,12 +15,13 @@ RUN yarn install --frozen-lockfile --network-timeout 1000000 && yarn vite build
 
 # Build the console image
 FROM nginx:1.26-bookworm
+LABEL maintainer="Vitaliy Kukharik vitabaks@gmail.com"
 
 COPY --from=api-builder /go/src/pg-console/pg-console /usr/local/bin/
-COPY --from=api-builder /go/src/pg-console/db/migrations /etc/db/migrations
+COPY console/db/migrations /etc/db/migrations
 COPY --from=ui-builder /usr/src/pg-console/dist /usr/share/nginx/html/
-COPY --from=ui-builder /usr/src/pg-console/nginx/nginx.conf /etc/nginx/
-COPY --from=ui-builder /usr/src/pg-console/env.sh /usr/src/pg-console/.env /usr/src/pg-console/.env.production /usr/share/nginx/html/
+COPY console/ui/nginx/nginx.conf /etc/nginx/
+COPY console/ui/env.sh console/ui/.env console/ui/.env.production /usr/share/nginx/html/
 RUN chmod +x /usr/share/nginx/html/env.sh
 
 ARG POSTGRES_VERSION
