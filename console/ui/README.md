@@ -19,7 +19,8 @@ To run this project locally, follow these steps:
 1. **Clone repository**
 
 ```
-git clone https://github.com/vitabaks/postgresql_cluster.git cd postgresql_cluster/console/ui
+git clone https://github.com/vitabaks/postgresql_cluster.git
+cd postgresql_cluster/console/ui
 ```
 
 2. **Install dependencies**
@@ -72,10 +73,10 @@ There are several env variables that configure UI:
 |----------------------------------------------|------------------------------|-------------------------------------------------------------|
 | PG_CONSOLE_API_URL                           | http://localhost:8080/api/v1 | Default API URL where frontend will be sending requests to. |
 | PG_CONSOLE_AUTHORIZATION_TOKEN               | auth_token                   | Reference auth token that will be used for login.           |
-| PG_CONSOLE_CLUSTERS_POLLING_INTERVAL         | 60000                        | Clusters table refresh interval in seconds.                 |
-| PG_CONSOLE_CLUSTER_OVERVIEW_POLLING_INTERVAL | 60000                        | Cluster overview refresh interval in seconds.               |
-| PG_CONSOLE_OPERATIONS_POLLING_INTERVAL       | 60000                        | Operations table refresh interval in seconds.               |
-| PG_CONSOLE_OPERATION_LOGS_POLLING_INTERVAL   | 10000                        | Operation logs refresh interval in seconds.                 |
+| PG_CONSOLE_CLUSTERS_POLLING_INTERVAL         | 60000                        | Clusters table refresh interval in milliseconds.                 |
+| PG_CONSOLE_CLUSTER_OVERVIEW_POLLING_INTERVAL | 60000                        | Cluster overview refresh interval in milliseconds.               |
+| PG_CONSOLE_OPERATIONS_POLLING_INTERVAL       | 60000                        | Operations table refresh interval in milliseconds.               |
+| PG_CONSOLE_OPERATION_LOGS_POLLING_INTERVAL   | 10000                        | Operation logs refresh interval in milliseconds.                 |
 
 ## Architecture
 
