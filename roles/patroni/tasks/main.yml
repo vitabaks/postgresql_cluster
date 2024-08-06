@@ -431,11 +431,11 @@
     # patroni bootstrap failure is possible if the PostgreSQL config files are missing
     - name: Prepare PostgreSQL | make sure PostgreSQL config directory exists
       ansible.builtin.file:
-        path: "{{ postgresql_conf_dir }}"
+        path: /etc/postgresql
         state: directory
         owner: postgres
         group: postgres
-        mode: "0755"
+        recurse: true
       when: ansible_os_family == "Debian" and
             postgresql_packages|join(" ") is not search("postgrespro")
 
