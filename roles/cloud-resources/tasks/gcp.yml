@@ -67,6 +67,7 @@
       when: ssh_key_content is not defined or
             ssh_key_content | length < 1
 
+    # if server_network is not specified, use default network
     - name: "Set variable: gcp_network_name"
       ansible.builtin.set_fact:
         gcp_network_name: "{{ server_network if server_network is defined and server_network | length > 0 else 'default' }}"
