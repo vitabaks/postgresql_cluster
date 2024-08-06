@@ -320,19 +320,6 @@
           when: not ec2_spot_instance_result.changed | default(false)
       when: server_spot | default(aws_ec2_spot_instance | default(false)) | bool
 
-    - name: Wait for EC2 instance to be available via SSH
-      ansible.builtin.wait_for:
-        host: "{{ item.instances[0].public_ip_address }}"
-        port: 22
-        delay: 5
-        timeout: 300
-      loop: "{{ server_result.results }}"
-      loop_control:
-        label: "{{ item.instances[0].public_ip_address | default('N/A') }}"
-      when:
-        - server_result.results is defined
-        - item.instances is defined
-
     # Load Balancer (ELB)
     - name: "AWS: Create or modify Elastic Load Balancer (ELB)"
       amazon.aws.elb_classic_lb:
@@ -390,6 +377,19 @@
         - (pgbackrest_install | bool or wal_g_install | bool)
         - aws_s3_bucket_create | bool
   when: state == 'present'
+
+- name: Wait for host to be available via SSH
+  ansible.builtin.wait_for:
+    host: "{{ item.instances[0].public_ip_address }}"
+    port: 22
+    delay: 5
+    timeout: 300
+  loop: "{{ server_result.results }}"
+  loop_control:
+    label: "{{ item.instances[0].public_ip_address | default('N/A') }}"
+  when:
+    - server_result.results is defined
+    - item.instances is defined
 
 # Info
 - name: Server info
