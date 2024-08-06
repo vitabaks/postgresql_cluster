@@ -497,19 +497,6 @@
         label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-storage"
       when: droplet_result.results is defined
 
-    - name: Wait for host to be available via SSH
-      ansible.builtin.wait_for:
-        host: "{{ (item.data.droplet.networks.v4 | selectattr('type', 'equalto', 'public')).0.ip_address }}"
-        port: 22
-        delay: 5
-        timeout: 300
-      loop: "{{ droplet_result.results }}"
-      loop_control:
-        label: "{{ (item.data.droplet.networks.v4 | default('') | selectattr('type', 'equalto', 'public')).0.ip_address | default('N/A') }}"
-      when:
-        - droplet_result.results is defined
-        - item.data is defined
-
     # Load Balancer
     - name: "Set variable: digital_ocean_load_balancer_port"
       ansible.builtin.set_fact:
@@ -597,6 +584,19 @@
         - (pgbackrest_install | bool or wal_g_install | bool)
         - digital_ocean_spaces_create | bool
   when: state == 'present'
+
+- name: Wait for host to be available via SSH
+  ansible.builtin.wait_for:
+    host: "{{ (item.data.droplet.networks.v4 | selectattr('type', 'equalto', 'public')).0.ip_address }}"
+    port: 22
+    delay: 5
+    timeout: 300
+  loop: "{{ droplet_result.results }}"
+  loop_control:
+    label: "{{ (item.data.droplet.networks.v4 | default('') | selectattr('type', 'equalto', 'public')).0.ip_address | default('N/A') }}"
+  when:
+    - droplet_result.results is defined
+    - item.data is defined
 
 # Info
 - name: Server info
