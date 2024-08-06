@@ -132,6 +132,13 @@
         version: v{{ wal_g_version }}
         dest: /tmp/wal-g
 
+    - name: Run go mod tidy to ensure dependencies are correct
+      ansible.builtin.command: go mod tidy
+      args:
+        chdir: /tmp/wal-g
+      environment:
+        PATH: "{{ ansible_env.PATH }}:/usr/local/go/bin"
+
     - name: Build WAL-G deps
       become: true
       become_user: root
