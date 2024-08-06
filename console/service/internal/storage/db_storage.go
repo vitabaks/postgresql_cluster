@@ -638,7 +638,16 @@ func (s *dbStorage) DeleteCluster(ctx context.Context, id int64) error {
 }
 
 func (s *dbStorage) DeleteClusterSoft(ctx context.Context, id int64) error {
-	_, err := s.db.Exec(ctx, "update clusters set deleted_at = CURRENT_TIMESTAMP, secret_id = null where cluster_id = $1", id)
+	query := `
+	  update clusters
+	  set
+		deleted_at = current_timestamp,
+		secret_id = null,
+		cluster_name = cluster_name || '_deleted_' || to_char(current_timestamp, 'yyyymmddhh24miss')
+	  where
+		cluster_id = $1
+	`
+	_, err := s.db.Exec(ctx, query, id)
 
 	return err
 }
