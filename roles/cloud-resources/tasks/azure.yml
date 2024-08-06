@@ -313,20 +313,6 @@
         label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
       register: server_result
 
-    - name: "Wait for host to be available via SSH"
-      ansible.builtin.wait_for:
-        host: "{{ item.state.ip_address }}"
-        port: 22
-        delay: 5
-        timeout: 300
-      loop: "{{ public_ip_address.results }}"
-      loop_control:
-        index_var: idx
-        label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
-      when:
-        - public_ip_address.results is defined
-        - item.state.ip_address is defined
-
     # Azure Blob Storage (Backups)
     - block:
         - name: "Azure: Create Storage Account '{{ azure_blob_storage_account_name }}'"
@@ -365,6 +351,20 @@
         - (pgbackrest_install | bool or wal_g_install | bool)
         - azure_blob_storage_create | bool
   when: state == 'present'
+
+- name: "Wait for host to be available via SSH"
+  ansible.builtin.wait_for:
+    host: "{{ item.state.ip_address }}"
+    port: 22
+    delay: 5
+    timeout: 300
+  loop: "{{ public_ip_address.results }}"
+  loop_control:
+    index_var: idx
+    label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
+  when:
+    - public_ip_address.results is defined
+    - item.state.ip_address is defined
 
 # Info
 - name: Server info
