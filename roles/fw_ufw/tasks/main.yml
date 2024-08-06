@@ -1,0 +1,43 @@
+---
+- name: Ensure ufw is present.
+  ansible.builtin.package:
+    namee: ufw
+    state: present
+  register: package_status
+  until: package_status is success
+  delay: 5
+  retries: 3
+
+- name: Enable ufw service
+  ansible.builtin.service:
+    name: ufw
+    state: started
+    enabled: true
+
+- name: Configure | default (incoming) policy
+  community.general.ufw:
+    policy: "deny"
+    state: enabled
+    direction: incoming
+  notify: reload ufw
+
+- name: Configure | default (outgoing) policy
+  community.general.ufw:
+    policy: "allow"
+    state: enabled
+    direction: outgoing
+  notify: reload ufw
+
+- name: Configure the ufw service.
+  community.general.ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: tcp
+  with_items: "{{ firewall_allowed_tcp_ports }}"
+  notify: reload ufw
+
+- name: Get services status.
+  ansible.builtin.service_facts:
+
+- ansible.builtin.import_tasks: disable-other-firewalls.yml
+  when: ansible_facts.services['firewall.service'] is defined or ansible_facts.services['firewalld.service'] is defined

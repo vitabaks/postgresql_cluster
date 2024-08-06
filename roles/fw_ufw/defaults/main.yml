@@ -1,0 +1,6 @@
+---
+firewall_state: started
+firewall_enabled_at_boot: true
+
+firewall_allowed_tcp_ports:
+  - "22"
