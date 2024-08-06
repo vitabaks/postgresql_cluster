@@ -101,21 +101,14 @@
         - (ssh_public_keys is not defined or ssh_public_keys | length < 1)
   when: state == 'present'
 
-# Create (if state or state is present)
+# Create (if state is present)
 - block:
     - name: "DigitalOcean: Gather information about VPC"
       community.digitalocean.digital_ocean_vpc_info:
         oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
       register: vpc_info
 
-    # if server_network is not specified
-    - name: "Fail if no VPC found in the specified region."
-      ansible.builtin.fail:
-        msg: "No default VPC found in region '{{ server_location }}'. Please create a network (VPC)."
-      when:
-        - server_network | length < 1
-        - vpc_info.data | selectattr('region', 'equalto', server_location) | selectattr('default', 'equalto', true) | list | length == 0
-
+    # if server_network is not specified and the default VPC is present
     - name: Extract ip_range from default VPC
       ansible.builtin.set_fact:
         default_ip_range: >-
@@ -126,7 +119,32 @@
             | map(attribute='ip_range')
             | first
           }}
-      when: server_network | length < 1
+      when:
+        - server_network | length < 1
+        - vpc_info.data | selectattr('region', 'equalto', server_location) | selectattr('default', 'equalto', true) | list | length > 0
+
+    # if server_network is not specified and there is no default VPC, create a network
+    - name: "DigitalOcean: Create a VPC '{{ digital_ocean_vpc_name | default('network-' + server_location) }}'"
+      community.digitalocean.digital_ocean_vpc:
+        oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
+        name: "{{ digital_ocean_vpc_name | default('network-' + server_location) }}"
+        region: "{{ server_location }}"
+        state: present
+      register: digital_ocean_vpc
+      when:
+        - server_network | length < 1
+        - vpc_info.data | selectattr('region', 'equalto', server_location) | selectattr('default', 'equalto', true) | list | length == 0
+
+    - name: "Set variable: server_network"
+      ansible.builtin.set_fact:
+        server_network: "{{ digital_ocean_vpc_name | default('network-' + server_location) }}"
+      when: digital_ocean_vpc is changed
+
+    - name: "DigitalOcean: Gather information about VPC"
+      community.digitalocean.digital_ocean_vpc_info:
+        oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
+      register: vpc_info
+      when: digital_ocean_vpc is changed
 
     # if server_network is specified
     - name: "Fail if no VPC found in the specified region"
@@ -636,7 +654,7 @@
     - tmp_ssh_key_name is defined
     - ssh_key_name == tmp_ssh_key_name
 
-# Delete (if state or state is absent)
+# Delete (if state is absent)
 - block:
     - name: "DigitalOcean: Delete Droplet"
       community.digitalocean.digital_ocean_droplet:
