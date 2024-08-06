@@ -453,19 +453,6 @@
         index_var: idx
         label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-storage"
 
-    - name: Wait for host to be available via SSH
-      ansible.builtin.wait_for:
-        host: "{{ item.hcloud_server.ipv4_address }}"
-        port: 22
-        delay: 5
-        timeout: 300
-      loop: "{{ server_result.results }}"
-      loop_control:
-        label: "{{ item.hcloud_server.ipv4_address | default('N/A') }}"
-      when:
-        - server_result.results is defined
-        - item.hcloud_server is defined
-
     # Load Balancer
     - name: "Hetzner Cloud: Create or modify Load Balancer"
       hetzner.hcloud.load_balancer:
@@ -605,6 +592,19 @@
       delay: 5
       retries: 3
   when: state == 'present'
+
+- name: Wait for host to be available via SSH
+  ansible.builtin.wait_for:
+    host: "{{ item.hcloud_server.ipv4_address }}"
+    port: 22
+    delay: 5
+    timeout: 300
+  loop: "{{ server_result.results }}"
+  loop_control:
+    label: "{{ item.hcloud_server.ipv4_address | default('N/A') }}"
+  when:
+    - server_result.results is defined
+    - item.hcloud_server is defined
 
 # Info
 - name: Server info
