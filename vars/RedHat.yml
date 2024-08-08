@@ -29,7 +29,7 @@ install_postgresql_repo: true  # or 'false' (installed from the package "pgdg-re
 install_scl_repo: true  # or 'false' (Redhat 7 family only)
 
 # Packages (for yum repo)
-python_version: "3.11"
+python_version: "3"  # override the version (e.q, 3.11) only if patroni_installation_method: "pip" is used
 
 os_specific_packages:
   RedHat-7:
@@ -100,8 +100,9 @@ installation_method: "repo"  # "repo" (default) or "file"
 # The Patroni package will be installed from the rpm package by default.
 # You also have the option of choosing an installation method using the pip package.
 patroni_installation_method: "rpm"  # "rpm" (default) or "pip"
+
 # if patroni_installation_method: "pip"
-patroni_install_version: "3.3.2"  # or 'latest'
+patroni_install_version: "latest"  # or a specific version (e.q., '3.3.2')
 
 # if patroni_installation_method: "rpm"
 patroni_packages:

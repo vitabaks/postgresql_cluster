@@ -10,7 +10,7 @@
   delay: 5
   retries: 3
   become: true
-  when: (consul_os_repo_prerequisites)
+  when: consul_os_repo_prerequisites | default(true) | bool
   tags: installation
 
 - name: Gather the package facts
@@ -49,7 +49,7 @@
 
 - name: Install repository
   block:
-    - name: Add Redhat/CentOS/Fedora/Amazon Linux repository
+    - name: Add hashicorp repository
       ansible.builtin.command: "yum-config-manager --add-repo {{ consul_repo_url }}"
       args:
         creates: /etc/yum.repos.d/hashicorp.repo
@@ -67,7 +67,7 @@
         state: present
       when: "ansible_os_family|lower == 'debian'"
 
-    - name: Add Debian/Ubuntu Linux repository
+    - name: Add hashicorp repository
       ansible.builtin.apt_repository:
         repo: "deb {{ consul_repo_url }} {{ ansible_distribution_release }} main"
         state: present

@@ -76,8 +76,9 @@ installation_method: "repo"  # "repo" (default) or "file"
 # The Patroni package will be installed from the deb package by default.
 # You also have the option of choosing an installation method using the pip package.
 patroni_installation_method: "deb"  # "deb" (default) or "pip"
+
 # if patroni_installation_method: "pip"
-patroni_install_version: "3.3.2"  # or 'latest'
+patroni_install_version: "latest"  # or a specific version (e.q., '3.3.2')
 
 # if patroni_installation_method: "deb"
 patroni_packages:
