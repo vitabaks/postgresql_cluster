@@ -33,12 +33,23 @@
       delegate_to: localhost
       run_once: true # noqa run-once
 
+    # Consul package for OracleLinux, Debian 10 (EOL) missing in HashiCorp repository
+    # Only the installation of a binary file is supported
+    - name: "Set variables: 'consul_install_from_repo: false' and 'patroni_installation_method: pip'"
+      ansible.builtin.set_fact:
+        consul_install_from_repo: false  # whether to install consul from repository as opposed to installing the binary directly
+        patroni_installation_method: "pip"  # the "rpm" method is supported only for consul installed from the repository
+      when:
+        - dcs_type == "consul"
+        - ansible_distribution == "OracleLinux" or
+          (ansible_distribution == "Debian" and ansible_distribution_major_version == '10')
+
     - name: Set variables for custom PostgreSQL data and WAL directory test
       ansible.builtin.set_fact:
         postgresql_data_dir: "/pgdata/{{ postgresql_version }}/main"
         postgresql_wal_dir: "/pgwal/{{ postgresql_version }}/pg_wal"
 
-    - name: Set variables for Extansions test
+    - name: Set variables for Extensions test
       ansible.builtin.set_fact:
         enable_timescale: true
         enable_pg_repack: true

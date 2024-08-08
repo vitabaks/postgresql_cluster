@@ -22,6 +22,12 @@ jobs:
           - distro: debian11
             tag: latest
             namespace: geerlingguy
+          - distro: debian10
+            tag: latest
+            namespace: geerlingguy
+          - distro: ubuntu2404
+            tag: latest
+            namespace: geerlingguy
           - distro: ubuntu2204
             tag: latest
             namespace: geerlingguy
