@@ -33,6 +33,17 @@
       delegate_to: localhost
       run_once: true # noqa run-once
 
+    # Consul package for OracleLinux, Debian 10 (EOL) missing in HashiCorp repository
+    # Only the installation of a binary file is supported
+    - name: "Set variables: 'consul_install_from_repo: false' and 'patroni_installation_method: pip'"
+      ansible.builtin.set_fact:
+        consul_install_from_repo: false  # whether to install consul from repository as opposed to installing the binary directly
+        patroni_installation_method: "pip"  # the "rpm" method is supported only for consul installed from the repository
+      when:
+        - dcs_type == "consul"
+        - ansible_distribution == "OracleLinux" or
+          (ansible_distribution == "Debian" and ansible_distribution_major_version == '10')
+
     - name: Set variables for custom PostgreSQL data and WAL directory test
       ansible.builtin.set_fact:
         postgresql_data_dir: "/pgdata/{{ postgresql_version }}/main"
@@ -41,9 +52,6 @@
     - name: Set variables for TimescaleDB cluster deployment test
       ansible.builtin.set_fact:
         enable_timescale: true
-      when:
-        - not (ansible_distribution == 'Ubuntu' and ansible_distribution_version is version('20.04', '<'))
-        - not (ansible_distribution == 'Debian' and ansible_distribution_version is version('11', '>')) # TODO Debian 12
 
     - name: Set variables for PostgreSQL Cluster update test
       ansible.builtin.set_fact:
