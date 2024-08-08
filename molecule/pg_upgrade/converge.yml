@@ -30,7 +30,6 @@
     - name: Set variables for TimescaleDB cluster deployment test
       ansible.builtin.set_fact:
         enable_timescale: true
-      when: not (ansible_distribution == 'Ubuntu' and ansible_distribution_version is version('22.04', '>')) # TODO Ubuntu 24.04
 
     - name: Set variables for PostgreSQL upgrade test
       ansible.builtin.set_fact:
