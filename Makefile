@@ -38,19 +38,7 @@ python_launcher := python$(shell cat .config/python_version.config | cut -d '=' 
 
 -include $(addsuffix /*.mak, $(shell find .config/make -type d))
 
-## —— Tests collection ———————————————————————————————————————————————————————————————————————
-.PHONY: tests
-tests: ## tests Ansible collection
-	$(MAKE) docker-tests
-	$(MAKE) lint
-	$(MAKE) molecule-test-all
-
-.PHONY: tests-fast
-tests-fast: ## tests Ansible collection quickly
-	$(MAKE) lint
-	$(MAKE) molecule-converge
-
-## —— Bootstrap collection ———————————————————————————————————————————————————————————————————————
+## —— Bootstrap ——————————————————————————————————————————————————————————————————————————————————
 .PHONY: bootstrap
 bootstrap: ## Bootstrap Ansible collection
 	$(MAKE) python-bootstrap
@@ -60,19 +48,33 @@ bootstrap-dev: ## Bootstrap Ansible collection for development
 	$(MAKE) bootstrap
 	$(MAKE) python-bootstrap-dev
 
-## —— Virtualenv ————————————————————————————————————————————————————————————————————————————————
+## —— Virtualenv —————————————————————————————————————————————————————————————————————————————————
 .PHONY: reinitialization
-reinitialization: ## Return to an initial state of Bootstrap Ansible collection
+reinitialization: ## Return to initial state of Bootstrap Ansible collection
 	$(MAKE) clean
 	$(MAKE) bootstrap
 
 .PHONY: reinitialization-dev
-reinitialization-dev: ## Return to an initial state of Bootstrap Ansible collection for development
+reinitialization-dev: ## Return to initial state of Bootstrap Ansible collection for development
 	$(MAKE) reinitialization
 	$(MAKE) bootstrap-dev
 
+## —— Tests ——————————————————————————————————————————————————————————————————————————————————————
+.PHONY: tests
+tests: ## tests Ansible
+	$(MAKE) docker-tests
+	$(MAKE) lint
+	$(MAKE) molecule-test-all
+
+.PHONY: tests-fast
+tests-fast: ## tests Ansible quickly
+	$(MAKE) lint
+	$(MAKE) molecule-converge
+
+## —— Clean ——————————————————————————————————————————————————————————————————————————————————————
 .PHONY: clean
-clean: ## Clean collection
+	$(MAKE) clean
+clean: ## Clean
 	rm -rf .venv/
 	rm -rf vendor/
 	rm -f *.mak

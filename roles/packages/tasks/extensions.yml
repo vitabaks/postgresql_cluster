@@ -1,0 +1,240 @@
+---
+# Extension Auto-Setup: packages
+
+# TimescaleDB (if 'enable_timescale' is 'true')
+- name: Install TimescaleDB package
+  ansible.builtin.package:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ timescaledb_package }}"
+  vars:
+    timescaledb_package: >-
+      [{% if postgresql_version | int >= 11 %}
+      "timescaledb-2-postgresql-{{ postgresql_version }}"
+      {% else %}
+      "timescaledb-postgresql-{{ postgresql_version }}"
+      {% endif %}]
+  register: package_status
+  until: package_status is success
+  delay: 5
+  retries: 3
+  when: (enable_timescale | default(false) | bool) or (enable_timescaledb | default(false) | bool)
+  tags: timescaledb, timescale
+
+# Citus (if 'enable_citus' is 'true')
+- name: Install Citus package
+  ansible.builtin.package:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ citus_package }}"
+  vars:
+    citus_package: >-
+      [{% if ansible_os_family == 'Debian' and postgresql_version | int >= 14 %}
+      "postgresql-{{ postgresql_version }}-citus-{{ citus_version | default('12.1') }}"
+      {% elif ansible_os_family == 'Debian' and postgresql_version | int == 13 %}
+      "postgresql-{{ postgresql_version }}-citus-11.3"
+      {% elif ansible_os_family == 'Debian' and postgresql_version | int == 12 %}
+      "postgresql-{{ postgresql_version }}-citus-10.2"
+      {% elif ansible_os_family == 'Debian' and postgresql_version | int == 11 %}
+      "postgresql-{{ postgresql_version }}-citus-10.0"
+      {% else %}
+      "citus_{{ postgresql_version }}"
+      {% endif %}]
+  register: package_status
+  until: package_status is success
+  delay: 5
+  retries: 3
+  when:
+    - enable_citus | default(false) | bool
+    - (ansible_os_family == 'Debian' and postgresql_version | int >= 11) or
+      (ansible_os_family == 'RedHat' and postgresql_version | int >= 12)
+  tags: citus
+
+# pg_repack (if 'enable_pg_repack' is 'true')
+- name: Install pg_repack package
+  ansible.builtin.package:
+    name: "{{ pg_repack_package }}"
+    state: present
+  vars:
+    pg_repack_package: >-
+      {% if ansible_os_family == 'Debian' %}
+      postgresql-{{ postgresql_version }}-repack
+      {% else %}
+      pg_repack_{{ postgresql_version }}
+      {% endif %}
+  register: package_status
+  until: package_status is success
+  delay: 5
+  retries: 3
+  when: enable_pg_repack | default(false) | bool
+  tags: pg_repack
+
+# pg_cron (if 'enable_pg_cron' is 'true')
+- name: Install pg_cron package
+  ansible.builtin.package:
+    name: "{{ pg_cron_package }}"
+    state: present
+  vars:
+    pg_cron_package: >-
+      {% if ansible_os_family == 'Debian' %}
+      postgresql-{{ postgresql_version }}-cron
+      {% else %}
+      pg_cron_{{ postgresql_version }}
+      {% endif %}
+  register: package_status
+  until: package_status is success
+  delay: 5
+  retries: 3
+  when: enable_pg_cron | default(false) | bool
+  tags: pg_cron
+
+# pgaudit (if 'enable_pgaudit' is 'true')
+- name: Install pgaudit package
+  ansible.builtin.package:
+    name: "{{ pgaudit_package }}"
+    state: present
+  vars:
+    pgaudit_package: >-
+      {% if ansible_os_family == 'Debian' %}
+      postgresql-{{ postgresql_version }}-pgaudit
+      {% elif ansible_os_family == 'RedHat' and postgresql_version | int >= 16 %}
+      pgaudit_{{ postgresql_version }}
+      {% elif ansible_os_family == 'RedHat' and postgresql_version | int == 15 %}
+      pgaudit17_{{ postgresql_version }}
+      {% elif ansible_os_family == 'RedHat' and postgresql_version | int == 14 %}
+      pgaudit16_{{ postgresql_version }}
+      {% elif ansible_os_family == 'RedHat' and postgresql_version | int == 13 %}
+      pgaudit15_{{ postgresql_version }}
+      {% elif ansible_os_family == 'RedHat' and postgresql_version | int == 12 %}
+      pgaudit14_{{ postgresql_version }}
+      {% elif ansible_os_family == 'RedHat' and postgresql_version | int == 11 %}
+      pgaudit13_{{ postgresql_version }}
+      {% endif %}
+  register: package_status
+  until: package_status is success
+  delay: 5
+  retries: 3
+  when: enable_pgaudit | default(false) | bool
+  tags: pgaudit
+
+# pgvector (if 'enable_pgvector' is 'true')
+- name: Install pgvector package
+  ansible.builtin.package:
+    name: "{{ pgvector_package }}"
+    state: present
+  vars:
+    pgvector_package: >-
+      {% if ansible_os_family == 'Debian' %}
+      postgresql-{{ postgresql_version }}-pgvector
+      {% else %}
+      pgvector_{{ postgresql_version }}
+      {% endif %}
+  register: package_status
+  until: package_status is success
+  delay: 5
+  retries: 3
+  when:
+    - enable_pgvector | default(false)| bool
+    - (ansible_os_family == 'Debian' and postgresql_version | int >= 11) or
+      (ansible_os_family == 'RedHat' and postgresql_version | int >= 12)
+  tags: pgvector
+
+# postgis (if 'enable_postgis' is 'true')
+- name: Install postgis package
+  ansible.builtin.package:
+    name: "{{ postgis_package }}"
+    state: present
+  vars:
+    postgis_package: >-
+      {% if ansible_os_family == 'Debian' %}
+      postgresql-{{ postgresql_version }}-postgis-3
+      {% elif ansible_os_family == 'RedHat' and postgresql_version | int == 16 %}
+      postgis34_{{ postgresql_version }}
+      {% else %}
+      postgis33_{{ postgresql_version }}
+      {% endif %}
+  register: package_status
+  until: package_status is success
+  delay: 5
+  retries: 3
+  when: enable_postgis | default(false) | bool
+  tags: postgis
+
+# pgrouting (if 'enable_pgrouting' is 'true')
+- name: Install pgrouting package
+  ansible.builtin.package:
+    name: "{{ pgrouting_package }}"
+    state: present
+  vars:
+    pgrouting_package: >-
+      {% if ansible_os_family == 'Debian' %}
+      postgresql-{{ postgresql_version }}-pgrouting
+      {% else %}
+      pgrouting_{{ postgresql_version }}
+      {% endif %}
+  register: package_status
+  until: package_status is success
+  delay: 5
+  retries: 3
+  when: enable_pgrouting | default(false) | bool and
+        not (ansible_distribution == 'Ubuntu' and ansible_distribution_version is version('20.04', '<='))
+  tags: pgrouting
+
+# pg_stat_kcache (if 'enable_pg_stat_kcache' is 'true')
+- name: Install pg_stat_kcache package
+  ansible.builtin.package:
+    name: "{{ pg_stat_kcache_package }}"
+    state: present
+  vars:
+    pg_stat_kcache_package: >-
+      {% if ansible_os_family == 'Debian' %}
+      postgresql-{{ postgresql_version }}-pg-stat-kcache
+      {% else %}
+      pg_stat_kcache_{{ postgresql_version }}
+      {% endif %}
+  register: package_status
+  until: package_status is success
+  delay: 5
+  retries: 3
+  when: enable_pg_stat_kcache | default(false) | bool
+  tags: pg_stat_kcache
+
+# pg_wait_sampling (if 'enable_pg_wait_sampling' is 'true')
+- name: Install pg_wait_sampling package
+  ansible.builtin.package:
+    name: "{{ pg_wait_sampling_package }}"
+    state: present
+  vars:
+    pg_wait_sampling_package: >-
+      {% if ansible_os_family == 'Debian' %}
+      postgresql-{{ postgresql_version }}-pg-wait-sampling
+      {% else %}
+      pg_wait_sampling_{{ postgresql_version }}
+      {% endif %}
+  register: package_status
+  until: package_status is success
+  delay: 5
+  retries: 3
+  when: enable_pg_wait_sampling | default(false) | bool
+  tags: pg_wait_sampling
+
+# pg_partman (if 'enable_pg_partman' is 'true')
+- name: Install pg_partman package
+  ansible.builtin.package:
+    name: "{{ pg_partman_package }}"
+    state: present
+  vars:
+    pg_partman_package: >-
+      {% if ansible_os_family == 'Debian' %}
+      postgresql-{{ postgresql_version }}-partman
+      {% else %}
+      pg_partman_{{ postgresql_version }}
+      {% endif %}
+  register: package_status
+  until: package_status is success
+  delay: 5
+  retries: 3
+  when: enable_pg_partman | default(false) | bool
+  tags: pg_partman
+
+...

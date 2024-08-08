@@ -13,8 +13,7 @@
 
 - name: Try to connect to PostgreSQL
   postgresql_ping:
-    login_host: "127.0.0.1"
+    login_unix_socket: "{{ postgresql_unix_socket_dir }}"
     login_port: "{{ postgresql_port }}"
     login_user: "{{ patroni_superuser_username }}"
-    login_password: "{{ patroni_superuser_password }}"
     login_db: template1
