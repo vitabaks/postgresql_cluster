@@ -10,7 +10,8 @@ const PrivateRouteWrapper: FC = () => {
   const location = useLocation();
 
   useEffect(() => {
-    if (localStorage.getItem('token') !== AUTH_TOKEN) toast.error(t('invalidToken'));
+    const token = localStorage.getItem('token');
+    if (token && token !== AUTH_TOKEN) toast.error(t('invalidToken'));
   }, [localStorage.getItem('token')]);
 
   return localStorage.getItem('token') === AUTH_TOKEN ? (
