@@ -1,11 +1,93 @@
 ## —— Docker —————————————————————————————————————————————————————————————————————————————————————
-.PHONY: docker-build
-docker-build: ## Run docker build image in local
-	docker build --tag postgresql_cluster:local --file .config/gitpod/Dockerfile .
+TAG ?= local
+DOCKER_REGISTRY ?= vitabaks
 
-.PHONY: docker-lint
-docker-lint: ## Run hadolint command to lint Dokerfile
-	docker run --rm -i hadolint/hadolint < .config/gitpod/Dockerfile
+.PHONY: docker-lint docker-lint-console-ui docker-lint-console-api docker-lint-console-db docker-lint-console
+docker-lint: docker-lint-console-ui docker-lint-console-api docker-lint-console-db docker-lint-console ## Lint all Dockerfiles 
+#docker-lint: docker-lint-automation docker-lint-console-ui docker-lint-console-api docker-lint-console-db docker-lint-console ## Lint all Dockerfiles 
+
+#docker-lint-automation: ## Lint automation Dockerfile
+#	@echo "Lint automation container Dockerfile"
+#	docker run --rm -i -v $(PWD)/Dockerfile:/Dockerfile \
+#	hadolint/hadolint hadolint --ignore DL3002 --ignore DL3008 --ignore DL3059 /Dockerfile
+
+docker-lint-console-ui: ## Lint console ui Dockerfile
+	@echo "Lint console ui container Dockerfile"
+	docker run --rm -i -v $(PWD)/console/ui/Dockerfile:/Dockerfile \
+	hadolint/hadolint hadolint --ignore DL3002 --ignore DL3008 --ignore DL3059 /Dockerfile
+
+docker-lint-console-api: ## Lint console api Dockerfile
+	@echo "Lint console api container Dockerfile"
+	docker run --rm -i -v $(PWD)/console/service/Dockerfile:/Dockerfile \
+	hadolint/hadolint hadolint --ignore DL3002 --ignore DL3008 --ignore DL3059 /Dockerfile
+
+docker-lint-console-db: ## Lint console db Dockerfile
+	@echo "Lint console db container Dockerfile"
+	docker run --rm -i -v $(PWD)/console/db/Dockerfile:/Dockerfile \
+	hadolint/hadolint hadolint --ignore DL3002 --ignore DL3008 --ignore DL3059 --ignore DL4001 /Dockerfile
+
+docker-lint-console: ## Lint console Dockerfile (all services)
+	@echo "Lint console container Dockerfile"
+	docker run --rm -i -v $(PWD)/console/Dockerfile:/Dockerfile \
+	hadolint/hadolint hadolint --ignore DL3002 --ignore DL3008 --ignore DL3059 --ignore DL4001 /Dockerfile
+
+.PHONY: docker-build docker-build-console-ui docker-build-console-api docker-build-console-db docker-build-console
+docker-build: docker-build-console-ui docker-build-console-api docker-build-console-db docker-build-console ## Build for all Docker images
+#docker-build: docker-build-automation docker-build-console-ui docker-build-console-api docker-build-console-db docker-build-console ## Build for all Docker images
+
+#docker-build-automation: ## Build automation image
+#	@echo "Build automation docker image with tag $(TAG)";
+#	docker build --no-cache --platform linux/amd64 --tag postgresql_cluster:$(TAG) --file Dockerfile .
+
+docker-build-console-ui: ## Build console ui image
+	@echo "Build console ui docker image with tag $(TAG)"
+	docker build --no-cache --platform linux/amd64 --tag postgresql_cluster_console_ui:$(TAG) --file console/ui/Dockerfile .
+
+docker-build-console-api: ## Build console api image
+	@echo "Build console api docker image with tag $(TAG)"
+	docker build --no-cache --platform linux/amd64 --tag postgresql_cluster_console_api:$(TAG) --file console/service/Dockerfile .
+
+docker-build-console-db: ## Build console db image
+	@echo "Build console db docker image with tag $(TAG)"
+	docker build --no-cache --platform linux/amd64 --tag postgresql_cluster_console_db:$(TAG) --file console/db/Dockerfile .
+
+docker-build-console: ## Build console image (all services)
+	@echo "Build console docker image with tag $(TAG)"
+	docker build --no-cache --platform linux/amd64 --tag postgresql_cluster_console:$(TAG) --file console/Dockerfile .
+
+.PHONY: docker-push docker-push-console-ui docker-push-console-api docker-push-console-db docker-push-console
+docker-push: docker-push-console-ui docker-push-console-api docker-push-console-db docker-push-console ## Push all images to Dockerhub (example: make docker-push TAG=my_tag DOCKER_REGISTRY=my_repo DOCKER_REGISTRY_USER="my_username" DOCKER_REGISTRY_PASSWORD="my_password")
+#docker-push: docker-push-automation docker-push-console-ui docker-push-console-api docker-push-console-db docker-push-console ## Push all images to Dockerhub
+
+#docker-push-automation: ## Push automation to Dockerhub
+#	@echo "Push automation docker image with tag $(TAG)";
+#	echo "$(DOCKER_REGISTRY_PASSWORD)" | docker login --username "$(DOCKER_REGISTRY_USER)" --password-stdin
+#	docker tag postgresql_cluster:$(TAG) $(DOCKER_REGISTRY)/postgresql_cluster:$(TAG)
+#	docker push $(DOCKER_REGISTRY)/postgresql_cluster:$(TAG)
+
+docker-push-console-ui: ## Push console ui image to Dockerhub
+	@echo "Push console ui docker image with tag $(TAG)"
+	echo "$(DOCKER_REGISTRY_PASSWORD)" | docker login --username "$(DOCKER_REGISTRY_USER)" --password-stdin
+	docker tag postgresql_cluster_console_ui:$(TAG) $(DOCKER_REGISTRY)/postgresql_cluster_console_ui:$(TAG)
+	docker push $(DOCKER_REGISTRY)/postgresql_cluster_console_ui:$(TAG)
+
+docker-push-console-api: ## Push console api image to Dockerhub
+	@echo "Push console api docker image with tag $(TAG)"
+	echo "$(DOCKER_REGISTRY_PASSWORD)" | docker login --username "$(DOCKER_REGISTRY_USER)" --password-stdin
+	docker tag postgresql_cluster_console_api:$(TAG) $(DOCKER_REGISTRY)/postgresql_cluster_console_api:$(TAG)
+	docker push $(DOCKER_REGISTRY)/postgresql_cluster_console_api:$(TAG)
+
+docker-push-console-db: ## Push console db image to Dockerhub
+	@echo "Push console db docker image with tag $(TAG)"
+	echo "$(DOCKER_REGISTRY_PASSWORD)" | docker login --username "$(DOCKER_REGISTRY_USER)" --password-stdin
+	docker tag postgresql_cluster_console_db:$(TAG) $(DOCKER_REGISTRY)/postgresql_cluster_console_db:$(TAG)
+	docker push $(DOCKER_REGISTRY)/postgresql_cluster_console_db:$(TAG)
+
+docker-push-console: ## Push console image to Dockerhub (all services)
+	@echo "Push console docker image with tag $(TAG)"
+	echo "$(DOCKER_REGISTRY_PASSWORD)" | docker login --username "$(DOCKER_REGISTRY_USER)" --password-stdin
+	docker tag postgresql_cluster_console:$(TAG) $(DOCKER_REGISTRY)/postgresql_cluster_console:$(TAG)
+	docker push $(DOCKER_REGISTRY)/postgresql_cluster_console:$(TAG)
 
 .PHONY: docker-tests
 docker-tests: ## Run tests for docker
