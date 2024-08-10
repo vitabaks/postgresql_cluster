@@ -11,10 +11,10 @@ const SettingsProxyBlock: React.FC = () => {
 
   return (
     <Stack gap="8px">
-      <Typography fontWeight="bold" fontSize={20}>
+      <Typography fontWeight="bold" fontSize={16}>
         {t('proxyServer')}
       </Typography>
-      <Typography whiteSpace="pre-line">{t('proxyServerInfo')}</Typography>
+      <Typography whiteSpace="pre-line" fontSize={14}>{t('proxyServerInfo')}</Typography>
       <Stack gap="8px">
         <Controller
           control={control}

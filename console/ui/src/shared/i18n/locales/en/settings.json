@@ -8,7 +8,7 @@
   "secret": "Secret",
   "secrets": "Secrets",
   "proxyServer": "Proxy server",
-  "proxyServerInfo": "Specify your HTTP and HTTPS corporate proxy server settings below\nto enable package downloads during cluster deployment in environments without direct internet access (optional)",
+  "proxyServerInfo": "Specify your HTTP and HTTPS corporate proxy server settings below (optional).\nTo enable package downloads during cluster deployment in environments without direct internet access.",
   "addSecret": "Add secret",
   "secretType": "Secret type",
   "secretName": "Secret name",
