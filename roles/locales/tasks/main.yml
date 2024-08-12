@@ -1,13 +1,7 @@
 ---
 
-# for OracleLinux 7
-- name: Reinstall glibc-common to avoid problem when generating locales
-  ansible.builtin.command: yum reinstall glibc-common -y
-  environment: "{{ proxy_env | default({}) }}"
-  when: (ansible_distribution == "OracleLinux" and
-         ansible_distribution_major_version == '7')
-
 - block:
+    # Debian
     - name: Generate locales
       become: true
       community.general.locale_gen:
@@ -16,24 +10,13 @@
       loop: "{{ locale_gen | flatten(1) }}"
       when: ansible_os_family == "Debian"
 
-    - name: Generate locales
-      become: true
-      ansible.builtin.command: >
-        localedef -c
-        -i {{ item.language_country }}
-        -f {{ item.encoding }} {{ item.language_country }}.{{ item.encoding }}
-      changed_when: false
-      loop: "{{ locale_gen | flatten(1) }}"
-      when: ansible_os_family == "RedHat" and
-            ansible_distribution_major_version == '7'
-
+    # RedHat
     - name: Install glibc-langpack
       ansible.builtin.dnf:
         name: "{{ item }}"
       loop: "{{ glibc_langpack }}"
       environment: "{{ proxy_env | default({}) }}"
-      when: ansible_os_family == "RedHat" and
-            ansible_distribution_major_version >= '8'
+      when: ansible_os_family == "RedHat"
   when: locale_gen is defined and locale_gen | length > 0
   tags: locales, locale_gen
 
