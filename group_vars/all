@@ -16,5 +16,5 @@ os_minimum_versions:
   Rocky: 8.4
   AlmaLinux: 8.3
   OracleLinux: 8
-  Ubuntu: 20.04
+  Ubuntu: 22.04
   Debian: 11

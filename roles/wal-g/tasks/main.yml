@@ -21,37 +21,6 @@
     - wal_g_installed_version.stdout == wal_g_version
   tags: wal-g, wal_g, wal_g_install
 
-# Install WAL-G from a precompiled binary for Ubuntu 20.04
-- block:
-    - name: "Download WAL-G v{{ wal_g_version }} binary"
-      ansible.builtin.get_url:
-        url: "https://github.com/wal-g/wal-g/releases/download/v{{ wal_g_version }}/wal-g-pg-ubuntu-{{ ansible_distribution_version }}-amd64.tar.gz"
-        dest: /tmp/
-        timeout: 60
-        validate_certs: false
-      environment: "{{ proxy_env | default({}) }}"
-
-    - name: Extract WAL-G into /tmp
-      ansible.builtin.unarchive:
-        src: "/tmp/wal-g-pg-ubuntu-{{ ansible_distribution_version }}-amd64.tar.gz"
-        dest: /tmp/
-        extra_opts:
-          - --no-same-owner
-        remote_src: true
-
-    - name: Copy WAL-G binary file to /usr/local/bin/
-      ansible.builtin.copy:
-        src: "/tmp/wal-g-pg-ubuntu-{{ ansible_distribution_version }}-amd64"
-        dest: "{{ wal_g_path }}"
-        mode: u+x,g+x,o+x
-        remote_src: true
-  when:
-    - installation_method == "repo"
-    - wal_g_version is version('1.0', '>=')
-    - (wal_g_installed_version.stderr is search("command not found") or wal_g_installed_version.stdout != wal_g_version)
-    - (ansible_distribution == 'Ubuntu' and ansible_distribution_version == '20.04')
-  tags: wal-g, wal_g, wal_g_install
-
 # Build WAL-G from source code for other Linux distributions
 - block:
     - name: Install lib dependencies to build WAL-G
@@ -170,7 +139,6 @@
     - installation_method == "repo"
     - wal_g_version is version('1.0', '>=')
     - (wal_g_installed_version.stderr is search("command not found") or wal_g_installed_version.stdout != wal_g_version)
-    - not (ansible_distribution == 'Ubuntu' and ansible_distribution_version == '20.04')
   tags: wal-g, wal_g, wal_g_install
 
 # older versions of WAL-G (for compatibility)
