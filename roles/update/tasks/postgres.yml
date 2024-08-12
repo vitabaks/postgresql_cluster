@@ -1,21 +1,11 @@
 ---
-- name: Update yum cache
-  ansible.builtin.shell: yum clean all && yum -y makecache
-  args:
-    executable: /bin/bash
-  ignore_errors: true
-  when:
-    - ansible_os_family == "RedHat"
-    - ansible_distribution_major_version == '7'
 
 - name: Update dnf cache
   ansible.builtin.shell: dnf clean all && dnf -y makecache
   args:
     executable: /bin/bash
   ignore_errors: true
-  when:
-    - ansible_os_family == "RedHat"
-    - ansible_distribution_major_version >= '8'
+  when: ansible_os_family == "RedHat"
 
 - name: Update apt cache
   ansible.builtin.apt:

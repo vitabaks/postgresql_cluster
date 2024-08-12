@@ -11,10 +11,10 @@ os_valid_distributions:
   - AlmaLinux
 
 os_minimum_versions:
-  RedHat: 7
-  CentOS: 7
+  RedHat: 8
+  CentOS: 8
   Rocky: 8.4
-  OracleLinux: 7
-  Ubuntu: 20.04
-  Debian: 10
   AlmaLinux: 8.3
+  OracleLinux: 8
+  Ubuntu: 22.04
+  Debian: 11

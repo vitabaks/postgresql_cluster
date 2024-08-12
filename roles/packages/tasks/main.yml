@@ -37,20 +37,6 @@
 # Install packages from repository
 
 # RedHat
-- name: Update yum cache
-  ansible.builtin.shell: yum clean all && yum -y makecache
-  args:
-    executable: /bin/bash
-  register: yum_status
-  until: yum_status is success
-  delay: 5
-  retries: 3
-  when:
-    - installation_method == "repo"
-    - ansible_os_family == "RedHat"
-    - ansible_distribution_major_version == '7'
-  tags: install_packages, install_postgres
-
 - name: Update dnf cache
   ansible.builtin.shell: dnf clean all && dnf -y makecache
   args:
@@ -62,26 +48,8 @@
   when:
     - installation_method == "repo"
     - ansible_os_family == "RedHat"
-    - ansible_distribution_major_version >= '8'
-  tags: install_packages, install_postgres
-
-- name: Install system packages
-  ansible.builtin.yum:
-    name: "{{ item }}"
-    state: present
-    disablerepo: 'pgdg*'
-  loop: "{{ system_packages | list }}"
-  register: package_status
-  until: package_status is success
-  delay: 5
-  retries: 3
   environment: "{{ proxy_env | default({}) }}"
-  when:
-    - installation_method == "repo"
-    - ansible_os_family == "RedHat"
-    - ansible_distribution_major_version == '7'
-    - system_packages | default('') | length > 0
-  tags: install_packages
+  tags: install_packages, install_postgres
 
 - name: Install system packages
   ansible.builtin.dnf:
@@ -97,7 +65,6 @@
   when:
     - installation_method == "repo"
     - ansible_os_family == "RedHat"
-    - ansible_distribution_major_version >= '8'
     - system_packages | default('') | length > 0
   tags: install_packages
 
@@ -111,7 +78,6 @@
   when:
     - installation_method == "repo"
     - ansible_os_family == "RedHat"
-    - ansible_distribution_major_version >= '8'
     - python_version | default('') | length > 1
   tags: install_packages
 
@@ -125,7 +91,6 @@
   when:
     - installation_method == "repo"
     - ansible_os_family == "RedHat"
-    - ansible_distribution_major_version >= '8'
     - python_version | default('') | length > 1
     - pip_package in system_packages
   vars:
@@ -141,6 +106,7 @@
   until: apt_status is success
   delay: 5
   retries: 3
+  environment: "{{ proxy_env | default({}) }}"
   when:
     - installation_method == "repo"
     - ansible_os_family == "Debian"
@@ -150,11 +116,11 @@
     name: "{{ item }}"
     state: present
   loop: "{{ system_packages | list }}"
-  environment: "{{ proxy_env | default({}) }}"
   register: apt_status
   until: apt_status is success
   delay: 5
   retries: 3
+  environment: "{{ proxy_env | default({}) }}"
   when:
     - installation_method == "repo"
     - ansible_os_family == "Debian"
@@ -223,6 +189,39 @@
     - ansible_os_family == "Debian"
   tags: install_postgres
 
+# PostgreSQL prepare for install (for RHEL)
+- block:
+    - name: PostgreSQL | check if appstream module is enabled
+      ansible.builtin.command: 'dnf -y -C module list postgresql'
+      register: postgresql_module_result
+      changed_when: false
+
+    - name: PostgreSQL | disable appstream module
+      ansible.builtin.command: 'dnf -y -C module disable postgresql'
+      when: "'[x] ' not in postgresql_module_result.stdout"
+  when: installation_method == "repo" and ansible_os_family == "RedHat"
+  ignore_errors: true
+  tags: install_postgres
+
+# Install PostgreSQL from repository
+# RedHat
+- name: Install PostgreSQL packages
+  ansible.builtin.package:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ postgresql_packages }}"
+  register: package_status
+  until: package_status is success
+  delay: 5
+  retries: 3
+  environment: "{{ proxy_env | default({}) }}"
+  when:
+    - installation_method == "repo"
+    - ansible_os_family == "RedHat"
+    - postgresql_packages | default('') | length > 0
+  tags: install_packages, install_postgres
+
+# Debian
 - name: Install PostgreSQL packages
   ansible.builtin.apt:
     name: "{{ item }}"
