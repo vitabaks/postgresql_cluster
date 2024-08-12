@@ -26,7 +26,7 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/partial \
     && chmod +x /postgresql_cluster/entrypoint.sh
 
 # Set environment variable for Ansible collections paths
-ENV ANSIBLE_COLLECTIONS_PATH=/root/.ansible/collections/ansible_collections:/usr/local/lib/python3/dist-packages/ansible_collections
+ENV ANSIBLE_COLLECTIONS_PATH=/root/.ansible/collections/ansible_collections:/usr/local/lib/python3.11/dist-packages/ansible_collections
 ENV USER=root
 
 WORKDIR /postgresql_cluster
