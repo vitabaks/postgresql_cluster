@@ -1,6 +1,7 @@
 ---
 
 - block:
+    # Debian
     - name: Install ntp package
       ansible.builtin.package:
         name: ntp
@@ -10,9 +11,7 @@
       delay: 5
       retries: 3
       environment: "{{ proxy_env | default({}) }}"
-      when: ansible_os_family == "Debian" or
-            (ansible_os_family == "RedHat" and
-            ansible_distribution_major_version == '7')
+      when: ansible_os_family == "Debian"
       tags: ntp_install
 
     - name: Copy the ntp.conf file
@@ -23,15 +22,7 @@
       when: ansible_os_family == "Debian"
       tags: ntp_conf
 
-    - name: Copy the ntp.conf file
-      ansible.builtin.template:
-        src: ntp.conf.j2
-        dest: /etc/ntp.conf
-      notify: "restart ntpd"
-      when: ansible_os_family == "RedHat" and
-            ansible_distribution_major_version == '7'
-      tags: ntp_conf
-
+    # RedHat
     - name: Install chrony package
       ansible.builtin.package:
         name: chrony
@@ -42,8 +33,7 @@
       retries: 3
       environment: "{{ proxy_env | default({}) }}"
       tags: ntp_install
-      when: ansible_os_family == "RedHat" and
-            ansible_distribution_major_version >= '8'
+      when: ansible_os_family == "RedHat"
 
     - name: Copy the chrony.conf template file
       ansible.builtin.template:
@@ -51,8 +41,7 @@
         dest: /etc/chrony.conf
       notify: "restart chronyd"
       tags: ntp_conf
-      when: ansible_os_family == "RedHat" and
-            ansible_distribution_major_version >= '8'
+      when: ansible_os_family == "RedHat"
   when: ntp_enabled is defined and ntp_enabled|bool
   tags: ntp
 
