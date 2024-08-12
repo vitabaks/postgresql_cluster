@@ -8,7 +8,7 @@
       ansible.builtin.apt_key:
         url: "https://packagecloud.io/timescale/timescaledb/gpgkey"
         state: present
-        keyring: /etc/apt/trusted.gpg.d/{{ item.key | urlsplit('netloc') }}.gpg
+        keyring: /etc/apt/trusted.gpg.d/packagecloud.io.gpg
       when: ansible_os_family == "Debian"
 
     - name: Add TimescaleDB repository
@@ -38,7 +38,7 @@
       ansible.builtin.apt_key:
         url: "https://repos.citusdata.com/community/gpgkey"
         state: present
-        keyring: /etc/apt/trusted.gpg.d/{{ item.key | urlsplit('netloc') }}.gpg
+        keyring: /etc/apt/trusted.gpg.d/repos.citusdata.com.gpg
       when: ansible_os_family == "Debian"
 
     - name: Add Citus repository
