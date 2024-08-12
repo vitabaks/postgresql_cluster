@@ -17,4 +17,4 @@ os_minimum_versions:
   AlmaLinux: 8.3
   OracleLinux: 8
   Ubuntu: 20.04
-  Debian: 10
+  Debian: 11

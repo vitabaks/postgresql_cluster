@@ -8,97 +8,37 @@
   when: hostvars[groups['postgres_cluster'][0]].ansible_hostname is not defined
 
 # Install HAProxy from rpm/deb packages
-- block:
-    # RedHat
-    - name: Install HAProxy package
-      ansible.builtin.package:
-        name: haproxy
-        state: present
-      register: package_status
-      until: package_status is success
-      delay: 5
-      retries: 3
+
+# RedHat
+- name: Install HAProxy package
+  ansible.builtin.package:
+    name: haproxy
+    state: present
+  register: package_status
+  until: package_status is success
+  delay: 5
+  retries: 3
   environment: "{{ proxy_env | default({}) }}"
-  when: ansible_os_family == "RedHat" and
-        installation_method == "repo" and
-        haproxy_installation_method == "rpm"
+  when:
+    - ansible_os_family == "RedHat"
+    - installation_method == "repo"
+    - haproxy_installation_method == "rpm"
   tags: haproxy, load_balancing
 
-- block:
-    # Debian
-    - name: Add haproxy.debian.net repository apt-key
-      ansible.builtin.apt_key:
-        url: https://haproxy.debian.net/bernat.debian.org.gpg
-        state: present
-      when: haproxy_install_repo|bool and
-            (ansible_distribution == "Debian" and
-            ansible_distribution_major_version is version('10', '<='))
-
-    - name: Add haproxy.debian.net repository
-      ansible.builtin.apt_repository:
-        repo: "deb https://haproxy.debian.net {{ ansible_distribution_release }}-backports-1.8 main"
-        state: present
-        update_cache: true
-      when: haproxy_install_repo|bool and
-            (ansible_distribution == "Debian" and
-            ansible_distribution_major_version is version('10', '<='))
-
-    # Ubuntu
-    - name: Add ppa:vbernat/haproxy-1.8 repository apt-key
-      ansible.builtin.apt_key:  # https://github.com/ansible/ansible/issues/31691
-        data: |
-          -----BEGIN PGP PUBLIC KEY BLOCK-----
-
-          xo0EUa70wAEEAMtI29s01PCX0JleVmh1QQr3rfPkfGo/GFKfcXRGE40nQHq+rWUh
-          9slUN+kXBckSE0DDrnQH08Uvf12TJiHHFlbXnH5Ep+hgYPZGlVSpvBGO+c/CopU7
-          RHMx9bl+pVOhrVeDWqLl2KqJI2wjJBLXA0dbRbCzmXPvrg3mBQ0hZ533ABEBAAHN
-          IExhdW5jaHBhZCBQUEEgZm9yIFZpbmNlbnQgQmVybmF0wrgEEwECACIFAlGu9MAC
-          GwMGCwkIBwMCBhUIAgkKCwQWAgMBAh4BAheAAAoJEFBdl6QcYbnN8aMD/RM3InMu
-          bxTF9hzToCPF2EP37Q9WUQNF15f90jTOl8VqqpnUfGd2qlxUW31soCpDVxqX6lXf
-          qB0bI9EDz2r7w+goxBH+cRArJ2APdC7wE/U9eIxY49mzNsqjsl7zY+eoX4v4fjqk
-          33hFyMMJDUtPxSRHWFqP5QNwCN+fbPh5GiyL
-          =ZiOf
-          -----END PGP PUBLIC KEY BLOCK-----
-        state: present
-      when: haproxy_install_repo|bool and
-            (ansible_distribution == 'Ubuntu' and
-            ansible_distribution_major_version is version('18', '<='))
-
-    - name: Add ppa:vbernat/haproxy-1.8 repository
-      ansible.builtin.apt_repository:
-        repo: "deb http://ppa.launchpad.net/vbernat/haproxy-1.8/ubuntu {{ ansible_distribution_release }} main"
-        state: present
-        update_cache: true
-      when: haproxy_install_repo|bool and
-            (ansible_distribution == 'Ubuntu' and
-            ansible_distribution_major_version is version('18', '<='))
-
-    - name: Install HAProxy v1.8 package
-      ansible.builtin.apt:
-        force_apt_get: true
-        name: "haproxy=1.8.*"
-        state: present
-      register: apt_status
-      until: apt_status is success
-      delay: 5
-      retries: 3
-      when: (ansible_distribution == "Debian" and ansible_distribution_major_version is version('10', '<=')) or
-            (ansible_distribution == 'Ubuntu' and ansible_distribution_major_version is version('18', '<='))
-
-    - name: Install HAProxy package
-      ansible.builtin.apt:
-        name: haproxy
-        state: present
-      register: apt_status
-      until: apt_status is success
-      delay: 5
-      retries: 3
-      when: (ansible_distribution == "Debian" and ansible_distribution_major_version is version('11', '>=')) or
-            (ansible_distribution == 'Ubuntu' and ansible_distribution_major_version is version('20', '>='))
+# Debian
+- name: Install HAProxy package
+  ansible.builtin.apt:
+    name: haproxy
+    state: present
+  register: apt_status
+  until: apt_status is success
+  delay: 5
+  retries: 3
   environment: "{{ proxy_env | default({}) }}"
-  when: ansible_os_family == "Debian" and
-        installation_method == "repo" and
-        haproxy_installation_method == "deb"
+  when:
+    - ansible_os_family == "Debian"
+    - installation_method == "repo"
+    - haproxy_installation_method == "deb"
   tags: haproxy, load_balancing
 
 # from file (rpm/deb packages)
