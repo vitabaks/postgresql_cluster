@@ -65,6 +65,7 @@
       ansible.builtin.apt_key:
         url: "{{ consul_repo_url }}/gpg"
         state: present
+        keyring: /etc/apt/trusted.gpg.d/{{ item.key | urlsplit('netloc') }}.gpg
       when: "ansible_os_family|lower == 'debian'"
 
     - name: Add hashicorp repository

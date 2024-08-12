@@ -5,6 +5,7 @@
       ansible.builtin.apt_key:
         url: "{{ item.key }}"
         state: present
+        keyring: /etc/apt/trusted.gpg.d/{{ item.key | urlsplit('netloc') }}.gpg
       loop: "{{ apt_repository_keys }}"
       when: apt_repository_keys | length > 0
 
