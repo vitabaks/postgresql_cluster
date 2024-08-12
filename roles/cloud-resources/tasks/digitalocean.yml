@@ -23,6 +23,9 @@
       vars:
         ansible_become: false
       run_once: true
+      environment:
+        PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
+        PIP_BREAK_SYSTEM_PACKAGES: "1"
 
     - name: Ensure that 'boto3' dependency is present on controlling host
       ansible.builtin.pip:
@@ -36,6 +39,9 @@
       when:
         - (pgbackrest_install | bool or wal_g_install | bool)
         - digital_ocean_spaces_create | bool
+      environment:
+        PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
+        PIP_BREAK_SYSTEM_PACKAGES: "1"
 
 # SSH key
 - block:

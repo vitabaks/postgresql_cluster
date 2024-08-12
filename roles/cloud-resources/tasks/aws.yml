@@ -23,6 +23,9 @@
       vars:
         ansible_become: false
       run_once: true
+      environment:
+        PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
+        PIP_BREAK_SYSTEM_PACKAGES: "1"
 
 # SSH key
 - block:
