@@ -217,7 +217,7 @@ postgresql_extensions: []
 
 # postgresql parameters to bootstrap dcs (are parameters for example)
 postgresql_parameters:
-  - { option: "max_connections", value: "500" }
+  - { option: "max_connections", value: "1000" }
   - { option: "superuser_reserved_connections", value: "5" }
   - { option: "password_encryption", value: "{{ postgresql_password_encryption_algorithm }}" }
   - { option: "max_locks_per_transaction", value: "512" }
@@ -337,11 +337,11 @@ pgbouncer_conf_dir: "/etc/pgbouncer"
 pgbouncer_log_dir: "/var/log/pgbouncer"
 pgbouncer_listen_addr: "0.0.0.0" # Listen on all interfaces. Or use "{{ inventory_hostname }}" to listen on a specific IP address.
 pgbouncer_listen_port: 6432
-pgbouncer_max_client_conn: 10000
-pgbouncer_max_db_connections: 1000
+pgbouncer_max_client_conn: 100000
+pgbouncer_max_db_connections: 10000
 pgbouncer_max_prepared_statements: 1024
-pgbouncer_default_pool_size: 20
 pgbouncer_query_wait_timeout: 120
+pgbouncer_default_pool_size: 100
 pgbouncer_default_pool_mode: "session"
 pgbouncer_admin_users: "{{ patroni_superuser_username }}"  # comma-separated list of users, who are allowed to change settings
 pgbouncer_stats_users: "{{ patroni_superuser_username }}"  # comma-separated list of users who are just allowed to use SHOW command
