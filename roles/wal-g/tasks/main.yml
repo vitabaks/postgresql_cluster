@@ -42,7 +42,7 @@
     - name: Copy WAL-G binary file to /usr/local/bin/
       ansible.builtin.copy:
         src: "/tmp/wal-g-pg-ubuntu-{{ ansible_distribution_version }}-amd64"
-        dest: "{{ wal_g_path }}"
+        dest: "{{ wal_g_path.split(' ')[0] }}"  # use split to get only the path without options
         mode: u+x,g+x,o+x
         remote_src: true
   when:
