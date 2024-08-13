@@ -1,6 +1,6 @@
 ---
 
-- name: Gather facts for hosts postres_cluster
+- name: Gather facts from postgres_cluster hosts
   ansible.builtin.setup:
   delegate_to: "{{ item }}"
   delegate_facts: true
@@ -8,160 +8,37 @@
   when: hostvars[groups['postgres_cluster'][0]].ansible_hostname is not defined
 
 # Install HAProxy from rpm/deb packages
-# from repo
-- block:
-    # RedHat/CentOS/OracleLinux 7 (SCL)
-    - name: Install Software Collections (SCL) repository for CentOS 7
-      ansible.builtin.package:
-        name: centos-release-scl-rh
-        state: present
-      register: package_status
-      until: package_status is success
-      delay: 5
-      retries: 3
-      when: haproxy_install_repo|bool and
-            (ansible_distribution == 'CentOS' and
-            ansible_distribution_major_version == '7')
-      tags: haproxy_scl_repo
 
-    - name: Install Software Collections (SCL) repository for OracleLinux 7
-      ansible.builtin.yum_repository:
-        name: ol7_software_collections
-        description: Software Collection Library packages for Oracle Linux 7 (x86_64)
-        baseurl: https://yum.oracle.com/repo/OracleLinux/OL7/SoftwareCollections/x86_64/
-        gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-oracle
-        gpgcheck: true
-        enabled: true
-      when: haproxy_install_repo|bool and
-            (ansible_distribution == "OracleLinux" and
-            ansible_distribution_major_version == '7')
-      tags: haproxy_scl_repo
-
-    - name: Enable Software Collections (SCL) repository for RedHat 7
-      become: true
-      become_user: root
-      ansible.builtin.command: subscription-manager repos --enable rhel-server-rhscl-7-rpms
-      when: haproxy_install_repo|bool and
-            (ansible_distribution == 'RedHat' and
-            ansible_distribution_major_version == '7')
-      tags: haproxy_scl_repo
-
-    - name: Install HAProxy v1.8 (rh-haproxy18 package)
-      ansible.builtin.package:
-        name: rh-haproxy18
-        state: present
-      register: package_status
-      until: package_status is success
-      delay: 5
-      retries: 3
-      when: ansible_distribution_major_version == '7'
-
-    - name: create a symlink "/usr/sbin/haproxy"
-      ansible.builtin.file:
-        src: /opt/rh/rh-haproxy18/root/usr/sbin/haproxy
-        dest: /usr/sbin/haproxy
-        owner: root
-        group: root
-        state: link
-      when: ansible_distribution_major_version == '7'
+# RedHat
+- name: Install HAProxy package
+  ansible.builtin.package:
+    name: haproxy
+    state: present
+  register: package_status
+  until: package_status is success
+  delay: 5
+  retries: 3
   environment: "{{ proxy_env | default({}) }}"
-  when: ansible_os_family == "RedHat" and
-        installation_method == "repo" and
-        haproxy_installation_method == "rpm"
+  when:
+    - ansible_os_family == "RedHat"
+    - installation_method == "repo"
+    - haproxy_installation_method == "rpm"
   tags: haproxy, load_balancing
 
-- block:
-    # RedHat os family version 8 (and higher)
-    - name: Install HAProxy package
-      ansible.builtin.package:
-        name: haproxy
-        state: present
-      register: package_status
-      until: package_status is success
-      delay: 5
-      retries: 3
-      when: ansible_distribution_major_version is version('8', '>=')
+# Debian
+- name: Install HAProxy package
+  ansible.builtin.apt:
+    name: haproxy
+    state: present
+  register: apt_status
+  until: apt_status is success
+  delay: 5
+  retries: 3
   environment: "{{ proxy_env | default({}) }}"
-  when: ansible_os_family == "RedHat" and
-        installation_method == "repo" and
-        haproxy_installation_method == "rpm"
-  tags: haproxy, load_balancing
-
-- block:
-    # Debian
-    - name: Add haproxy.debian.net repository apt-key
-      ansible.builtin.apt_key:
-        url: https://haproxy.debian.net/bernat.debian.org.gpg
-        state: present
-      when: haproxy_install_repo|bool and
-            (ansible_distribution == "Debian" and
-            ansible_distribution_major_version is version('10', '<='))
-
-    - name: Add haproxy.debian.net repository
-      ansible.builtin.apt_repository:
-        repo: "deb https://haproxy.debian.net {{ ansible_distribution_release }}-backports-1.8 main"
-        state: present
-        update_cache: true
-      when: haproxy_install_repo|bool and
-            (ansible_distribution == "Debian" and
-            ansible_distribution_major_version is version('10', '<='))
-
-    # Ubuntu
-    - name: Add ppa:vbernat/haproxy-1.8 repository apt-key
-      ansible.builtin.apt_key:  # https://github.com/ansible/ansible/issues/31691
-        data: |
-          -----BEGIN PGP PUBLIC KEY BLOCK-----
-
-          xo0EUa70wAEEAMtI29s01PCX0JleVmh1QQr3rfPkfGo/GFKfcXRGE40nQHq+rWUh
-          9slUN+kXBckSE0DDrnQH08Uvf12TJiHHFlbXnH5Ep+hgYPZGlVSpvBGO+c/CopU7
-          RHMx9bl+pVOhrVeDWqLl2KqJI2wjJBLXA0dbRbCzmXPvrg3mBQ0hZ533ABEBAAHN
-          IExhdW5jaHBhZCBQUEEgZm9yIFZpbmNlbnQgQmVybmF0wrgEEwECACIFAlGu9MAC
-          GwMGCwkIBwMCBhUIAgkKCwQWAgMBAh4BAheAAAoJEFBdl6QcYbnN8aMD/RM3InMu
-          bxTF9hzToCPF2EP37Q9WUQNF15f90jTOl8VqqpnUfGd2qlxUW31soCpDVxqX6lXf
-          qB0bI9EDz2r7w+goxBH+cRArJ2APdC7wE/U9eIxY49mzNsqjsl7zY+eoX4v4fjqk
-          33hFyMMJDUtPxSRHWFqP5QNwCN+fbPh5GiyL
-          =ZiOf
-          -----END PGP PUBLIC KEY BLOCK-----
-        state: present
-      when: haproxy_install_repo|bool and
-            (ansible_distribution == 'Ubuntu' and
-            ansible_distribution_major_version is version('18', '<='))
-
-    - name: Add ppa:vbernat/haproxy-1.8 repository
-      ansible.builtin.apt_repository:
-        repo: "deb http://ppa.launchpad.net/vbernat/haproxy-1.8/ubuntu {{ ansible_distribution_release }} main"
-        state: present
-        update_cache: true
-      when: haproxy_install_repo|bool and
-            (ansible_distribution == 'Ubuntu' and
-            ansible_distribution_major_version is version('18', '<='))
-
-    - name: Install HAProxy v1.8 package
-      ansible.builtin.apt:
-        force_apt_get: true
-        name: "haproxy=1.8.*"
-        state: present
-      register: apt_status
-      until: apt_status is success
-      delay: 5
-      retries: 3
-      when: (ansible_distribution == "Debian" and ansible_distribution_major_version is version('10', '<=')) or
-            (ansible_distribution == 'Ubuntu' and ansible_distribution_major_version is version('18', '<='))
-
-    - name: Install HAProxy package
-      ansible.builtin.apt:
-        name: haproxy
-        state: present
-      register: apt_status
-      until: apt_status is success
-      delay: 5
-      retries: 3
-      when: (ansible_distribution == "Debian" and ansible_distribution_major_version is version('11', '>=')) or
-            (ansible_distribution == 'Ubuntu' and ansible_distribution_major_version is version('20', '>='))
-  environment: "{{ proxy_env | default({}) }}"
-  when: ansible_os_family == "Debian" and
-        installation_method == "repo" and
-        haproxy_installation_method == "deb"
+  when:
+    - ansible_os_family == "Debian"
+    - installation_method == "repo"
+    - haproxy_installation_method == "deb"
   tags: haproxy, load_balancing
 
 # from file (rpm/deb packages)
@@ -482,26 +359,6 @@
   tags: haproxy, haproxy_conf, load_balancing
 
 - block:
-    - name: selinux | make sure the libsemanage-python, policycoreutils-python packages is present
-      ansible.builtin.package:
-        name: "{{ packages }}"
-        state: present
-        update_cache: true
-      vars:
-        packages:
-          - libsemanage-python
-          - policycoreutils-python
-      register: package_status
-      until: package_status is success
-      delay: 5
-      retries: 3
-      environment: "{{ proxy_env | default({}) }}"
-      when:
-        - ansible_os_family == "RedHat"
-        - ansible_distribution_major_version == '7'
-        - installation_method == "repo"
-        - haproxy_installation_method == "rpm"
-
     - name: selinux | make sure the python3-libsemanage, python3-policycoreutils packages is present
       ansible.builtin.package:
         name: "{{ packages }}"
@@ -518,7 +375,6 @@
       environment: "{{ proxy_env | default({}) }}"
       when:
         - ansible_os_family == "RedHat"
-        - ansible_distribution_major_version is version('8', '>=')
         - installation_method == "repo"
         - haproxy_installation_method == "rpm"
 

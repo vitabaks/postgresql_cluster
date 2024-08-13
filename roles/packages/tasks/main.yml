@@ -35,40 +35,16 @@
   tags: install_packages_from_file
 
 - block:  # RedHat (update cache)
-    - name: Update yum cache
-      ansible.builtin.shell: yum clean all && yum -y makecache
-      args:
-        executable: /bin/bash
-      when: ansible_distribution_major_version == '7'
-
     - name: Update dnf cache
       ansible.builtin.shell: dnf clean all && dnf -y makecache
       args:
         executable: /bin/bash
-      when: ansible_distribution_major_version >= '8'
   environment: "{{ proxy_env | default({}) }}"
   when: ansible_os_family == "RedHat" and installation_method == "repo"
   tags: install_packages, install_postgres
 
 # Install packages from repository
 # RedHat
-- name: Install system packages
-  ansible.builtin.yum:
-    name: "{{ item }}"
-    state: present
-    disablerepo: 'pgdg*'
-  loop: "{{ system_packages }}"
-  register: package_status
-  until: package_status is success
-  delay: 5
-  retries: 3
-  environment: "{{ proxy_env | default({}) }}"
-  when:
-    - installation_method == "repo"
-    - ansible_os_family == "RedHat"
-    - ansible_distribution_major_version == '7'
-  tags: install_packages
-
 - name: Install system packages
   ansible.builtin.dnf:
     name: "{{ item }}"
@@ -83,7 +59,6 @@
   when:
     - installation_method == "repo"
     - ansible_os_family == "RedHat"
-    - ansible_distribution_major_version >= '8'
   tags: install_packages
 
 - name: Set Python alternative
@@ -96,7 +71,6 @@
   when:
     - installation_method == "repo"
     - ansible_os_family == "RedHat"
-    - ansible_distribution_major_version >= '8'
     - python_version | default('') | length > 1
   tags: install_packages
 
@@ -110,7 +84,6 @@
   when:
     - installation_method == "repo"
     - ansible_os_family == "RedHat"
-    - ansible_distribution_major_version >= '8'
     - python_version | default('') | length > 1
     - pip_package in system_packages
   vars:
@@ -166,9 +139,7 @@
     - name: PostgreSQL | disable appstream module
       ansible.builtin.command: 'dnf -y -C module disable postgresql'
       when: "'[x] ' not in postgresql_module_result.stdout"
-  when: installation_method == "repo" and
-        ansible_os_family == "RedHat" and
-        ansible_distribution_major_version >= '8'
+  when: installation_method == "repo" and ansible_os_family == "RedHat"
   ignore_errors: true
   tags: install_postgres
 

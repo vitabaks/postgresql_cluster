@@ -7,25 +7,13 @@
       delegate_to: "{{ groups['pgbackrest'][0] }}"
       run_once: true
 
-    - name: Update yum cache
-      delegate_to: "{{ groups['pgbackrest'][0] }}"
-      run_once: true
-      ansible.builtin.shell: yum clean all && yum -y makecache
-      args:
-        executable: /bin/bash
-      when:
-        - ansible_os_family == "RedHat"
-        - ansible_distribution_major_version == '7'
-
     - name: Update dnf cache
       delegate_to: "{{ groups['pgbackrest'][0] }}"
       run_once: true
       ansible.builtin.shell: dnf clean all && dnf -y makecache
       args:
         executable: /bin/bash
-      when:
-        - ansible_os_family == "RedHat"
-        - ansible_distribution_major_version >= '8'
+      when: ansible_os_family == "RedHat"
 
     - name: Update apt cache
       delegate_to: "{{ groups['pgbackrest'][0] }}"

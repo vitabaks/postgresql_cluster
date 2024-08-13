@@ -10,7 +10,9 @@
   delay: 5
   retries: 3
   environment: "{{ proxy_env | default({}) }}"
-  when: ansible_os_family == "RedHat"
+  when:
+    - cron_jobs is defined and cron_jobs | length > 0
+    - ansible_os_family == "RedHat"
   tags: cron
 
 - name: Make sure that the cron package is installed
@@ -22,7 +24,9 @@
   delay: 5
   retries: 3
   environment: "{{ proxy_env | default({}) }}"
-  when: ansible_os_family == "Debian"
+  when:
+    - cron_jobs is defined and cron_jobs | length > 0
+    - ansible_os_family == "Debian"
   tags: cron
 
 - name: Add cron jobs

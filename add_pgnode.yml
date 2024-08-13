@@ -9,12 +9,6 @@
     - ansible.builtin.import_tasks: roles/patroni/handlers/main.yml
 
   pre_tasks:
-    - name: "Set variable: ansible_python_interpreter"
-      ansible.builtin.set_fact:
-        ansible_python_interpreter: "/usr/bin/env python3"
-      when: "'python3' not in (ansible_python_interpreter | default(''))"
-      tags: always
-
     - name: Include main variables
       ansible.builtin.include_vars: "vars/main.yml"
       tags: always
@@ -121,6 +115,12 @@
         - new_node | default(false) | bool
         - firewall_enabled_at_boot | bool
       tags: firewall
+
+    - role: pre-checks
+      vars:
+        minimal_ansible_version: 2.11.0
+        timescale_minimal_pg_version: 12 # if enable_timescale is defined
+      tags: always
 
     - role: sysctl
       when:

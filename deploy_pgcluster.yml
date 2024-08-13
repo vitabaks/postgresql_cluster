@@ -10,12 +10,6 @@
   environment: "{{ proxy_env | default({}) }}"
 
   pre_tasks:
-    - name: "Set variable: ansible_python_interpreter"
-      ansible.builtin.set_fact:
-        ansible_python_interpreter: "/usr/bin/env python3"
-      when: "'python3' not in (ansible_python_interpreter | default(''))"
-      tags: always
-
     - name: Include main variables
       ansible.builtin.include_vars: "vars/main.yml"
       tags: always
@@ -62,17 +56,10 @@
       tags: always
 
   tasks:
-    - name: Clean yum cache
-      ansible.builtin.command: yum clean all
-      when:
-        - ansible_os_family == "RedHat"
-        - ansible_distribution_major_version == '7'
-
     - name: Clean dnf cache
       ansible.builtin.command: dnf clean all
       when:
         - ansible_os_family == "RedHat"
-        - ansible_distribution_major_version is version('8', '>=')
 
     - name: Update apt cache
       ansible.builtin.apt:
