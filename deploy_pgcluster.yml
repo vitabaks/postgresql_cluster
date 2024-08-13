@@ -250,6 +250,7 @@
     - role: add-repository
     - role: packages
     - role: sudo
+    - role: mount
     - role: swap
     - role: sysctl
     - role: transparent_huge_pages
@@ -260,7 +261,6 @@
     - role: ntp
     - role: ssh-keys
     - role: copy
-    - role: mount
 
 - name: deploy_pgcluster.yml | Deploy balancers
   ansible.builtin.import_playbook: balancers.yml
