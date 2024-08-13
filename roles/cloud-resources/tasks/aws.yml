@@ -193,7 +193,7 @@
             }]
           }}
       register: ec2_security_group_result
-      when: firewall | bool
+      when: cloud_firewall | bool
 
     # Server and volume
     - name: "AWS: Create or modify EC2 instance"
@@ -206,7 +206,7 @@
         image_id: "{{ server_image }}"
         key_name: "{{ ssh_key_name }}"
         region: "{{ server_location }}"
-        security_groups: "{{ ([] if not firewall | bool else [patroni_cluster_name + '-security-group']) }}"
+        security_groups: "{{ ([] if not cloud_firewall | bool else [patroni_cluster_name + '-security-group']) }}"
         vpc_subnet_id: "{{ server_network }}"
         network:
           assign_public_ip: true

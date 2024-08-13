@@ -283,7 +283,7 @@
             ] if database_public_access | bool and (not with_haproxy_load_balancing | bool and not pgbouncer_install | bool) else [])
           }}
       when:
-        - firewall | bool
+        - cloud_firewall | bool
         - (ssh_public_access | bool or netdata_public_access | bool or database_public_access | bool)
 
     - name: "DigitalOcean: Create or modify Postgres cluster firewall"
@@ -452,7 +452,7 @@
               }
             ] if dcs_type == 'consul' else [])
           }}
-      when: firewall | bool
+      when: cloud_firewall | bool
 
     # Server and volume
     - name: "DigitalOcean: Create or modify Droplet"

@@ -179,7 +179,7 @@
               'direction': 'Inbound'
             }]
           }}
-      when: firewall | bool
+      when: cloud_firewall | bool
 
     # Load Balancer
     - name: "Azure: Create public IP address for Load Balancer"

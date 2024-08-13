@@ -253,7 +253,7 @@
             ] if database_public_access | bool and (not with_haproxy_load_balancing | bool and not pgbouncer_install | bool) else [])
           }}
       when:
-        - firewall | bool
+        - cloud_firewall | bool
         - (ssh_public_access | bool or netdata_public_access | bool or database_public_access | bool)
 
     - name: "Hetzner Cloud: Create or modify Postgres cluster firewall"
@@ -400,7 +400,7 @@
             ] if dcs_type == 'consul' else [])
           }}
       when:
-        - firewall | bool
+        - cloud_firewall | bool
 
     # Server and volume
     - name: "Hetzner Cloud: Create or modify server"
@@ -427,9 +427,9 @@
       vars:
         firewalls_list: >-
           {{
-            ([patroni_cluster_name + '-public-firewall'] if firewall | bool and
+            ([patroni_cluster_name + '-public-firewall'] if cloud_firewall | bool and
               (ssh_public_access | bool or netdata_public_access | bool or database_public_access | bool) else []) +
-            ([patroni_cluster_name + '-firewall'] if firewall | bool else [])
+            ([patroni_cluster_name + '-firewall'] if cloud_firewall | bool else [])
           }}
 
     - name: "Hetzner Cloud: Add server to network '{{ server_network }}'"

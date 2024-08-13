@@ -109,7 +109,7 @@
         state: present
       when:
         - ssh_public_access | bool
-        - firewall | bool
+        - cloud_firewall | bool
 
     - name: "GCP: Create or modify Netdata public firewall rule"
       google.cloud.gcp_compute_firewall:
@@ -131,7 +131,7 @@
       when:
         - netdata_install | bool
         - netdata_public_access | bool
-        - firewall | bool
+        - cloud_firewall | bool
 
     - name: "GCP: Create or modify Database public firewall rule"
       google.cloud.gcp_compute_firewall:
@@ -161,7 +161,7 @@
           }}
       when:
         - database_public_access | bool
-        - firewall | bool
+        - cloud_firewall | bool
 
     - name: "GCP: Create or modify Postgres cluster firewall rule"
       google.cloud.gcp_compute_firewall:
@@ -201,7 +201,7 @@
               consul_ports_serf_wan | default('8302'),
               consul_ports_server | default('8300')] if dcs_type == 'consul' else [])
           }}
-      when: firewall | bool
+      when: cloud_firewall | bool
 
     # if 'cloud_load_balancer' is 'true'
     # https://cloud.google.com/load-balancing/docs/tcp#firewall-rules
