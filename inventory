@@ -60,7 +60,7 @@ ansible_ssh_port='22'
 #ansible_user='root'
 #ansible_ssh_pass='secretpassword'  # "sshpass" package is required for use "ansible_ssh_pass"
 #ansible_ssh_private_key_file=
-#ansible_python_interpreter='/usr/bin/env python3'
+#ansible_python_interpreter='/usr/bin/python3'
 
 [pgbackrest:vars]
 #ansible_user='postgres'

@@ -15,7 +15,6 @@
       - master
     ansible_ssh_host: "{{ item.public_ip }}"
     ansible_ssh_private_key_file: "{{ ssh_private_key_file | default(None) }}"
-    ansible_python_interpreter: "/usr/bin/env python3"
   loop: "{{ [ip_addresses[0]] }}" # add the first item in the list
   loop_control:
     label: "{{ item.public_ip }}"
@@ -29,7 +28,6 @@
       - replica
     ansible_ssh_host: "{{ item.public_ip }}"
     ansible_ssh_private_key_file: "{{ ssh_private_key_file | default(None) }}"
-    ansible_python_interpreter: "/usr/bin/env python3"
   loop: "{{ ip_addresses[1:] }}" # start with the 2nd item of the list
   loop_control:
     label: "{{ item.public_ip }}"
@@ -42,7 +40,6 @@
     group: balancers
     ansible_ssh_host: "{{ item.public_ip }}"
     ansible_ssh_private_key_file: "{{ ssh_private_key_file | default(None) }}"
-    ansible_python_interpreter: "/usr/bin/env python3"
   loop: "{{ ip_addresses }}"
   loop_control:
     label: "{{ item.public_ip }}"
@@ -55,7 +52,6 @@
     group: etcd_cluster
     ansible_ssh_host: "{{ item.public_ip }}"
     ansible_ssh_private_key_file: "{{ ssh_private_key_file | default(None) }}"
-    ansible_python_interpreter: "/usr/bin/env python3"
   loop: "{{ ip_addresses[:7] }}" # no more than 7 servers for the etcd cluster
   loop_control:
     label: "{{ item.public_ip }}"
@@ -68,7 +64,6 @@
     group: consul_instances
     ansible_ssh_host: "{{ item.public_ip }}"
     ansible_ssh_private_key_file: "{{ ssh_private_key_file | default(None) }}"
-    ansible_python_interpreter: "/usr/bin/env python3"
     consul_node_role: "{{ not dcs_exists | ternary('server', 'client') }}"
     consul_bootstrap_expect: true
     consul_datacenter: "{{ server_location }}"
