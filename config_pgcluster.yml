@@ -10,6 +10,8 @@
   roles:
     - role: cloud-resources
       when: cloud_provider | default('') | length > 0
+      vars:
+        postgresql_cluster_maintenance: true
       tags: always
 
 - name: config_pgcluster.yml | Check the PostgreSQL cluster state and perform pre-checks

@@ -30,6 +30,7 @@
     - state == 'present'
     - ssh_key_name | length < 1
     - ssh_key_content | length < 1
+    - not (postgresql_cluster_maintenance|default(false)|bool) # exclude for config_pgcluster.yml
 
 # set_fact: ssh_key_name and ssh_key_content
 - name: "Set variable: ssh_key_name and ssh_key_content"
