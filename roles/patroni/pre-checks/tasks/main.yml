@@ -1,0 +1,23 @@
+---
+- block:
+    - name: "Check all hosts of the etcd cluster"
+      ansible.builtin.wait_for:
+        host: "{{ item.host }}"
+        port: "{{ item.port }}"
+        state: started
+        delay: 0
+        timeout: 2
+      register: patroni_precheck_etcd_port_results
+      loop: "{{ patroni_etcd_hosts }}"
+      ignore_errors: true
+
+    - name: "Check if etcd cluster accessible"
+      run_once: true # noqa run-once
+      ansible.builtin.fail:
+        msg: "Please make sure that the etcd cluster nodes are accessible from '{{ inventory_hostname }}'"
+      when:
+        - patroni_precheck_etcd_port_results['results'] | rejectattr('failed') | length < 1
+
+    # TODO: check etcd v3 auth (need gRPC tool)
+
+  when: dcs_exists|bool and dcs_type == 'etcd'
