@@ -173,10 +173,11 @@ INSERT INTO public.cloud_regions (cloud_provider, region_group, region_name, reg
     ('digitalocean', 'North America', 'sfo3', 'San Francisco (Datacenter 3)'),
     ('digitalocean', 'North America', 'tor1', 'Toronto (Datacenter 1)'),
     ('hetzner', 'Europe', 'nbg1', 'Nuremberg'),
-    ('hetzner', 'Europe', 'zfsn1', 'Falkenstein'),
+    ('hetzner', 'Europe', 'fsn1', 'Falkenstein'),
     ('hetzner', 'Europe', 'hel1', 'Helsinki'),
     ('hetzner', 'North America', 'hil', 'Hillsboro, OR'),
-    ('hetzner', 'North America', 'ash', 'Ashburn, VA');
+    ('hetzner', 'North America', 'ash', 'Ashburn, VA'),
+    ('hetzner', 'Asia Pacific', 'sin', 'Singapore');
 
 ALTER TABLE ONLY public.cloud_regions
     ADD CONSTRAINT cloud_regions_pkey PRIMARY KEY (cloud_provider, region_group, region_name);
