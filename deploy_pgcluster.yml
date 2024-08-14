@@ -279,7 +279,9 @@
 
   roles:
     - role: pgbackrest
-      when: pgbackrest_install|bool
+      when: pgbackrest_install | bool or
+            (pgbackrest_auto_conf | default(true) | bool and cloud_provider | default('') | lower in ['aws', 'gcp', 'azure'])
+            # TODO: Add the ability to configure backups in the UI
 
 - name: deploy_pgcluster.yml | PostgreSQL Cluster Deployment
   hosts: postgres_cluster
@@ -320,7 +322,9 @@
     - role: patroni
 
     - role: pgbackrest/stanza-create
-      when: pgbackrest_install|bool
+      when: pgbackrest_install | bool or
+            (pgbackrest_auto_conf | default(true) | bool and cloud_provider | default('') | lower in ['aws', 'gcp', 'azure'])
+            # TODO: Add the ability to configure backups in the UI
 
     - role: vip-manager
       when: not with_haproxy_load_balancing|bool and

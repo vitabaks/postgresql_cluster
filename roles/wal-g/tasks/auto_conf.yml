@@ -5,8 +5,8 @@
 - name: "Set variable 'wal_g_json' for backup in AWS S3 bucket"
   ansible.builtin.set_fact:
     wal_g_json:
-      - { option: "AWS_ACCESS_KEY_ID", value: "{{ WALG_AWS_ACCESS_KEY_ID | default('') }}" }
-      - { option: "AWS_SECRET_ACCESS_KEY", value: "{{ WALG_AWS_SECRET_ACCESS_KEY | default('') }}" }
+      - { option: "AWS_ACCESS_KEY_ID", value: "{{ WALG_AWS_ACCESS_KEY_ID | default(lookup('ansible.builtin.env', 'AWS_ACCESS_KEY_ID')) }}" }
+      - { option: "AWS_SECRET_ACCESS_KEY", value: "{{ WALG_AWS_SECRET_ACCESS_KEY | default(lookup('ansible.builtin.env', 'AWS_SECRET_ACCESS_KEY')) }}" }
       - { option: "WALG_S3_PREFIX", value: "{{ WALG_S3_PREFIX | default('s3://' + (aws_s3_bucket_name | default('backups-' + patroni_cluster_name))) }}" }
       - { option: "AWS_REGION", value: "{{ WALG_AWS_REGION | default(aws_s3_bucket_region | default(server_location)) }}" }
       - { option: "WALG_COMPRESSION_METHOD", value: "{{ WALG_COMPRESSION_METHOD | default('brotli') }}" }
@@ -18,6 +18,8 @@
       - { option: "PGHOST", value: "{{ postgresql_unix_socket_dir | default('/var/run/postgresql') }}" }
       - { option: "PGPORT", value: "{{ postgresql_port | default('5432') }}" }
       - { option: "PGUSER", value: "{{ patroni_superuser_username | default('postgres') }}" }
+  delegate_to: localhost
+  run_once: true # noqa run-once
   no_log: true  # do not output contents to the ansible log
   when: cloud_provider | default('') | lower == 'aws'
 
@@ -90,6 +92,7 @@
   when: cloud_provider | default('') | lower == 'azure'
 
 # DigitalOcean Spaces Object Storage (if 'cloud_provider=digitalocean')
+# Note: requires the Spaces access keys "AWS_ACCESS_KEY_ID" and "AWS_SECRET_ACCESS_KEY" (https://cloud.digitalocean.com/account/api/spaces)
 - name: "Set variable 'wal_g_json' for backup in DigitalOcean Spaces Object Storage"
   ansible.builtin.set_fact:
     wal_g_json:

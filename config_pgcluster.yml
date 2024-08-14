@@ -198,7 +198,9 @@
       tags: always
   roles:
     - role: pgbackrest
-      when: pgbackrest_install | bool
+      when: pgbackrest_install | bool or
+            (pgbackrest_auto_conf | default(true) | bool and cloud_provider | default('') | lower in ['aws', 'gcp', 'azure'])
+            # TODO: Add the ability to configure backups in the UI
 
 - name: config_pgcluster.yml | Restart patroni on secondary after config settings if need
   hosts: secondary
