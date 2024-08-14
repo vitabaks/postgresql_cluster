@@ -72,7 +72,7 @@
       retries: 3
       when: ansible_os_family == "Debian"
 
-    - name: Add hashicorp repository and an apt signing key, uses whichever key is at the URL
+    - name: Add hashicorp repository
       ansible.builtin.deb822_repository:
         name: "{{ consul_repo_url.split('//')[1] | replace('.', '-') }}"
         types: "deb"
@@ -82,7 +82,6 @@
         components: "main"
         enabled: true
         state: present
-        keyring: /etc/apt/trusted.gpg.d/{{ consul_repo_url | urlsplit('netloc') }}.gpg
       when: "ansible_os_family|lower == 'debian'"
 
     - name: Update apt cache
