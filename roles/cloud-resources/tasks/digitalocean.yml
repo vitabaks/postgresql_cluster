@@ -577,7 +577,7 @@
       register: digitalocean_load_balancer
       when: cloud_load_balancer | bool
 
-    # Spaces Object Storage (S3 bucket)
+    # Spaces Object Storage (Backups)
     - name: "DigitalOcean: Create Spaces Bucket '{{ digital_ocean_spaces_name }}'"
       community.digitalocean.digital_ocean_spaces:
         oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
