@@ -59,26 +59,4 @@
     - postgresql_version | int >= 11
   tags: add_repo, citus
 
-# Update cache
-- block:
-    # Debian based
-    - name: Update apt cache
-      ansible.builtin.apt:
-        update_cache: true
-      register: apt_status
-      until: apt_status is success
-      delay: 5
-      retries: 3
-      when: ansible_os_family == "Debian"
-
-    # RedHat based
-    - name: Update dnf cache
-      ansible.builtin.shell: dnf clean all && dnf -y makecache
-      args:
-        executable: /bin/bash
-      ignore_errors: true
-      when: ansible_os_family == "RedHat"
-  environment: "{{ proxy_env | default({}) }}"
-  tags: add_repo
-
 ...
