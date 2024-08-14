@@ -41,18 +41,6 @@
     - tmp_ssh_key_result.ssh_public_key is defined
     - tmp_ssh_key_result.ssh_public_key | length > 0
 
-# set_fact: 'pgbackrest_install' to configure Postgres backups (TODO: Add the ability to configure backups in the UI)
-# Note: Applicable only for "aws", "gcp", "azure", because:
-  # "digitalocean" - requires the Spaces access keys "AWS_ACCESS_KEY_ID" and "AWS_SECRET_ACCESS_KEY"
-  # "hetzner" - currently, Hetzner Cloud does not provide S3 storage
-- name: "Set variable: 'pgbackrest_install' to configure Postgres backups"
-  ansible.builtin.set_fact:
-    pgbackrest_install: true
-  when:
-    - not (pgbackrest_install | bool or wal_g_install | bool)
-    - cloud_provider | default('') | lower in ['aws', 'gcp', 'azure']
-    - pgbackrest_auto_conf | default(true) | bool  # to be able to disable auto backup settings
-
 - name: Import tasks for AWS
   ansible.builtin.import_tasks: aws.yml
   when: cloud_provider | lower == 'aws'
