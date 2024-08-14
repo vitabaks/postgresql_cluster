@@ -363,7 +363,7 @@
             (item == 'replica' and server_count | int > 1) or
             (item in ['sync', 'async'] and server_count | int > 1 and synchronous_mode | bool))
 
-    # S3 bucket
+    # S3 bucket (Backups)
     - name: "AWS: Create S3 bucket '{{ aws_s3_bucket_name }}'"
       amazon.aws.s3_bucket:
         access_key: "{{ lookup('ansible.builtin.env', 'AWS_ACCESS_KEY_ID') }}"
@@ -490,7 +490,7 @@
       delay: 10
       retries: 3
 
-    - name: "AWS: Delete S3 bucket '{{ patroni_cluster_name }}'"
+    - name: "AWS: Delete S3 bucket '{{ aws_s3_bucket_name }}'"
       amazon.aws.s3_bucket:
         access_key: "{{ lookup('ansible.builtin.env', 'AWS_ACCESS_KEY_ID') }}"
         secret_key: "{{ lookup('ansible.builtin.env', 'AWS_SECRET_ACCESS_KEY') }}"
