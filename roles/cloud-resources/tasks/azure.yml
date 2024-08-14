@@ -241,14 +241,6 @@
             (item == 'replica' and server_count | int > 1) or
             (item in ['sync', 'async'] and server_count | int > 1 and synchronous_mode | bool))
 
-    - name: Debug azure_load_balancer_ip
-      ansible.builtin.debug:
-        var: azure_load_balancer_public_ip
-
-    - name: Debug azure_load_balancer
-      ansible.builtin.debug:
-        var: azure_load_balancer
-
     # Network interface
     - name: "Azure: Create network interface"
       azure.azcollection.azure_rm_networkinterface:
