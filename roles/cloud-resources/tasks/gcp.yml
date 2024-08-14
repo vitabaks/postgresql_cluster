@@ -448,7 +448,7 @@
                 (item in ['sync', 'async'] and server_count | int > 1 and synchronous_mode | bool)
       when: cloud_load_balancer | bool
 
-    # GCS Bucket
+    # GCS Bucket (Backups)
     - name: "GCP: Create bucket '{{ gcp_bucket_name }}'"
       google.cloud.gcp_storage_bucket:
         auth_kind: "serviceaccount"
