@@ -18,13 +18,12 @@ postgresql_stats_temp_directory_path: "/var/lib/pgsql_stats_tmp"  # or 'none'
 postgresql_stats_temp_directory_size: "1024m"
 
 # Repository
-apt_repository_keys:
-  - key: "https://www.postgresql.org/media/keys/ACCC4CF8.asc"  # postgresql repository apt key
 apt_repository:
   - repo: "deb https://apt.postgresql.org/pub/repos/apt/ {{ ansible_distribution_release }}-pgdg main"  # postgresql apt repository
-#  - repo: "deb https://deb.debian.org/debian/ {{ ansible_distribution_release }} main"  # debian repo (optional)
-#  - repo: "deb https://deb.debian.org/debian/ {{ ansible_distribution_release }}-updates main"  # debian repo (optional)
-#  - repo: "deb https://security.debian.org/debian-security/ {{ ansible_distribution_release }}/updates main"  # debian repo (optional)
+    key: "https://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc"  # postgresql apt repository key
+#  - repo: "deb https://deb.debian.org/debian/ {{ ansible_distribution_release }} main"
+#  - repo: "deb https://deb.debian.org/debian/ {{ ansible_distribution_release }}-updates main"
+#  - repo: "deb https://security.debian.org/debian-security/ {{ ansible_distribution_release }}/updates main"
 
 # Packages
 system_packages:

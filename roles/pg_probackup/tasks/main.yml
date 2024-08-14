@@ -1,25 +1,29 @@
 ---
 
 - block:  # Debian family
-    - name: Make sure the gnupg and apt-transport-https packages are present
+    - name: Make sure the gnupg, apt-transport-https and python3-debian packages are present
       ansible.builtin.apt:
         pkg:
           - gnupg
           - apt-transport-https
+          - python3-debian
         state: present
       register: apt_status
       until: apt_status is success
       delay: 5
       retries: 3
 
-    - name: Make sure pgdg apt key is installed
-      ansible.builtin.apt_key:
-        id: 636D717E
-        url: https://repo.postgrespro.ru/pg_probackup/keys/GPG-KEY-PG_PROBACKUP
-
-    - name: Make sure pgdg repository is installed
-      ansible.builtin.apt_repository:
-        repo: "deb [arch=amd64] http://repo.postgrespro.ru/pg_probackup/deb/ {{ ansible_distribution_release }} main-{{ ansible_distribution_release }}"
+    - name: Add pgdg repository and signing key
+      ansible.builtin.deb822_repository:
+        name: "{{ pg_probackup_repo_name | default('pg_probackup') }}"
+        types: [deb]
+        uris: "http://repo.postgrespro.ru/pg_probackup/deb/"
+        signed_by: "https://repo.postgrespro.ru/pg_probackup/keys/GPG-KEY-PG-PROBACKUP"
+        suites: "{{ ansible_distribution_release }}"
+        components: "main-{{ ansible_distribution_release }}"
+        state: present
+        enabled: true
+      when: ansible_os_family == "Debian"
 
     - name: Update apt cache
       ansible.builtin.apt:

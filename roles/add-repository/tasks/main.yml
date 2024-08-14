@@ -1,20 +1,36 @@
 ---
 
 - block:  # Debian/Ubuntu
-    - name: Add repository apt-key
-      ansible.builtin.apt_key:
-        url: "{{ item.key }}"
+    - name: Make sure the python3-debian package is present
+      ansible.builtin.apt:
+        pkg:
+          - python3-debian
         state: present
-      loop: "{{ apt_repository_keys }}"
-      when: apt_repository_keys | length > 0
+      register: apt_status
+      until: apt_status is success
+      delay: 5
+      retries: 3
 
     - name: Add repository
-      ansible.builtin.apt_repository:
-        repo: "{{ item.repo }}"
+      ansible.builtin.deb822_repository:
+        name: "{{ item.name | default(item.repo.split('//')[1].split('/')[0] | replace('.', '-')) }}"
+        types: "{{ item.types | default(['deb']) }}"
+        uris: "{{ item.uris | default(item.repo.split(' ')[1]) }}"
+        signed_by: "{{ item.signed_by | default(item.key | default(omit)) }}"
+        suites: "{{ item.suites | default(item.repo.split(' ')[2]) }}"
+        components: "{{ item.components | default(item.repo.split(' ')[3]) }}"
+        enabled: "{{ item.enabled | default(true) }}"
         state: present
-        update_cache: true
       loop: "{{ apt_repository }}"
       when: apt_repository | length > 0
+
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+      register: apt_status
+      until: apt_status is success
+      delay: 5
+      retries: 3
   environment: "{{ proxy_env | default({}) }}"
   when: installation_method == "repo" and ansible_os_family == "Debian"
   tags: add_repo
@@ -112,17 +128,25 @@
 # timescaledb (if enable_timescale is defined)
 - block:
     # Debian based
-    - name: Add TimescaleDB repository apt-key
-      ansible.builtin.apt_key:
-        url: "https://packagecloud.io/timescale/timescaledb/gpgkey"
+    - name: Add TimescaleDB repository
+      ansible.builtin.deb822_repository:
+        name: "timescaledb"
+        types: [deb]
+        uris: "https://packagecloud.io/timescale/timescaledb/{{ ansible_distribution | lower }}"
+        signed_by: "https://packagecloud.io/timescale/timescaledb/gpgkey"
+        suites: "{{ ansible_distribution_release }}"
+        components: [main]
         state: present
+        enabled: true
       when: ansible_os_family == "Debian"
 
-    - name: Add TimescaleDB repository
-      ansible.builtin.apt_repository:
-        repo: "deb https://packagecloud.io/timescale/timescaledb/{{ ansible_distribution | lower }}/ {{ ansible_distribution_release }} main"
-        state: present
+    - name: Update apt cache
+      ansible.builtin.apt:
         update_cache: true
+      register: apt_status
+      until: apt_status is success
+      delay: 5
+      retries: 3
       when: ansible_os_family == "Debian"
 
     # RedHat based

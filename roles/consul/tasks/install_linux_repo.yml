@@ -61,18 +61,37 @@
         ansible_distribution|lower == 'rocky' or
         ansible_distribution|lower == 'almalinux'
 
-    - name: Add an Apt signing key, uses whichever key is at the URL
-      ansible.builtin.apt_key:
-        url: "{{ consul_repo_url }}/gpg"
+    - name: Make sure the python3-debian package is present
+      ansible.builtin.apt:
+        pkg:
+          - python3-debian
+        state: present
+      register: apt_status
+      until: apt_status is success
+      delay: 5
+      retries: 3
+      when: ansible_os_family == "Debian"
+
+    - name: Add hashicorp repository and an apt signing key, uses whichever key is at the URL
+      ansible.builtin.deb822_repository:
+        name: "{{ consul_repo_url.split('//')[1] | replace('.', '-') }}"
+        types: "deb"
+        uris: "{{ consul_repo_url }}"
+        signed_by: "{{ consul_repo_url }}/gpg"
+        suites: "{{ ansible_distribution_release }}"
+        components: "main"
+        enabled: true
         state: present
       when: "ansible_os_family|lower == 'debian'"
 
-    - name: Add hashicorp repository
-      ansible.builtin.apt_repository:
-        repo: "deb {{ consul_repo_url }} {{ ansible_distribution_release }} main"
-        state: present
+    - name: Update apt cache
+      ansible.builtin.apt:
         update_cache: true
-      when: "ansible_os_family|lower == 'debian'"
+      register: apt_status
+      until: apt_status is success
+      delay: 5
+      retries: 3
+      when: ansible_os_family == "Debian"
 
   when: "ansible_os_family|lower in [ 'debian', 'redhat' ]"
   become: true
