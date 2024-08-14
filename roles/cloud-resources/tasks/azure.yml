@@ -311,12 +311,12 @@
           azure.azcollection.azure_rm_storageaccount:
             resource_group: "{{ azure_resource_group | default('postgres-cluster-resource-group' ~ '-' ~ server_location) }}"
             name: "{{ azure_blob_storage_account_name }}"
-            state: present
             account_type: "{{ azure_blob_storage_account_type }}"
-            public_network_access: Enabled  # Allow public network access to Storage Account to create Blob Storage.
-            allow_blob_public_access: false  # Disallow public anonymous access.
-            kind: BlobStorage
-            access_tier: Hot
+            kind: "{{ azure_blob_storage_account_kind }}"
+            access_tier: "{{ azure_blob_storage_account_access_tier }}"
+            public_network_access: "{{ azure_blob_storage_account_public_network_access }}"
+            allow_blob_public_access: "{{ azure_blob_storage_account_allow_blob_public_access }}"
+            state: present
 
         - name: "Azure: Get Storage Account info"
           azure.azcollection.azure_rm_storageaccount_info:
@@ -329,15 +329,14 @@
         - name: "Set variable: azure_storage_account_key"
           ansible.builtin.set_fact:
             azure_storage_account_key: "{{ azure_storage_account_info.storageaccounts[0].primary_endpoints.key }}"
-            cacheable: true
           no_log: true  # do not output storage account contents to the ansible log
 
-        - name: "Azure: Create Blob Storage '{{ azure_blob_storage_name }}'"
+        - name: "Azure: Create Blob Storage container '{{ azure_blob_storage_name }}'"
           azure.azcollection.azure_rm_storageblob:
             resource_group: "{{ azure_resource_group | default('postgres-cluster-resource-group' ~ '-' ~ server_location) }}"
-            storage_account_name: "{{ azure_blob_storage_account_name }}"
+            account_name: "{{ azure_blob_storage_account_name }}"
             container: "{{ azure_blob_storage_name }}"
-            blob_type: block
+            blob_type: "{{ azure_blob_storage_blob_type }}"
             state: present
       when:
         - (pgbackrest_install | bool or wal_g_install | bool)
@@ -495,6 +494,7 @@
             name: "{{ azure_blob_storage_account_name }}"
             force_delete_nonempty: true
             state: absent
+      ignore_errors: true
       when: (pgbackrest_install | bool or wal_g_install | bool) and azure_blob_storage_absent | bool
   when: state == 'absent'
 
