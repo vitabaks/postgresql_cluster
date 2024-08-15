@@ -126,7 +126,7 @@
       when: dcs_type == "consul" and consul_dnsmasq_enable | bool and ('127.0.0.1' in (consul_dnsmasq_servers | default([])))
 
   roles:
-    - role: ansible-role-firewall
+    - role: "fw_{{ firewall_type }}"
       vars:
         firewall_allowed_tcp_ports: "{{ firewall_ports_dynamic_var | default([]) | unique }}"
         firewall_additional_rules: "{{ firewall_rules_dynamic_var | default([]) | unique }}"
