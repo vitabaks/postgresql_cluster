@@ -40,6 +40,8 @@ aws_s3_bucket_name: "{{ patroni_cluster_name }}}-backup"  # Name of the S3 bucke
 aws_s3_bucket_region: "{{ server_location }}"  # The AWS region to use.
 aws_s3_bucket_object_lock_enabled: false  # Whether S3 Object Lock to be enabled.
 aws_s3_bucket_encryption: "AES256"  # Describes the default server-side encryption to apply to new objects in the bucket. Choices: "AES256", "aws:kms"
+aws_s3_bucket_block_public_acls: true  # Sets BlockPublicAcls value.
+aws_s3_bucket_ignore_public_acls: true  # Sets IgnorePublicAcls value.
 aws_s3_bucket_absent: false  # Allow to delete S3 bucket when deleting a cluster servers using the 'state=absent' variable.
 
 gcp_bucket_create: true  # if 'cloud_provider=gcp'
