@@ -3,13 +3,12 @@ TAG ?= local
 DOCKER_REGISTRY ?= vitabaks
 
 .PHONY: docker-lint docker-lint-console-ui docker-lint-console-api docker-lint-console-db docker-lint-console
-docker-lint: docker-lint-console-ui docker-lint-console-api docker-lint-console-db docker-lint-console ## Lint all Dockerfiles 
-#docker-lint: docker-lint-automation docker-lint-console-ui docker-lint-console-api docker-lint-console-db docker-lint-console ## Lint all Dockerfiles 
+docker-lint: docker-lint-automation docker-lint-console-ui docker-lint-console-api docker-lint-console-db docker-lint-console ## Lint all Dockerfiles 
 
-#docker-lint-automation: ## Lint automation Dockerfile
-#	@echo "Lint automation container Dockerfile"
-#	docker run --rm -i -v $(PWD)/Dockerfile:/Dockerfile \
-#	hadolint/hadolint hadolint --ignore DL3002 --ignore DL3008 --ignore DL3059 /Dockerfile
+docker-lint-automation: ## Lint automation Dockerfile
+	@echo "Lint automation container Dockerfile"
+	docker run --rm -i -v $(PWD)/automation/Dockerfile:/Dockerfile \
+	hadolint/hadolint hadolint --ignore DL3002 --ignore DL3008 --ignore DL3059 /Dockerfile
 
 docker-lint-console-ui: ## Lint console ui Dockerfile
 	@echo "Lint console ui container Dockerfile"
@@ -32,12 +31,11 @@ docker-lint-console: ## Lint console Dockerfile (all services)
 	hadolint/hadolint hadolint --ignore DL3002 --ignore DL3008 --ignore DL3059 --ignore DL4001 /Dockerfile
 
 .PHONY: docker-build docker-build-console-ui docker-build-console-api docker-build-console-db docker-build-console
-docker-build: docker-build-console-ui docker-build-console-api docker-build-console-db docker-build-console ## Build for all Docker images
-#docker-build: docker-build-automation docker-build-console-ui docker-build-console-api docker-build-console-db docker-build-console ## Build for all Docker images
+docker-build: docker-build-automation docker-build-console-ui docker-build-console-api docker-build-console-db docker-build-console ## Build for all Docker images
 
-#docker-build-automation: ## Build automation image
-#	@echo "Build automation docker image with tag $(TAG)";
-#	docker build --no-cache --platform linux/amd64 --tag postgresql_cluster:$(TAG) --file Dockerfile .
+docker-build-automation: ## Build automation image
+	@echo "Build automation docker image with tag $(TAG)";
+	docker build --no-cache --platform linux/amd64 --tag postgresql_cluster:$(TAG) --file automation/Dockerfile .
 
 docker-build-console-ui: ## Build console ui image
 	@echo "Build console ui docker image with tag $(TAG)"
@@ -56,14 +54,13 @@ docker-build-console: ## Build console image (all services)
 	docker build --no-cache --platform linux/amd64 --tag postgresql_cluster_console:$(TAG) --file console/Dockerfile .
 
 .PHONY: docker-push docker-push-console-ui docker-push-console-api docker-push-console-db docker-push-console
-docker-push: docker-push-console-ui docker-push-console-api docker-push-console-db docker-push-console ## Push all images to Dockerhub (example: make docker-push TAG=my_tag DOCKER_REGISTRY=my_repo DOCKER_REGISTRY_USER="my_username" DOCKER_REGISTRY_PASSWORD="my_password")
-#docker-push: docker-push-automation docker-push-console-ui docker-push-console-api docker-push-console-db docker-push-console ## Push all images to Dockerhub
+docker-push: docker-push-automation docker-push-console-ui docker-push-console-api docker-push-console-db docker-push-console ## Push all images to Dockerhub (example: make docker-push TAG=my_tag DOCKER_REGISTRY=my_repo DOCKER_REGISTRY_USER="my_username" DOCKER_REGISTRY_PASSWORD="my_password")
 
-#docker-push-automation: ## Push automation to Dockerhub
-#	@echo "Push automation docker image with tag $(TAG)";
-#	echo "$(DOCKER_REGISTRY_PASSWORD)" | docker login --username "$(DOCKER_REGISTRY_USER)" --password-stdin
-#	docker tag postgresql_cluster:$(TAG) $(DOCKER_REGISTRY)/postgresql_cluster:$(TAG)
-#	docker push $(DOCKER_REGISTRY)/postgresql_cluster:$(TAG)
+docker-push-automation: ## Push automation to Dockerhub
+	@echo "Push automation docker image with tag $(TAG)";
+	echo "$(DOCKER_REGISTRY_PASSWORD)" | docker login --username "$(DOCKER_REGISTRY_USER)" --password-stdin
+	docker tag postgresql_cluster:$(TAG) $(DOCKER_REGISTRY)/postgresql_cluster:$(TAG)
+	docker push $(DOCKER_REGISTRY)/postgresql_cluster:$(TAG)
 
 docker-push-console-ui: ## Push console ui image to Dockerhub
 	@echo "Push console ui docker image with tag $(TAG)"

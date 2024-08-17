@@ -206,7 +206,7 @@ git clone https://github.com/vitabaks/postgresql_cluster.git
 2. Go to the playbook directory
 
 ```
-cd postgresql_cluster/
+cd postgresql_cluster/automation
 ```
 
 3. Edit the inventory file

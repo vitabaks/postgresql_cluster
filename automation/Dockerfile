@@ -7,7 +7,7 @@ USER root
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Copy postgresql_cluster repository
-COPY . /postgresql_cluster
+COPY automation /postgresql_cluster/automation
 
 # Install required packages, Python dependencies, Ansible requirements, and perform cleanup
 RUN apt-get clean && rm -rf /var/lib/apt/lists/partial \
@@ -16,11 +16,11 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/partial \
        ca-certificates gnupg git python3 python3-dev python3-pip keychain ssh-client sshpass\
        gcc g++ cmake make libssl-dev curl apt-transport-https lsb-release gnupg \
     && pip3 install --break-system-packages --no-cache-dir -r \
-      /postgresql_cluster/requirements.txt \
+      /postgresql_cluster/automation/requirements.txt \
     && ansible-galaxy install --force -r \
-       /postgresql_cluster/requirements.yml \
+       /postgresql_cluster/automation/requirements.yml \
     && ansible-galaxy install --force -r \
-       /postgresql_cluster/roles/consul/requirements.yml \
+       /postgresql_cluster/automation/roles/consul/requirements.yml \
     && ansible-galaxy collection list \
     && pip3 install --break-system-packages --no-cache-dir -r \
        /root/.ansible/collections/ansible_collections/azure/azcollection/requirements.txt \
@@ -30,12 +30,12 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/partial \
     && apt-get autoremove -y --purge gnupg git python3-dev gcc g++ cmake make libssl-dev \
     && apt-get clean -y autoclean \
     && rm -rf /var/lib/apt/lists/* /tmp/* \
-    && chmod +x /postgresql_cluster/entrypoint.sh
+    && chmod +x /postgresql_cluster/automation/entrypoint.sh
 
 # Set environment variable for Ansible collections paths
 ENV ANSIBLE_COLLECTIONS_PATH=/root/.ansible/collections/ansible_collections:/usr/local/lib/python3.11/dist-packages/ansible_collections
 ENV USER=root
 
-WORKDIR /postgresql_cluster
+WORKDIR /postgresql_cluster/automation
 
 ENTRYPOINT ["./entrypoint.sh"]
