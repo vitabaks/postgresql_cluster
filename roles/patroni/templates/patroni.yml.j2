@@ -120,19 +120,12 @@ bootstrap:
       {% endfor %}
     {% endif %}
 
-{% if postgresql_exists|bool %}
-#  initdb:  # List options to be passed on to initdb
-#    - encoding: UTF8
-#    - data-checksums
-{% endif %}
-{% if not postgresql_exists|bool %}
   initdb:  # List options to be passed on to initdb
     - encoding: {{ postgresql_encoding }}
     - locale: {{ postgresql_locale }}
   {% if postgresql_data_checksums|bool %}
     - data-checksums
   {% endif %}
-{% endif %}
 
   pg_hba:  # Add following lines to pg_hba.conf after running 'initdb'
     - host replication {{ patroni_replication_username }} 127.0.0.1/32 {{ postgresql_password_encryption_algorithm }}
@@ -161,7 +154,7 @@ postgresql:
 #      password: rewind_password
   parameters:
     unix_socket_directories: {{ postgresql_unix_socket_dir }}
-{% if postgresql_stats_temp_directory_path is defined and postgresql_stats_temp_directory_path != 'none' and postgresql_version is version('14', '<=') %}
+{% if postgresql_stats_temp_directory_path is defined and postgresql_stats_temp_directory_path != 'none' and postgresql_version | int <= 14 %}
     stats_temp_directory: {{ postgresql_stats_temp_directory_path }}
 {% endif %}
 

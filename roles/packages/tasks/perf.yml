@@ -1,0 +1,193 @@
+---
+# Install "perf" (Linux profiling with performance counters) and "FlameGraph".
+
+# RedHat
+- name: Install perf
+  ansible.builtin.yum:
+    name: perf
+    state: present
+    disablerepo: 'pgdg*'
+  register: package_status
+  until: package_status is success
+  delay: 5
+  retries: 3
+  when:
+    - ansible_os_family == "RedHat"
+    - ansible_distribution_major_version == '7'
+
+- name: Install perf
+  ansible.builtin.dnf:
+    name: perf
+    state: present
+    disablerepo: 'pgdg*'
+  register: package_status
+  until: package_status is success
+  delay: 5
+  retries: 3
+  when:
+    - ansible_os_family == "RedHat"
+    - ansible_distribution_major_version >= '8'
+
+# Debian
+- name: Install perf
+  ansible.builtin.apt:
+    name: "{{ 'linux-tools-common' if ansible_distribution == 'Ubuntu' else 'linux-perf' }}"
+    state: present
+  register: apt_status
+  until: apt_status is success
+  delay: 5
+  retries: 3
+  when:
+    - ansible_os_family == "Debian"
+
+# Check if perf is installed correctly, or build a perf from the source code
+- name: Check if perf is installed
+  ansible.builtin.command: perf --version
+  register: perf_result
+  failed_when: false
+  changed_when: false
+  tags: perf
+
+# Build perf from source (if perf is not installed)
+- block:
+    - name: Extract kernel version
+      ansible.builtin.set_fact:
+        kernel_version: >-
+          {{ ansible_kernel.split('-')[0]
+          if not ansible_kernel.split('-')[0].endswith('.0')
+          else ansible_kernel.split('-')[0][:-2] }}
+        kernel_major_version: "{{ ansible_kernel.split('.')[0] }}"
+
+    - name: Download kernel source
+      ansible.builtin.get_url:
+        url: "https://mirrors.edge.kernel.org/pub/linux/kernel/v{{ kernel_major_version }}.x/linux-{{ kernel_version }}.tar.gz"
+        dest: "/tmp/linux-source-{{ kernel_version }}.tar.gz"
+      register: get_url_result
+
+    - name: Extract kernel source
+      ansible.builtin.unarchive:
+        src: "/tmp/linux-source-{{ kernel_version }}.tar.gz"
+        dest: /tmp/
+        remote_src: true
+      when:
+        - get_url_result is defined
+        - get_url_result is success
+
+    - name: Install basic build tools
+      ansible.builtin.package:
+        name:
+          - make
+          - gcc
+          - flex
+          - bison
+        state: present
+      register: build_tools_result
+      when:
+        - get_url_result is defined
+        - get_url_result is success
+
+    - name: Install required libraries
+      ansible.builtin.package:
+        name:
+          - pkg-config
+          - libzstd1
+          - libdwarf-dev
+          - libdw-dev
+          - binutils-dev
+          - libcap-dev
+          - libelf-dev
+          - libnuma-dev
+          - python3-dev
+          - libssl-dev
+          - libunwind-dev
+          - libdwarf-dev
+          - zlib1g-dev
+          - liblzma-dev
+          - libaio-dev
+          - libtraceevent-dev
+          - debuginfod
+          - libpfm4-dev
+          - libslang2-dev
+          - systemtap-sdt-dev
+          - libperl-dev
+          - binutils-dev
+          - libbabeltrace-dev
+          - libiberty-dev
+          - libzstd-dev
+        state: present
+      when:
+        - ansible_os_family == "Debian"
+        - build_tools_result is defined
+        - build_tools_result is success
+
+    - name: Install required libraries
+      ansible.builtin.package:
+        name:
+          - pkgconf
+          - libzstd
+          - libdwarf-devel
+          - elfutils-libelf-devel
+          - binutils-devel
+          - libcap-devel
+          - numactl-devel
+          - python3-devel
+          - openssl-devel
+          - libunwind-devel
+          - zlib-devel
+          - xz-devel
+          - libaio-devel
+          - libtraceevent-devel
+          - slang-devel
+          - systemtap-sdt-devel
+          - perl-devel
+          - libbabeltrace-devel
+          - libzstd-devel
+        state: present
+      when:
+        - ansible_os_family == "RedHat"
+        - build_tools_result is defined
+        - build_tools_result is success
+
+    - name: Build perf from source
+      become: true
+      become_user: root
+      community.general.make:
+        chdir: "/tmp/linux-{{ kernel_version }}/tools/perf"
+        jobs: "{{ ansible_processor_vcpus }}"  # use all CPU cores
+      register: build_perf_result
+      when:
+        - build_tools_result is defined
+        - build_tools_result is success
+
+    - name: Copy perf to /usr/local/bin
+      ansible.builtin.copy:
+        src: "/tmp/linux-{{ kernel_version }}/tools/perf/perf"
+        dest: "/usr/local/bin/perf"
+        mode: '0755'
+        remote_src: true
+      when:
+        - build_perf_result is defined
+        - build_perf_result is success
+  ignore_errors: true  # do not stop the playbook if perf could not be installed
+  when:
+    - perf_result.rc is defined
+    - perf_result.rc != 0
+  tags: perf
+
+# FlameGraph
+- block:
+    - name: Make sure the git are present
+      ansible.builtin.package:
+        name: git
+        state: present
+
+    - name: "Download 'FlameGraph' to /var/opt/FlameGraph"
+      ansible.builtin.git:
+        repo: https://github.com/brendangregg/FlameGraph.git
+        dest: "/var/opt/FlameGraph"
+        single_branch: true
+        version: master
+        update: false
+  tags: flamegraph
+
+...

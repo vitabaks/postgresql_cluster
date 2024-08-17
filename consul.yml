@@ -36,6 +36,7 @@
       delegate_to: localhost
       run_once: true # noqa run-once
       when:
+        - ansible_utils_result.stderr is defined
         - ansible_utils_result.stderr is search("unable to find")
 
     - name: Make sure the unzip package are present on the control host
@@ -48,6 +49,7 @@
       retries: 3
       delegate_to: localhost
       run_once: true # noqa run-once
+      when: ansible_distribution != "MacOSX"
 
     - name: Make sure the python3-pip package are present on the control host
       ansible.builtin.package:
@@ -59,6 +61,7 @@
       retries: 3
       delegate_to: localhost
       run_once: true # noqa run-once
+      when: ansible_distribution != "MacOSX"
 
     - name: Install netaddr dependency on the control host
       ansible.builtin.pip:
@@ -136,7 +139,6 @@
     - role: hostname
     - role: resolv_conf
     - role: etc_hosts
-    - role: sysctl
     - role: timezone
     - role: ntp
 

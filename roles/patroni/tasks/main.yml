@@ -383,7 +383,7 @@
   when:
     - postgresql_stats_temp_directory_path is defined
     - postgresql_stats_temp_directory_path != 'none'
-    - postgresql_version is version('14', '<=')
+    - postgresql_version | int <= 14
   tags: patroni, pgsql_stats_tmp
 
 - name: Prepare PostgreSQL | mount the statistics directory in memory (tmpfs)
@@ -396,7 +396,7 @@
   when:
     - postgresql_stats_temp_directory_path is defined
     - postgresql_stats_temp_directory_path != 'none'
-    - postgresql_version is version('14', '<=')
+    - postgresql_version | int <= 14
   tags: patroni, pgsql_stats_tmp
 
 - name: Prepare PostgreSQL | make sure the postgresql log directory "{{ postgresql_log_dir }}" exists
@@ -427,16 +427,26 @@
         state: directory
         mode: "0700"
 
-      # for Debian based distros only
-      # patroni bootstrap failure is possible if the postgresql config files are missing
-    - name: Prepare PostgreSQL | make sure the postgresql config files exists
+    # for Debian based distros only
+    # patroni bootstrap failure is possible if the PostgreSQL config files are missing
+    - name: Prepare PostgreSQL | make sure PostgreSQL config directory exists
+      ansible.builtin.file:
+        path: /etc/postgresql
+        state: directory
+        owner: postgres
+        group: postgres
+        recurse: true
+      when: ansible_os_family == "Debian" and
+            postgresql_packages|join(" ") is not search("postgrespro")
+
+    - name: Prepare PostgreSQL | make sure PostgreSQL config files exists
       ansible.builtin.stat:
         path: "{{ postgresql_conf_dir }}/postgresql.conf"
       register: postgresql_conf_file
       when: ansible_os_family == "Debian" and
             postgresql_packages|join(" ") is not search("postgrespro")
 
-    - name: Prepare PostgreSQL | generate default postgresql config files
+    - name: Prepare PostgreSQL | generate default PostgreSQL config files
       become: true
       become_user: postgres
       ansible.builtin.command: >

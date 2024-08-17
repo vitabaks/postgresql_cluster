@@ -1,0 +1,688 @@
+---
+# Dependencies
+- name: Install Python dependencies
+  block:
+    - name: Ensure that 'python3-pip' package is present on controlling host
+      ansible.builtin.package:
+        name: python3-pip
+        state: present
+      register: package_status
+      until: package_status is success
+      delay: 10
+      retries: 3
+      delegate_to: 127.0.0.1
+      run_once: true
+      when: ansible_distribution != "MacOSX"
+
+    - name: Ensure that 'google-auth' dependency is present on controlling host
+      ansible.builtin.pip:
+        name: google-auth
+        extra_args: --user
+      delegate_to: 127.0.0.1
+      become: false
+      vars:
+        ansible_become: false
+      run_once: true
+      environment:
+        PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
+        PIP_BREAK_SYSTEM_PACKAGES: "1"
+
+# Check if GCP_SERVICE_ACCOUNT_CONTENTS is defined
+- name: Lookup the GCP_SERVICE_ACCOUNT_CONTENTS environmental variable
+  ansible.builtin.set_fact:
+    gcp_service_account_contents_raw: "{{ lookup('ansible.builtin.env', 'GCP_SERVICE_ACCOUNT_CONTENTS') | default('') }}"
+  no_log: true
+
+- name: "Fail if no GCP service account information is provided"
+  ansible.builtin.fail:
+    msg: "GCP_SERVICE_ACCOUNT_CONTENTS is not defined or empty. Please provide GCP service account credentials."
+  when: gcp_service_account_contents_raw | length < 1
+
+# Decode GCP Service Account if base64 encoded
+- name: "Set variable: gcp_service_account_contents (b64decode)"
+  ansible.builtin.set_fact:
+    gcp_service_account_contents: "{{ gcp_service_account_contents_raw | b64decode }}"
+  no_log: true
+  when: gcp_service_account_contents_raw is match('^[a-zA-Z0-9+/]+={0,2}$')
+
+# Set GCP Service Account Contents to raw value if not base64 encoded
+- name: "Set variable: gcp_service_account_contents"
+  ansible.builtin.set_fact:
+    gcp_service_account_contents: "{{ gcp_service_account_contents_raw }}"
+  no_log: true
+  when: gcp_service_account_contents is not defined
+
+# Project info
+- name: "GCP: Gather information about project"
+  google.cloud.gcp_resourcemanager_project_info:
+    auth_kind: "serviceaccount"
+    service_account_contents: "{{ gcp_service_account_contents }}"
+  register: project_info
+  when: gcp_project is not defined or gcp_project | length < 1
+
+# Create (if state is present)
+- block:
+    # if ssh_key_content is not defined, get the user public key from the system (if exists)
+    - name: "Set variable: ssh_key_content"
+      ansible.builtin.set_fact:
+        ssh_key_content: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+      no_log: true  # do not display the public key
+      when: ssh_key_content is not defined or
+            ssh_key_content | length < 1
+
+    # if server_network is not specified, use default network
+    - name: "Set variable: gcp_network_name"
+      ansible.builtin.set_fact:
+        gcp_network_name: "{{ server_network if server_network is defined and server_network | length > 0 else 'default' }}"
+
+    - name: "GCP: Gather information about network"
+      google.cloud.gcp_compute_subnetwork_info:
+        auth_kind: "serviceaccount"
+        service_account_contents: "{{ gcp_service_account_contents }}"
+        project: "{{ gcp_project | default(project_info.resources[0].projectNumber) }}"
+        region: "{{ server_location[:-2] if server_location[-2:] | regex_search('-[a-z]$') else server_location }}"
+        filters:
+          - name = "{{ gcp_network_name }}"
+      register: subnetwork_info
+
+    - name: "GCP: Extract ip_range for network '{{ gcp_network_name }}'"
+      ansible.builtin.set_fact:
+        gcp_network_ip_range: "{{ subnetwork_info.resources[0].ipCidrRange }}"
+
+    # Firewall
+    - name: "GCP: Create or modify SSH public firewall rule"
+      google.cloud.gcp_compute_firewall:
+        auth_kind: "serviceaccount"
+        service_account_contents: "{{ gcp_service_account_contents }}"
+        project: "{{ gcp_project | default(project_info.resources[0].projectNumber) }}"
+        name: "{{ patroni_cluster_name }}-ssh-public"
+        description: "Firewall rule for public SSH access to Postgres cluster servers"
+        allowed:
+          - ip_protocol: tcp
+            ports:
+              - "{{ ansible_ssh_port | default(22) }}"
+        source_ranges: "{{ ssh_public_allowed_ips | default('0.0.0.0/0', true) | split(',') }}"
+        target_tags:
+          - "{{ patroni_cluster_name }}" # Only VMs with this tag will be affected
+        network:
+          selfLink: "global/networks/{{ gcp_network_name }}"
+        state: present
+      when:
+        - ssh_public_access | bool
+        - cloud_firewall | bool
+
+    - name: "GCP: Create or modify Netdata public firewall rule"
+      google.cloud.gcp_compute_firewall:
+        auth_kind: "serviceaccount"
+        service_account_contents: "{{ gcp_service_account_contents }}"
+        project: "{{ gcp_project | default(project_info.resources[0].projectNumber) }}"
+        name: "{{ patroni_cluster_name }}-netdata-public"
+        description: "Firewall rule for public Netdata monitoring access"
+        allowed:
+          - ip_protocol: tcp
+            ports:
+              - "{{ netdata_port | default('19999') }}"
+        source_ranges: "{{ netdata_public_allowed_ips | default('0.0.0.0/0', true) | split(',') }}"
+        target_tags:
+          - "{{ patroni_cluster_name }}" # Only VMs with this tag will be affected
+        network:
+          selfLink: "global/networks/{{ gcp_network_name }}"
+        state: present
+      when:
+        - netdata_install | bool
+        - netdata_public_access | bool
+        - cloud_firewall | bool
+
+    - name: "GCP: Create or modify Database public firewall rule"
+      google.cloud.gcp_compute_firewall:
+        auth_kind: "serviceaccount"
+        service_account_contents: "{{ gcp_service_account_contents }}"
+        project: "{{ gcp_project | default(project_info.resources[0].projectNumber) }}"
+        name: "{{ patroni_cluster_name }}-database-public"
+        description: "Firewall rule for public database access"
+        allowed:
+          - ip_protocol: tcp
+            ports: "{{ allowed_ports }}"
+        source_ranges: "{{ database_public_allowed_ips | default('0.0.0.0/0', true) | split(',') }}"
+        target_tags:
+          - "{{ patroni_cluster_name }}" # Only VMs with this tag will be affected
+        network:
+          selfLink: "global/networks/{{ gcp_network_name }}"
+        state: present
+      vars:
+        allowed_ports: >-
+          {{
+            ([postgresql_port | default('5432')] if not with_haproxy_load_balancing | bool and not pgbouncer_install | bool else []) +
+            ([pgbouncer_listen_port | default('6432')] if not with_haproxy_load_balancing | bool and pgbouncer_install | bool else []) +
+            ([haproxy_listen_port.master | default('5000'),
+              haproxy_listen_port.replicas | default('5001'),
+              haproxy_listen_port.replicas_sync | default('5002'),
+              haproxy_listen_port.replicas_async | default('5003')] if with_haproxy_load_balancing | bool else [])
+          }}
+      when:
+        - database_public_access | bool
+        - cloud_firewall | bool
+
+    - name: "GCP: Create or modify Postgres cluster firewall rule"
+      google.cloud.gcp_compute_firewall:
+        auth_kind: "serviceaccount"
+        service_account_contents: "{{ gcp_service_account_contents }}"
+        project: "{{ gcp_project | default(project_info.resources[0].projectNumber) }}"
+        name: "{{ patroni_cluster_name }}-firewall-rule"
+        description: "Firewall rule for Postgres cluster"
+        allowed:
+          - ip_protocol: tcp
+            ports: "{{ allowed_ports }}"
+        source_ranges:
+          - "{{ gcp_network_ip_range }}"
+        target_tags:
+          - "{{ patroni_cluster_name }}" # Only VMs with this tag will be affected
+        network:
+          selfLink: "global/networks/{{ gcp_network_name }}"
+        state: present
+      vars:
+        allowed_ports: >-
+          {{
+            [ansible_ssh_port | default('22')] +
+            ([netdata_port | default('19999')] if netdata_install | bool else []) +
+            ([pgbouncer_listen_port | default('6432')] if pgbouncer_install | bool else []) +
+            [postgresql_port | default('5432')] +
+            [patroni_restapi_port | default('8008')] +
+            ([haproxy_listen_port.master | default('5000'),
+              haproxy_listen_port.replicas | default('5001'),
+              haproxy_listen_port.replicas_sync | default('5002'),
+              haproxy_listen_port.replicas_async | default('5003'),
+              haproxy_listen_port.stats | default('7000')] if with_haproxy_load_balancing | bool else []) +
+            ([etcd_client_port | default('2379'), etcd_peer_port | default('2380')] if dcs_type == 'etcd' else []) +
+            ([consul_ports_dns | default('8600'),
+              consul_ports_http | default('8500'),
+              consul_ports_rpc | default('8400'),
+              consul_ports_serf_lan | default('8301'),
+              consul_ports_serf_wan | default('8302'),
+              consul_ports_server | default('8300')] if dcs_type == 'consul' else [])
+          }}
+      when: cloud_firewall | bool
+
+    # if 'cloud_load_balancer' is 'true'
+    # https://cloud.google.com/load-balancing/docs/tcp#firewall-rules
+    - name: "GCP: Create health checks and LB firewall rule"
+      google.cloud.gcp_compute_firewall:
+        auth_kind: "serviceaccount"
+        service_account_contents: "{{ gcp_service_account_contents }}"
+        project: "{{ gcp_project | default(project_info.resources[0].projectNumber) }}"
+        name: "{{ patroni_cluster_name }}-lb-firewall-rule"
+        description: "Firewall rule for Health Checks and Load Balancer access to the database"
+        priority: 900
+        allowed:
+          - ip_protocol: tcp
+            ports:
+              - "{{ patroni_restapi_port | default('8008') }}"
+              - "{{ pgbouncer_listen_port | default('6432') if pgbouncer_install | bool else postgresql_port | default('5432') }}"
+        source_ranges:
+          - "35.191.0.0/16"
+          - "130.211.0.0/22"
+        target_tags:
+          - "{{ patroni_cluster_name }}" # Only VMs with this tag will be affected
+        network:
+          selfLink: "global/networks/{{ gcp_network_name }}"
+        state: present
+      when: cloud_load_balancer | bool
+
+    # Server and volume
+    - name: "GCP: Create or modify VM instance"
+      google.cloud.gcp_compute_instance:
+        auth_kind: "serviceaccount"
+        service_account_contents: "{{ gcp_service_account_contents }}"
+        project: "{{ gcp_project | default(project_info.resources[0].projectNumber) }}"
+        zone: "{{ server_location + '-b' if not server_location is match('.*-[a-z]$') else server_location }}"  # add "-b" if the zone is not defined
+        name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
+        machine_type: "{{ server_type }}"
+        disks:
+          - device_name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-system"
+            auto_delete: true
+            boot: true
+            initialize_params:
+              disk_name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-system"
+              source_image: "{{ server_image }}"
+              disk_size_gb: "{{ system_volume_size | default('80') }}"  # system disk size
+              disk_type: "{{ system_volume_type | default('pd-ssd', true) }}"
+          - device_name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-storage"
+            auto_delete: true
+            initialize_params:
+              disk_name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-storage"
+              disk_size_gb: "{{ volume_size | int }}"
+              disk_type: "{{ volume_type | default('pd-ssd', true) }}"
+        network_interfaces:
+          - network:
+              selfLink: "global/networks/{{ gcp_network_name }}"
+            access_configs:
+              - name: External NAT
+                type: ONE_TO_ONE_NAT
+        metadata:
+          ssh-keys: "root:{{ ssh_key_content }}"
+        scheduling:
+          preemptible: "{{ server_spot | default(gcp_compute_instance_preemptible | default(false)) | bool }}"
+        tags:
+          items:
+            - "{{ patroni_cluster_name }}"
+        labels:
+          cluster: "{{ patroni_cluster_name }}"
+        status: "{{ gcp_instance_status | default('RUNNING') }}"
+        state: present
+      loop: "{{ range(0, server_count | int) | list }}"
+      loop_control:
+        index_var: idx
+        label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
+      register: server_result
+      until: server_result is success
+      delay: 10
+      retries: 3
+
+    # Load Balancer
+    # This block creates Global External classic proxy Network Load Balancer.
+    # Global objects are required because the gcp_compute_target_tcp_proxy module can only be global, as it requires the use of a global forwarding rule.
+    # Using global objects instead of regional ones allows us to utilize a TCP proxy for correct traffic load balancing.
+    # Note: Regional internal load balancers are passthrough and do not work correctly with the health checks we use through the Patroni REST API.
+    - block:
+        - name: "GCP: [Load Balancer] Create instance group"
+          google.cloud.gcp_compute_instance_group:
+            auth_kind: "serviceaccount"
+            service_account_contents: "{{ gcp_service_account_contents }}"
+            project: "{{ gcp_project | default(project_info.resources[0].projectNumber) }}"
+            name: "{{ patroni_cluster_name }}"
+            description: "{{ patroni_cluster_name }} instance group"
+            region: "{{ region }}"
+            zone: "{{ zone }}"
+            named_ports:
+              - name: postgres
+                port: "{{ postgresql_port | default('5432') }}"
+              - name: pgbouncer
+                port: "{{ pgbouncer_listen_port | default('6432') }}"
+            network:
+              selfLink: "global/networks/{{ gcp_network_name }}"
+            instances: "{{ instances_selflink }}"
+            state: present
+          vars:
+            region: "{{ server_location[:-2] if server_location[-2:] | regex_search('-[a-z]$') else server_location }}"
+            zone: "{{ server_location + '-b' if not server_location is match('.*-[a-z]$') else server_location }}"  # add "-b" if the zone is not defined
+            # The module only works if selfLink is set manually, issue: https://github.com/ansible-collections/google.cloud/issues/614
+            instances_selflink: >-  # TODO: use "{{ server_result.results | map(attribute='selfLink') | map('community.general.dict_kv', 'selfLink') | list }}"
+              [
+                {% for i in range(1, (server_count | int) + 1) %}
+                  {
+                    "selfLink": "zones/{{ zone }}/instances/{{ server_name }}{{ '%02d' % i }}"
+                  }{% if not loop.last %},{% endif %}
+                {% endfor %}
+              ]
+          register: instance_group
+          # Ignore error if resource already exists on re-run
+          failed_when: instance_group is failed and 'memberAlreadyExists' not in (instance_group.msg | default(''))
+
+        - name: "GCP: [Load Balancer] Create health check"
+          google.cloud.gcp_compute_health_check:
+            auth_kind: "serviceaccount"
+            service_account_contents: "{{ gcp_service_account_contents }}"
+            project: "{{ gcp_project | default(project_info.resources[0].projectNumber) }}"
+            name: "{{ patroni_cluster_name }}-{{ item }}-hc"
+            description: "{{ patroni_cluster_name }} {{ item }} health check"
+            type: "HTTP"
+            http_health_check:
+              port: "{{ patroni_restapi_port }}"
+              request_path: "/{{ item }}"
+            check_interval_sec: "{{ gcp_compute_health_check_interval_sec | default(3) }}"
+            timeout_sec: "{{ gcp_compute_health_check_check_timeout_sec | default(2) }}"
+            unhealthy_threshold: "{{ gcp_compute_health_check_unhealthy_threshold | default(2) }}"
+            healthy_threshold: "{{ gcp_compute_health_check_healthy_threshold | default(3) }}"
+            state: present
+          loop:
+            - "primary"
+            - "replica"
+            - "sync"
+          loop_control:
+            label: "{{ patroni_cluster_name }}-{{ item }}-hc"
+          register: health_check
+          when: item == 'primary' or
+                (item == 'replica' and server_count | int > 1) or
+                (item in ['sync', 'async'] and server_count | int > 1 and synchronous_mode | bool)
+
+        - name: "GCP: [Load Balancer] Create backend service"
+          google.cloud.gcp_compute_backend_service:
+            auth_kind: "serviceaccount"
+            service_account_contents: "{{ gcp_service_account_contents }}"
+            project: "{{ gcp_project | default(project_info.resources[0].projectNumber) }}"
+            name: "{{ patroni_cluster_name }}-{{ item }}"
+            description: "{{ patroni_cluster_name }} {{ item }} backend"
+            protocol: "TCP"
+            port_name: "{{ 'pgbouncer' if pgbouncer_install | bool else 'postgres' }}"
+            load_balancing_scheme: "EXTERNAL"
+            backends:
+              - group: "zones/{{ zone }}/instanceGroups/{{ patroni_cluster_name }}"
+                balancing_mode: "CONNECTION"
+                max_connections_per_instance: "{{ gcp_lb_max_connections | default(10000) }}"
+            health_checks:
+              - "/global/healthChecks/{{ patroni_cluster_name }}-{{ item }}-hc"
+            timeout_sec: "{{ gcp_compute_backend_service_timeout_sec | default(5) }}"
+            log_config:
+              enable: "{{ gcp_compute_backend_service_log_enable | default(false) }}"
+            state: present
+          vars:
+            zone: "{{ server_location + '-b' if not server_location is match('.*-[a-z]$') else server_location }}"  # add "-b" if the zone is not defined
+          loop:
+            - "primary"
+            - "replica"
+            - "sync"
+          loop_control:
+            label: "{{ patroni_cluster_name }}-{{ item }}"
+          register: backend_service
+          # Ignore error if resource already exists on re-run
+          failed_when: backend_service is failed and 'resource.fingerprint' not in (backend_service.msg | default(''))
+          when: item == 'primary' or
+                (item == 'replica' and server_count | int > 1) or
+                (item in ['sync', 'async'] and server_count | int > 1 and synchronous_mode | bool)
+
+        - name: "GCP: [Load Balancer] Create target TCP proxy"
+          google.cloud.gcp_compute_target_tcp_proxy:
+            auth_kind: "serviceaccount"
+            service_account_contents: "{{ gcp_service_account_contents }}"
+            project: "{{ gcp_project | default(project_info.resources[0].projectNumber) }}"
+            name: "{{ patroni_cluster_name }}-{{ item }}-proxy"
+            description: "{{ patroni_cluster_name }} {{ item }} TCP Proxy"
+            service:
+              selfLink: "/global/backendServices/{{ patroni_cluster_name }}-{{ item }}"
+            proxy_header: "NONE"
+            state: present
+          loop:
+            - "primary"
+            - "replica"
+            - "sync"
+          loop_control:
+            label: "{{ patroni_cluster_name }}-{{ item }}-proxy"
+          register: target_tcp_proxy
+          when: item == 'primary' or
+                (item == 'replica' and server_count | int > 1) or
+                (item in ['sync', 'async'] and server_count | int > 1 and synchronous_mode | bool)
+
+        - name: "GCP: [Load Balancer] Reserve static IP address"
+          google.cloud.gcp_compute_global_address:
+            auth_kind: "serviceaccount"
+            service_account_contents: "{{ gcp_service_account_contents }}"
+            project: "{{ gcp_project | default(project_info.resources[0].projectNumber) }}"
+            name: "{{ patroni_cluster_name }}-{{ item }}-ip"
+            description: "{{ patroni_cluster_name }} {{ item }} load balancer IP address"
+            address_type: "EXTERNAL"
+            ip_version: "IPV4"
+            state: present
+          loop:
+            - "primary"
+            - "replica"
+            - "sync"
+          loop_control:
+            label: "{{ patroni_cluster_name }}-{{ item }}-ip"
+          register: load_balancer_ip
+          when: item == 'primary' or
+                (item == 'replica' and server_count | int > 1) or
+                (item in ['sync', 'async'] and server_count | int > 1 and synchronous_mode | bool)
+
+        - name: "GCP: [Load Balancer] Create forwarding rule"
+          google.cloud.gcp_compute_global_forwarding_rule:
+            auth_kind: "serviceaccount"
+            service_account_contents: "{{ gcp_service_account_contents }}"
+            project: "{{ gcp_project | default(project_info.resources[0].projectNumber) }}"
+            name: "{{ patroni_cluster_name }}-{{ item }}-fr"
+            description: "{{ patroni_cluster_name }} {{ item }} forwarding rule"
+            load_balancing_scheme: "EXTERNAL"
+            ip_address: "{{ (load_balancer_ip.results | selectattr('item', 'equalto', item) | map(attribute='address') | first) }}"
+            ip_protocol: "TCP"
+            port_range: "{{ pgbouncer_listen_port | default('6432') if pgbouncer_install | bool else postgresql_port | default('5432') }}"
+            target: "/global/targetTcpProxies/{{ patroni_cluster_name }}-{{ item }}-proxy"
+            state: present
+          loop:
+            - "primary"
+            - "replica"
+            - "sync"
+          loop_control:
+            label: "{{ patroni_cluster_name }}-{{ item }}-fr"
+          register: gcp_load_balancer
+          when: item == 'primary' or
+                (item == 'replica' and server_count | int > 1) or
+                (item in ['sync', 'async'] and server_count | int > 1 and synchronous_mode | bool)
+      when: cloud_load_balancer | bool
+
+    # GCS Bucket (Backups)
+    - name: "GCP: Create bucket '{{ gcp_bucket_name }}'"
+      google.cloud.gcp_storage_bucket:
+        auth_kind: "serviceaccount"
+        service_account_contents: "{{ gcp_service_account_contents }}"
+        project: "{{ gcp_project | default(project_info.resources[0].projectNumber) }}"
+        name: "{{ gcp_bucket_name }}"
+        storage_class: "{{ gcp_bucket_storage_class }}"
+        predefined_default_object_acl: "{{ gcp_bucket_default_object_acl }}"
+        state: present
+      when:
+        - (pgbackrest_install | bool or wal_g_install | bool)
+        - gcp_bucket_create | bool
+  when: state == 'present'
+
+- name: Wait for host to be available via SSH
+  ansible.builtin.wait_for:
+    host: "{{ item.networkInterfaces[0].accessConfigs[0].natIP }}"
+    port: 22
+    delay: 5
+    timeout: 300
+  loop: "{{ server_result.results }}"
+  loop_control:
+    label: "{{ item.networkInterfaces[0].accessConfigs[0].natIP | default('N/A') }}"
+  when:
+    - server_result.results is defined
+    - item.networkInterfaces is defined
+
+# Info
+- name: Server info
+  ansible.builtin.debug:
+    msg:
+      id: "{{ item.id }}"
+      name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
+      image: "{{ item.disks[0].licenses[0] | basename }}"
+      type: "{{ item.machineType | basename }}"
+      volume_size: "{{ volume_size }} GB"
+      public_ip: "{{ item.networkInterfaces[0].accessConfigs[0].natIP }}"
+      private_ip: "{{ item.networkInterfaces[0].networkIP }}"
+  loop: "{{ server_result.results }}"
+  loop_control:
+    index_var: idx
+    label: "{{ item.networkInterfaces[0].accessConfigs[0].natIP | default('N/A') }}"
+  when:
+    - server_result.results is defined
+    - item.networkInterfaces is defined
+
+# Inventory
+- block:
+    - name: "Inventory | Initialize ip_addresses variable"
+      ansible.builtin.set_fact:
+        ip_addresses: []
+
+    - name: "Inventory | Extract IP addresses"
+      ansible.builtin.set_fact:
+        ip_addresses: >-
+          {{ ip_addresses +
+            [{'public_ip': item.networkInterfaces[0].accessConfigs[0].natIP,
+              'private_ip': item.networkInterfaces[0].networkIP}]
+          }}
+      loop: "{{ server_result.results | selectattr('networkInterfaces', 'defined') }}"
+      loop_control:
+        label: "public_ip: {{ item.networkInterfaces[0].accessConfigs[0].natIP }}, private_ip: {{ item.networkInterfaces[0].networkIP }}"
+
+    - name: "Inventory | Generate in-memory inventory"
+      ansible.builtin.import_tasks: inventory.yml
+  when:
+    - server_result.results is defined
+    - server_result.results | selectattr('networkInterfaces', 'defined')
+
+# Delete (if state is absent)
+- block:
+    - name: "GCP: Delete VM instance"
+      google.cloud.gcp_compute_instance:
+        auth_kind: "serviceaccount"
+        service_account_contents: "{{ gcp_service_account_contents }}"
+        project: "{{ gcp_project | default(project_info.resources[0].projectNumber) }}"
+        zone: "{{ server_location + '-b' if not server_location is match('.*-[a-z]$') else server_location }}"  # add "-b" if the zone is not defined
+        name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
+        state: absent
+      loop: "{{ range(0, server_count | int) | list }}"
+      loop_control:
+        index_var: idx
+        label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
+
+    - name: "GCP: [Load Balancer] Delete forwarding rule"
+      google.cloud.gcp_compute_global_forwarding_rule:
+        auth_kind: "serviceaccount"
+        service_account_contents: "{{ gcp_service_account_contents }}"
+        project: "{{ gcp_project | default(project_info.resources[0].projectNumber) }}"
+        name: "{{ patroni_cluster_name }}-{{ item }}-fr"
+        target: "/global/targetTcpProxies/{{ patroni_cluster_name }}-{{ item }}-proxy"
+        state: absent
+      loop:
+        - "primary"
+        - "replica"
+        - "sync"
+      loop_control:
+        label: "{{ patroni_cluster_name }}-{{ item }}-fr"
+      when: item == 'primary' or
+           (item == 'replica' and server_count | int > 1) or
+           (item in ['sync', 'async'] and server_count | int > 1 and synchronous_mode | bool)
+
+    - name: "GCP: [Load Balancer] Delete static IP address"
+      google.cloud.gcp_compute_global_address:
+        auth_kind: "serviceaccount"
+        service_account_contents: "{{ gcp_service_account_contents }}"
+        project: "{{ gcp_project | default(project_info.resources[0].projectNumber) }}"
+        name: "{{ patroni_cluster_name }}-{{ item }}-ip"
+        address_type: "EXTERNAL"
+        ip_version: "IPV4"
+        state: absent
+      loop:
+        - "primary"
+        - "replica"
+        - "sync"
+      loop_control:
+        label: "{{ patroni_cluster_name }}-{{ item }}-ip"
+      when: item == 'primary' or
+           (item == 'replica' and server_count | int > 1) or
+           (item in ['sync', 'async'] and server_count | int > 1 and synchronous_mode | bool)
+
+    - name: "GCP: [Load Balancer] Delete target TCP proxy"
+      google.cloud.gcp_compute_target_tcp_proxy:
+        auth_kind: "serviceaccount"
+        service_account_contents: "{{ gcp_service_account_contents }}"
+        project: "{{ gcp_project | default(project_info.resources[0].projectNumber) }}"
+        name: "{{ patroni_cluster_name }}-{{ item }}-proxy"
+        service:
+          selfLink: "/global/backendServices/{{ patroni_cluster_name }}-{{ item }}"
+        state: absent
+      loop:
+        - "primary"
+        - "replica"
+        - "sync"
+      loop_control:
+        label: "{{ patroni_cluster_name }}-{{ item }}-proxy"
+      when: item == 'primary' or
+           (item == 'replica' and server_count | int > 1) or
+           (item in ['sync', 'async'] and server_count | int > 1 and synchronous_mode | bool)
+
+    - name: "GCP: [Load Balancer] Delete backend service"
+      google.cloud.gcp_compute_backend_service:
+        auth_kind: "serviceaccount"
+        service_account_contents: "{{ gcp_service_account_contents }}"
+        project: "{{ gcp_project | default(project_info.resources[0].projectNumber) }}"
+        name: "{{ patroni_cluster_name }}-{{ item }}"
+        state: absent
+      loop:
+        - "primary"
+        - "replica"
+        - "sync"
+      loop_control:
+        label: "{{ patroni_cluster_name }}-{{ item }}"
+      when: item == 'primary' or
+           (item == 'replica' and server_count | int > 1) or
+           (item in ['sync', 'async'] and server_count | int > 1 and synchronous_mode | bool)
+
+    - name: "GCP: [Load Balancer] Delete health check"
+      google.cloud.gcp_compute_health_check:
+        auth_kind: "serviceaccount"
+        service_account_contents: "{{ gcp_service_account_contents }}"
+        project: "{{ gcp_project | default(project_info.resources[0].projectNumber) }}"
+        name: "{{ patroni_cluster_name }}-{{ item }}-hc"
+        state: absent
+      loop:
+        - "primary"
+        - "replica"
+        - "sync"
+      loop_control:
+        label: "{{ patroni_cluster_name }}-{{ item }}-hc"
+      when: item == 'primary' or
+           (item == 'replica' and server_count | int > 1) or
+           (item in ['sync', 'async'] and server_count | int > 1 and synchronous_mode | bool)
+
+    - name: "GCP: [Load Balancer] Delete instance group"
+      google.cloud.gcp_compute_instance_group:
+        auth_kind: "serviceaccount"
+        service_account_contents: "{{ gcp_service_account_contents }}"
+        project: "{{ gcp_project | default(project_info.resources[0].projectNumber) }}"
+        name: "{{ patroni_cluster_name }}"
+        region: "{{ server_location[:-2] if server_location[-2:] | regex_search('-[a-z]$') else server_location }}"
+        zone: "{{ server_location + '-b' if not server_location is match('.*-[a-z]$') else server_location }}"
+        state: absent
+
+    - name: "GCP: Delete SSH public firewall rule"
+      google.cloud.gcp_compute_firewall:
+        auth_kind: "serviceaccount"
+        service_account_contents: "{{ gcp_service_account_contents }}"
+        project: "{{ gcp_project | default(project_info.resources[0].projectNumber) }}"
+        name: "{{ patroni_cluster_name }}-ssh-public"
+        state: absent
+
+    - name: "GCP: Delete Netdata public firewall rule"
+      google.cloud.gcp_compute_firewall:
+        auth_kind: "serviceaccount"
+        service_account_contents: "{{ gcp_service_account_contents }}"
+        project: "{{ gcp_project | default(project_info.resources[0].projectNumber) }}"
+        name: "{{ patroni_cluster_name }}-netdata-public"
+        state: absent
+
+    - name: "GCP: Delete Database public firewall rule"
+      google.cloud.gcp_compute_firewall:
+        auth_kind: "serviceaccount"
+        service_account_contents: "{{ gcp_service_account_contents }}"
+        project: "{{ gcp_project | default(project_info.resources[0].projectNumber) }}"
+        name: "{{ patroni_cluster_name }}-database-public"
+        state: absent
+
+    - name: "GCP: Delete Postgres cluster firewall rule"
+      google.cloud.gcp_compute_firewall:
+        auth_kind: "serviceaccount"
+        service_account_contents: "{{ gcp_service_account_contents }}"
+        project: "{{ gcp_project | default(project_info.resources[0].projectNumber) }}"
+        name: "{{ patroni_cluster_name }}-firewall-rule"
+        state: absent
+
+    - name: "GCP: Delete health checks and LB firewall rule"
+      google.cloud.gcp_compute_firewall:
+        auth_kind: "serviceaccount"
+        service_account_contents: "{{ gcp_service_account_contents }}"
+        project: "{{ gcp_project | default(project_info.resources[0].projectNumber) }}"
+        name: "{{ patroni_cluster_name }}-lb-firewall-rule"
+        state: absent
+
+    - name: "GCP: Delete bucket '{{ gcp_bucket_name }}'"
+      google.cloud.gcp_storage_bucket:
+        auth_kind: "serviceaccount"
+        service_account_contents: "{{ gcp_service_account_contents }}"
+        project: "{{ gcp_project | default(project_info.resources[0].projectNumber) }}"
+        name: "{{ gcp_bucket_name }}"
+        state: absent
+      when:
+        - (pgbackrest_install | bool or wal_g_install | bool)
+        - gcp_bucket_absent | bool
+  when: state == 'absent'
+
+...

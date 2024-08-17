@@ -1,0 +1,64 @@
+---
+
+- name: Ensure that required variables are specified
+  ansible.builtin.fail:
+    msg:
+      - "One or more required variables have empty values."
+      - "Please specify value for variables: 'server_type', 'server_image', 'server_location'."
+  when: state == 'present' and
+    (server_type | length < 1 or
+    (server_image | length < 1 and cloud_provider != 'azure') or
+    server_location | length < 1)
+
+# if ssh_key_name is not specified
+# with each new execution of the playbook, a new temporary ssh key is created
+- block:
+    - name: Generate a unique temporary SSH key name
+      ansible.builtin.set_fact:
+        tmp_ssh_key_name: "ssh_key_tmp_{{ lookup('password', '/dev/null chars=ascii_lowercase length=7') }}"
+
+    - name: Generate a new temporary SSH key to access the server for deployment
+      ansible.builtin.user:
+        name: "{{ lookup('env', 'USER') }}"
+        generate_ssh_key: true
+        ssh_key_bits: 2048
+        ssh_key_file: ".ssh/{{ tmp_ssh_key_name }}"
+        ssh_key_comment: "{{ tmp_ssh_key_name }}"
+        force: true
+      register: tmp_ssh_key_result
+  when:
+    - state == 'present'
+    - ssh_key_name | length < 1
+    - ssh_key_content | length < 1
+    - not (postgresql_cluster_maintenance|default(false)|bool) # exclude for config_pgcluster.yml
+
+# set_fact: ssh_key_name and ssh_key_content
+- name: "Set variable: ssh_key_name and ssh_key_content"
+  ansible.builtin.set_fact:
+    ssh_key_name: "{{ tmp_ssh_key_name }}"
+    ssh_key_content: "{{ tmp_ssh_key_result.ssh_public_key }}"
+  when:
+    - tmp_ssh_key_result.ssh_public_key is defined
+    - tmp_ssh_key_result.ssh_public_key | length > 0
+
+- name: Import tasks for AWS
+  ansible.builtin.import_tasks: aws.yml
+  when: cloud_provider | lower == 'aws'
+
+- name: Import tasks for GCP
+  ansible.builtin.import_tasks: gcp.yml
+  when: cloud_provider | lower == 'gcp'
+
+- name: Import tasks for Azure
+  ansible.builtin.import_tasks: azure.yml
+  when: cloud_provider | lower == 'azure'
+
+- name: Import tasks for DigitalOcean
+  ansible.builtin.import_tasks: digitalocean.yml
+  when: cloud_provider | lower in ['digitalocean', 'do']
+
+- name: Import tasks for Hetzner Cloud
+  ansible.builtin.import_tasks: hetzner.yml
+  when: cloud_provider | lower == 'hetzner'
+
+...

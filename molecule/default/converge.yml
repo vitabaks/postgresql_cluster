@@ -48,9 +48,19 @@
         postgresql_data_dir: "/pgdata/{{ postgresql_version }}/main"
         postgresql_wal_dir: "/pgwal/{{ postgresql_version }}/pg_wal"
 
-    - name: Set variables for TimescaleDB cluster deployment test
+    - name: Set variables for Extensions test
       ansible.builtin.set_fact:
         enable_timescale: true
+        enable_pg_repack: true
+        enable_pg_cron: true
+        enable_pgaudit: true
+        enable_pgvector: true
+        enable_postgis: true
+        enable_pgrouting: true
+        enable_pg_stat_kcache: true
+        enable_pg_wait_sampling: true
+        enable_pg_partman: true
+        enable_citus: "{{ 'false' if ansible_distribution_version == '24.04' else 'true' }}"  # TODO Ubuntu 24.04
 
     - name: Set variables for PostgreSQL Cluster update test
       ansible.builtin.set_fact:

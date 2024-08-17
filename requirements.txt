@@ -1,10 +1,5 @@
-ansible==9.2.0
-ansible-core==2.16.3
-Jinja2==3.1.4
-PyYAML==6.0.1
-cryptography==42.0.4
-packaging==23.2
-resolvelib==1.0.1
-MarkupSafe==2.1.5
-cffi==1.16.0
-pycparser==2.21
+ansible==9.8.0
+boto3==1.34.158
+dopy==0.3.7
+google-auth==2.33.0
+hcloud==2.2.0

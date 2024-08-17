@@ -122,7 +122,7 @@ Minimum supported Ansible version: 8.0.0 (ansible-core 2.15.0)
 ## Requirements
 This playbook requires root privileges or sudo.
 
-Ansible ([What is Ansible](https://www.ansible.com/resources/videos/quick-start-video)?)
+Ansible ([What is Ansible](https://www.ansible.com/how-ansible-works/)?)
 
 if dcs_type: "consul", please install consul role requirements on the control node:
 

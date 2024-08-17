@@ -9,14 +9,14 @@ proxy_env: {}  # yamllint disable rule:braces
 # Cluster variables
 cluster_vip: ""  # IP address for client access to the databases in the cluster (optional).
 vip_interface: "{{ ansible_default_ipv4.interface }}"  # interface name (e.g., "ens32").
-# Note: VIP-based solutions such as keepalived or vip-manager may not function correctly in cloud environments like AWS.
+# Note: VIP-based solutions such as keepalived or vip-manager may not function correctly in cloud environments.
 
 patroni_cluster_name: "postgres-cluster"  # the cluster name (must be unique for each cluster)
 
 patroni_superuser_username: "postgres"
-patroni_superuser_password: "postgres-pass"  # please change password
+patroni_superuser_password: ""  # Please specify a password. If not defined, will be generated automatically during deployment.
 patroni_replication_username: "replicator"
-patroni_replication_password: "replicator-pass"  # please change password
+patroni_replication_password: ""  # Please specify a password. If not defined, will be generated automatically during deployment.
 
 synchronous_mode: false  # or 'true' for enable synchronous database replication
 synchronous_mode_strict: false  # if 'true' then block all client writes to the master, when a synchronous replica is not available
@@ -173,10 +173,10 @@ consul_services:
 
 
 # PostgreSQL variables
-postgresql_version: "16"
+postgresql_version: 16
 # postgresql_data_dir: see vars/Debian.yml or vars/RedHat.yml
 postgresql_listen_addr: "0.0.0.0" # Listen on all interfaces. Or use "{{ inventory_hostname }},127.0.0.1" to listen on a specific IP address.
-postgresql_port: "5432"
+postgresql_port: 5432
 postgresql_encoding: "UTF8"  # for bootstrap only (initdb)
 postgresql_locale: "en_US.UTF-8"  # for bootstrap only (initdb)
 postgresql_data_checksums: true  # for bootstrap only (initdb)
@@ -217,7 +217,7 @@ postgresql_extensions: []
 
 # postgresql parameters to bootstrap dcs (are parameters for example)
 postgresql_parameters:
-  - { option: "max_connections", value: "500" }
+  - { option: "max_connections", value: "1000" }
   - { option: "superuser_reserved_connections", value: "5" }
   - { option: "password_encryption", value: "{{ postgresql_password_encryption_algorithm }}" }
   - { option: "max_locks_per_transaction", value: "512" }
@@ -314,6 +314,7 @@ postgresql_pg_hba:
   - { type: "local", database: "all", user: "all", address: "", method: "{{ postgresql_password_encryption_algorithm }}" }
   - { type: "host", database: "all", user: "all", address: "127.0.0.1/32", method: "{{ postgresql_password_encryption_algorithm }}" }
   - { type: "host", database: "all", user: "all", address: "::1/128", method: "{{ postgresql_password_encryption_algorithm }}" }
+  - { type: "host", database: "all", user: "all", address: "0.0.0.0/0", method: "{{ postgresql_password_encryption_algorithm }}" }
 #  - { type: "host", database: "mydatabase", user: "mydb-user", address: "192.168.0.0/24", method: "{{ postgresql_password_encryption_algorithm }}" }
 #  - { type: "host", database: "all", user: "all", address: "192.168.0.0/24", method: "ident", options: "map=main" }  # use pg_ident
 
@@ -337,11 +338,11 @@ pgbouncer_conf_dir: "/etc/pgbouncer"
 pgbouncer_log_dir: "/var/log/pgbouncer"
 pgbouncer_listen_addr: "0.0.0.0" # Listen on all interfaces. Or use "{{ inventory_hostname }}" to listen on a specific IP address.
 pgbouncer_listen_port: 6432
-pgbouncer_max_client_conn: 10000
-pgbouncer_max_db_connections: 1000
+pgbouncer_max_client_conn: 100000
+pgbouncer_max_db_connections: 10000
 pgbouncer_max_prepared_statements: 1024
-pgbouncer_default_pool_size: 20
 pgbouncer_query_wait_timeout: 120
+pgbouncer_default_pool_size: 100
 pgbouncer_default_pool_mode: "session"
 pgbouncer_admin_users: "{{ patroni_superuser_username }}"  # comma-separated list of users, who are allowed to change settings
 pgbouncer_stats_users: "{{ patroni_superuser_username }}"  # comma-separated list of users who are just allowed to use SHOW command
@@ -349,7 +350,7 @@ pgbouncer_ignore_startup_parameters: "extra_float_digits,geqo,search_path"
 pgbouncer_auth_type: "{{ postgresql_password_encryption_algorithm }}"
 pgbouncer_auth_user: true # or 'false' if you want to manage the list of users for authentication in the database via userlist.txt
 pgbouncer_auth_username: pgbouncer # user who can query the database via the user_search function
-pgbouncer_auth_password: "pgbouncer-pass" # please change password
+pgbouncer_auth_password: "" # If not defined, a password will be generated automatically during deployment
 pgbouncer_auth_dbname: "postgres"
 pgbouncer_client_tls_sslmode: "disable"
 pgbouncer_client_tls_key_file: ""
@@ -369,7 +370,7 @@ pgbouncer_pools:
 patroni_restapi_listen_addr: "0.0.0.0" # Listen on all interfaces. Or use "{{ inventory_hostname }}" to listen on a specific IP address.
 patroni_restapi_port: 8008
 patroni_restapi_username: "patroni"
-patroni_restapi_password: "restapi-pass"  # please change password
+patroni_restapi_password: ""  # If not defined, a password will be generated automatically during deployment.
 patroni_ttl: 30
 patroni_loop_wait: 10
 patroni_retry_timeout: 10
@@ -454,7 +455,7 @@ wal_g:
   - { option: "command", value: "{{ wal_g_path }} backup-fetch {{ postgresql_data_dir }} LATEST" }
   - { option: "no_params", value: "True" }
 basebackup:
-  - { option: "max-rate", value: "100M" }
+  - { option: "max-rate", value: "1000M" }
   - { option: "checkpoint", value: "fast" }
 #  - { option: "waldir", value: "{{ postgresql_wal_dir }}" }
 pg_probackup:
@@ -495,9 +496,9 @@ wal_g_path: "/usr/local/bin/wal-g --config {{ postgresql_home_dir }}/.walg.json"
 wal_g_json:  # config https://github.com/wal-g/wal-g#configuration
   - { option: "AWS_ACCESS_KEY_ID", value: "{{ AWS_ACCESS_KEY_ID | default('') }}" }  # define values or pass via --extra-vars
   - { option: "AWS_SECRET_ACCESS_KEY", value: "{{ AWS_SECRET_ACCESS_KEY | default('') }}" }  # define values or pass via --extra-vars
-  - { option: "WALG_S3_PREFIX", value: "{{ WALG_S3_PREFIX | default('') }}" } # define values or pass via --extra-vars
-  - { option: "WALG_COMPRESSION_METHOD", value: "brotli" }  # or "lz4", "lzma", "zstd"
-  - { option: "WALG_DELTA_MAX_STEPS", value: "6" }  # determines how many delta backups can be between full backups
+  - { option: "WALG_S3_PREFIX", value: "{{ WALG_S3_PREFIX | default('s3://' + patroni_cluster_name) }}" } # define values or pass via --extra-vars
+  - { option: "WALG_COMPRESSION_METHOD", value: "{{ WALG_COMPRESSION_METHOD | default('brotli') }}" }  # or "lz4", "lzma", "zstd"
+  - { option: "WALG_DELTA_MAX_STEPS", value: "{{ WALG_DELTA_MAX_STEPS | default('6') }}" }  # determines how many delta backups can be between full backups
   - { option: "PGDATA", value: "{{ postgresql_data_dir }}" }
   - { option: "PGHOST", value: "{{ postgresql_unix_socket_dir }}" }
   - { option: "PGPORT", value: "{{ postgresql_port }}" }
@@ -521,13 +522,13 @@ wal_g_cron_jobs:
   - name: "WAL-G: Create daily backup"
     user: "postgres"
     file: /etc/cron.d/walg
-    minute: "30"
-    hour: "3"
+    minute: "00"
+    hour: "{{ WALG_BACKUP_HOUR | default('3') }}"
     day: "*"
     month: "*"
     weekday: "*"
     job: "{{ wal_g_backup_command | join('') }}"
-  - name: "WAL-G: Delete old backups" # retain 4 full backups (adjust according to your company's backup retention policy)
+  - name: "WAL-G: Delete old backups"
     user: "postgres"
     file: /etc/cron.d/walg
     minute: "30"
@@ -538,28 +539,30 @@ wal_g_cron_jobs:
     job: "{{ wal_g_delete_command | join('') }}"
 
 # pgBackRest
-pgbackrest_install: false  # or 'true'
+pgbackrest_install: false  # or 'true' to install and configure backups using pgBackRest
 pgbackrest_install_from_pgdg_repo: true  # or 'false'
 pgbackrest_stanza: "{{ patroni_cluster_name }}"  # specify your --stanza
 pgbackrest_repo_type: "posix"  # or "s3", "gcs", "azure"
 pgbackrest_repo_host: ""  # dedicated repository host (optional)
-pgbackrest_repo_user: "postgres"
+pgbackrest_repo_user: "postgres"  # if "repo_host" is set (optional)
 pgbackrest_conf_file: "/etc/pgbackrest/pgbackrest.conf"
 # config https://pgbackrest.org/configuration.html
 pgbackrest_conf:
   global:  # [global] section
     - { option: "log-level-file", value: "detail" }
     - { option: "log-path", value: "/var/log/pgbackrest" }
+    - { option: "repo1-type", value: "{{ pgbackrest_repo_type | lower }}" }
 #    - { option: "repo1-host", value: "{{ pgbackrest_repo_host }}" }
 #    - { option: "repo1-host-user", value: "{{ pgbackrest_repo_user }}" }
-    - { option: "repo1-type", value: "{{ pgbackrest_repo_type | lower }}" }
     - { option: "repo1-path", value: "/var/lib/pgbackrest" }
     - { option: "repo1-retention-full", value: "4" }
     - { option: "repo1-retention-archive", value: "4" }
+    - { option: "repo1-bundle", value: "y" }
+    - { option: "repo1-block", value: "y" }
     - { option: "start-fast", value: "y" }
     - { option: "stop-auto", value: "y" }
-    - { option: "resume", value: "n" }
     - { option: "link-all", value: "y" }
+    - { option: "resume", value: "n" }
     - { option: "spool-path", value: "/var/spool/pgbackrest" }
     - { option: "archive-async", value: "y" } # Enables asynchronous WAL archiving (details: https://pgbackrest.org/user-guide.html#async-archiving)
     - { option: "archive-get-queue-max", value: "1GiB" }
@@ -585,13 +588,13 @@ pgbackrest_server_conf:
     - { option: "repo1-retention-archive", value: "4" }
     - { option: "repo1-bundle", value: "y" }
     - { option: "repo1-block", value: "y" }
-    - { option: "start-fast", value: "y" }
-    - { option: "stop-auto", value: "y" }
-    - { option: "resume", value: "n" }
-    - { option: "link-all", value: "y" }
     - { option: "archive-check", value: "y" }
     - { option: "archive-copy", value: "n" }
     - { option: "backup-standby", value: "y" }
+    - { option: "start-fast", value: "y" }
+    - { option: "stop-auto", value: "y" }
+    - { option: "link-all", value: "y" }
+    - { option: "resume", value: "n" }
 #    - { option: "", value: "" }
 # the stanza section will be generated automatically
 
@@ -607,23 +610,23 @@ pgbackrest_cron_jobs:
   - name: "pgBackRest: Full Backup"
     file: "/etc/cron.d/pgbackrest-{{ patroni_cluster_name }}"
     user: "postgres"
-    minute: "30"
-    hour: "6"
+    minute: "00"
+    hour: "{{ PGBACKREST_BACKUP_HOUR | default('3') }}"
     day: "*"
     month: "*"
     weekday: "0"
     job: "pgbackrest --stanza={{ pgbackrest_stanza }} --type=full backup"
-    # job: "if [ $(psql -tAXc 'select pg_is_in_recovery()') = 'f' ]; then pgbackrest --type=full --stanza={{ pgbackrest_stanza }} backup; fi"
+    # job: "if [ $(psql -tAXc 'select pg_is_in_recovery()') = 'f' ]; then pgbackrest --stanza={{ pgbackrest_stanza }} --type=full backup; fi"
   - name: "pgBackRest: Diff Backup"
     file: "/etc/cron.d/pgbackrest-{{ patroni_cluster_name }}"
     user: "postgres"
-    minute: "30"
-    hour: "6"
+    minute: "00"
+    hour: "3"
     day: "*"
     month: "*"
     weekday: "1-6"
     job: "pgbackrest --stanza={{ pgbackrest_stanza }} --type=diff backup"
-    # job: "if [ $(psql -tAXc 'select pg_is_in_recovery()') = 'f' ]; then pgbackrest --type=diff --stanza={{ pgbackrest_stanza }} backup; fi"
+    # job: "if [ $(psql -tAXc 'select pg_is_in_recovery()') = 'f' ]; then pgbackrest --stanza={{ pgbackrest_stanza }} --type=diff backup; fi"
 
 
 # PITR mode (if patroni_cluster_bootstrap_method: "pgbackrest" or "wal-g"):

@@ -72,7 +72,7 @@
       retries: 3
       when: ansible_os_family == "Debian"
 
-    - name: Add hashicorp repository and an apt signing key, uses whichever key is at the URL
+    - name: Add hashicorp repository
       ansible.builtin.deb822_repository:
         name: "{{ consul_repo_url.split('//')[1] | replace('.', '-') }}"
         types: "deb"

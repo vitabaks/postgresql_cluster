@@ -3,7 +3,15 @@
 # PostgreSQL variables
 postgresql_cluster_name: "main"
 # You can specify custom data dir path. Example: "/pgdata/{{ postgresql_version }}/main"
-postgresql_data_dir: "/var/lib/postgresql/{{ postgresql_version }}/{{ postgresql_cluster_name }}"
+postgresql_data_dir: "\
+  {% if cloud_provider | default('') | length > 0 %}\
+    {{ pg_data_mount_path | default('/pgdata') }}/{{ postgresql_version }}/{{ postgresql_cluster_name }}\
+  {% else %}\
+    /var/lib/postgresql/{{ postgresql_version }}/{{ postgresql_cluster_name }}\
+  {% endif %}"
+# Note: When deploying to cloud providers, we create a disk and mount the data directory,
+# along the path defined in the 'pg_data_mount_path' variable (or use '/pgdata' by default).
+
 # You can specify custom WAL dir path. Example: "/pgwal/{{ postgresql_version }}/pg_wal"
 postgresql_wal_dir: ""  # if defined, symlink will be created [optional]
 postgresql_conf_dir: "/etc/postgresql/{{ postgresql_version }}/{{ postgresql_cluster_name }}"
@@ -41,13 +49,16 @@ system_packages:
   - iptables
   - acl
   - dnsutils
+  - moreutils
+
+install_perf: false  # or 'true' to install "perf" (Linux profiling with performance counters) and "FlameGraph".
 
 postgresql_packages:
   - postgresql-{{ postgresql_version }}
   - postgresql-client-{{ postgresql_version }}
   - postgresql-contrib-{{ postgresql_version }}
   - postgresql-server-dev-{{ postgresql_version }}
-#  - postgresql-{{ postgresql_version }}-dbgsym
+  - postgresql-{{ postgresql_version }}-dbgsym
 #  - postgresql-{{ postgresql_version }}-repack
 #  - postgresql-{{ postgresql_version }}-cron
 #  - postgresql-{{ postgresql_version }}-pg-stat-kcache
@@ -56,6 +67,7 @@ postgresql_packages:
 #  - postgresql-{{ postgresql_version }}-pgrouting
 #  - postgresql-{{ postgresql_version }}-pgvector
 #  - postgresql-{{ postgresql_version }}-pgaudit
+#  - postgresql-{{ postgresql_version }}-partman
 
 # Extra packages
 etcd_package_repo: "https://github.com/etcd-io/etcd/releases/download/v{{ etcd_version }}/etcd-v{{ etcd_version }}-linux-amd64.tar.gz"
