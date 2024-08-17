@@ -45,6 +45,34 @@
       environment:
         PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
         PIP_BREAK_SYSTEM_PACKAGES: "1"
+
+    # CLI required for task "Add virtual machine IP addresses to Load Balancer backend pool"
+    - name: Check if Azure CLI is installed
+      ansible.builtin.command: az --version
+      register: az_version_result
+      changed_when: false
+      failed_when: false
+
+    # try to install CLI (if not installed)
+    - name: Install Azure CLI
+      ansible.builtin.homebrew:
+        name: azure-cli
+        state: present
+      ignore_errors: true
+      when:
+        - az_version_result.rc != 0
+        - ansible_distribution == "MacOSX"
+
+    - name: Install Azure CLI
+      ansible.builtin.shell: >
+        set -o pipefail;
+        curl -sL https://aka.ms/InstallAzureCli | bash
+      args:
+        executable: /bin/bash
+      ignore_errors: true
+      when:
+        - az_version_result.rc != 0
+        - ansible_distribution != "MacOSX"
   delegate_to: 127.0.0.1
   become: false
   run_once: true
@@ -181,6 +209,61 @@
           }}
       when: cloud_firewall | bool
 
+    # Network interface
+    - name: "Azure: Create network interface"
+      azure.azcollection.azure_rm_networkinterface:
+        resource_group: "{{ azure_resource_group | default('postgres-cluster-resource-group' ~ '-' ~ server_location) }}"
+        name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-network-interface"
+        virtual_network: "{{ server_network | default(azure_virtual_network | default('postgres-cluster-network'), true) }}"
+        subnet_name: "{{ azure_subnet | default('postgres-cluster-subnet') }}"
+        security_group: "{{ patroni_cluster_name }}-security-group"
+        ip_configurations:
+          - name: ipconfig1
+            primary: true
+            public_ip_address_name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-public-ip"
+        dns_servers:
+          - 8.8.8.8
+      loop: "{{ range(0, server_count | int) | list }}"
+      loop_control:
+        index_var: idx
+        label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-network-interface"
+
+    # Server and volume
+    - name: "Azure: Create virtual machine"
+      azure.azcollection.azure_rm_virtualmachine:
+        resource_group: "{{ azure_resource_group | default('postgres-cluster-resource-group' ~ '-' ~ server_location) }}"
+        name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
+        state: present
+        started: true
+        location: "{{ server_location }}"
+        vm_size: "{{ server_type }}"
+        priority: "{{ 'Spot' if server_spot | default(false) | bool else 'None' }}"
+        eviction_policy: "{{ 'Deallocate' if server_spot | default(false) | bool else omit }}"
+        admin_username: "{{ azure_admin_username | default('azureadmin') }}"
+        ssh_public_keys:
+          - path: /home/azureadmin/.ssh/authorized_keys
+            key_data: "{{ ssh_key_content }}"
+        ssh_password_enabled: false
+        image:
+          offer: "{{ azure_vm_image_offer | default('0001-com-ubuntu-server-jammy') }}"
+          publisher: "{{ azure_vm_image_publisher | default('Canonical') }}"
+          sku: "{{ azure_vm_image_sku | default('22_04-lts-gen2') }}"
+          version: "{{ azure_vm_image_version | default('latest') }}"
+        os_type: Linux
+        os_disk_size_gb: "{{ system_volume_size | default('80') }}"  # system disk size
+        managed_disk_type: "{{ system_volume_type | default('StandardSSD_LRS', true) }}"
+        data_disks:
+          - lun: 0
+            disk_size_gb: "{{ volume_size | int }}"
+            managed_disk_type: "{{ volume_type | default('StandardSSD_LRS', true) }}"
+        network_interface_names:
+          - "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-network-interface"
+      loop: "{{ range(0, server_count | int) | list }}"
+      loop_control:
+        index_var: idx
+        label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
+      register: server_result
+
     # Load Balancer
     - name: "Azure: Create public IP address for Load Balancer"
       azure.azcollection.azure_rm_publicipaddress:
@@ -227,7 +310,8 @@
             probe: "{{ patroni_cluster_name }}-{{ item }}-health-probe"
             protocol: "Tcp"
             idle_timeout: 10  # in minutes
-            enable_floating_ip: true
+            enable_floating_ip: false
+            disable_outbound_snat: true
         sku: "Standard"
       loop:
         - "primary"
@@ -241,69 +325,41 @@
             (item == 'replica' and server_count | int > 1) or
             (item in ['sync', 'async'] and server_count | int > 1 and synchronous_mode | bool))
 
-    # Network interface
-    - name: "Azure: Create network interface"
-      azure.azcollection.azure_rm_networkinterface:
-        resource_group: "{{ azure_resource_group | default('postgres-cluster-resource-group' ~ '-' ~ server_location) }}"
-        name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-network-interface"
-        virtual_network: "{{ server_network | default(azure_virtual_network | default('postgres-cluster-network'), true) }}"
-        subnet_name: "{{ azure_subnet | default('postgres-cluster-subnet') }}"
-        security_group: "{{ patroni_cluster_name }}-security-group"
-        ip_configurations:
-          - name: ipconfig1
-            primary: true
-            public_ip_address_name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-public-ip"
-            load_balancer_backend_address_pools: "{{ cloud_load_balancer | bool | ternary(load_balancer_backend_ids, omit) }}"
-        dns_servers:
-          - 8.8.8.8
-      loop: "{{ range(0, server_count | int) | list }}"
-      loop_control:
-        index_var: idx
-        label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-network-interface"
-      vars:
-        load_balancer_backend_ids: >-
+    - name: Extract virtual machine private IPs
+      ansible.builtin.set_fact:
+        private_ips: >-
           {{
-            (azure_load_balancer.results | selectattr('state.backend_address_pools', 'defined')
-            | map(attribute='state.backend_address_pools')
-            | map('first')
-            | map(attribute='id') if cloud_load_balancer | bool else [])
+            private_ips | default([]) +
+            [item.ansible_facts.azure_vm.network_profile.network_interfaces[0].properties.ip_configurations[0].private_ip_address]
           }}
-
-    # Server and volume
-    - name: "Azure: Create virtual machine"
-      azure.azcollection.azure_rm_virtualmachine:
-        resource_group: "{{ azure_resource_group | default('postgres-cluster-resource-group' ~ '-' ~ server_location) }}"
-        name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
-        state: present
-        started: true
-        location: "{{ server_location }}"
-        vm_size: "{{ server_type }}"
-        priority: "{{ 'Spot' if server_spot | default(false) | bool else 'None' }}"
-        eviction_policy: "{{ 'Deallocate' if server_spot | default(false) | bool else omit }}"
-        admin_username: "{{ azure_admin_username | default('azureadmin') }}"
-        ssh_public_keys:
-          - path: /home/azureadmin/.ssh/authorized_keys
-            key_data: "{{ ssh_key_content }}"
-        ssh_password_enabled: false
-        image:
-          offer: "{{ azure_vm_image_offer | default('0001-com-ubuntu-server-jammy') }}"
-          publisher: "{{ azure_vm_image_publisher | default('Canonical') }}"
-          sku: "{{ azure_vm_image_sku | default('22_04-lts-gen2') }}"
-          version: "{{ azure_vm_image_version | default('latest') }}"
-        os_type: Linux
-        os_disk_size_gb: "{{ system_volume_size | default('80') }}"  # system disk size
-        managed_disk_type: "{{ system_volume_type | default('StandardSSD_LRS', true) }}"
-        data_disks:
-          - lun: 0
-            disk_size_gb: "{{ volume_size | int }}"
-            managed_disk_type: "{{ volume_type | default('StandardSSD_LRS', true) }}"
-        network_interface_names:
-          - "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-network-interface"
-      loop: "{{ range(0, server_count | int) | list }}"
+      loop: "{{ server_result.results | selectattr('ansible_facts.azure_vm', 'defined') }}"
       loop_control:
-        index_var: idx
-        label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
-      register: server_result
+        label: "{{ item.ansible_facts.azure_vm.network_profile.network_interfaces[0].properties.ip_configurations[0].private_ip_address }}"
+
+    # Note: We use Azure CLI here because there is no ansible module available to manage the list of IP addresses within a backend pool.
+    - name: "Azure: Add virtual machine IP addresses to Load Balancer backend pool"
+      ansible.builtin.shell: |
+        {% for ip in private_ips %}
+        az network lb address-pool address add \
+        --resource-group {{ azure_resource_group | default('postgres-cluster-resource-group-' ~ server_location) }} \
+        --lb-name {{ patroni_cluster_name }}-{{ item }} \
+        --pool-name {{ patroni_cluster_name }}-{{ item }}-backend \
+        --vnet {{ azure_virtual_network | default('postgres-cluster-network') }} \
+        --name address-{{ ip }} \
+        --ip-address {{ ip }}
+        {% endfor %}
+      args:
+        executable: /bin/bash
+      loop:
+        - "primary"
+        - "replica"
+        - "sync"
+      loop_control:
+        label: "{{ patroni_cluster_name }}-{{ item }}-backend"
+      when: cloud_load_balancer | bool and
+            (item == 'primary' or
+            (item == 'replica' and server_count | int > 1) or
+            (item in ['sync', 'async'] and server_count | int > 1 and synchronous_mode | bool))
 
     # Azure Blob Storage (Backups)
     - block:
