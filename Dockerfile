@@ -26,7 +26,7 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/partial \
        /root/.ansible/collections/ansible_collections/azure/azcollection/requirements.txt \
     && curl -sLS https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | tee /etc/apt/trusted.gpg.d/microsoft.asc.gpg > /dev/null \
     && echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/azure-cli.list \
-    && apt-get update && apt-get install -y azure-cli \
+    && apt-get update && apt-get install --no-install-recommends -y azure-cli \
     && apt-get autoremove -y --purge gnupg git python3-dev gcc g++ cmake make libssl-dev \
     && apt-get clean -y autoclean \
     && rm -rf /var/lib/apt/lists/* /tmp/* \
