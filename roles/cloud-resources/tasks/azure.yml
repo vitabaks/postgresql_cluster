@@ -55,7 +55,7 @@
 
     # try to install CLI (if not installed)
     - name: Install Azure CLI
-      ansible.builtin.homebrew:
+      community.general.homebrew:
         name: azure-cli
         state: present
       ignore_errors: true
