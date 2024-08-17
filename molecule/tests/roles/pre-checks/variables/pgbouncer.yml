@@ -100,18 +100,18 @@
     var: pgbouncer_total_pool_size
 
 # ✅ Verifying the correctness of the calculated overall pool size
-# The expected overall pool size is 50
+# The expected overall pool size is 130
 #   10 from db1
 #   20 from db2
-#   20 from db3 as db3 is not defined in pgbouncer_pools and hence, its pool size is pgbouncer_default_pool_size which is 20
-# If the calculated overall pool size is not 50, the test fails and an error message is displayed
+#   100 from db3 as db3 is not defined in pgbouncer_pools and hence, its pool size is pgbouncer_default_pool_size which is 100
+# If the calculated overall pool size is not 130, the test fails and an error message is displayed
 - name: Molecule.tests.roles.pre-checks.variables.pgbouncer | Verify Total Pool Size Calculation
   run_once: true
   ansible.builtin.assert:
     that:
-      - pgbouncer_total_pool_size | int == 50
-    fail_msg: "Test failed: pgbouncer_total_pool_size is not equal to 50."
-    success_msg: "Test passed: pgbouncer_total_pool_size is equal to 50."
+      - pgbouncer_total_pool_size | int == 130
+    fail_msg: "Test failed: pgbouncer_total_pool_size is not equal to 130."
+    success_msg: "Test passed: pgbouncer_total_pool_size is equal to 130."
 
 # ======================================================================
 # 📊 Start pgbouncer_total_pool_size (postgresql_databases not defined)

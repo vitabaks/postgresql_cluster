@@ -35,7 +35,7 @@ locale: "en_US.utf-8"
 # Configure swap space (if not already exists)
 swap_file_create: true  # or 'false'
 swap_file_path: /swapfile
-swap_file_size_mb: '2048'  # change this value for your system
+swap_file_size_mb: '4096'  # change this value for your system
 
 # Kernel parameters
 sysctl_set: true  # or 'false'
@@ -119,6 +119,8 @@ ssh_key_user: "postgres"
 ssh_key_state: "present"
 ssh_known_hosts: "{{ groups['postgres_cluster'] }}"
 
+# List of public SSH keys. These keys will be added to the database server's  ~/.ssh/authorized_keys  file.
+ssh_public_keys: []
 
 # sudo
 sudo_users:
@@ -213,5 +215,32 @@ cron_jobs: []
 #    month: "*"
 #    weekday: "*"
 #    job: "echo 'example job two command'"
+
+# (optional) Configure mount points in /etc/fstab and mount the file system (if 'mount.src' is defined)
+mount:
+  - path: "/pgdata"
+    src: ""  # device UUID or path.
+    fstype: ext4  # if 'zfs' is specified a ZFS pool will be created
+    opts: defaults,noatime  # not applicable to 'zfs'
+    state: mounted
+#  - path: "/pgwal"
+#    src: ""
+#    fstype: ext4
+#    opts: defaults,noatime
+#    state: mounted
+
+# (optional) Execute custom commands or scripts
+# This can be a direct command, a bash script content, or a path to a script on the host
+pre_deploy_command: "" # Command or script to be executed before the Postgres cluster deployment
+pre_deploy_command_timeout: 3600 # Timeout in seconds
+pre_deploy_command_hosts: "postgres_cluster" # host groups where the pre_deploy_command should be executed
+pre_deploy_command_print: true # Print the command in the ansible log
+pre_deploy_command_print_result: true # Print the result of the command execution to the ansible log
+
+post_deploy_command: "" # Command or script to be executed after the Postgres cluster deployment
+post_deploy_command_timeout: 3600 # Timeout in seconds
+post_deploy_command_hosts: "postgres_cluster" # host groups where the post_deploy_command should be executed
+post_deploy_command_print: true # Print the command in the ansible log
+post_deploy_command_print_result: true # Print the result of the command execution to the ansible log
 
 ...

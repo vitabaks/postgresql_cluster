@@ -1,0 +1,12 @@
+---
+collections:
+  - name: amazon.aws
+    version: "==8.1.0"
+  - name: google.cloud
+    version: "==1.3.0"
+  - name: azure.azcollection
+    version: "==2.6.0"
+  - name: community.digitalocean
+    version: "==1.26.0"
+  - name: hetzner.hcloud
+    version: "==4.1.0"

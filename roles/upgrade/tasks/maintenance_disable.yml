@@ -27,6 +27,8 @@
       delegate_to: "{{ item }}"
       loop: "{{ groups.balancers | default([]) | list }}"
       run_once: true
+      when: dcs_type == "etcd"
+
   become: true
   become_user: root
   ignore_errors: true  # show the error and continue the playbook execution

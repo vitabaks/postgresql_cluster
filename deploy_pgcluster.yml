@@ -1,21 +1,38 @@
 ---
-
 - name: Deploy PostgreSQL HA Cluster (based on "Patroni")
+  hosts: localhost
+  gather_facts: true
+  any_errors_fatal: true
+  pre_tasks:
+    - name: Include main variables
+      ansible.builtin.include_vars: "vars/main.yml"
+      tags: always
+    # set_fact: 'pgbackrest_install' to configure Postgres backups (TODO: Add the ability to configure backups in the UI)
+    # Note: Applicable only for "aws", "gcp", "azure", because:
+      # "digitalocean" - requires the Spaces access keys "AWS_ACCESS_KEY_ID" and "AWS_SECRET_ACCESS_KEY"
+      # "hetzner" - currently, Hetzner Cloud does not provide S3 storage
+    - name: "Set variable: 'pgbackrest_install' to configure Postgres backups"
+      ansible.builtin.set_fact:
+        pgbackrest_install: true
+      when:
+        - not (pgbackrest_install | bool or wal_g_install | bool)
+        - cloud_provider | default('') | lower in ['aws', 'gcp', 'azure']
+        - pgbackrest_auto_conf | default(true) | bool  # to be able to disable auto backup settings
+      tags: always
+  roles:
+    - role: cloud-resources
+      when: cloud_provider | default('') | length > 0
+      tags: always
+
+- name: deploy_pgcluster.yml | Perform pre-checks
   hosts: all
   become: true
   become_method: sudo
   gather_facts: true
-  tags: always
   any_errors_fatal: true
   environment: "{{ proxy_env | default({}) }}"
 
   pre_tasks:
-    - name: "Set variable: ansible_python_interpreter"
-      ansible.builtin.set_fact:
-        ansible_python_interpreter: "/usr/bin/env python3"
-      when: "'python3' not in (ansible_python_interpreter | default(''))"
-      tags: always
-
     - name: Include main variables
       ansible.builtin.include_vars: "vars/main.yml"
       tags: always
@@ -28,19 +45,20 @@
       ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
       tags: always
 
-    - name: System information
+    - name: System info
       ansible.builtin.debug:
-        var: system_info
-      vars:
-        system_info:
-          OS: "{{ ansible_distribution | default('N/A') }} {{ ansible_distribution_version | default('N/A') }}"
-          Kernel: "{{ ansible_kernel | default('N/A') }}"
-          CPU model: >-
-            {{ ansible_processor[2] | default('N/A') }},
-            count: {{ ansible_processor_count | default('N/A') }},
-            cores: {{ ansible_processor_cores | default('N/A') }}
-          Memory: "{{ (ansible_memtotal_mb / 1024) | round(2) if ansible_memtotal_mb is defined else 'N/A' }} GB"
-          Disk space total: >-
+        msg:
+          server_name: "{{ hostname | default(ansible_hostname) }}"
+          server_location: "{{ server_location | default(omit) }}"
+          ip_address: "{{ inventory_hostname | default('N/A') }}"
+          os: "{{ ansible_distribution | default('N/A') }} {{ ansible_distribution_version | default('N/A') }}"
+          kernel: "{{ ansible_kernel | default('N/A') }}"
+          cpu:
+            model: "{{ ansible_processor[2] | default('N/A') }}"
+            count: "{{ ansible_processor_count | default('N/A') }}"
+            cores: "{{ ansible_processor_cores | default('N/A') }}"
+          memory: "{{ (ansible_memtotal_mb / 1024) | round(2) if ansible_memtotal_mb is defined else 'N/A' }} GB"
+          disk_space_total: >-
             {{
               (ansible_mounts
                 | map(attribute='size_total')
@@ -49,30 +67,38 @@
               )
               | round(2) if ansible_mounts is defined else 'N/A'
             }} GB
-          Architecture: "{{ ansible_architecture | default('N/A') }}"
-          Virtualization type: "{{ ansible_virtualization_type | default('N/A') }}"
-          Product name: "{{ ansible_product_name | default('N/A') }}"
+          architecture: "{{ ansible_architecture | default('N/A') }}"
+          virtualization_type: "{{ ansible_virtualization_type | default('N/A') }}"
+          product_name: "{{ ansible_product_name | default('N/A') }}"
+      tags: always
+
+    # if 'cloud_provider' is 'aws', 'gcp', or 'azure'
+    # set_fact: 'pgbackrest_install' to configure Postgres backups (TODO: Add the ability to configure backups in the UI)
+    - name: "Set variable: 'pgbackrest_install' to configure Postgres backups"
+      ansible.builtin.set_fact:
+        pgbackrest_install: true
+      when:
+        - not (pgbackrest_install | bool or wal_g_install | bool)
+        - cloud_provider | default('') | lower in ['aws', 'gcp', 'azure']
+        - pgbackrest_auto_conf | default(true) | bool  # to be able to disable auto backup settings
       tags: always
 
   roles:
+    # (optional) if 'ssh_public_keys' is defined
+    - role: authorized-keys
+      tags: ssh_public_keys
+
     - role: pre-checks
       vars:
-        minimal_ansible_version: 2.11.0
+        minimal_ansible_version: 2.15.0
         timescale_minimal_pg_version: 12 # if enable_timescale is defined
       tags: always
 
   tasks:
-    - name: Clean yum cache
-      ansible.builtin.command: yum clean all
-      when:
-        - ansible_os_family == "RedHat"
-        - ansible_distribution_major_version == '7'
-
     - name: Clean dnf cache
       ansible.builtin.command: dnf clean all
       when:
         - ansible_os_family == "RedHat"
-        - ansible_distribution_major_version is version('8', '>=')
 
     - name: Update apt cache
       ansible.builtin.apt:
@@ -117,6 +143,65 @@
       retries: 3
       when: ansible_os_family == "Debian"
 
+    # (optional) Command or script to be executed before the Postgres cluster deployment.
+    - block:
+        - name: Print pre-deploy command
+          ansible.builtin.debug:
+            var: pre_deploy_command
+          when: pre_deploy_command_print | default(false) | bool
+
+        - name: Run pre-deploy command
+          ansible.builtin.shell: "{{ pre_deploy_command }} > /tmp/pre_deploy_command.log 2>&1"
+          args:
+            executable: /bin/bash
+          register: pre_deploy_result
+          delegate_to: "{{ item }}"
+          loop: "{{ pre_deploy_command_hosts.split(',') | map('extract', groups) | list | flatten }}"
+          async: "{{ pre_deploy_command_timeout }}"  # run the command asynchronously
+          poll: 0
+
+        - name: Wait for the pre-deploy command to complete
+          ansible.builtin.async_status:
+            jid: "{{ item.ansible_job_id }}"
+          register: pre_deploy_job_result
+          delegate_to: "{{ item.item }}"
+          loop: "{{ pre_deploy_result.results }}"
+          loop_control:
+            label: "{{ item.item }}"
+          until: pre_deploy_job_result.finished
+          retries: "{{ (pre_deploy_command_timeout | int) // 10 }}"
+          delay: 10
+          ignore_errors: true # allows to collect logs before stopping execution (in case of failure)
+          when:
+            - pre_deploy_result.results is defined
+            - item.ansible_job_id is defined
+
+        - name: Get pre-deploy command log
+          ansible.builtin.command: cat /tmp/pre_deploy_command.log
+          register: pre_deploy_command_log
+          delegate_to: "{{ item }}"
+          loop: "{{ pre_deploy_command_hosts.split(',') | map('extract', groups) | list | flatten }}"
+          changed_when: false
+          when: pre_deploy_command_print_result | default(false) | bool
+
+        - name: Print pre-deploy command result
+          ansible.builtin.debug:
+            msg: "{{ item.stdout_lines }}"
+          loop: "{{ pre_deploy_command_log.results }}"
+          loop_control:
+            label: "{{ item.item }}"
+          when:
+            - pre_deploy_command_log.results is defined
+            - item.stdout_lines is defined
+
+        - name: Stop if pre-deploy command failed
+          ansible.builtin.fail:
+            msg: "Pre-deploy command failed. See log for details."
+          when: pre_deploy_job_result.results | json_query('[?failed]') | length > 0
+      run_once: true # noqa run-once
+      when: pre_deploy_command | default('') | length > 0
+      tags: pre_deploy, pre_deploy_command
+
 - name: deploy_pgcluster.yml | Deploy etcd cluster
   ansible.builtin.import_playbook: etcd_cluster.yml
   when: not dcs_exists|bool and dcs_type == "etcd"
@@ -133,6 +218,7 @@
   become_method: sudo
   gather_facts: true
   any_errors_fatal: true
+  environment: "{{ proxy_env | default({}) }}"
 
   pre_tasks:
     - name: Include main variables
@@ -169,7 +255,6 @@
 
   roles:
     - role: ansible-role-firewall
-      environment: "{{ proxy_env | default({}) }}"
       vars:
         firewall_allowed_tcp_ports: "{{ firewall_ports_dynamic_var | default([]) | unique }}"
         firewall_additional_rules: "{{ firewall_rules_dynamic_var | default([]) | unique }}"
@@ -182,6 +267,7 @@
     - role: add-repository
     - role: packages
     - role: sudo
+    - role: mount
     - role: swap
     - role: sysctl
     - role: transparent_huge_pages
@@ -214,9 +300,19 @@
       ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
       tags: always
 
+    # if 'cloud_provider' is 'aws', 'gcp', or 'azure'
+    # set_fact: 'pgbackrest_install' to configure Postgres backups (TODO: Add the ability to configure backups in the UI)
+    - name: "Set variable: 'pgbackrest_install' to configure Postgres backups"
+      ansible.builtin.set_fact:
+        pgbackrest_install: true
+      when:
+        - not (pgbackrest_install | bool or wal_g_install | bool)
+        - cloud_provider | default('') | lower in ['aws', 'gcp', 'azure']
+        - pgbackrest_auto_conf | default(true) | bool  # to be able to disable auto backup settings
+      tags: always
   roles:
     - role: pgbackrest
-      when: pgbackrest_install|bool
+      when: pgbackrest_install | bool
 
 - name: deploy_pgcluster.yml | PostgreSQL Cluster Deployment
   hosts: postgres_cluster
@@ -240,6 +336,17 @@
       ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
       tags: always
 
+    # if 'cloud_provider' is 'aws', 'gcp', or 'azure'
+    # set_fact: 'pgbackrest_install' to configure Postgres backups (TODO: Add the ability to configure backups in the UI)
+    - name: "Set variable: 'pgbackrest_install' to configure Postgres backups"
+      ansible.builtin.set_fact:
+        pgbackrest_install: true
+      when:
+        - not (pgbackrest_install | bool or wal_g_install | bool)
+        - cloud_provider | default('') | lower in ['aws', 'gcp', 'azure']
+        - pgbackrest_auto_conf | default(true) | bool  # to be able to disable auto backup settings
+      tags: always
+
   roles:
     - role: wal-g
       when: wal_g_install|bool
@@ -257,7 +364,7 @@
     - role: patroni
 
     - role: pgbackrest/stanza-create
-      when: pgbackrest_install|bool
+      when: pgbackrest_install | bool
 
     - role: vip-manager
       when: not with_haproxy_load_balancing|bool and
@@ -284,3 +391,65 @@
 
     # finish (info)
     - role: deploy-finish
+
+  tasks:
+    # (optional) Command or script to be executed after the Postgres cluster deployment.
+    - block:
+        - name: Print post-deploy command
+          ansible.builtin.debug:
+            var: post_deploy_command
+          when: post_deploy_command_print | default(false) | bool
+
+        - name: Run post-deploy command
+          ansible.builtin.shell: "{{ post_deploy_command }} > /tmp/post_deploy_command.log 2>&1"
+          args:
+            executable: /bin/bash
+          register: post_deploy_result
+          delegate_to: "{{ item }}"
+          loop: "{{ post_deploy_command_hosts.split(',') | map('extract', groups) | list | flatten }}"
+          async: "{{ post_deploy_command_timeout }}"  # run the command asynchronously
+          poll: 0
+
+        - name: Wait for the post-deploy command to complete
+          ansible.builtin.async_status:
+            jid: "{{ item.ansible_job_id }}"
+          register: post_deploy_job_result
+          delegate_to: "{{ item.item }}"
+          loop: "{{ post_deploy_result.results }}"
+          loop_control:
+            label: "{{ item.item }}"
+          until: post_deploy_job_result.finished
+          retries: "{{ (post_deploy_command_timeout | int) // 10 }}"
+          delay: 10
+          ignore_errors: true # allows to collect logs before stopping execution (in case of failure)
+          when:
+            - post_deploy_result.results is defined
+            - item.ansible_job_id is defined
+
+        - name: Get post-deploy command log
+          ansible.builtin.command: cat /tmp/post_deploy_command.log
+          register: post_deploy_command_log
+          delegate_to: "{{ item }}"
+          loop: "{{ post_deploy_command_hosts.split(',') | map('extract', groups) | list | flatten }}"
+          changed_when: false
+          when: post_deploy_command_print_result | default(false) | bool
+
+        - name: Print post-deploy command result
+          ansible.builtin.debug:
+            msg: "{{ item.stdout_lines }}"
+          loop: "{{ post_deploy_command_log.results }}"
+          loop_control:
+            label: "{{ item.item }}"
+          when:
+            - post_deploy_command_log.results is defined
+            - item.stdout_lines is defined
+
+        - name: Stop if post-deploy command failed
+          ansible.builtin.fail:
+            msg: "Post-deploy command failed. See log for details."
+          when: post_deploy_job_result.results | json_query('[?failed]') | length > 0
+      run_once: true # noqa run-once
+      when: post_deploy_command | default('') | length > 0
+      tags: post_deploy, post_deploy_command
+
+...

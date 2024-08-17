@@ -7,12 +7,6 @@
   gather_facts: true
 
   pre_tasks:
-    - name: "Set variable: ansible_python_interpreter"
-      ansible.builtin.set_fact:
-        ansible_python_interpreter: "/usr/bin/env python3"
-      when: "'python3' not in (ansible_python_interpreter | default(''))"
-      tags: always
-
     - name: Include main variables
       ansible.builtin.include_vars: "vars/main.yml"
       tags: always
@@ -75,7 +69,6 @@
     - role: hostname
     - role: resolv_conf
     - role: etc_hosts
-    - role: sysctl
     - role: timezone
     - role: ntp
 
