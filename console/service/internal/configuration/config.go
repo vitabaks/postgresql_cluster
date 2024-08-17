@@ -43,7 +43,7 @@ type Config struct {
 	Docker        struct {
 		Host   string `default:"unix:///var/run/docker.sock" desc:"Docker host"`
 		LogDir string `default:"/tmp/ansible" desc:"Directory inside docker container for ansible json log"`
-		Image  string `default:"vitabaks/postgresql_cluster:cloud" desc:"Docker image for postgresql_cluster"`
+		Image  string `default:"vitabaks/postgresql_cluster:2.0.0" desc:"Docker image for postgresql_cluster"`
 	}
 	LogWatcher struct {
 		RunEvery    time.Duration `default:"1m" desc:"LogWatcher run interval"`
