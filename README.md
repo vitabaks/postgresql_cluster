@@ -7,7 +7,7 @@
 [![GitHub license](https://img.shields.io/github/license/vitabaks/postgresql_cluster)](https://github.com/vitabaks/postgresql_cluster/blob/master/LICENSE) 
 ![GitHub stars](https://img.shields.io/github/stars/vitabaks/postgresql_cluster)
 
-### Production-ready PostgreSQL High-Availability Cluster (based on "Patroni" and DCS "etcd" or "consul"). Automating with Ansible.
+### Production-ready PostgreSQL High-Availability Cluster (based on Patroni etcd or consul). Automating with Ansible.
 
 `postgresql_cluster` automates the deployment and management of highly available PostgreSQL clusters in production environments. This solution is tailored for use on dedicated physical servers, virtual machines, and within both on-premises and cloud-based infrastructures.
 
@@ -40,9 +40,13 @@ This is simple scheme without load balancing.
 
 #### 2. PostgreSQL High-Availability with Load Balancing
 
-To use this scheme, specify `with_haproxy_load_balancing: true` in variable file vars/main.yml
+This scheme enables load distribution for read operations and also allows for scaling out the cluster with read-only replicas.
 
-This scheme provides the ability to distribute the load on reading. This also allows us to scale out the cluster (with read-only replicas).
+When deploying to cloud providers such as AWS, GCP, Azure, DigitalOcean, and Hetzner Cloud, a cloud load balancer is automatically created by default to provide a single entry point to the database (controlled by the `cloud_load_balancer` variable).
+
+For non-cloud environments, such as when deploying on Your Own Machines, the HAProxy load balancer is available for use. To enable it, set `with_haproxy_load_balancing: true` in the vars/main.yml file.
+
+:heavy_exclamation_mark: Note: Your application must have support sending read requests to a custom port 5001, and write requests to port 5000.
 
 - port 5000 (read / write) master
 - port 5001 (read only) all replicas
@@ -50,8 +54,6 @@ This scheme provides the ability to distribute the load on reading. This also al
 ###### if variable "synchronous_mode" is 'true' (vars/main.yml):
 - port 5002 (read only) synchronous replica only
 - port 5003 (read only) asynchronous replicas only
-
-:heavy_exclamation_mark: Note: Your application must have support sending read requests to a custom port 5001, and write requests to port 5000.
 
 ##### Components of HAProxy load balancing:
 
