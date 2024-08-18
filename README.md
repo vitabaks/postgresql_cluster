@@ -7,7 +7,7 @@
 [![GitHub license](https://img.shields.io/github/license/vitabaks/postgresql_cluster)](https://github.com/vitabaks/postgresql_cluster/blob/master/LICENSE) 
 ![GitHub stars](https://img.shields.io/github/stars/vitabaks/postgresql_cluster)
 
-### Production-ready PostgreSQL High-Availability Cluster (based on Patroni etcd or consul). Automating with Ansible.
+### Production-ready PostgreSQL High-Availability Cluster (based on Patroni). Automating with Ansible.
 
 `postgresql_cluster` automates the deployment and management of highly available PostgreSQL clusters in production environments. This solution is tailored for use on dedicated physical servers, virtual machines, and within both on-premises and cloud-based infrastructures.
 
