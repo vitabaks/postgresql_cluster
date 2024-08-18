@@ -9,9 +9,9 @@
 
 ### Production-ready PostgreSQL High-Availability Cluster (based on "Patroni" and DCS "etcd" or "consul"). Automating with Ansible.
 
-The **postgresql_cluster** project is designed to deploy and manage high-availability PostgreSQL clusters in production environments. This solution is tailored for use on dedicated physical servers, virtual machines, and within both on-premises and cloud-based infrastructures.
+`postgresql_cluster` automates the deployment and management of highly available PostgreSQL clusters in production environments. This solution is tailored for use on dedicated physical servers, virtual machines, and within both on-premises and cloud-based infrastructures.
 
-This project not only facilitates the creation of new clusters but also offers support for integrating with pre-existing PostgreSQL instances. If you intend to upgrade your conventional PostgreSQL setup to a high-availability configuration, then just set `postgresql_exists=true` in the inventory file. Be aware that initiating cluster mode requires temporarily stopping your existing PostgreSQL service, which will lead to a brief period of database downtime. Please plan this transition accordingly.
+You can find a version of this documentation that is searchable and also easier to navigate at [postgresql-cluster.org](http://postgresql-cluster.org)
 
 :trophy: **Use the [sponsoring](https://github.com/vitabaks/postgresql_cluster#sponsor-this-project) program to get personalized support, or just to contribute to this project.**
 
@@ -26,23 +26,19 @@ You have three schemes available for deployment:
 
 #### 1. PostgreSQL High-Availability only
 
-This is simple scheme without load balancing (used by default).
+This is simple scheme without load balancing.
 
 ##### Components of high availability:
 
 - [**Patroni**](https://github.com/zalando/patroni) is a template for you to create your own customized, high-availability solution using Python and - for maximum accessibility - a distributed configuration store like ZooKeeper, etcd, Consul or Kubernetes. Used for automate the management of PostgreSQL instances and auto failover.
 
-- [**etcd**](https://github.com/etcd-io/etcd) is a distributed reliable key-value store for the most critical data of a distributed system. etcd is written in Go and uses the [Raft](https://raft.github.io/) consensus algorithm to manage a highly-available replicated log. It is used by Patroni to store information about the status of the cluster and PostgreSQL configuration parameters.
+- [**etcd**](https://github.com/etcd-io/etcd) is a distributed reliable key-value store for the most critical data of a distributed system. etcd is written in Go and uses the [Raft](https://raft.github.io/) consensus algorithm to manage a highly-available replicated log. It is used by Patroni to store information about the status of the cluster and PostgreSQL configuration parameters. [What is Distributed Consensus?](http://thesecretlivesofdata.com/raft/)
 
-[What is Distributed Consensus?](http://thesecretlivesofdata.com/raft/)
-
-To provide a single entry point (VIP) for database access is used "vip-manager".
-
-- [**vip-manager**](https://github.com/cybertec-postgresql/vip-manager) (_optional, if the `cluster_vip` variable is specified_) is a service that gets started on all cluster nodes and connects to the DCS. If the local node owns the leader-key, vip-manager starts the configured VIP. In case of a failover, vip-manager removes the VIP on the old leader and the corresponding service on the new leader starts it there.
+- [**vip-manager**](https://github.com/cybertec-postgresql/vip-manager) (_optional, if the `cluster_vip` variable is specified_) is a service that gets started on all cluster nodes and connects to the DCS. If the local node owns the leader-key, vip-manager starts the configured VIP. In case of a failover, vip-manager removes the VIP on the old leader and the corresponding service on the new leader starts it there. Used to provide a single entry point (VIP) for database access.
 
 - [**PgBouncer**](https://pgbouncer.github.io/features.html) (optional, if the `pgbouncer_install` variable is `true`) is a connection pooler for PostgreSQL.
 
-#### 2. PostgreSQL High-Availability with HAProxy Load Balancing
+#### 2. PostgreSQL High-Availability with Load Balancing
 
 To use this scheme, specify `with_haproxy_load_balancing: true` in variable file vars/main.yml
 
@@ -57,7 +53,7 @@ This scheme provides the ability to distribute the load on reading. This also al
 
 :heavy_exclamation_mark: Note: Your application must have support sending read requests to a custom port 5001, and write requests to port 5000.
 
-##### Components of load balancing:
+##### Components of HAProxy load balancing:
 
 - [**HAProxy**](http://www.haproxy.org/) is a free, very fast and reliable solution offering high availability, load balancing, and proxying for TCP and HTTP-based applications. 
 
@@ -189,7 +185,35 @@ To minimize the risk of losing data on autofailover, you can configure settings 
 
 ---
 
-## Deployment: quick start
+## Getting Started
+
+To run the PostgreSQL Cluster Console, execute the following command:
+
+```bash
+docker run -d --name pg-console \
+  --publish 80:80 \
+  --publish 8080:8080 \
+  --env PG_CONSOLE_API_URL=http://localhost:8080/api/v1 \
+  --env PG_CONSOLE_AUTHORIZATION_TOKEN=secret_token \
+  --volume console_postgres:/var/lib/postgresql \
+  --volume /var/run/docker.sock:/var/run/docker.sock \
+  --volume /tmp/ansible:/tmp/ansible \
+  --restart=unless-stopped \
+  vitabaks/postgresql_cluster_console:2.0.0
+```
+
+Note: It is recommended to run the console in the same network as your database servers to enable monitoring of the cluster status. In this case, replace `localhost` with your server's IP address in the PG_CONSOLE_API_URL variable.
+
+**Open the Console UI**
+
+Go to http://localhost/ and use `secret_token` for authorization.
+
+Note: If you have set up the console on a different server, replace 'localhost' with the server's address. Use the value of your token if you have redefined it in the PG_CONSOLE_AUTHORIZATION_TOKEN variable.
+
+<details><summary>Click here to expand... if you prefer the command line.</summary><p>
+
+#### Command line
+
 0. [Install Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) on one control node (which could easily be a laptop)
 
 ```
@@ -232,6 +256,9 @@ nano vars/main.yml
 - `with_haproxy_load_balancing` `'true'` (Type A) or `'false'`/default (Type B)
 - `dcs_type` # "etcd" (default) or "consul" (Type C)
 
+See the vars/[main.yml](./vars/main.yml), [system.yml](./vars/system.yml) and ([Debian.yml](./vars/Debian.yml) or [RedHat.yml](./vars/RedHat.yml)) files for more details.
+
+
 if dcs_type: "consul", please install consul role requirements on the control node:
 
 ```
@@ -250,7 +277,7 @@ ansible all -m ping
 ansible-playbook deploy_pgcluster.yml
 ```
 
-### Deploy Cluster with TimescaleDB
+#### Deploy Cluster with TimescaleDB
 
 To deploy a PostgreSQL High-Availability Cluster with the TimescaleDB extension, you just need to add the `enable_timescale` variable.
 
@@ -261,11 +288,9 @@ ansible-playbook deploy_pgcluster.yml -e "enable_timescale=true"
 
 [![asciicast](https://asciinema.org/a/251019.svg)](https://asciinema.org/a/251019?speed=5)
 
+</p></details>
+
 ---
-
-## Variables
-See the vars/[main.yml](./vars/main.yml), [system.yml](./vars/system.yml) and ([Debian.yml](./vars/Debian.yml) or [RedHat.yml](./vars/RedHat.yml)) files for more details.
-
 
 ## Cluster Scaling
 
