@@ -1,6 +1,6 @@
 # Python default launcher
 python_launcher ?= python3.10
-python_requirements_file ?= requirements.txt
+python_requirements_file ?= automation/requirements.txt
 python_requirements_dev_file ?= .config/python/dev/requirements.txt
 
 # Activate virtual environment

@@ -7,11 +7,11 @@
 [![GitHub license](https://img.shields.io/github/license/vitabaks/postgresql_cluster)](https://github.com/vitabaks/postgresql_cluster/blob/master/LICENSE) 
 ![GitHub stars](https://img.shields.io/github/stars/vitabaks/postgresql_cluster)
 
-### Production-ready PostgreSQL High-Availability Cluster (based on "Patroni" and DCS "etcd" or "consul"). Automating with Ansible.
+### Production-ready PostgreSQL High-Availability Cluster (based on Patroni). Automating with Ansible.
 
-The **postgresql_cluster** project is designed to deploy and manage high-availability PostgreSQL clusters in production environments. This solution is tailored for use on dedicated physical servers, virtual machines, and within both on-premises and cloud-based infrastructures.
+`postgresql_cluster` automates the deployment and management of highly available PostgreSQL clusters in production environments. This solution is tailored for use on dedicated physical servers, virtual machines, and within both on-premises and cloud-based infrastructures.
 
-This project not only facilitates the creation of new clusters but also offers support for integrating with pre-existing PostgreSQL instances. If you intend to upgrade your conventional PostgreSQL setup to a high-availability configuration, then just set `postgresql_exists=true` in the inventory file. Be aware that initiating cluster mode requires temporarily stopping your existing PostgreSQL service, which will lead to a brief period of database downtime. Please plan this transition accordingly.
+You can find a version of this documentation that is searchable and also easier to navigate at [postgresql-cluster.org](http://postgresql-cluster.org)
 
 :trophy: **Use the [sponsoring](https://github.com/vitabaks/postgresql_cluster#sponsor-this-project) program to get personalized support, or just to contribute to this project.**
 
@@ -26,27 +26,27 @@ You have three schemes available for deployment:
 
 #### 1. PostgreSQL High-Availability only
 
-This is simple scheme without load balancing (used by default).
+This is simple scheme without load balancing.
 
 ##### Components of high availability:
 
 - [**Patroni**](https://github.com/zalando/patroni) is a template for you to create your own customized, high-availability solution using Python and - for maximum accessibility - a distributed configuration store like ZooKeeper, etcd, Consul or Kubernetes. Used for automate the management of PostgreSQL instances and auto failover.
 
-- [**etcd**](https://github.com/etcd-io/etcd) is a distributed reliable key-value store for the most critical data of a distributed system. etcd is written in Go and uses the [Raft](https://raft.github.io/) consensus algorithm to manage a highly-available replicated log. It is used by Patroni to store information about the status of the cluster and PostgreSQL configuration parameters.
+- [**etcd**](https://github.com/etcd-io/etcd) is a distributed reliable key-value store for the most critical data of a distributed system. etcd is written in Go and uses the [Raft](https://raft.github.io/) consensus algorithm to manage a highly-available replicated log. It is used by Patroni to store information about the status of the cluster and PostgreSQL configuration parameters. [What is Distributed Consensus?](http://thesecretlivesofdata.com/raft/)
 
-[What is Distributed Consensus?](http://thesecretlivesofdata.com/raft/)
-
-To provide a single entry point (VIP) for database access is used "vip-manager".
-
-- [**vip-manager**](https://github.com/cybertec-postgresql/vip-manager) (_optional, if the `cluster_vip` variable is specified_) is a service that gets started on all cluster nodes and connects to the DCS. If the local node owns the leader-key, vip-manager starts the configured VIP. In case of a failover, vip-manager removes the VIP on the old leader and the corresponding service on the new leader starts it there.
+- [**vip-manager**](https://github.com/cybertec-postgresql/vip-manager) (_optional, if the `cluster_vip` variable is specified_) is a service that gets started on all cluster nodes and connects to the DCS. If the local node owns the leader-key, vip-manager starts the configured VIP. In case of a failover, vip-manager removes the VIP on the old leader and the corresponding service on the new leader starts it there. Used to provide a single entry point (VIP) for database access.
 
 - [**PgBouncer**](https://pgbouncer.github.io/features.html) (optional, if the `pgbouncer_install` variable is `true`) is a connection pooler for PostgreSQL.
 
-#### 2. PostgreSQL High-Availability with HAProxy Load Balancing
+#### 2. PostgreSQL High-Availability with Load Balancing
 
-To use this scheme, specify `with_haproxy_load_balancing: true` in variable file vars/main.yml
+This scheme enables load distribution for read operations and also allows for scaling out the cluster with read-only replicas.
 
-This scheme provides the ability to distribute the load on reading. This also allows us to scale out the cluster (with read-only replicas).
+When deploying to cloud providers such as AWS, GCP, Azure, DigitalOcean, and Hetzner Cloud, a cloud load balancer is automatically created by default to provide a single entry point to the database (controlled by the `cloud_load_balancer` variable).
+
+For non-cloud environments, such as when deploying on Your Own Machines, the HAProxy load balancer is available for use. To enable it, set `with_haproxy_load_balancing: true` in the vars/main.yml file.
+
+:heavy_exclamation_mark: Note: Your application must have support sending read requests to a custom port 5001, and write requests to port 5000.
 
 - port 5000 (read / write) master
 - port 5001 (read only) all replicas
@@ -55,9 +55,7 @@ This scheme provides the ability to distribute the load on reading. This also al
 - port 5002 (read only) synchronous replica only
 - port 5003 (read only) asynchronous replicas only
 
-:heavy_exclamation_mark: Note: Your application must have support sending read requests to a custom port 5001, and write requests to port 5000.
-
-##### Components of load balancing:
+##### Components of HAProxy load balancing:
 
 - [**HAProxy**](http://www.haproxy.org/) is a free, very fast and reliable solution offering high availability, load balancing, and proxying for TCP and HTTP-based applications. 
 
@@ -66,7 +64,7 @@ This scheme provides the ability to distribute the load on reading. This also al
 - [**Keepalived**](https://github.com/acassen/keepalived)  (_optional, if the `cluster_vip` variable is specified_) provides a virtual high-available IP address (VIP) and single entry point for databases access.
 Implementing VRRP (Virtual Router Redundancy Protocol) for Linux. In our configuration keepalived checks the status of the HAProxy service and in case of a failure delegates the VIP to another server in the cluster.
 
-#### 3. PostgreSQL High-Availability with Consul Service Discovery (DNS)
+#### 3. PostgreSQL High-Availability with Consul Service Discovery
 
 To use this scheme, specify `dcs_type: consul` in variable file vars/main.yml
 
@@ -189,7 +187,35 @@ To minimize the risk of losing data on autofailover, you can configure settings 
 
 ---
 
-## Deployment: quick start
+## Getting Started
+
+To run the PostgreSQL Cluster Console, execute the following command:
+
+```
+docker run -d --name pg-console \
+  --publish 80:80 \
+  --publish 8080:8080 \
+  --env PG_CONSOLE_API_URL=http://localhost:8080/api/v1 \
+  --env PG_CONSOLE_AUTHORIZATION_TOKEN=secret_token \
+  --volume console_postgres:/var/lib/postgresql \
+  --volume /var/run/docker.sock:/var/run/docker.sock \
+  --volume /tmp/ansible:/tmp/ansible \
+  --restart=unless-stopped \
+  vitabaks/postgresql_cluster_console:2.0.0
+```
+
+Note: It is recommended to run the console in the same network as your database servers to enable monitoring of the cluster status. In this case, replace `localhost` with your server's IP address in the PG_CONSOLE_API_URL variable.
+
+**Open the Console UI**
+
+Go to http://localhost/ and use `secret_token` for authorization.
+
+Note: If you have set up the console on a different server, replace 'localhost' with the server's address. Use the value of your token if you have redefined it in the PG_CONSOLE_AUTHORIZATION_TOKEN variable.
+
+<details><summary>Click here to expand... if you prefer the command line.</summary><p>
+
+#### Command line
+
 0. [Install Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) on one control node (which could easily be a laptop)
 
 ```
@@ -206,7 +232,7 @@ git clone https://github.com/vitabaks/postgresql_cluster.git
 2. Go to the playbook directory
 
 ```
-cd postgresql_cluster/
+cd postgresql_cluster/automation
 ```
 
 3. Edit the inventory file
@@ -232,6 +258,9 @@ nano vars/main.yml
 - `with_haproxy_load_balancing` `'true'` (Type A) or `'false'`/default (Type B)
 - `dcs_type` # "etcd" (default) or "consul" (Type C)
 
+See the vars/[main.yml](./vars/main.yml), [system.yml](./vars/system.yml) and ([Debian.yml](./vars/Debian.yml) or [RedHat.yml](./vars/RedHat.yml)) files for more details.
+
+
 if dcs_type: "consul", please install consul role requirements on the control node:
 
 ```
@@ -250,7 +279,7 @@ ansible all -m ping
 ansible-playbook deploy_pgcluster.yml
 ```
 
-### Deploy Cluster with TimescaleDB
+#### Deploy Cluster with TimescaleDB
 
 To deploy a PostgreSQL High-Availability Cluster with the TimescaleDB extension, you just need to add the `enable_timescale` variable.
 
@@ -261,292 +290,29 @@ ansible-playbook deploy_pgcluster.yml -e "enable_timescale=true"
 
 [![asciicast](https://asciinema.org/a/251019.svg)](https://asciinema.org/a/251019?speed=5)
 
+
 ---
 
-## Variables
-See the vars/[main.yml](./vars/main.yml), [system.yml](./vars/system.yml) and ([Debian.yml](./vars/Debian.yml) or [RedHat.yml](./vars/RedHat.yml)) files for more details.
+### How to start from scratch
 
+If you need to start from the very beginning, you can use the playbook `remove_cluster.yml`.
 
-## Cluster Scaling
+Available variables:
+- `remove_postgres`: stop the PostgreSQL service and remove data.
+- `remove_etcd`: stop the ETCD service and remove data.
+- `remove_consul`: stop the Consul service and remove data.
 
-After you successfully deployed your PostgreSQL HA cluster, you may need to scale it further. \
-Use the `add_pgnode.yml` playbook for this.
+Run the following command to remove specific components:
 
-<details><summary>Add new postgresql node to existing cluster</summary><p>
-
-> This playbook does not scaling the etcd cluster or consul cluster.
-
-During the run this playbook, the new nodes will be prepared in the same way as when first deployment the cluster. But unlike the initial deployment, all the necessary **configuration files will be copied from the master server**.
-
-###### Steps to add a new Postgres node:
-
-1. Add a new node to the inventory file with the variable `new_node=true`
-2. Run `add_pgnode.yml` playbook 
-
-In this example, we add a node with the IP address 10.128.64.144
-
-```
-[master]
-10.128.64.140 hostname=pgnode01 postgresql_exists='true'
-
-[replica]
-10.128.64.142 hostname=pgnode02 postgresql_exists='true'
-10.128.64.143 hostname=pgnode03 postgresql_exists='true'
-10.128.64.144 hostname=pgnode04 postgresql_exists=false new_node=true
+```bash
+ansible-playbook remove_cluster.yml -e "remove_postgres=true remove_etcd=true"
 ```
 
-Run playbook:
+This command will delete the specified components, allowing you to start a new installation from scratch.
 
-```
-ansible-playbook add_pgnode.yml
-```
+:warning: **Caution:** be careful when running this command in a production environment.
 
 </p></details>
-
-<details><summary>Add new haproxy balancer node</summary><p>
-
-During the run this playbook, the new balancer node will be prepared in the same way as when first deployment the cluster. But unlike the initial deployment, all necessary **configuration files will be copied from the first server specified in the inventory file in the "balancers" group**.
-
-###### Steps to add a new balancer node:
-
-Note: Used if the `with_haproxy_load_balancing` variable is set to `true`
-
-1. Add a new node to the inventory file with the variable `new_node=true`
-
-2. Run `add_balancer.yml` playbook 
-
-
- In this example, we add a balancer node with the IP address 10.128.64.144
-
-```
-[balancers]
-10.128.64.140
-10.128.64.142
-10.128.64.143
-10.128.64.144 new_node=true
-```
-
-Run playbook:
-
-```
-ansible-playbook add_balancer.yml
-```
-
-</p></details>
-
-
-## Restore and Cloning
-Create new clusters from your existing backups with [pgBackRest](https://github.com/pgbackrest/pgbackrest) or [WAL-G](https://github.com/wal-g/wal-g) \
-Point-In-Time-Recovery
-
-<details><summary>Click here to expand...</summary><p>
-
-##### Create cluster with pgBackRest:
-1. Edit the `main.yml` variable file
-```
-patroni_cluster_bootstrap_method: "pgbackrest"
-
-patroni_create_replica_methods:
-  - pgbackrest
-  - basebackup
-
-postgresql_restore_command: "pgbackrest --stanza={{ pgbackrest_stanza }} archive-get %f %p"
-
-pgbackrest_install: true
-pgbackrest_stanza: "stanza_name"  # specify your --stanza
-pgbackrest_repo_type: "posix"  # or "s3"
-pgbackrest_repo_host: "ip-address"  # dedicated repository host (if repo_type: "posix")
-pgbackrest_repo_user: "postgres"  # if "repo_host" is set
-pgbackrest_conf:  # see more options https://pgbackrest.org/configuration.html
-  global:  # [global] section
-    - {option: "xxxxxxx", value: "xxxxxxx"}
-    ...
-  stanza:  # [stanza_name] section
-    - {option: "xxxxxxx", value: "xxxxxxx"}
-    ...
-    
-pgbackrest_patroni_cluster_restore_command:
-  '/usr/bin/pgbackrest --stanza={{ pgbackrest_stanza }} --type=time "--target=2020-06-01 11:00:00+03" --delta restore'
-```
-example for S3 https://github.com/vitabaks/postgresql_cluster/pull/40#issuecomment-647146432
-
-2. Run playbook:
-
-`ansible-playbook deploy_pgcluster.yml`
-
-
-##### Create cluster with WAL-G:
-1. Edit the `main.yml` variable file
-```
-patroni_cluster_bootstrap_method: "wal-g"
-
-patroni_create_replica_methods:
-  - wal_g
-  - basebackup
-
-postgresql_restore_command: "wal-g wal-fetch %f %p"
-
-wal_g_install: true
-wal_g_version: "2.0.1"
-wal_g_json:  # config https://github.com/wal-g/wal-g#configuration
-  - {option: "xxxxxxx", value: "xxxxxxx"}
-  - {option: "xxxxxxx", value: "xxxxxxx"}
-  ...
-wal_g_patroni_cluster_bootstrap_command: "wal-g backup-fetch {{ postgresql_data_dir }} LATEST"
-```
-2. Run playbook:
-
-`ansible-playbook deploy_pgcluster.yml`
-
-
-##### Point-In-Time-Recovery:
-You can run automatic restore of your existing patroni cluster \
-for PITR, specify the required parameters in the main.yml variable file and run the playbook with the tag:
-```
-ansible-playbook deploy_pgcluster.yml --tags point_in_time_recovery
-```
-Recovery steps with pgBackRest:
-```
-1. Stop patroni service on the Replica servers (if running);
-2. Stop patroni service on the Master server;
-3. Remove patroni cluster "xxxxxxx" from DCS (if exist);
-4. Run "/usr/bin/pgbackrest --stanza=xxxxxxx --delta restore" on Master;
-5. Run "/usr/bin/pgbackrest --stanza=xxxxxxx --delta restore" on Replica (if patroni_create_replica_methods: "pgbackrest");
-6. Waiting for restore from backup (timeout 24 hours);
-7. Start PostgreSQL for Recovery (master and replicas);
-8. Waiting for PostgreSQL Recovery to complete (WAL apply);
-9. Stop PostgreSQL instance (if running);
-10. Disable PostgreSQL archive_command (if enabled);
-11. Start patroni service on the Master server;
-12. Check PostgreSQL is started and accepting connections on Master;
-13. Make sure the postgresql users (superuser and replication) are present, and password does not differ from the specified in vars/main.yml;
-14. Update postgresql authentication parameter in patroni.yml (if superuser or replication users is changed);
-15. Reload patroni service (if patroni.yml is updated);
-16. Start patroni service on Replica servers;
-17. Check that the patroni is healthy on the replica server (timeout 10 hours);
-18. Check postgresql cluster health (finish).
-```
-
-**Why disable archive_command?**
-
-This is necessary to avoid conflicts in the archived log storage when archiving WALs. When multiple clusters try to send WALs to the same storage. \
-For example, when you make multiple clones of a cluster from one backup.
-
-You can change this parameter using `patronictl edit-config` after restore. \
-Or set `disable_archive_command: false` to not disable archive_command after restore.
-</p></details>
-
-
-## Maintenance
-
-I recommend that you study the following materials for further maintenance of the cluster:
-
-- [Tutorial: Management of High-Availability PostgreSQL clusters with Patroni](https://pgconf.ru/en/2018/108567)
-- [Patroni documentation](https://patroni.readthedocs.io/en/latest/)
-- [etcd operations guide](https://etcd.io/docs/v3.5/op-guide/)
-
-### Changing PostgreSQL configuration parameters
-
-To change the PostgreSQL configuration in a cluster using automation:
-
-1. Update the `postgresql_parameters` variable with the desired parameter changes.
-    - Note: Optionally, set `pending_restart: true` to automatically restart PostgreSQL if a parameter change requires it.
-3. Execute the `config_pgcluster.yml` playbook to apply the changes.
-
-#### Using Git for cluster configuration management (IaC/GitOps)
-
-Infrastructure as Code (IaC) is the managing and provisioning of infrastructure through code instead of through manual processes. \
-GitOps automates infrastructure updates using a Git workflow with continuous integration (CI) and continuous delivery (CI/CD). When new code is merged, the CI/CD pipeline enacts the change in the environment. Any configuration drift, such as manual changes or errors, is overwritten by GitOps automation so the environment converges on the desired state defined in Git. 
-
-Once the cluster is deployed, you can use the `config_pgcluster.yml` playbook to integrate with Git to manage cluster configurations. \
-For example, GitHub Action ([link](https://github.com/marketplace/actions/run-ansible-playbook)), GitLab CI/CD ([link](https://medium.com/geekculture/how-to-run-an-ansible-playbook-using-gitlab-ci-cd-2135f76d7f1e))
-
-Details about IaC and GitOps:
-
-- [What is GitOps](https://about.gitlab.com/topics/gitops/)?
-- [What is Infrastructure as Code (IaC)](https://www.redhat.com/en/topics/automation/what-is-infrastructure-as-code-iac)?
-
-
-### Update the PostgreSQL HA Cluster
-
-Use the `update_pgcluster.yml` playbook for update the PostgreSQL HA Cluster to a new minor version (for example 15.1->15.2, and etc).
-
-<details><summary>Update PostgreSQL</summary>
-
-```
-ansible-playbook update_pgcluster.yml -e target=postgres
-```
-
-</details>
-
-
-<details><summary>Update Patroni</summary>
-
-```
-ansible-playbook update_pgcluster.yml -e target=patroni
-```
-
-</details>
-
-<details><summary>Update all system</summary>
-
-includes PostgreSQL and Patroni
-
-```
-ansible-playbook update_pgcluster.yml -e target=system
-```
-
-</details>
-
-More details [here](roles/update/README.md)
-
-### PostgreSQL major upgrade
-
-Use the `pg_upgrade.yml` playbook to upgrade the PostgreSQL to a new major version (for example 14->15, and etc).
-
-<details><summary>Upgrade PostgreSQL</summary>
-
-```
-ansible-playbook pg_upgrade.yml -e "pg_old_version=14 pg_new_version=15"
-```
-
-</details>
-
-More details [here](roles/upgrade/README.md)
-
-## Disaster Recovery
-
-A high availability cluster provides an automatic failover mechanism, and does not cover all disaster recovery scenarios.
-You must take care of backing up your data yourself.
-##### etcd
-> Patroni nodes are dumping the state of the DCS options to disk upon for every change of the configuration into the file patroni.dynamic.json located in the Postgres data directory. The master (patroni leader) is allowed to restore these options from the on-disk dump if these are completely absent from the DCS or if they are invalid.
-
-However, I recommend that you read the disaster recovery guide for the etcd cluster:
-- [etcd disaster recovery](https://etcd.io/docs/v3.3.12/op-guide/recovery)
-
-##### PostgreSQL (databases)
-I can recommend the following backup and restore tools:
-* [pgbackrest](https://github.com/pgbackrest/pgbackrest)
-* [pg_probackup](https://github.com/postgrespro/pg_probackup)
-* [wal-g](https://github.com/wal-g/wal-g)
-
-Do not forget to validate your backups (for example [pgbackrest auto](https://github.com/vitabaks/pgbackrest_auto)).
-
-## How to start from scratch
-Should you need to start from very beginning, use the playbook `remove_cluster.yml`.
-
-To prevent the script to be used by accident in a production environment, edit `remove_cluster.yml` and remove the *safety pin*. Change these variables accordingly:
-
-- remove_postgres: true
-- remove_etcd: true (or remove_consul)
-
-Run the script and all the data are gone.
-
-`ansible-playbook remove_cluster.yml`
-
-A new installation can now be made from scratch.
- 
-:heavy_exclamation_mark: Be careful not to copy this script without the *safety pin* to the production environment.
 
 ---
 

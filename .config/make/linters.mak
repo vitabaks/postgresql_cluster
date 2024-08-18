@@ -17,7 +17,7 @@ linter-yamllint: ## Lint YAML files using yamllint
 linter-ansible-lint: ## Lint Ansible files using ansible-lint
 	echo "ansible-lint #########################################################"
 	$(ACTIVATE_VENV) && \
-	ansible-lint --force-color --parseable
+	ansible-lint --force-color --parseable ./automation
 
 .PHONY: linter-flake8
 linter-flake8: ## Lint Python files using flake8
