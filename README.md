@@ -81,7 +81,6 @@ Example: `replica.postgres-cluster.service.dc1.consul`, `replica.postgres-cluste
 
 It requires the installation of a consul in client mode on each application server for service DNS resolution (or use [forward DNS](https://developer.hashicorp.com/consul/tutorials/networking/dns-forwarding?utm_source=docs) to the remote consul server instead of installing a local consul client).
 
-
 ## Compatibility
 RedHat and Debian based distros (x86_64)
 
@@ -113,11 +112,13 @@ _Table of results of daily automated testing of cluster deployment:_
 | AlmaLinux 8 | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/postgresql_cluster/schedule_pg_almalinux8.yml?branch=master)](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_almalinux8.yml) |
 | AlmaLinux 9 | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/postgresql_cluster/schedule_pg_almalinux9.yml?branch=master)](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_almalinux9.yml) |
 
-
 ###### Ansible version 
 Minimum supported Ansible version: 8.0.0 (ansible-core 2.15.0)
 
 ## Requirements
+
+<details><summary>Click here to expand...</summary><p>
+
 This playbook requires root privileges or sudo.
 
 Ansible ([What is Ansible](https://www.ansible.com/how-ansible-works/)?)
@@ -126,7 +127,7 @@ if dcs_type: "consul", please install consul role requirements on the control no
 
 `ansible-galaxy install -r roles/consul/requirements.yml`
 
-## Port requirements
+### Port requirements
 List of required TCP ports that must be open for the database cluster:
 
 - `5432` (postgresql)
@@ -150,8 +151,12 @@ for the scheme "[Type C] PostgreSQL High-Availability with Consul Service Discov
 - `8500` (Consul HTTP API)
 - `8600` (Consul DNS server)
 
+</p></details>
 
 ## Recommenations
+
+<details><summary>Click here to expand...</summary><p>
+
 - **linux (Operation System)**: 
 
 Update your operating system on your target servers before deploying;
@@ -185,7 +190,7 @@ To minimize the risk of losing data on autofailover, you can configure settings 
 - synchronous_mode_strict: 'true'
 - synchronous_commit: 'on' (or 'remote_apply')
 
----
+</p></details>
 
 ## Getting Started
 
@@ -260,7 +265,6 @@ nano vars/main.yml
 
 See the vars/[main.yml](./vars/main.yml), [system.yml](./vars/system.yml) and ([Debian.yml](./vars/Debian.yml) or [RedHat.yml](./vars/RedHat.yml)) files for more details.
 
-
 if dcs_type: "consul", please install consul role requirements on the control node:
 
 ```
@@ -290,9 +294,6 @@ ansible-playbook deploy_pgcluster.yml -e "enable_timescale=true"
 
 [![asciicast](https://asciinema.org/a/251019.svg)](https://asciinema.org/a/251019?speed=5)
 
-
----
-
 ### How to start from scratch
 
 If you need to start from the very beginning, you can use the playbook `remove_cluster.yml`.
@@ -314,11 +315,23 @@ This command will delete the specified components, allowing you to start a new i
 
 </p></details>
 
----
+## Star us
+
+If you find our project helpful, consider giving it a star on GitHub! Your support helps us grow and motivates us to keep improving. Starring the project is a simple yet effective way to show your appreciation and help others discover it.
+
+<a href="https://star-history.com/#vitabaks/postgresql_cluster&Date">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=vitabaks/postgresql_cluster&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=vitabaks/postgresql_cluster&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=vitabaks/postgresql_cluster&type=Date" />
+ </picture>
+</a>
 
 ## Sponsor this project
 
-Join our sponsorship program to directly contribute to our project's growth and gain exclusive access to personalized support. Your sponsorship is crucial for innovation and progress. Become a sponsor today!
+By sponsoring our project, you directly contribute to its continuous improvement and innovation. As a sponsor, you'll receive exclusive benefits, including personalized support, early access to new features, and the opportunity to influence the project's direction. Your sponsorship is invaluable to us and helps ensure the project's sustainability and progress.
+
+Become a sponsor today and help us take this project to the next level!
 
 Support our work through [GitHub Sponsors](https://github.com/sponsors/vitabaks)
 
