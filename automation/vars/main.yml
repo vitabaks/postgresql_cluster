@@ -202,6 +202,12 @@ postgresql_databases: []
 postgresql_schemas: []
 #  - { schema: "myschema", db: "mydatabase", owner: "mydb-user" }
 
+# (optional) list of privileges to be granted (if not already exists) or revoked
+postgresql_privs: []
+#  - { role: "mydb-user", privs: "SELECT", type: "table", db: "mydb", objs: "my_table", schema: "my_schema" }
+#  - { role: "db-user", privs: "EXECUTE", type: "function", db: "database_name", objs: "pg_ls_waldir()", schema: "pg_catalog" }
+#  - { role: "myuser, privs: "SELECT", type: "table", db: "mydatabase", objs: "my_table2", schema: "my_schema2", state: "absent" }
+
 # (optional) list of database extensions to be created (if not already exists)
 postgresql_extensions: []
 #  - { ext: "pg_stat_statements", db: "postgres" }
