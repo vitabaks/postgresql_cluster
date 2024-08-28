@@ -57,7 +57,7 @@ jobs:
           TAG: ${{ env.TAG }}
 
       - name: Run Docker push
-        if: secrets.DOCKER_USERNAME != '' && secrets.DOCKER_PASSWORD != ''
+        if: secrets.DOCKER_USERNAME && secrets.DOCKER_PASSWORD
         run: make docker-push
         env:
           TAG: ${{ env.TAG }}
