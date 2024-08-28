@@ -203,6 +203,7 @@ postgresql_schemas: []
 #  - { schema: "myschema", db: "mydatabase", owner: "mydb-user" }
 
 # (optional) list of privileges to be granted (if not already exists) or revoked
+# https://docs.ansible.com/ansible/latest/collections/community/postgresql/postgresql_privs_module.html#examples
 postgresql_privs: []
 #  - { role: "mydb-user", privs: "SELECT", type: "table", db: "mydb", objs: "my_table", schema: "my_schema" }
 #  - { role: "db-user", privs: "EXECUTE", type: "function", db: "database_name", objs: "pg_ls_waldir()", schema: "pg_catalog" }
