@@ -208,8 +208,8 @@ postgresql_privs: []
 #  - { role: "test", privs: "SELECT,INSERT,UPDATE", type: "table", db: "test2", objs: "test" }  # grant SELECT, INSERT, UPDATE on a table to role test
 #  - { role: "test-user", privs: "ALL", type: "database", db: "test-db", objs: "test-db" }  # grant ALL on a database to role test-user
 #  - { role: "mydb-user", privs: "SELECT", type: "table", db: "mydb", objs: "my_table", schema: "my_schema" }  # grant SELECT on a table and schema
-#  - { role: "db-user", privs: "EXECUTE", type: "function", db: "database_name", objs: "pg_ls_waldir()", schema: "pg_catalog" }  # grant execute on a pg_ls_waldir() function in schema pg_catalog to role db-user
-#  - { role: "myuser, privs: "SELECT", type: "table", db: "mydatabase", objs: "my_table2", schema: "my_schema2", state: "absent" }  # revoke SELECT on a table and schema
+#  - { role: "user", privs: "EXECUTE", type: "function", db: "db1", objs: "pg_ls_waldir()", schema: "pg_catalog" }  # grant EXECUTE on a function
+#  - { role: "user, privs: "SELECT", type: "table", db: "mydb", objs: "table2", schema: "schema2", state: "absent" }  # revoke SELECT on a table2 and schema2
 #  - { role: "test, test2", privs: "CREATE", type: "database", db: "test2", objs: "test2" }  # grant CREATE on a database test2 to role test and test2
 
 
