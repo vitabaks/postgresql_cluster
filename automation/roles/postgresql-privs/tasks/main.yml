@@ -18,5 +18,6 @@
   when:
     - postgresql_privs | default('') | length > 0
     - item.role | default('') | length > 0
+    - item.db | default('') | length > 0
     - patroni_standby_cluster.host | default('') | length < 1  # do not perform on the Standby Cluster leader
   tags: postgresql_privs
