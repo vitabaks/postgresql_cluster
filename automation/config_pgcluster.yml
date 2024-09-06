@@ -199,6 +199,9 @@
     - role: postgresql-schemas
       when: inventory_hostname in groups['primary']
 
+    - role: postgresql-privs
+      when: inventory_hostname in groups['primary']
+
     - role: postgresql-extensions
       when: inventory_hostname in groups['primary']
 

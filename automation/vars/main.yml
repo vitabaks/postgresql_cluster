@@ -202,6 +202,18 @@ postgresql_databases: []
 postgresql_schemas: []
 #  - { schema: "myschema", db: "mydatabase", owner: "mydb-user" }
 
+# (optional) list of privileges to be granted (if not already exists) or revoked
+# https://docs.ansible.com/ansible/latest/collections/community/postgresql/postgresql_privs_module.html#examples
+# The db (which is the database to connect to) and role parameters are required
+postgresql_privs: []
+#  - { role: "test", privs: "SELECT,INSERT,UPDATE", type: "table", db: "test2", objs: "test" }  # grant SELECT, INSERT, UPDATE on a table to role test
+#  - { role: "test-user", privs: "ALL", type: "database", db: "test-db", objs: "test-db" }  # grant ALL on a database to role test-user
+#  - { role: "mydb-user", privs: "SELECT", type: "table", db: "mydb", objs: "my_table", schema: "my_schema" }  # grant SELECT on a table and schema
+#  - { role: "user", privs: "EXECUTE", type: "function", db: "db1", objs: "pg_ls_waldir()", schema: "pg_catalog" }  # grant EXECUTE on a function
+#  - { role: "user, privs: "SELECT", type: "table", db: "mydb", objs: "table2", schema: "schema2", state: "absent" }  # revoke SELECT on a table2 and schema2
+#  - { role: "test, test2", privs: "CREATE", type: "database", db: "test2", objs: "test2" }  # grant CREATE on a database test2 to role test and test2
+
+
 # (optional) list of database extensions to be created (if not already exists)
 postgresql_extensions: []
 #  - { ext: "pg_stat_statements", db: "postgres" }
