@@ -28,7 +28,7 @@ You have three schemes available for deployment:
 
 This is simple scheme without load balancing.
 
-##### Components of high availability:
+##### Components:
 
 - [**Patroni**](https://github.com/zalando/patroni) is a template for you to create your own customized, high-availability solution using Python and - for maximum accessibility - a distributed configuration store like ZooKeeper, etcd, Consul or Kubernetes. Used for automate the management of PostgreSQL instances and auto failover.
 
@@ -46,12 +46,12 @@ When deploying to cloud providers such as AWS, GCP, Azure, DigitalOcean, and Het
 
 For non-cloud environments, such as when deploying on Your Own Machines, the HAProxy load balancer is available for use. To enable it, set `with_haproxy_load_balancing: true` in the vars/main.yml file.
 
-:heavy_exclamation_mark: Note: Your application must have support sending read requests to a custom port 5001, and write requests to port 5000.
+> [!NOTE]
+> Your application must have support sending read requests to a custom port 5001, and write requests to port 5000.
 
+List of ports when using HAProxy:
 - port 5000 (read / write) master
 - port 5001 (read only) all replicas
-
-###### if variable "synchronous_mode" is 'true' (vars/main.yml):
 - port 5002 (read only) synchronous replica only
 - port 5003 (read only) asynchronous replicas only
 
@@ -194,6 +194,10 @@ To minimize the risk of losing data on autofailover, you can configure settings 
 
 ## Getting Started
 
+You have the option to easily deploy Postgres clusters using the Console (UI) or from the command line with the ansible-playbook command.
+
+### Console (UI)
+
 To run the PostgreSQL Cluster Console, execute the following command:
 
 ```
@@ -209,17 +213,21 @@ docker run -d --name pg-console \
   vitabaks/postgresql_cluster_console:2.0.0
 ```
 
-Note: It is recommended to run the console in the same network as your database servers to enable monitoring of the cluster status. In this case, replace `localhost` with your server's IP address in the PG_CONSOLE_API_URL variable.
+> [!TIP]
+> It is recommended to run the console in the same network as your database servers to enable monitoring of the cluster status. In this case, replace `localhost` with your server's IP address in the PG_CONSOLE_API_URL variable.
 
-**Open the Console UI**
+**Open the Console UI**:
 
 Go to http://localhost/ and use `secret_token` for authorization.
 
-Note: If you have set up the console on a different server, replace 'localhost' with the server's address. Use the value of your token if you have redefined it in the PG_CONSOLE_AUTHORIZATION_TOKEN variable.
+> [!NOTE]
+> If you have set up the console on a different server, replace 'localhost' with the server's address. Use the value of your token if you have redefined it in the PG_CONSOLE_AUTHORIZATION_TOKEN variable.
+
+Refer to the [Deployment](https://postgresql-cluster.org/category/deployment) section to learn more about the different deployment methods.
+
+### Command line
 
 <details><summary>Click here to expand... if you prefer the command line.</summary><p>
-
-#### Command line
 
 0. [Install Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) on one control node (which could easily be a laptop)
 
@@ -234,50 +242,55 @@ pip3 install ansible
 git clone https://github.com/vitabaks/postgresql_cluster.git
 ```
 
-2. Go to the playbook directory
+2. Go to the automation directory
 
 ```
 cd postgresql_cluster/automation
 ```
 
-3. Edit the inventory file
+3. Install requirements on the control node
 
-###### Specify (non-public) IP addresses and connection settings (`ansible_user`, `ansible_ssh_pass` or `ansible_ssh_private_key_file` for your environment
+```
+ansible-galaxy install --force -r requirements.yml 
+```
+
+Note: If you plan to use Consul (`dcs_type: consul`), install the consul role requirements
+```
+ansible-galaxy install -r roles/consul/requirements.yml
+```
+
+4. Edit the inventory file
+
+Specify (non-public) IP addresses and connection settings (`ansible_user`, `ansible_ssh_pass` or `ansible_ssh_private_key_file` for your environment
 
 ```
 nano inventory
 ```
 
-4. Edit the variable file vars/[main.yml](./vars/main.yml)
+5. Edit the variable file vars/[main.yml](./automation/vars/main.yml)
 
 ```
 nano vars/main.yml
 ```
 
-###### Minimum set of variables: 
-- `proxy_env` # if required (*for download packages*)
-- `cluster_vip` # for client access to databases in the cluster (optional)
+Minimum set of variables: 
+- `proxy_env` to download packages in environments without direct internet access (optional)
 - `patroni_cluster_name`
 - `postgresql_version`
 - `postgresql_data_dir`
-- `with_haproxy_load_balancing` `'true'` (Type A) or `'false'`/default (Type B)
-- `dcs_type` # "etcd" (default) or "consul" (Type C)
+- `cluster_vip` to provide a single entry point for client access to databases in the cluster (optional)
+- `with_haproxy_load_balancing` to enable load balancing (optional)
+- `dcs_type` "etcd" (default) or "consul"
 
-See the vars/[main.yml](./vars/main.yml), [system.yml](./vars/system.yml) and ([Debian.yml](./vars/Debian.yml) or [RedHat.yml](./vars/RedHat.yml)) files for more details.
+See the vars/[main.yml](./automation/vars/main.yml), [system.yml](./automation/vars/system.yml) and ([Debian.yml](./automation/vars/Debian.yml) or [RedHat.yml](./automation/vars/RedHat.yml)) files for more details.
 
-if dcs_type: "consul", please install consul role requirements on the control node:
-
-```
-ansible-galaxy install -r roles/consul/requirements.yml
-```
-
-5. Try to connect to hosts
+6. Try to connect to hosts
 
 ```
 ansible all -m ping
 ```
 
-6. Run playbook:
+7. Run playbook:
 
 ```
 ansible-playbook deploy_pgcluster.yml
@@ -285,7 +298,7 @@ ansible-playbook deploy_pgcluster.yml
 
 #### Deploy Cluster with TimescaleDB
 
-To deploy a PostgreSQL High-Availability Cluster with the TimescaleDB extension, you just need to add the `enable_timescale` variable.
+To deploy a PostgreSQL High-Availability Cluster with the [TimescaleDB](https://github.com/timescale/timescaledb) extension, add the `enable_timescale` variable:
 
 Example:
 ```
