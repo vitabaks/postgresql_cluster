@@ -223,6 +223,8 @@ Go to http://localhost/ and use `secret_token` for authorization.
 > [!NOTE]
 > If you have set up the console on a different server, replace 'localhost' with the server's address. Use the value of your token if you have redefined it in the PG_CONSOLE_AUTHORIZATION_TOKEN variable.
 
+![Cluster creation demo](images/pg_console_create_cluster_demo.gif)
+
 Refer to the [Deployment](https://postgresql-cluster.org/category/deployment) section to learn more about the different deployment methods.
 
 ### Command line
