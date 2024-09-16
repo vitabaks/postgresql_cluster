@@ -62,6 +62,14 @@
         enable_pg_partman: true
         enable_citus: "{{ 'false' if ansible_distribution_version == '24.04' else 'true' }}"  # TODO Ubuntu 24.04
         enable_paradedb: true  # pg_search and pg_analytics
+        # create extension
+        postgresql_schemas:
+          - { schema: "paradedb", db: "postgres", owner: "postgres" }  # pg_search must be installed in the paradedb schema.
+        postgresql_extensions:
+          - { ext: "vector", db: "postgres" }
+          - { ext: "pg_search", db: "postgres", schema: "paradedb" }
+          - { ext: "pg_analytics", db: "postgres" }
+        #  - { ext: "", db: "" }
 
     - name: Set variables for PostgreSQL Cluster update test
       ansible.builtin.set_fact:
