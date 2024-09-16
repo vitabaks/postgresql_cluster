@@ -254,9 +254,14 @@
         # Debian
         - name: "Install pg_search v{{ pg_search_version }} package"
           ansible.builtin.apt:
-            deb: "{{ pg_search_repo }}"
+            deb: "{{ pg_search_package }}"
+          register: apt_status
+          until: apt_status is success
+          delay: 5
+          retries: 3
           vars:
-            pg_search_repo: "https://github.com/paradedb/paradedb/releases/download/v{{ pg_search_version }}/postgresql-{{ postgresql_version }}-pg-search_{{ pg_search_version }}-1PARADEDB-{{ ansible_distribution_release }}_amd64.deb" # yamllint disable rule:line-length
+            pg_search_repo: "https://github.com/paradedb/paradedb/releases/download/v{{ pg_search_version }}/"
+            pg_search_package: "{{ pg_search_repo }}/postgresql-{{ postgresql_version }}-pg-search_{{ pg_search_version }}-1PARADEDB-{{ ansible_distribution_release }}_amd64.deb" # yamllint disable rule:line-length
           when:
             - ansible_os_family == "Debian"
             - ansible_distribution_release in ['bookworm', 'jammy', 'noble']
@@ -264,9 +269,14 @@
         # RedHat
         - name: "Install pg_search v{{ pg_search_version }} package"
           ansible.builtin.dnf:
-            name: "{{ pg_search_repo }}"
+            name: "{{ pg_search_package }}"
+          register: dnf_status
+          until: dnf_status is success
+          delay: 5
+          retries: 3
           vars:
-            pg_search_repo: "https://github.com/paradedb/paradedb/releases/download/v{{ pg_search_version }}/pg_search_{{ postgresql_version }}-{{ pg_search_version }}-1PARADEDB.el{{ ansible_distribution_version }}.x86_64.rpm" # yamllint disable rule:line-length
+            pg_search_repo: "https://github.com/paradedb/paradedb/releases/download/v{{ pg_search_version }}/"
+            pg_search_package: "{{ pg_search_repo }}/pg_search_{{ postgresql_version }}-{{ pg_search_version }}-1PARADEDB.el{{ ansible_distribution_version }}.x86_64.rpm" # yamllint disable rule:line-length
           when:
             - ansible_os_family == "RedHat"
             - ansible_distribution_version in ['8', '9']
@@ -287,9 +297,14 @@
         # Debian
         - name: "Install pg_analytics v{{ pg_analytics_version }} package"
           ansible.builtin.apt:
-            deb: "{{ pg_analytics_repo }}"
+            deb: "{{ pg_analytics_package }}"
+          register: apt_status
+          until: apt_status is success
+          delay: 5
+          retries: 3
           vars:
-            pg_analytics_repo: "https://github.com/paradedb/pg_analytics/releases/download/v{{ pg_analytics_version }}/postgresql-{{ postgresql_version }}-pg-analytics_{{ pg_analytics_version }}-1PARADEDB-{{ ansible_distribution_release }}_amd64.deb" # yamllint disable rule:line-length
+            pg_analytics_repo: "https://github.com/paradedb/pg_analytics/releases/download/v{{ pg_analytics_version }}/"
+            pg_analytics_package: "{{ pg_analytics_repo }}/postgresql-{{ postgresql_version }}-pg-analytics_{{ pg_analytics_version }}-1PARADEDB-{{ ansible_distribution_release }}_amd64.deb" # yamllint disable rule:line-length
           when:
             - ansible_os_family == "Debian"
             - ansible_distribution_release in ['bookworm', 'jammy', 'noble']
@@ -297,15 +312,18 @@
         # RedHat
         - name: "Install pg_analytics v{{ pg_analytics_version }} package"
           ansible.builtin.dnf:
-            name: "{{ pg_analytics_repo }}"
+            name: "{{ pg_analytics_package }}"
+          until: dnf_status is success
+          delay: 5
+          retries: 3
           vars:
-            pg_analytics_repo: "https://github.com/paradedb/pg_analytics/releases/download/v{{ pg_analytics_version }}/pg_analytics_{{ postgresql_version }}-{{ pg_analytics_version }}-1PARADEDB.el{{ ansible_distribution_version }}.x86_64.rpm" # yamllint disable rule:line-length
+            pg_analytics_repo: "https://github.com/paradedb/pg_analytics/releases/download/v{{ pg_analytics_version }}/"
+            pg_analytics_package: "{{ pg_analytics_repo }}/pg_analytics_{{ postgresql_version }}-{{ pg_analytics_version }}-1PARADEDB.el{{ ansible_distribution_version }}.x86_64.rpm" # yamllint disable rule:line-length
           when:
             - ansible_os_family == "RedHat"
             - ansible_distribution_version in ['8', '9']
       when: (enable_paradedb | default(false) | bool) or (enable_pg_analytics | default(false) | bool)
-  when:
-    - (enable_paradedb | default(false) | bool) or (enable_pg_search | default(false) | bool) or (enable_pg_analytics | default(false) | bool)
+  when: (enable_paradedb | default(false) | bool) or (enable_pg_search | default(false) | bool) or (enable_pg_analytics | default(false) | bool)
   tags: paradedb, pg_search, pg_analytics
 
 ...
