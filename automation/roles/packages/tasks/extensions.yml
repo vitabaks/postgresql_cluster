@@ -270,6 +270,7 @@
         - name: "Install pg_search v{{ pg_search_version }} package"
           ansible.builtin.dnf:
             name: "{{ pg_search_package }}"
+            disable_gpg_check: true
           register: dnf_status
           until: dnf_status is success
           delay: 5
@@ -313,6 +314,7 @@
         - name: "Install pg_analytics v{{ pg_analytics_version }} package"
           ansible.builtin.dnf:
             name: "{{ pg_analytics_package }}"
+            disable_gpg_check: true
           until: dnf_status is success
           delay: 5
           retries: 3
