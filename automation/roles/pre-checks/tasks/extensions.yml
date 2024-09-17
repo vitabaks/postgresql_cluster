@@ -1,6 +1,6 @@
 # yamllint disable rule:line-length
 ---
-# Extension Auto-Setup: shared_preload_libraries
+# Extension Auto-Setup: pre-checks and shared_preload_libraries
 
 # pre-checks
 - name: TimescaleDB | Checking PostgreSQL version
