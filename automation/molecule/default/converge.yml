@@ -61,7 +61,7 @@
         enable_pg_wait_sampling: true
         enable_pg_partman: true
         enable_citus: "{{ 'false' if ansible_distribution_version == '24.04' else 'true' }}"  # TODO Ubuntu 24.04
-        enable_paradedb: true  # pg_search and pg_analytics
+        enable_paradedb: "{{ 'false' if ansible_distribution_release == 'bullseye' else 'true' }}"  # pg_search and pg_analytics (no packages for debian 11)
         # create extension
         postgresql_schemas:
           - { schema: "paradedb", db: "postgres", owner: "postgres" }  # pg_search must be installed in the paradedb schema.

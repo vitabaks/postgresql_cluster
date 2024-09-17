@@ -13,6 +13,16 @@
     - (enable_timescale | default(false) | bool) or (enable_timescaledb | default(false) | bool)
     - postgresql_version | string is version(timescale_minimal_pg_version | default(12) | string, '<')
 
+- name: ParadeDB | Checking PostgreSQL version
+  run_once: true
+  ansible.builtin.fail:
+    msg:
+      - "The current PostgreSQL version ({{ postgresql_version }}) is not supported by the ParadeDB (pg_search, pg_analytics)."
+      - "PostgreSQL version must be {{ paradedb_minimal_pg_version | default(14) }} or higher."
+  when:
+    - (enable_paradedb | default(false) | bool) or (enable_pg_search | default(false) | bool) or (enable_pg_analytics | default(false) | bool)
+    - postgresql_version | string is version(paradedb_minimal_pg_version | default(14) | string, '<')
+
 - name: ParadeDB | Checking supported operating system and version
   run_once: true
   ansible.builtin.fail:
@@ -25,16 +35,6 @@
         (ansible_os_family == "Debian" and ansible_distribution_release in ['bookworm', 'jammy', 'noble']) or
         (ansible_os_family == "RedHat" and ansible_distribution_major_version in ['8', '9'])
       )
-
-- name: ParadeDB | Checking PostgreSQL version
-  run_once: true
-  ansible.builtin.fail:
-    msg:
-      - "The current PostgreSQL version ({{ postgresql_version }}) is not supported by the ParadeDB (pg_search, pg_analytics)."
-      - "PostgreSQL version must be {{ paradedb_minimal_pg_version | default(14) }} or higher."
-  when:
-    - (enable_paradedb | default(false) | bool) or (enable_pg_search | default(false) | bool) or (enable_pg_analytics | default(false) | bool)
-    - postgresql_version | string is version(paradedb_minimal_pg_version | default(14) | string, '<')
 
 # shared_preload_libraries
 - name: Create a list of extensions
