@@ -202,9 +202,6 @@
     - role: postgresql-privs
       when: inventory_hostname in groups['primary']
 
-    - role: postgresql-extensions
-      when: inventory_hostname in groups['primary']
-
     - role: wal-g
       when: wal_g_install | bool
 
@@ -347,7 +344,7 @@
   tags:
     - patroni_conf
 
-- name: config_pgcluster.yml | PostgreSQL Cluster Info
+- name: config_pgcluster.yml | Configure PostgreSQL Cluster and info
   hosts: primary
   become: true
   become_method: sudo
@@ -366,5 +363,7 @@
       ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
       tags: always
   roles:
+    - role: postgresql-extensions
+
     # finish (info)
     - role: deploy-finish
