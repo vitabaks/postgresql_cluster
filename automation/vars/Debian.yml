@@ -50,6 +50,7 @@ system_packages:
   - acl
   - dnsutils
   - moreutils
+  - unzip
 
 install_perf: false  # or 'true' to install "perf" (Linux profiling with performance counters) and "FlameGraph".
 
