@@ -280,6 +280,7 @@
   when:
     - enable_pgvectorscale | default(false) | bool
     - ansible_os_family == "Debian"
+    - ansible_distribution_release in ['bookworm', 'jammy', 'noble']
 
 # ParadeDB (pg_search, pg_analytics) - https://github.com/paradedb/paradedb
 # (if 'enable_paradedb' or 'enable_pg_search', 'enable_pg_analytics' is 'true')
