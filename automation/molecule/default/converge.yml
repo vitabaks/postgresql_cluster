@@ -68,6 +68,7 @@
           - { schema: "paradedb", db: "postgres", owner: "postgres" }  # pg_search must be installed in the paradedb schema.
         postgresql_extensions:
           - { ext: "vector", db: "postgres" }
+          - { ext: "vectorscale", db: "postgres" }
           - { ext: "pg_search", db: "postgres", schema: "paradedb" }
           - { ext: "pg_analytics", db: "postgres" }
         #  - { ext: "", db: "" }
