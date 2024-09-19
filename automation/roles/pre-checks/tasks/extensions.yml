@@ -13,6 +13,26 @@
     - (enable_timescale | default(false) | bool) or (enable_timescaledb | default(false) | bool)
     - postgresql_version | string is version(timescale_minimal_pg_version | default(12) | string, '<')
 
+- name: Timescale (pgvectorscale) | Checking PostgreSQL version
+  run_once: true
+  ansible.builtin.fail:
+    msg:
+      - "The current PostgreSQL version ({{ postgresql_version }}) is not supported by the pgvectorscale."
+      - "PostgreSQL version must be {{ pgvectorscale_minimal_pg_version | default(15) }} or higher."
+  when:
+    - enable_pgvectorscale | default(false) | bool
+    - postgresql_version | string is version(pgvectorscale_minimal_pg_version | default(15) | string, '<')
+
+- name: Timescale (pgvectorscale) | Checking supported operating system and version
+  run_once: true
+  ansible.builtin.fail:
+    msg:
+      - "pgvectorscale is not supported on {{ ansible_distribution }} {{ ansible_distribution_release }}."
+      - "Supported OS: Debian (bookworm), Ubuntu (jammy, noble)."
+  when:
+    - enable_pgvectorscale | default(false) | bool
+    - not (ansible_os_family == "Debian" and ansible_distribution_release in ['bookworm', 'jammy', 'noble'])
+
 - name: ParadeDB | Checking PostgreSQL version
   run_once: true
   ansible.builtin.fail:

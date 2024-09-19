@@ -62,11 +62,13 @@
         enable_pg_partman: true
         enable_citus: "{{ 'false' if ansible_distribution_version == '24.04' else 'true' }}"  # TODO Ubuntu 24.04
         enable_paradedb: "{{ 'false' if ansible_distribution_release == 'bullseye' else 'true' }}"  # pg_search and pg_analytics (no packages for debian 11)
+        enable_pgvectorscale: "{{ 'true' if ansible_distribution_release in ['bookworm', 'jammy', 'noble'] else 'false' }}" # only deb packages are available
         # create extension
         postgresql_schemas:
           - { schema: "paradedb", db: "postgres", owner: "postgres" }  # pg_search must be installed in the paradedb schema.
         postgresql_extensions:
           - { ext: "vector", db: "postgres" }
+          - { ext: "vectorscale", db: "postgres" }
           - { ext: "pg_search", db: "postgres", schema: "paradedb" }
           - { ext: "pg_analytics", db: "postgres" }
         #  - { ext: "", db: "" }
