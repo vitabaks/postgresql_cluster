@@ -648,7 +648,7 @@
           ansible.builtin.command: >
             {{ pgbackrest_patroni_cluster_restore_command }}
             {{ '--target-action=promote' if pgbackrest_patroni_cluster_restore_command is search('--type=') else '' }}
-          async: 86400  # timeout 24 hours
+          async: "{{ patroni_cluster_restore_timeout | default(86400) }}"  # timeout 24 hours
           poll: 0
           register: pgbackrest_restore_master
           when: is_master | bool
@@ -658,7 +658,7 @@
           ansible.builtin.command: >
             {{ pgbackrest_patroni_cluster_restore_command }}
             {{ '--target-action=shutdown' if pgbackrest_patroni_cluster_restore_command is search('--type=') else '' }}
-          async: 86400  # timeout 24 hours
+          async: "{{ patroni_cluster_restore_timeout | default(86400) }}"  # timeout 24 hours
           poll: 0
           register: pgbackrest_restore_replica
           when: not is_master | bool and 'pgbackrest' in patroni_create_replica_methods
@@ -673,7 +673,7 @@
             label: "{{ item.changed }}"
           register: pgbackrest_restore_jobs_result
           until: pgbackrest_restore_jobs_result.finished
-          retries: 2880  # timeout 24 hours
+          retries: "{{ (patroni_cluster_restore_timeout | default(86400)) | int // 30 }}"  # timeout 24 hours
           delay: 30
           when: item.ansible_job_id is defined
 
@@ -693,8 +693,8 @@
             {{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -tAXc
             "select pg_is_in_recovery()"
           register: pg_is_in_recovery
-          until: pg_is_in_recovery.stdout != "t"
-          retries: 1200  # timeout 10 hours
+          until: pg_is_in_recovery.stdout == "f"
+          retries: "{{ (patroni_cluster_restore_timeout | default(86400)) | int // 30 }}"  # timeout 24 hours
           delay: 30
           changed_when: false
           failed_when: false
@@ -791,7 +791,7 @@
         "select pg_is_in_recovery()"
       register: pg_is_in_recovery
       until: pg_is_in_recovery.stdout == "f"
-      retries: 1200  # timeout 10 hours
+      retries: "{{ (patroni_cluster_restore_timeout | default(86400)) | int // 30 }}"  # timeout 24 hours
       delay: 30
       changed_when: false
       failed_when: false
@@ -853,8 +853,8 @@
         {{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -tAXc
         "select pg_is_in_recovery()"
       register: pg_is_in_recovery
-      until: pg_is_in_recovery.stdout != "t"
-      retries: 1200  # timeout 10 hours
+      until: pg_is_in_recovery.stdout == "f"
+      retries: "{{ (patroni_cluster_restore_timeout | default(86400)) | int // 30 }}"  # timeout 24 hours
       delay: 30
       changed_when: false
       when: is_master | bool
@@ -961,7 +961,7 @@
         status_code: 200
       register: replica_result
       until: replica_result.status == 200
-      retries: 1200  # timeout 10 hours
+      retries: "{{ (patroni_cluster_restore_timeout | default(86400)) | int // 30 }}"  # timeout 24 hours
       delay: 30
       environment:
         no_proxy: "{{ inventory_hostname }}"
