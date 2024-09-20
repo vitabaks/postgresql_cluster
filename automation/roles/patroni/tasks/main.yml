@@ -798,7 +798,21 @@
       failed_when: false
       when: patroni_cluster_bootstrap_method == "wal-g"
 
-    - name: Check PostgreSQL is started and accepting connections on Master
+    - name: Wait for the Standby cluster initialization to complete
+      ansible.builtin.uri:
+        url: "http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/standby-leader"
+        status_code: 200
+      register: standby_leader_result
+      until: standby_leader_result.status_code == 200
+      retries: "{{ (patroni_cluster_restore_timeout | default(86400)) | int // 30 }}"  # timeout 24 hours
+      delay: 30
+      environment:
+        no_proxy: "{{ inventory_hostname }}"
+      when:
+        - (patroni_standby_cluster.host is defined and patroni_standby_cluster.host | length > 0)
+        - not ansible_check_mode
+
+    - name: Check PostgreSQL is started and accepting connections
       become: true
       become_user: postgres
       ansible.builtin.command: "{{ postgresql_bin_dir }}/pg_isready -p {{ postgresql_port }}"
