@@ -44,6 +44,9 @@
         wal_g_archive: "wal-g-pg-ubuntu-20.04-amd64.tar.gz"
       environment: "{{ proxy_env | default({}) }}"
 
+    # Note: We are using a precompiled binary on Ubuntu 20.04,
+    # but since Go binaries are cross-platform, it works well on other distributions as well.
+
     - name: Extract WAL-G into /tmp
       ansible.builtin.unarchive:
         src: "/tmp/wal-g-pg-ubuntu-20.04-amd64.tar.gz"
