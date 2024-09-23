@@ -148,6 +148,7 @@
         repo: https://github.com/wal-g/wal-g.git
         version: v{{ wal_g_version }}
         dest: /tmp/wal-g
+        force: true
 
     - name: Run go mod tidy to ensure dependencies are correct
       ansible.builtin.command: go mod tidy
