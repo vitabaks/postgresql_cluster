@@ -36,7 +36,7 @@ cloud_load_balancer: true  # Create a Load Balancer in the Cloud.
 
 # Backups (if 'pgbackrest_install' or 'wal_g_install' is 'true')
 aws_s3_bucket_create: true  # if 'cloud_provider=aws'
-aws_s3_bucket_name: "{{ patroni_cluster_name }}}-backup"  # Name of the S3 bucket. Bucket naming rules: https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html
+aws_s3_bucket_name: "{{ patroni_cluster_name }}-backup"  # Name of the S3 bucket. Bucket naming rules: https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html
 aws_s3_bucket_region: "{{ server_location }}"  # The AWS region to use.
 aws_s3_bucket_object_lock_enabled: false  # Whether S3 Object Lock to be enabled.
 aws_s3_bucket_encryption: "AES256"  # Describes the default server-side encryption to apply to new objects in the bucket. Choices: "AES256", "aws:kms"
