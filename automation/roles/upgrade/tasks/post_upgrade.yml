@@ -34,7 +34,7 @@
 # if pg_new_wal_dir is defined
 - name: Delete the old PostgreSQL WAL directory
   ansible.builtin.file:
-    path: "{{ postgresql_wal_dir | regex_replace('(/$)', '') | regex_replace(postgresql_version, pg_old_version) }}"
+    path: "{{ postgresql_wal_dir | regex_replace('(/$)', '') | replace(postgresql_version | string, pg_old_version | string) }}"
     state: absent
   when:
     - pg_current_datadir is success
@@ -48,7 +48,7 @@
   ansible.builtin.package:
     name: "{{ item }}"
     state: absent
-  loop: "{{ postgresql_packages | regex_replace(postgresql_version, pg_old_version) }}"
+  loop: "{{ postgresql_packages | replace(postgresql_version | string, pg_old_version | string) }}"
   register: package_remove
   until: package_remove is success
   delay: 5
@@ -67,7 +67,7 @@
     name: "{{ item }}"
     state: absent
     purge: true
-  loop: "{{ postgresql_packages | regex_replace(postgresql_version, pg_old_version) }}"
+  loop: "{{ postgresql_packages | replace(postgresql_version | string, pg_old_version | string) }}"
   register: apt_remove
   until: apt_remove is success
   delay: 5
@@ -159,14 +159,14 @@
     - name: "WAL-G | Update PostgreSQL data directory path in .walg.json"
       ansible.builtin.replace:
         path: "{{ postgresql_home_dir }}/.walg.json"
-        regexp: "{{ postgresql_data_dir | regex_replace(postgresql_version, pg_old_version) }}"
-        replace: "{{ postgresql_data_dir | regex_replace(postgresql_version, pg_new_version) }}"
+        regexp: "{{ postgresql_data_dir | replace(postgresql_version | string, pg_old_version | string) }}"
+        replace: "{{ postgresql_data_dir | replace(postgresql_version | string, pg_new_version | string) }}"
 
     - name: "WAL-G | Update PostgreSQL data directory path in cron jobs"
       ansible.builtin.replace:
         path: "{{ wal_g_cron_jobs[0].file | default('/etc/cron.d/walg') }}"
-        regexp: "{{ postgresql_data_dir | regex_replace(postgresql_version, pg_old_version) }}"
-        replace: "{{ postgresql_data_dir | regex_replace(postgresql_version, pg_new_version) }}"
+        regexp: "{{ postgresql_data_dir | replace(postgresql_version | string, pg_old_version | string) }}"
+        replace: "{{ postgresql_data_dir | replace(postgresql_version | string, pg_new_version | string) }}"
   become: true
   become_user: root
   ignore_errors: true  # show the error and continue the playbook execution
