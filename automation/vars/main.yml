@@ -460,11 +460,11 @@ patroni_create_replica_methods:
   - basebackup
 
 pgbackrest:
-  - { option: "command", value: "/usr/bin/pgbackrest --stanza={{ pgbackrest_stanza }} --delta restore" }
+  - { option: "command", value: "{{ pgbackrest_patroni_cluster_restore_command }}" }
   - { option: "keep_data", value: "True" }
   - { option: "no_params", value: "True" }
 wal_g:
-  - { option: "command", value: "{{ wal_g_path }} backup-fetch {{ postgresql_data_dir }} LATEST" }
+  - { option: "command", value: "{{ wal_g_patroni_cluster_bootstrap_command }}" }
   - { option: "no_params", value: "True" }
 basebackup:
   - { option: "max-rate", value: "1000M" }
