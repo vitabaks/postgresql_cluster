@@ -691,8 +691,7 @@
 
         - name: Waiting for PostgreSQL Recovery to complete (WAL apply)
           ansible.builtin.command: >-
-            {{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -tAXc
-            "select pg_is_in_recovery()"
+            {{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -tAXc "select pg_is_in_recovery()"
           register: pg_is_in_recovery
           until: pg_is_in_recovery.stdout == "f"
           retries: "{{ (cluster_restore_timeout | default(86400)) | int // 30 }}"  # timeout 24 hours
