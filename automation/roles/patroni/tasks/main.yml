@@ -696,7 +696,7 @@
           retries: 3
           delay: 10
           changed_when: false
-          when: is_master | bool or (not is_master | bool and 'pgbackrest' in patroni_create_replica_methods)
+          when: is_master | bool
 
         - name: Waiting for PostgreSQL Recovery to complete (WAL apply)
           ansible.builtin.command: >-
