@@ -39,7 +39,7 @@
       where pid <> pg_backend_pid()
       and state <> 'idle'
       and query_start < clock_timestamp() - interval '{{ pg_slow_active_query_treshold }} ms'
-      {{ "and backend_type = 'client backend'" if pg_old_version is version('10', '>=') else '' }}
+      {{ "and backend_type = 'client backend'" if pg_old_version | string is version('10', '>=') else '' }}
     pg_slow_active_terminate_query: >-
       select
         clock_timestamp(),
@@ -50,7 +50,7 @@
       where pid <> pg_backend_pid()
       and state <> 'idle'
       and query_start < clock_timestamp() - interval '{{ pg_slow_active_query_treshold_to_terminate }} ms'
-      {{ "and backend_type = 'client backend'" if pg_old_version is version('10', '>=') else '' }}
+      {{ "and backend_type = 'client backend'" if pg_old_version | string is version('10', '>=') else '' }}
     pgb_unix_socket_dirs: >-
       {% set unix_socket_dir = ['/var/run/pgbouncer'] %}
       {%- for idx in range(1, pgbouncer_processes | default(1) | int) -%}

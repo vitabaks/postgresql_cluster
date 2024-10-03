@@ -34,14 +34,14 @@
 # (if 'wal_g_installation_method' is 'binary')
 # Note: excluding RHEL 8 as GLIBC version 2.29 or higher is required.
 - block:
-    - name: "Download WAL-G v{{ wal_g_version | replace('v', '') }} binary"
+    - name: "Download WAL-G v{{ wal_g_version | string | replace('v', '') }} binary"
       ansible.builtin.get_url:
         url: "{{ wal_g_repo }}/{{ wal_g_archive }}"
         dest: /tmp/
         timeout: 60
         validate_certs: false
       vars:
-        wal_g_repo: "https://github.com/wal-g/wal-g/releases/download/v{{ wal_g_version | replace('v', '') }}"
+        wal_g_repo: "https://github.com/wal-g/wal-g/releases/download/v{{ wal_g_version | string | replace('v', '') }}"
         wal_g_archive: "wal-g-pg-ubuntu-20.04-amd64.tar.gz"
       environment: "{{ proxy_env | default({}) }}"
 
@@ -145,10 +145,10 @@
       when: go_installed_version.stderr is search("command not found") or
             go_installed_version.stdout is version(wal_g_latest_version.stdout, '<')
 
-    - name: "Download WAL-G v{{ wal_g_version | replace('v', '') }} source code"
+    - name: "Download WAL-G v{{ wal_g_version | string | replace('v', '') }} source code"
       ansible.builtin.git:
         repo: https://github.com/wal-g/wal-g.git
-        version: v{{ wal_g_version | replace('v', '') }}
+        version: v{{ wal_g_version | string | replace('v', '') }}
         dest: /tmp/wal-g
         force: true
 
@@ -195,9 +195,9 @@
 
 # older versions of WAL-G (for compatibility)
 - block:
-    - name: "Download WAL-G v{{ wal_g_version | replace('v', '') }} binary"
+    - name: "Download WAL-G v{{ wal_g_version | string | replace('v', '') }} binary"
       ansible.builtin.get_url:
-        url: "https://github.com/wal-g/wal-g/releases/download/v{{ wal_g_version | replace('v', '') }}/wal-g.linux-amd64.tar.gz"
+        url: "https://github.com/wal-g/wal-g/releases/download/v{{ wal_g_version | string | replace('v', '') }}/wal-g.linux-amd64.tar.gz"
         dest: /tmp/
         timeout: 60
         validate_certs: false
