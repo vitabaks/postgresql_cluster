@@ -66,7 +66,7 @@ jobs:
         run: make bootstrap-dev
 
       - name: Run Molecule tests
-        run: make molecule-test-scenario MOLECULE_SCENARIO="pg_upgrade"
+        run: make molecule-test
         env:
           PY_COLORS: "1"
           ANSIBLE_FORCE_COLOR: "1"
