@@ -29,7 +29,7 @@
   failed_when: false
   when:
     - inventory_hostname in groups['primary']
-    - pg_old_version is version('10', '>=')
+    - pg_old_version | string is version('10', '>=')
 
 # Stop, if replication lag is high
 - block:
@@ -62,7 +62,7 @@
   failed_when: false
   when:
     - inventory_hostname in groups['primary']
-    - pg_old_version is version('10', '<')
+    - pg_old_version | string is version('10', '<')
 
 # Stop, if replication lag is high (for 9x)
 - block:
