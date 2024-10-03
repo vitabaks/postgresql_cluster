@@ -55,7 +55,7 @@
   retries: 3
   ignore_errors: true  # show the error and continue the playbook execution
   when:
-    - item is search(pg_old_version)
+    - item | string is search(pg_old_version | string)
     - pg_old_packages_remove | bool
     - ansible_os_family == "RedHat"
 
@@ -74,7 +74,7 @@
   retries: 3
   ignore_errors: true  # show the error and continue the playbook execution
   when:
-    - item is search(pg_old_version)
+    - item | string is search(pg_old_version | string)
     - pg_old_packages_remove | bool
     - ansible_os_family == "Debian"
 
