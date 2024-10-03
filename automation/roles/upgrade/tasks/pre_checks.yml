@@ -7,8 +7,8 @@
     msg:
       - "One or more required variables have empty values."
       - "Please specify a value for the variables: pg_old_version, pg_new_version"
-  failed_when: pg_old_version | length < 1 or pg_new_version | length < 1
-  when: pg_old_version | length < 1 or pg_new_version | length < 1
+  failed_when: pg_old_version | string | length < 1 or pg_new_version | string | length < 1
+  when: pg_old_version | string | length < 1 or pg_new_version | string | length < 1
 
 # Stop, if the directories of the old and new versions are the same
 - name: "Make sure that the old and new data and config directories do not match"
