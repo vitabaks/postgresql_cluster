@@ -261,7 +261,7 @@
         metadata:
           ssh-keys: "root:{{ ssh_key_content }}"
         scheduling:
-          onHostMaintenance: "{{ 'TERMINATE' if (server_spot | bool or server_type is search('metal')) else 'MIGRATE' }}"
+          on_host_maintenance: "{{ 'TERMINATE' if (server_spot | bool or server_type is search('metal')) else 'MIGRATE' }}"
           preemptible: "{{ server_spot | default(gcp_compute_instance_preemptible | default(false)) | bool }}"
         tags:
           items:
