@@ -469,7 +469,7 @@
     host: "{{ item.networkInterfaces[0].accessConfigs[0].natIP }}"
     port: 22
     delay: 5
-    timeout: 300
+    timeout: "{{ 1800 if server_type is search('metal') else 300 }}"  # timeout 30 minutes for bare metal instances and 5 minutes for regular VMs
   loop: "{{ server_result.results }}"
   loop_control:
     label: "{{ item.networkInterfaces[0].accessConfigs[0].natIP | default('N/A') }}"
