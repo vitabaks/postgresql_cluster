@@ -125,6 +125,11 @@
             state: present
           register: aws_subnet
 
+        - name: "Set variable: vpc_id"
+          ansible.builtin.set_fact:
+            vpc_id: "{{ aws_vpc.vpc.id }}"
+          when: vpc_info.vpcs[0].id is defined
+
         - name: "Set variable: server_network"
           ansible.builtin.set_fact:
             server_network: "{{ aws_subnet.subnet.id }}"
