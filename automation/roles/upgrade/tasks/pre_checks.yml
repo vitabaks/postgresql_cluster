@@ -7,8 +7,8 @@
     msg:
       - "One or more required variables have empty values."
       - "Please specify a value for the variables: pg_old_version, pg_new_version"
-  failed_when: pg_old_version | length < 1 or pg_new_version | length < 1
-  when: pg_old_version | length < 1 or pg_new_version | length < 1
+  failed_when: pg_old_version | string | length < 1 or pg_new_version | string | length < 1
+  when: pg_old_version | string | length < 1 or pg_new_version | string | length < 1
 
 # Stop, if the directories of the old and new versions are the same
 - name: "Make sure that the old and new data and config directories do not match"
@@ -66,7 +66,7 @@
   changed_when: false
   when:
     - inventory_hostname in groups['primary']
-    - pg_old_version is version('10', '>=')
+    - pg_old_version | string is version('10', '>=')
 
 # for compatibility with Postgres 9.x
 - name: '[Pre-Check] Check the current version of PostgreSQL'
@@ -77,11 +77,11 @@
   changed_when: false
   when:
     - inventory_hostname in groups['primary']
-    - pg_old_version is version('10', '<')
+    - pg_old_version | string is version('10', '<')
 
 - name: "Set variable 'current_pg_version'"
   ansible.builtin.set_fact:
-    current_pg_version: "{{ pg_current_version.stdout if pg_old_version is version('10', '>=') else pg_current_version_9x.stdout }}"
+    current_pg_version: "{{ pg_current_version.stdout if pg_old_version | string is version('10', '>=') else pg_current_version_9x.stdout }}"
   when:
     - inventory_hostname in groups['primary']
 
@@ -168,7 +168,7 @@
   delay: 5
   when:
     - inventory_hostname in groups['primary']
-    - pg_old_version is version('10', '>=')
+    - pg_old_version | string is version('10', '>=')
 
 # Stop, if replication lag is high
 - name: "Pre-Check error. High replication lag"
@@ -195,7 +195,7 @@
   delay: 5
   when:
     - inventory_hostname in groups['primary']
-    - pg_old_version is version('10', '<')
+    - pg_old_version | string is version('10', '<')
 
 # Stop, if replication lag is high (for 9x)
 - name: "Pre-Check error. High replication lag"
@@ -223,7 +223,7 @@
   until: pg_long_transactions.stdout | length < 1
   retries: 30 # 1 minute
   delay: 2
-  when: pg_old_version is version('10', '>=')
+  when: pg_old_version | string is version('10', '>=')
 
 # Stop, if long-running transactions detected
 - block:
@@ -254,7 +254,7 @@
   until: pg_long_transactions_9x.stdout | length < 1
   retries: 30 # 1 minute
   delay: 2
-  when: pg_old_version is version('10', '<')
+  when: pg_old_version | string is version('10', '<')
 
 # Stop, if long-running transactions detected (for 9x)
 - block:
