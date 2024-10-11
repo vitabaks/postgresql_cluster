@@ -107,7 +107,7 @@
           when: vpc_subnet_info.subnets[0].id is defined
       when: server_network | length < 1
 
-    # if server_network is not specified and there is no default VPC, create a VPC and subnet
+    # if server_network is not specified and there is no default VPC, create a VPC, subnet, gateway and route table
     - block:
         - name: "AWS: Create VPC"
           amazon.aws.ec2_vpc_net:
@@ -124,6 +124,21 @@
             region: "{{ server_location }}"
             state: present
           register: aws_subnet
+
+        - name: "AWS: Create Internet gateway"
+          amazon.aws.ec2_vpc_igw:
+            vpc_id: "{{ aws_vpc.vpc.id }}"
+            state: present
+            region: "{{ server_location }}"
+          register: aws_igw
+
+        - name: "AWS: Update route table"
+          amazon.aws.ec2_vpc_route_table:
+            vpc_id: "{{ aws_vpc.vpc.id }}"
+            routes:
+              - dest: 0.0.0.0/0
+                gateway_id: "{{ aws_igw.gateway_id }}"
+            region: "{{ server_location }}"
 
         - name: "AWS: Gather information about VPC subnet for {{ aws_vpc_name | default('postgres-cluster-vpc') }}"
           amazon.aws.ec2_vpc_subnet_info:
