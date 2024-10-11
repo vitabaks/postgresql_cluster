@@ -125,7 +125,7 @@
             state: present
           register: aws_subnet
 
-        - name: "AWS: Gather information about VPC subnet for {{ aws_vpc_name | default('postgres-cluster-vpc') }} VPC"
+        - name: "AWS: Gather information about VPC subnet for {{ aws_vpc_name | default('postgres-cluster-vpc') }}"
           amazon.aws.ec2_vpc_subnet_info:
             region: "{{ server_location }}"
             filters:
