@@ -61,7 +61,7 @@
 - block:
     # if server_network is specified, get vpc id for this subnet
     - block:
-        - name: "AWS: Gather information about VPC for '{{ server_network }}'"
+        - name: "AWS: Gather information about VPC subnet for '{{ server_network }}'"
           amazon.aws.ec2_vpc_subnet_info:
             region: "{{ server_location }}"
             subnet_ids: "{{ server_network }}"
@@ -124,6 +124,13 @@
             region: "{{ server_location }}"
             state: present
           register: aws_subnet
+
+        - name: "AWS: Gather information about VPC subnet for {{ aws_vpc_name | default('postgres-cluster-vpc') }} VPC"
+          amazon.aws.ec2_vpc_subnet_info:
+            region: "{{ server_location }}"
+            filters:
+              vpc-id: "{{ aws_vpc.vpc.id }}"
+          register: vpc_subnet_info
 
         - name: "Set variable: vpc_id"
           ansible.builtin.set_fact:
