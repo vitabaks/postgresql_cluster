@@ -125,6 +125,13 @@
             state: present
           register: aws_subnet
 
+        - name: "AWS: Gather information about VPC subnet for {{ aws_vpc_name | default('postgres-cluster-vpc') }}"
+          amazon.aws.ec2_vpc_subnet_info:
+            region: "{{ server_location }}"
+            filters:
+              vpc-id: "{{ aws_vpc.vpc.id }}"
+          register: vpc_subnet_info
+
         - name: "AWS: Create Internet gateway"
           amazon.aws.ec2_vpc_igw:
             vpc_id: "{{ aws_vpc.vpc.id }}"
@@ -132,20 +139,28 @@
             region: "{{ server_location }}"
           register: aws_igw
 
-        - name: "AWS: Update route table"
+        - name: "AWS: Gather information about VPC route tables"
+          amazon.aws.ec2_vpc_route_table_info:
+            region: "{{ server_location }}"
+            filters:
+              vpc-id: "{{ aws_vpc.vpc.id }}"
+          register: route_table_info
+
+        - name: "AWS: Update the main route table"
           amazon.aws.ec2_vpc_route_table:
-            vpc_id: "{{ aws_vpc.vpc.id }}"
+            route_table_id: "{{ main_route_table_id }}"
             routes:
               - dest: 0.0.0.0/0
                 gateway_id: "{{ aws_igw.gateway_id }}"
             region: "{{ server_location }}"
-
-        - name: "AWS: Gather information about VPC subnet for {{ aws_vpc_name | default('postgres-cluster-vpc') }}"
-          amazon.aws.ec2_vpc_subnet_info:
-            region: "{{ server_location }}"
-            filters:
-              vpc-id: "{{ aws_vpc.vpc.id }}"
-          register: vpc_subnet_info
+          vars:
+            main_route_table_id: >-
+              {{ route_table_info.route_tables
+              | selectattr('associations', 'defined')
+              | map(attribute='associations')
+              | selectattr('main', 'equalto', true)
+              | map(attribute='route_table_id')
+              | first }}
 
         - name: "Set variable: vpc_id"
           ansible.builtin.set_fact:
