@@ -144,11 +144,12 @@
             region: "{{ server_location }}"
             filters:
               vpc-id: "{{ aws_vpc.vpc.id }}"
-          register: route_table_info
+          register: aws_route_table_info
 
         - name: "AWS: Update the main route table"
           amazon.aws.ec2_vpc_route_table:
-            route_table_id: "{{ route_table_info.route_tables[0].route_table_id }}"
+            vpc_id: "{{ aws_vpc.vpc.id }}"
+            route_table_id: "{{ aws_route_table_info.route_tables[0].route_table_id }}"
             routes:
               - dest: 0.0.0.0/0
                 gateway_id: "{{ aws_igw.gateway_id }}"
