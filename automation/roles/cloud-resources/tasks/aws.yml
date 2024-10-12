@@ -148,19 +148,11 @@
 
         - name: "AWS: Update the main route table"
           amazon.aws.ec2_vpc_route_table:
-            route_table_id: "{{ main_route_table_id }}"
+            route_table_id: "{{ route_table_info.route_tables[0].route_table_id }}"
             routes:
               - dest: 0.0.0.0/0
                 gateway_id: "{{ aws_igw.gateway_id }}"
             region: "{{ server_location }}"
-          vars:
-            main_route_table_id: >-
-              {{ route_table_info.route_tables
-              | selectattr('associations', 'defined')
-              | map(attribute='associations')
-              | selectattr('main', 'equalto', true)
-              | map(attribute='route_table_id')
-              | first }}
 
         - name: "Set variable: vpc_id"
           ansible.builtin.set_fact:
