@@ -685,10 +685,8 @@
           when: not keep_patroni_dynamic_json|bool
 
         - name: Start PostgreSQL for Recovery
-          ansible.builtin.shell: >
+          ansible.builtin.command: >-
             {{ postgresql_bin_dir }}/pg_ctl start -D {{ postgresql_data_dir }} -o '-c hot_standby=off' -w -t {{ pg_ctl_timeout | default(3600) }}
-          args:
-            executable: /bin/bash
           when: is_master | bool or (not is_master | bool and 'pgbackrest' in patroni_create_replica_methods)
 
         - name: Check PostgreSQL is started and accepting connections
