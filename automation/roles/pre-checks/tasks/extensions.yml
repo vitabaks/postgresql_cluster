@@ -18,10 +18,10 @@
   ansible.builtin.fail:
     msg:
       - "The current PostgreSQL version ({{ postgresql_version }}) is not supported by the pgvectorscale."
-      - "PostgreSQL version must be {{ pgvectorscale_minimal_pg_version | default(15) }} or higher."
+      - "PostgreSQL version must be {{ pgvectorscale_minimal_pg_version | default(13) }} or higher."
   when:
     - enable_pgvectorscale | default(false) | bool
-    - postgresql_version | string is version(pgvectorscale_minimal_pg_version | default(15) | string, '<')
+    - postgresql_version | string is version(pgvectorscale_minimal_pg_version | default(13) | string, '<')
 
 - name: Timescale (pgvectorscale) | Checking supported operating system and version
   run_once: true
