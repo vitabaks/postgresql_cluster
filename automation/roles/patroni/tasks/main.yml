@@ -598,7 +598,7 @@
   tags: patroni, patroni_start_master
 
 - block:  # PITR (custom bootstrap)
-  # Prepare (install pexpect, ruamel.yaml)
+    # Prepare (install pexpect, ruamel.yaml)
     - name: Prepare | Make sure the ansible required python library is exist
       ansible.builtin.pip:
         name: "{{ item }}"
@@ -612,7 +612,8 @@
       environment:
         PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
         PIP_BREAK_SYSTEM_PACKAGES: "1"
-  # Run PITR
+
+    # Run PITR
     - name: Stop patroni service on the Replica servers (if running)
       ansible.builtin.systemd:
         name: patroni
@@ -626,12 +627,16 @@
       when: is_master | bool
 
     - name: Check that PostgreSQL is stopped
+      become: true
+      become_user: postgres
       ansible.builtin.command: "{{ postgresql_bin_dir }}/pg_ctl status -D {{ postgresql_data_dir }}"
       register: pg_ctl_status_result
       changed_when: false
       failed_when: false
 
     - name: Stop PostgreSQL
+      become: true
+      become_user: postgres
       ansible.builtin.command: >-
         {{ postgresql_bin_dir }}/pg_ctl stop -D {{ postgresql_data_dir }} -m fast -w -t {{ pg_ctl_timeout | default(3600) }}
       when: pg_ctl_status_result.rc is defined and (pg_ctl_status_result.rc != 3 and pg_ctl_status_result.rc != 4)
@@ -719,7 +724,7 @@
           delay: 10
           when: is_master | bool or (not is_master | bool and 'pgbackrest' in patroni_create_replica_methods)
 
-        - name: Wait for PostgreSQL Recovery to complete (WAL apply)
+        - name: Wait for PostgreSQL recovery to complete (WAL apply)
           ansible.builtin.command: >-
             {{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres
             -tAXc "select pg_is_in_recovery()"
