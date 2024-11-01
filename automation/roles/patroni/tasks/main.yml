@@ -767,7 +767,7 @@
   tags: patroni, point_in_time_recovery
 
 - block:  # PITR (custom bootstrap) - disable archive_command
-    - name: Check the patroni.dynamic.json exists
+    - name: Check if patroni.dynamic.json exists
       ansible.builtin.stat:
         path: "{{ postgresql_data_dir }}/patroni.dynamic.json"
       register: patroni_dynamic_json
@@ -777,8 +777,10 @@
       ansible.builtin.file:
         path: "{{ postgresql_data_dir }}/patroni.dynamic.json"
         state: absent
-      when: patroni_dynamic_json is defined and
-            patroni_dynamic_json.stat.exists
+      when:
+        - patroni_dynamic_json is defined
+        - patroni_dynamic_json.stat is defined
+        - patroni_dynamic_json.stat.exists
 
     - name: Edit patroni.dynamic.json | disable archive_command (if enabled)
       yedit:
@@ -786,18 +788,22 @@
         key: postgresql.parameters.archive_command
         value: "cd ."  # not doing anything yet with WAL-s
         content_type: json
-      when: patroni_dynamic_json.stat.exists and
-            keep_patroni_dynamic_json|bool and disable_archive_command|bool
+      when:
+        - disable_archive_command | bool
+        - patroni_dynamic_json is defined
+        - patroni_dynamic_json.stat is defined
+        - patroni_dynamic_json.stat.exists
+        - keep_patroni_dynamic_json | bool
 
     - name: Edit patroni.yml | disable archive_command (if enabled)
       yedit:
         src: /etc/patroni/patroni.yml
         key: bootstrap.dcs.postgresql.parameters.archive_command
         value: "cd ."  # not doing anything yet with WAL-s
-      when: disable_archive_command|bool
+      when: disable_archive_command | bool
   when: patroni_cluster_bootstrap_method != "initdb" and
-        (pgbackrest_install|bool or wal_g_install|bool) and
-        (existing_pgcluster is not defined or not existing_pgcluster|bool)
+        (pgbackrest_install | bool or wal_g_install | bool) and
+        (existing_pgcluster is not defined or not existing_pgcluster | bool)
   become: true
   become_user: postgres
   tags: patroni, point_in_time_recovery
