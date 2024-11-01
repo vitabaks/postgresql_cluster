@@ -625,6 +625,17 @@
         state: stopped
       when: is_master | bool
 
+    - name: Check that PostgreSQL is stopped
+      ansible.builtin.command: "{{ postgresql_bin_dir }}/pg_ctl status -D {{ postgresql_data_dir }}"
+      register: pg_ctl_status_result
+      changed_when: false
+      failed_when: false
+
+    - name: Stop PostgreSQL
+      ansible.builtin.command: >-
+        {{ postgresql_bin_dir }}/pg_ctl stop -D {{ postgresql_data_dir }} -m fast -w -t {{ pg_ctl_timeout | default(3600) }}
+      when: pg_ctl_status_result.rc is defined and (pg_ctl_status_result.rc != 3 and pg_ctl_status_result.rc != 4)
+
     - name: Remove patroni cluster "{{ patroni_cluster_name }}" from DCS (if exist)
       become: true
       become_user: postgres
