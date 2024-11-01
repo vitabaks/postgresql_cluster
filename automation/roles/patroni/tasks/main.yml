@@ -777,8 +777,8 @@
       ansible.builtin.file:
         path: "{{ postgresql_data_dir }}/patroni.dynamic.json"
         state: absent
-      when: patroni_dynamic_json.stat.exists and
-            not keep_patroni_dynamic_json|bool
+      when: patroni_dynamic_json is defined and
+            patroni_dynamic_json.stat.exists
 
     - name: Edit patroni.dynamic.json | disable archive_command (if enabled)
       yedit:
