@@ -13,6 +13,8 @@
 
 You can find a version of this documentation that is searchable and also easier to navigate at [postgresql-cluster.org](http://postgresql-cluster.org)
 
+<a href="https://www.producthunt.com/posts/postgresql-cluster-org?embed=true&utm_source=badge-featured&utm_medium=badge&utm_souce=badge-postgresql&#0045;cluster&#0045;org" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=583645&theme=light" alt="postgresql&#0045;cluster&#0046;org - The&#0032;open&#0045;source&#0032;alternative&#0032;to&#0032;cloud&#0045;managed&#0032;databases | Product Hunt" style="width: 250px; height: 54px;" width="250" height="54" /></a>
+
 :trophy: **Use the [sponsoring](https://github.com/vitabaks/postgresql_cluster#sponsor-this-project) program to get personalized support, or just to contribute to this project.**
 
 ---
@@ -95,7 +97,7 @@ RedHat and Debian based distros (x86_64)
 ###### PostgreSQL versions: 
 all supported PostgreSQL versions
 
-:white_check_mark: tested, works fine: PostgreSQL 10, 11, 12, 13, 14, 15, 16
+:white_check_mark: tested, works fine: PostgreSQL 10, 11, 12, 13, 14, 15, 16, 17
 
 _Table of results of daily automated testing of cluster deployment:_
 | Distribution | Test result |
