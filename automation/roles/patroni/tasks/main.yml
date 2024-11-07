@@ -736,14 +736,14 @@
           failed_when: false
           when: is_master | bool
 
-        - name: Get PostgreSQL recovery log
+        - name: Check PostgreSQL recovery log
           ansible.builtin.command: "grep -A2 'recovery stopping' /tmp/pg_recovery_{{ ansible_date_time.date }}.log"
           register: pg_recovery_result
           changed_when: false
           failed_when: false
           when: is_master | bool
 
-        - name: Print PostgreSQL recovery log
+        - name: PostgreSQL recovery details
           ansible.builtin.debug:
             msg: '{{ pg_recovery_result.stdout_lines }}'
           when: pg_recovery_result.stdout_lines is defined
