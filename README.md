@@ -216,19 +216,20 @@ docker run -d --name pg-console \
   vitabaks/postgresql_cluster_console:2.0.0
 ```
 
+> [!NOTE]
+> If you are running the console on a dedicated server (rather than on your laptop), replace `localhost` with the server’s IP address in the `PG_CONSOLE_API_URL` variable.
+
 > [!TIP]
-> It is recommended to run the console in the same network as your database servers to enable monitoring of the cluster status. In this case, replace `localhost` with your server's IP address in the PG_CONSOLE_API_URL variable.
+> It is recommended to run the console in the same network as your database servers to enable monitoring of the cluster status.
+
 
 **Open the Console UI**:
 
-Go to http://localhost/ and use `secret_token` for authorization.
-
-> [!NOTE]
-> If you have set up the console on a different server, replace 'localhost' with the server's address. Use the value of your token if you have redefined it in the PG_CONSOLE_AUTHORIZATION_TOKEN variable.
+Go to http://localhost:80 (or the address of your server) and use `secret_token` for authorization.
 
 ![Cluster creation demo](images/pg_console_create_cluster_demo.gif)
 
-Refer to the [Deployment](https://postgresql-cluster.org/category/deployment) section to learn more about the different deployment methods.
+Refer to the [Deployment](https://postgresql-cluster.org/docs/category/deployment) section to learn more about the different deployment methods.
 
 ### Command line
 
