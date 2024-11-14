@@ -32,7 +32,10 @@
         "http": "{{ consul_addresses.http }}",
         "https": "{{ consul_addresses.https }}",
         {% if consul_version is version_compare('1.3.0', '>=') %}
-        "grpc": "{{ consul_addresses.grpc }}"
+        "grpc": "{{ consul_addresses.grpc }}",
+        {% endif %}
+        {% if consul_version is version_compare('1.14.0', '>=') and consul_tls_enable %}
+        "grpc_tls": "{{ consul_addresses.grpc_tls }}",
         {% endif %}
     },
     {## Ports Used ##}
@@ -47,7 +50,10 @@
         "serf_wan": {{ consul_ports.serf_wan }},
         "server": {{ consul_ports.server }},
         {% if consul_version is version_compare('1.3.0', '>=') %}
-        "grpc": {{ consul_ports.grpc }}
+        "grpc": {{ consul_ports.grpc }},
+        {% endif %}
+        {% if consul_version is version_compare('1.14.0', '>=') and consul_tls_enable %}
+        "grpc_tls": {{ consul_ports.grpc_tls }},
         {% endif %}
     },
 
