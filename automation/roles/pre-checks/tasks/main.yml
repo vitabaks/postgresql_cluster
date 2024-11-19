@@ -33,6 +33,7 @@
   ansible.builtin.import_tasks: huge_pages.yml
   when:
     - inventory_hostname in groups['postgres_cluster']
+    - huge_pages_auto_conf | bool
 
 - name: Perform pre-checks for pgbackrest
   ansible.builtin.import_tasks: pgbackrest.yml
