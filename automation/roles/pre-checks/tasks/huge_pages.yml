@@ -40,6 +40,7 @@
     - name: "HugePages | Get Hugepagesize value from /proc/meminfo"
       ansible.builtin.command: "awk '/Hugepagesize/ {print $2}' /proc/meminfo"
       changed_when: false
+      check_mode: false
       register: huge_page_size
       when:
         - shared_buffers_gb | default(0) | int >= (min_shared_buffers_gb | default(8))
@@ -47,6 +48,7 @@
     - name: "HugePages | Get HugePages_Total value from /proc/meminfo"
       ansible.builtin.command: "awk '/HugePages_Total/ {print $2}' /proc/meminfo"
       changed_when: false
+      check_mode: false
       register: huge_pages_total
       when:
         - shared_buffers_gb | default(0) | int >= (min_shared_buffers_gb | default(8))
