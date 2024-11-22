@@ -22,11 +22,19 @@
       ansible.builtin.command: "awk '/Hugepagesize/ {print $2}' /proc/meminfo"
       changed_when: false
       register: huge_page_size
-
+    
+    - name: "Debug | Hugepagesize command result"
+      ansible.builtin.debug:
+        var: huge_page_size
+    
     - name: "HugePages | Get HugePages_Total value from /proc/meminfo"
       ansible.builtin.command: "awk '/HugePages_Total/ {print $2}' /proc/meminfo"
       changed_when: false
       register: huge_pages_total
+    
+    - name: "Debug | HugePages_Total command result"
+      ansible.builtin.debug:
+        var: huge_pages_total
 
     - name: "HugePages | Set variable: shared_buffers_gb"
       ansible.builtin.set_fact:
