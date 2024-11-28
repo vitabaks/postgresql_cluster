@@ -35,7 +35,7 @@ export const sidebarLowData = (t: TFunction) => [
   {
     icon: DocumentationIcon,
     label: t('documentation', { ns: 'shared' }),
-    path: 'https://autobase.tech',
+    path: 'https://autobase.tech/docs',
   },
   {
     icon: SupportIcon,
