@@ -1,6 +1,6 @@
 ## —— Docker —————————————————————————————————————————————————————————————————————————————————————
 TAG ?= local
-DOCKER_REGISTRY ?= vitabaks
+DOCKER_REGISTRY ?= autobase
 
 .PHONY: docker-lint docker-lint-console-ui docker-lint-console-api docker-lint-console-db docker-lint-console
 docker-lint: docker-lint-automation docker-lint-console-ui docker-lint-console-api docker-lint-console-db docker-lint-console ## Lint all Dockerfiles 
