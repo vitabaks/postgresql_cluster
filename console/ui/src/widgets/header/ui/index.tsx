@@ -33,10 +33,10 @@ const Header: FC = () => {
               <Logo />
               <Box>
                 <Typography fontWeight="bold" color="common.black" sx={{ lineHeight: 1.2 }}>
-                  PostgreSQL Cluster
+                  autobase
                 </Typography>
                 <Typography fontWeight="bold" color={grey[700]} sx={{ lineHeight: 1.2 }}>
-                  Console
+                  for PostgreSQL®
                 </Typography>
               </Box>
             </Stack>

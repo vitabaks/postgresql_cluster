@@ -34,7 +34,7 @@ const Login: FC = () => {
             height="max-content"
             padding="16px">
             <Logo />
-            <Typography variant="h6">PostgreSQL Cluster Console</Typography>
+            <Typography variant="h6">Autobase Console</Typography>
             <Controller
               control={control}
               name={LOGIN_FORM_FIELD_NAMES.TOKEN}
