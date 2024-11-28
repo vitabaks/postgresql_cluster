@@ -1,6 +1,6 @@
-# PostgreSQL Cluster Console UI
+# Autobase Console UI
 
-The UI part of PostgreSQL Cluster Console. This project provides a user-friendly web interface for managing, monitoring, and configuring Postgres clusters.
+The UI part of autobase console. This project provides a user-friendly web interface for managing, monitoring, and configuring Postgres clusters.
 
 ## Features
 
@@ -19,8 +19,8 @@ To run this project locally, follow these steps:
 1. **Clone repository**
 
 ```
-git clone https://github.com/vitabaks/postgresql_cluster.git
-cd postgresql_cluster/console/ui
+git clone https://github.com/vitabaks/autobase.git
+cd autobase/console/ui
 ```
 
 2. **Install dependencies**

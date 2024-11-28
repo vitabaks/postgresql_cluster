@@ -1,28 +1,34 @@
-# PostgreSQL High-Availability Cluster :elephant: :sparkling_heart:
+<p align="center">
+  <img src="images/github-autobase.png">
+</p>
 
-[<img src="https://github.com/vitabaks/postgresql_cluster/workflows/Ansible-lint/badge.svg?branch=master">](https://github.com/vitabaks/postgresql_cluster/actions?query=workflow%3AAnsible-lint)
-[<img src="https://github.com/vitabaks/postgresql_cluster/workflows/Yamllint/badge.svg?branch=master">](https://github.com/vitabaks/postgresql_cluster/actions?query=workflow%3AYamllint)
-[<img src="https://github.com/vitabaks/postgresql_cluster/workflows/Flake8/badge.svg?branch=master">](https://github.com/vitabaks/postgresql_cluster/actions?query=workflow%3AFlake8)
-[<img src="https://github.com/vitabaks/postgresql_cluster/workflows/Molecule/badge.svg?branch=master">](https://github.com/vitabaks/postgresql_cluster/actions?query=workflow%3AMolecule)
-[![GitHub license](https://img.shields.io/github/license/vitabaks/postgresql_cluster)](https://github.com/vitabaks/postgresql_cluster/blob/master/LICENSE) 
-![GitHub stars](https://img.shields.io/github/stars/vitabaks/postgresql_cluster)
+# Autobase for PostgreSQL® :elephant: :sparkling_heart:
 
-### Production-ready PostgreSQL High-Availability Cluster (based on Patroni). Automating with Ansible.
+[<img src="https://github.com/vitabaks/autobase/workflows/Ansible-lint/badge.svg?branch=master">](https://github.com/vitabaks/autobase/actions?query=workflow%3AAnsible-lint)
+[<img src="https://github.com/vitabaks/autobase/workflows/Yamllint/badge.svg?branch=master">](https://github.com/vitabaks/autobase/actions?query=workflow%3AYamllint)
+[<img src="https://github.com/vitabaks/autobase/workflows/Flake8/badge.svg?branch=master">](https://github.com/vitabaks/autobase/actions?query=workflow%3AFlake8)
+[<img src="https://github.com/vitabaks/autobase/workflows/Molecule/badge.svg?branch=master">](https://github.com/vitabaks/autobase/actions?query=workflow%3AMolecule)
+[![GitHub license](https://img.shields.io/github/license/vitabaks/autobase)](https://github.com/vitabaks/autobase/blob/master/LICENSE) 
+![GitHub stars](https://img.shields.io/github/stars/vitabaks/autobase)
 
-`postgresql_cluster` automates the deployment and management of highly available PostgreSQL clusters in production environments. This solution is tailored for use on dedicated physical servers, virtual machines, and within both on-premises and cloud-based infrastructures.
+**Autobase for PostgreSQL®** is an open-source alternative to cloud-managed databases (DBaaS) such as Amazon RDS, Google Cloud SQL, Azure Database, and more.
 
-You can find a version of this documentation that is searchable and also easier to navigate at [postgresql-cluster.org](http://postgresql-cluster.org)
+This automated database platform enables you to create and manage production-ready, highly available PostgreSQL clusters. It simplifies the deployment process, reduces operational costs, and makes database management accessible—even for teams without specialized expertise.
+
+**Automate failover, backups, restore, upgrades, scaling, and more with ease.**
+
+You can find a version of this documentation that is searchable and also easier to navigate at [autobase.tech](http://autobase.tech)
 
 <a href="https://www.producthunt.com/posts/postgresql-cluster-org?embed=true&utm_source=badge-featured&utm_medium=badge&utm_souce=badge-postgresql&#0045;cluster&#0045;org" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=583645&theme=light" alt="postgresql&#0045;cluster&#0046;org - The&#0032;open&#0045;source&#0032;alternative&#0032;to&#0032;cloud&#0045;managed&#0032;databases | Product Hunt" style="width: 250px; height: 54px;" width="250" height="54" /></a>
 
-:trophy: **Use the [sponsoring](https://github.com/vitabaks/postgresql_cluster#sponsor-this-project) program to get personalized support, or just to contribute to this project.**
+:trophy: **Use the [sponsoring](https://github.com/vitabaks/autobase#sponsor-this-project) program to get personalized support, or just to contribute to this project.**
 
 ---
 
 ### Supported setups of Postgres Cluster
 
-![postgresql_cluster](images/postgresql_cluster.png#gh-light-mode-only)
-![postgresql_cluster](images/postgresql_cluster.dark_mode.png#gh-dark-mode-only)
+![pg_cluster_scheme](images/pg_cluster_scheme.png#gh-light-mode-only)
+![pg_cluster_scheme](images/pg_cluster_scheme.dark_mode.png#gh-dark-mode-only)
 
 You have three schemes available for deployment:
 
@@ -102,17 +108,17 @@ all supported PostgreSQL versions
 _Table of results of daily automated testing of cluster deployment:_
 | Distribution | Test result |
 |--------------|:----------:|
-| Debian 11    | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/postgresql_cluster/schedule_pg_debian11.yml?branch=master)](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_debian11.yml) |
-| Debian 12    | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/postgresql_cluster/schedule_pg_debian11.yml?branch=master)](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_debian12.yml) |
-| Ubuntu 22.04 | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/postgresql_cluster/schedule_pg_ubuntu2204.yml?branch=master)](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_ubuntu2204.yml) |
-| Ubuntu 24.04 | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/postgresql_cluster/schedule_pg_ubuntu2204.yml?branch=master)](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_ubuntu2404.yml) |
-| CentOS Stream 9 | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/postgresql_cluster/schedule_pg_centosstream9.yml?branch=master)](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_centosstream9.yml) |
-| Oracle Linux 8 | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/postgresql_cluster/schedule_pg_oracle_linux8.yml?branch=master)](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_oracle_linux8.yml) |
-| Oracle Linux 9 | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/postgresql_cluster/schedule_pg_oracle_linux9.yml?branch=master)](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_oracle_linux9.yml) |
-| Rocky Linux 8 | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/postgresql_cluster/schedule_pg_rockylinux8.yml?branch=master)](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_rockylinux8.yml) |
-| Rocky Linux 9 | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/postgresql_cluster/schedule_pg_rockylinux9.yml?branch=master)](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_rockylinux9.yml) |
-| AlmaLinux 8 | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/postgresql_cluster/schedule_pg_almalinux8.yml?branch=master)](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_almalinux8.yml) |
-| AlmaLinux 9 | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/postgresql_cluster/schedule_pg_almalinux9.yml?branch=master)](https://github.com/vitabaks/postgresql_cluster/actions/workflows/schedule_pg_almalinux9.yml) |
+| Debian 11    | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/autobase/schedule_pg_debian11.yml?branch=master)](https://github.com/vitabaks/autobase/actions/workflows/schedule_pg_debian11.yml) |
+| Debian 12    | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/autobase/schedule_pg_debian11.yml?branch=master)](https://github.com/vitabaks/autobase/actions/workflows/schedule_pg_debian12.yml) |
+| Ubuntu 22.04 | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/autobase/schedule_pg_ubuntu2204.yml?branch=master)](https://github.com/vitabaks/autobase/actions/workflows/schedule_pg_ubuntu2204.yml) |
+| Ubuntu 24.04 | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/autobase/schedule_pg_ubuntu2204.yml?branch=master)](https://github.com/vitabaks/autobase/actions/workflows/schedule_pg_ubuntu2404.yml) |
+| CentOS Stream 9 | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/autobase/schedule_pg_centosstream9.yml?branch=master)](https://github.com/vitabaks/autobase/actions/workflows/schedule_pg_centosstream9.yml) |
+| Oracle Linux 8 | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/autobase/schedule_pg_oracle_linux8.yml?branch=master)](https://github.com/vitabaks/autobase/actions/workflows/schedule_pg_oracle_linux8.yml) |
+| Oracle Linux 9 | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/autobase/schedule_pg_oracle_linux9.yml?branch=master)](https://github.com/vitabaks/autobase/actions/workflows/schedule_pg_oracle_linux9.yml) |
+| Rocky Linux 8 | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/autobase/schedule_pg_rockylinux8.yml?branch=master)](https://github.com/vitabaks/autobase/actions/workflows/schedule_pg_rockylinux8.yml) |
+| Rocky Linux 9 | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/autobase/schedule_pg_rockylinux9.yml?branch=master)](https://github.com/vitabaks/autobase/actions/workflows/schedule_pg_rockylinux9.yml) |
+| AlmaLinux 8 | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/autobase/schedule_pg_almalinux8.yml?branch=master)](https://github.com/vitabaks/autobase/actions/workflows/schedule_pg_almalinux8.yml) |
+| AlmaLinux 9 | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/autobase/schedule_pg_almalinux9.yml?branch=master)](https://github.com/vitabaks/autobase/actions/workflows/schedule_pg_almalinux9.yml) |
 
 ###### Ansible version 
 Minimum supported Ansible version: 8.0.0 (ansible-core 2.15.0)
@@ -200,20 +206,20 @@ You have the option to easily deploy Postgres clusters using the Console (UI) or
 
 ### Console (UI)
 
-To run the PostgreSQL Cluster Console, execute the following command:
+To run the autobase console, execute the following command:
 
 ```
-docker run -d --name pg-console \
+docker run -d --name autobase-console \
   --publish 80:80 \
   --publish 8080:8080 \
   --env PG_CONSOLE_API_URL=http://localhost:8080/api/v1 \
   --env PG_CONSOLE_AUTHORIZATION_TOKEN=secret_token \
-  --env PG_CONSOLE_DOCKER_IMAGE=vitabaks/postgresql_cluster:latest \
+  --env PG_CONSOLE_DOCKER_IMAGE=autobase/automation:latest \
   --volume console_postgres:/var/lib/postgresql \
   --volume /var/run/docker.sock:/var/run/docker.sock \
   --volume /tmp/ansible:/tmp/ansible \
   --restart=unless-stopped \
-  vitabaks/postgresql_cluster_console:2.0.0
+  autobase/console:latest
 ```
 
 > [!NOTE]
@@ -229,7 +235,7 @@ Go to http://localhost:80 (or the address of your server) and use `secret_token`
 
 ![Cluster creation demo](images/pg_console_create_cluster_demo.gif)
 
-Refer to the [Deployment](https://postgresql-cluster.org/docs/category/deployment) section to learn more about the different deployment methods.
+Refer to the [Deployment](https://autobase.tech/docs/category/deployment) section to learn more about the different deployment methods.
 
 ### Command line
 
@@ -245,13 +251,13 @@ pip3 install ansible
 1. Download or clone this repository
 
 ```
-git clone https://github.com/vitabaks/postgresql_cluster.git
+git clone https://github.com/vitabaks/autobase.git
 ```
 
 2. Go to the automation directory
 
 ```
-cd postgresql_cluster/automation
+cd autobase/automation
 ```
 
 3. Install requirements on the control node
@@ -338,11 +344,11 @@ This command will delete the specified components, allowing you to start a new i
 
 If you find our project helpful, consider giving it a star on GitHub! Your support helps us grow and motivates us to keep improving. Starring the project is a simple yet effective way to show your appreciation and help others discover it.
 
-<a href="https://star-history.com/#vitabaks/postgresql_cluster&Date">
+<a href="https://star-history.com/#vitabaks/autobase&Date">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=vitabaks/postgresql_cluster&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=vitabaks/postgresql_cluster&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=vitabaks/postgresql_cluster&type=Date" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=vitabaks/autobase&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=vitabaks/autobase&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=vitabaks/autobase&type=Date" />
  </picture>
 </a>
 
@@ -360,10 +366,6 @@ Support our work through [Patreon](https://www.patreon.com/vitabaks)
 
 [![Support me on Patreon](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fshieldsio-patreon.vercel.app%2Fapi%3Fusername%3Dvitabaks%26type%3Dpatrons&style=for-the-badge)](https://patreon.com/vitabaks)
 
-Support our work through a crypto wallet:
-
-USDT (TRC20): `TSTSXZzqDCUDHDjZwCpuBkdukjuDZspwjj`
-
 ## License
 Licensed under the MIT License. See the [LICENSE](./LICENSE) file for details.
 
@@ -372,4 +374,4 @@ Vitaliy Kukharik (PostgreSQL DBA) \
 vitabaks@gmail.com
 
 ## Feedback, bug-reports, requests, ...
-Are [welcome](https://github.com/vitabaks/postgresql_cluster/issues)!
+Are [welcome](https://github.com/vitabaks/autobase/issues)!

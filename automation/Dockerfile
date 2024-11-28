@@ -6,8 +6,8 @@ USER root
 # Set SHELL to Bash to ensure pipefail is supported
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-# Copy postgresql_cluster repository
-COPY automation /postgresql_cluster/automation
+# Copy autobase repository
+COPY automation /autobase/automation
 
 # Install required packages, Python dependencies, Ansible requirements, and perform cleanup
 RUN apt-get clean && rm -rf /var/lib/apt/lists/partial \
@@ -16,11 +16,11 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/partial \
        ca-certificates gnupg git python3 python3-dev python3-pip keychain ssh-client sshpass\
        gcc g++ cmake make libssl-dev curl apt-transport-https lsb-release gnupg \
     && pip3 install --break-system-packages --no-cache-dir -r \
-      /postgresql_cluster/automation/requirements.txt \
+      /autobase/automation/requirements.txt \
     && ansible-galaxy install --force -r \
-       /postgresql_cluster/automation/requirements.yml \
+       /autobase/automation/requirements.yml \
     && ansible-galaxy install --force -r \
-       /postgresql_cluster/automation/roles/consul/requirements.yml \
+       /autobase/automation/roles/consul/requirements.yml \
     && ansible-galaxy collection list \
     && pip3 install --break-system-packages --no-cache-dir -r \
        /root/.ansible/collections/ansible_collections/azure/azcollection/requirements.txt \
@@ -30,12 +30,12 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/partial \
     && apt-get autoremove -y --purge gnupg git python3-dev gcc g++ cmake make libssl-dev \
     && apt-get clean -y autoclean \
     && rm -rf /var/lib/apt/lists/* /tmp/* \
-    && chmod +x /postgresql_cluster/automation/entrypoint.sh
+    && chmod +x /autobase/automation/entrypoint.sh
 
 # Set environment variable for Ansible collections paths
 ENV ANSIBLE_COLLECTIONS_PATH=/root/.ansible/collections/ansible_collections:/usr/local/lib/python3.11/dist-packages/ansible_collections
 ENV USER=root
 
-WORKDIR /postgresql_cluster/automation
+WORKDIR /autobase/automation
 
 ENTRYPOINT ["./entrypoint.sh"]

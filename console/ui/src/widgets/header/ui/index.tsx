@@ -1,6 +1,6 @@
 import { FC, useEffect } from 'react';
 import { AppBar, Box, MenuItem, SelectChangeEvent, Stack, TextField, Toolbar, Typography } from '@mui/material';
-import Logo from '@shared/assets/PGCLogo.svg?react';
+import Logo from '@shared/assets/AutobaseLogo.svg?react';
 import { grey } from '@mui/material/colors';
 import LogoutButton from '@features/logout-button';
 import { useGetProjectsQuery } from '@shared/api/api/projects.ts';
@@ -28,15 +28,15 @@ const Header: FC = () => {
     <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }} elevation={0} variant="outlined">
       <Toolbar sx={{ paddingLeft: '12px !important' }}>
         <Stack direction="row" justifyContent="space-between" alignItems="center" width="100%">
-          <Stack direction="row" alignItems="center" gap="24px">
+          <Stack direction="row" alignItems="center" gap="46px">
             <Stack direction="row" alignItems="center" gap="16px" marginLeft="4px">
-              <Logo />
+              <Logo style={{ width: '35px', height: '35px' }} />
               <Box>
-                <Typography fontWeight="bold" color="common.black" sx={{ lineHeight: 1.2 }}>
-                  PostgreSQL Cluster
+                <Typography fontWeight="400" sx={{ color: '#384555', lineHeight: 1.2 }}>
+                  autobase
                 </Typography>
-                <Typography fontWeight="bold" color={grey[700]} sx={{ lineHeight: 1.2 }}>
-                  Console
+                <Typography fontWeight="500" color="common.black" sx={{ lineHeight: 1.2 }}>
+                  for PostgreSQL®
                 </Typography>
               </Box>
             </Stack>

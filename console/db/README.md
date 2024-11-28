@@ -1,4 +1,4 @@
-## Database Schema for PostgreSQL Cluster Console
+## Database Schema for Autobase Console
 
 ### Introduction
 
@@ -75,7 +75,7 @@ status
    - Table containing logs of operations performed on cluster.
      - Note: The migration includes a DO block that checks for the presence of the timescaledb extension. If the extension is installed, the operations table is converted into a hypertable with monthly partitioning. Additionally, the block checks the timescaledb license. If the license is a Community license (timescale), a hypertable compression policy is created for partitions older than one month.
 - `postgres_versions`
-  - Table containing the major PostgreSQL versions supported by the postgresql_cluster
+  - Table containing the major PostgreSQL versions supported by the autobase
 - `settings`
   - Table containing configuration parameters, including console and other component settings
 
