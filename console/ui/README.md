@@ -19,8 +19,8 @@ To run this project locally, follow these steps:
 1. **Clone repository**
 
 ```
-git clone https://github.com/vitabaks/postgresql_cluster.git
-cd postgresql_cluster/console/ui
+git clone https://github.com/vitabaks/autobase.git
+cd autobase/console/ui
 ```
 
 2. **Install dependencies**
