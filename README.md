@@ -11,7 +11,7 @@
 
 **Autobase for PostgreSQL®** automates the deployment and management of highly available PostgreSQL clusters in production environments. This solution is tailored for use on dedicated physical servers, virtual machines, and within both on-premises and cloud-based infrastructures.
 
-You can find a version of this documentation that is searchable and also easier to navigate at [postgresql-cluster.org](http://postgresql-cluster.org)
+You can find a version of this documentation that is searchable and also easier to navigate at [autobase.tech](http://autobase.tech)
 
 <a href="https://www.producthunt.com/posts/postgresql-cluster-org?embed=true&utm_source=badge-featured&utm_medium=badge&utm_souce=badge-postgresql&#0045;cluster&#0045;org" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=583645&theme=light" alt="postgresql&#0045;cluster&#0046;org - The&#0032;open&#0045;source&#0032;alternative&#0032;to&#0032;cloud&#0045;managed&#0032;databases | Product Hunt" style="width: 250px; height: 54px;" width="250" height="54" /></a>
 
@@ -229,7 +229,7 @@ Go to http://localhost:80 (or the address of your server) and use `secret_token`
 
 ![Cluster creation demo](images/pg_console_create_cluster_demo.gif)
 
-Refer to the [Deployment](https://postgresql-cluster.org/docs/category/deployment) section to learn more about the different deployment methods.
+Refer to the [Deployment](https://autobase.tech/docs/category/deployment) section to learn more about the different deployment methods.
 
 ### Command line
 
