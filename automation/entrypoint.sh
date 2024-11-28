@@ -13,13 +13,13 @@ is_base64() {
 if [[ -n "${ANSIBLE_INVENTORY_JSON}" ]]; then
   if is_base64 "${ANSIBLE_INVENTORY_JSON}"; then
     echo "Creating inventory.json with the (base64 decoded) content of ANSIBLE_INVENTORY_JSON"
-    echo "${ANSIBLE_INVENTORY_JSON}" | base64 -d > /postgresql_cluster/inventory.json
+    echo "${ANSIBLE_INVENTORY_JSON}" | base64 -d > /autobase/inventory.json
   else
     echo "Creating inventory.json with the content of ANSIBLE_INVENTORY_JSON"
-    echo "${ANSIBLE_INVENTORY_JSON}" > /postgresql_cluster/inventory.json
+    echo "${ANSIBLE_INVENTORY_JSON}" > /autobase/inventory.json
   fi
   # Set ANSIBLE_INVENTORY environment variable
-  export ANSIBLE_INVENTORY=/postgresql_cluster/inventory.json
+  export ANSIBLE_INVENTORY=/autobase/inventory.json
   # Set ANSIBLE_SSH_ARGS environment variable
   export ANSIBLE_SSH_ARGS="-o StrictHostKeyChecking=no"
 fi

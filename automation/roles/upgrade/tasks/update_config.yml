@@ -7,7 +7,6 @@
     dest: "{{ patroni_config_file }}.bkp"
     remote_src: true
 
-# https://github.com/vitabaks/postgresql_cluster/issues/666
 - name: Remove patroni.dynamic.json file
   ansible.builtin.file:
     path: "{{ pg_old_datadir }}/patroni.dynamic.json"

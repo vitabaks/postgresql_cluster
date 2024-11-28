@@ -27,8 +27,8 @@ You can find a version of this documentation that is searchable and also easier 
 
 ### Supported setups of Postgres Cluster
 
-![pg_cluster_scheme](images/postgresql_cluster.png#gh-light-mode-only)
-![pg_cluster_scheme](images/postgresql_cluster.dark_mode.png#gh-dark-mode-only)
+![pg_cluster_scheme](images/pg_cluster_scheme.png#gh-light-mode-only)
+![pg_cluster_scheme](images/pg_cluster_scheme.dark_mode.png#gh-dark-mode-only)
 
 You have three schemes available for deployment:
 
