@@ -219,7 +219,7 @@ docker run -d --name autobase-console \
   --volume /var/run/docker.sock:/var/run/docker.sock \
   --volume /tmp/ansible:/tmp/ansible \
   --restart=unless-stopped \
-  autobase/console:2.0.0
+  autobase/console:latest
 ```
 
 > [!NOTE]
