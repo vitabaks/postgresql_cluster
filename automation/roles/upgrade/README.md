@@ -155,7 +155,7 @@ Please see the variable file vars/[upgrade.yml](../../vars/upgrade.yml)
       - Perform pg_dropcluster (for Debian based)
       - Clear the new PostgreSQL data directory
   - Get the current install user (rolname with oid = 10)
-  - Get the current encodig and data_checksums settings
+  - Get the current encoding and data_checksums settings
   - Initialize new PostgreSQL data directory
     - for Debain based: on all database servers to create default config files
     - for RedHat based: on the Primary only
