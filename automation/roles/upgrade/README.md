@@ -187,22 +187,10 @@ Please see the variable file vars/[upgrade.yml](../../vars/upgrade.yml)
 - Backup the patroni.yml configuration file
 - Edit the patroni.yml configuration file
   - **Update parameters**: `data_dir`, `bin_dir`, `config_dir`
-  - **Check if the 'standby_cluster' parameter is specified**
-    - Remove parameters: `standby_cluster` (if exists)
+  - **Prepare the PostgreSQL parameters**
+    - Notes: Removed or renamed parameters
+  - **Remove 'standby_cluster' parameter (if exists)**
     - Notes: To support upgrades in the Patroni Standby Cluster
-  - **Prepare the PostgreSQL parameters** (removed or renamed parameters)
-    - Check if the '`replacement_sort_tuples`' parameter is specified (removed in PG 11)
-      - remove parameter: 'replacement_sort_tuples' (if exists)
-    - Check if the '`default_with_oids`' parameter is specified (removed in PG 12)
-      - remove parameter: 'default_with_oids' (if exists)
-    - Check if the '`wal_keep_segments`' parameter is specified (removed in PG 13)
-      - replace parameter: 'wal_keep_segments' to '`wal_keep_size`'
-    - Check if the '`operator_precedence_warning`' parameter is specified" (removed in PG 14)
-      - remove parameter: 'operator_precedence_warning' (if exists)
-    - Check if the '`vacuum_cleanup_index_scale_factor`' parameter is specified (removed in PG 14)
-      - remove parameter: 'vacuum_cleanup_index_scale_factor' (if exists)
-    - Check if the '`stats_temp_directory`' parameter is specified (removed in PG 15)
-      - remove parameter: 'stats_temp_directory' (if exists)
 - **Copy pg_hba.conf to `pg_new_confdir`**
   - Notes: to save pg_hba rules
 
