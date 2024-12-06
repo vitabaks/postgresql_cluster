@@ -25,26 +25,6 @@
   loop_control:
     label: '{{ item.replace }}'
 
-# To support upgrades in the Patroni Standby Cluster.
-- block:  # standby_cluster
-    - name: "Edit patroni.yml | check if the 'standby_cluster' parameter is specified"
-      ansible.builtin.command: grep standby_cluster {{ patroni_config_file }}
-      register: standby_cluster_output
-      changed_when: false
-      failed_when: false
-
-    # The standby_cluster parameter will be removed from the bootstrap.dcs section (if exists)
-    # along with all the text between 'standby_cluster' and the next 'initdb' parameter
-    - name: "Edit patroni.yml | remove parameters: standby_cluster (if exists)"
-      ansible.builtin.replace:
-        path: "{{ patroni_config_file }}"
-        regexp: '^\s*standby_cluster:[^\n]*\n(.|\n)*?initdb:'
-        replace: '  initdb:'
-      when: standby_cluster_output.stdout | length > 0
-  when:
-    - patroni_standby_cluster.host is defined
-    - patroni_standby_cluster.host | length > 0
-
 # Prepare the parameters for PostgreSQL (removed or renamed parameters).
 
 - block:  # replacement_sort_tuples (removed in the PG 11)
@@ -268,6 +248,17 @@
     - pg_old_version|int <= 16 and pg_new_version|int >= 17
 
 # TODO: Prepare the parameters for PostgreSQL 18 and etc.
+
+# To support upgrades in the Patroni Standby Cluster.
+- name: "Edit patroni.yml | remove parameter: standby_cluster (if exists)"
+  ansible.builtin.replace:
+    path: "{{ patroni_config_file }}"
+    regexp: '^\s*standby_cluster:[^\n]*\n(.|\n)*?initdb:'
+    replace: '  initdb:'
+
+- name: "Remove 'standby_cluster' parameter from DCS (if exists)"
+  ansible.builtin.command: patronictl -c {{ patroni_config_file }} edit-config -s standby_cluster=null --force
+  when: inventory_hostname in groups['primary']
 
 # Copy the pg_hba.conf file to a new PostgreSQL to save pg_hba rules.
 - name: "Copy pg_hba.conf to {{ pg_new_confdir }}"
