@@ -9,13 +9,15 @@
         name: sudo
         state: present
 
-    - name: Check current user
-      ansible.builtin.command: whoami
-      register: current_user
-
-    - name: Debug current_user
-      ansible.builtin.debug:
-        var: current_user.stdout
+    - name: Ensure sudo NOPASSWD is configured for ansible user
+      become: true
+      become_method: su
+      ansible.builtin.lineinfile:
+        path: /etc/sudoers
+        state: present
+        regexp: '^{{ ansible_user }} ALL=\(ALL\) NOPASSWD: ALL$'
+        line: '{{ ansible_user }} ALL=(ALL) NOPASSWD: ALL'
+        validate: 'visudo -cf %s'
 
     - name: Set variables for PostgreSQL Cluster deployment test
       ansible.builtin.set_fact:
@@ -102,8 +104,6 @@
 
     - name: Install openssh-server package
       become: true
-      become_user: root
-      become_method: su
       ansible.builtin.package:
         name: openssh-server
         state: present
