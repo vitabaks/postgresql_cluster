@@ -9,6 +9,20 @@
         name: sudo
         state: present
 
+    - name: Ensure PAM is installed
+      become: true
+      ansible.builtin.package:
+        name: pam
+        state: present
+
+    - name: Check current user
+      ansible.builtin.command: whoami
+      register: current_user
+
+    - name: Debug current_user
+      ansible.builtin.debug:
+        var: current_user.stdout
+
     - name: Set variables for PostgreSQL Cluster deployment test
       ansible.builtin.set_fact:
         firewall_enabled_at_boot: false
