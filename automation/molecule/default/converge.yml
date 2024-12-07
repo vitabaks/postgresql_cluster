@@ -103,7 +103,7 @@
     - name: Install openssh-server package
       become: true
       become_user: root
-      become_method: sudo
+      become_method: su
       ansible.builtin.package:
         name: openssh-server
         state: present
