@@ -15,8 +15,8 @@
       ansible.builtin.lineinfile:
         path: /etc/sudoers
         state: present
-        regexp: '^{{ ansible_user }} ALL=\(ALL\) NOPASSWD: ALL$'
-        line: '{{ ansible_user }} ALL=(ALL) NOPASSWD: ALL'
+        regexp: '^{{ ansible_facts.user | default("root") }} ALL=\(ALL\) NOPASSWD: ALL$'
+        line: '{{ ansible_facts.user | default("root") }} ALL=(ALL) NOPASSWD: ALL'
         validate: 'visudo -cf %s'
 
     - name: Set variables for PostgreSQL Cluster deployment test
