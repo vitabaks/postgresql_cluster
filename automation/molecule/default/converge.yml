@@ -9,14 +9,6 @@
         name: sudo
         state: present
 
-    - name: Ensure PAM is installed
-      become: true
-      become_user: root
-      become_method: sudo
-      ansible.builtin.package:
-        name: pam
-        state: present
-
     - name: Check current user
       ansible.builtin.command: whoami
       register: current_user
