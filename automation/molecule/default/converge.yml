@@ -11,6 +11,8 @@
 
     - name: Ensure PAM is installed
       become: true
+      become_user: root
+      become_method: sudo
       ansible.builtin.package:
         name: pam
         state: present
