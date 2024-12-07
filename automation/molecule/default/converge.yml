@@ -3,8 +3,15 @@
   hosts: all
   gather_facts: true
   become: true
+  become_user: root
+  become_method: sudo
 
   tasks:
+    - name: Ensure sudo is installed
+      ansible.builtin.package:
+        name: sudo
+        state: present
+
     - name: Set variables for PostgreSQL Cluster deployment test
       ansible.builtin.set_fact:
         firewall_enabled_at_boot: false
