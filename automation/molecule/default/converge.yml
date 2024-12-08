@@ -109,6 +109,7 @@
 
     - name: Delete "/run/nologin" file (if exists)
       become: true
+      become_method: su
       ansible.builtin.file:
         path: /run/nologin
         state: absent
