@@ -94,12 +94,14 @@
 
     - name: Install openssh-server package
       become: true
+      become_method: su
       ansible.builtin.package:
         name: openssh-server
         state: present
 
     - name: Start ssh service
       become: true
+      become_method: su
       ansible.builtin.systemd:
         name: "{{ 'ssh' if ansible_os_family == 'Debian' else 'sshd' }}"
         state: started
