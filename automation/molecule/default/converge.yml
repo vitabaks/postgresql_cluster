@@ -4,52 +4,22 @@
   gather_facts: true
 
   tasks:
-    # Проверяем PAM конфигурацию для sudo
-    - name: Check PAM configuration for sudo
-      command: cat /etc/pam.d/sudo
-      register: pam_sudo_config
-      changed_when: false
-
-    - name: Debug PAM configuration for sudo
-      debug:
-        var: pam_sudo_config.stdout
-
-    # Обновляем PAM конфигурацию для sudo
-    - name: Update PAM configuration to disable password for sudo
+    - name: Update PAM configuration for sudo to disable authentication
       ansible.builtin.lineinfile:
         path: /etc/pam.d/sudo
         regexp: '^auth'
         line: 'auth sufficient pam_permit.so'
         state: present
 
-    # Проверяем system-auth
-    - name: Check system-auth configuration
-      command: cat /etc/pam.d/system-auth
-      register: pam_system_auth_config
+    - name: Check updated PAM configuration for sudo
+      command: cat /etc/pam.d/sudo
+      register: pam_sudo_updated
       changed_when: false
 
-    - name: Debug system-auth configuration
+    - name: Debug updated PAM configuration for sudo
       debug:
-        var: pam_system_auth_config.stdout
+        var: pam_sudo_updated.stdout
 
-    # Проверяем SELinux статус
-    - name: Check SELinux status
-      command: getenforce
-      register: selinux_status
-      changed_when: false
-      ignore_errors: yes
-
-    - name: Debug SELinux status
-      debug:
-        var: selinux_status.stdout
-
-    # Отключаем SELinux, если он включён
-    - name: Disable SELinux if enabled
-      command: setenforce 0
-      when: selinux_status.stdout == "Enforcing"
-      ignore_errors: yes
-
-    # Тестируем sudo без пароля
     - name: Test sudo without password
       command: sudo -n true
       register: sudo_test
@@ -60,7 +30,6 @@
       debug:
         var: sudo_test
 
-    # Проверяем логи PAM на ошибки
     - name: Check authentication logs for PAM errors
       shell: "grep -Ei 'pam|auth' /var/log/secure || true"
       register: pam_log_check
