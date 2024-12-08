@@ -4,38 +4,26 @@
   gather_facts: true
 
   tasks:
-    - name: Install pamtester
+    - name: Disable PAM for sudo
       become: true
       become_method: su
-      ansible.builtin.package:
-        name: pamtester
+      ansible.builtin.lineinfile:
+        path: /etc/sudoers
         state: present
+        regexp: '^Defaults !pam$'
+        line: 'Defaults !pam'
+        validate: 'visudo -cf %s'
 
-    - name: Verify PAM modules for sudo
+    - name: Verify PAM is disabled for sudo
       become: true
       become_method: su
-      ansible.builtin.command: "pamtester sudo root authenticate"
-      register: pam_test
-      ignore_errors: true
+      ansible.builtin.command: "sudo -l"
+      register: sudo_check
+      changed_when: false
 
-    - name: Debug PAM tester result
-      ansible.builtin.debug:
-        msg: "PAM tester result:\n{{ pam_test.stdout }}\nError: {{ pam_test.stderr }}"
-
-    - name: Check SELinux status
-      become: true
-      become_method: su
-      ansible.builtin.command: "getenforce"
-      register: selinux_status
-
-    - name: Debug SELinux status
-      ansible.builtin.debug:
-        msg: "SELinux status: {{ selinux_status.stdout }}"
-
-    - name: Disable SELinux temporarily
-      become: true
-      become_method: su
-      ansible.builtin.command: "setenforce 0"
+    - name: Debug sudo configuration
+      debug:
+        var: sudo_check.stdout
 
     - name: Set variables for PostgreSQL Cluster deployment test
       ansible.builtin.set_fact:
