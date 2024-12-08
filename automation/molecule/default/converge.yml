@@ -6,6 +6,7 @@
   tasks:
     - name: Check PAM configuration for sudo
       become: true
+      become_method: su
       ansible.builtin.command: "cat /etc/pam.d/sudo"
       register: pam_sudo_config
       changed_when: false
