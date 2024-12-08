@@ -5,14 +5,14 @@
 
   tasks:
     # for tests only, not for production
-    - name: Update PAM configuration for sudo
+    - name: Disable PAM authentication in sudoers
       become: true
-      become_method: su
       ansible.builtin.lineinfile:
-        path: /etc/pam.d/sudo
+        path: /etc/sudoers
         state: present
-        regexp: '^auth.*pam_unix.so'
-        line: 'auth sufficient pam_unix.so try_first_pass nullok'
+        regexp: '^Defaults\s*!pam$'
+        line: 'Defaults !pam'
+        validate: 'visudo -cf %s'
 
     - name: Set variables for PostgreSQL Cluster deployment test
       ansible.builtin.set_fact:
