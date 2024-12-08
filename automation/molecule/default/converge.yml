@@ -87,10 +87,10 @@
       ansible.builtin.command: "rpm --import https://repo.almalinux.org/almalinux/RPM-GPG-KEY-AlmaLinux-{{ ansible_distribution_major_version }}"
       when: ansible_distribution == "AlmaLinux"
 
-#    - name: Update all system packages
-#      ansible.builtin.include_role:
-#        name: ../../roles/update
-#        tasks_from: system
+    - name: Update all system packages
+      ansible.builtin.include_role:
+        name: ../../roles/update
+        tasks_from: system
 
     - name: Install openssh-server package
       become: true
