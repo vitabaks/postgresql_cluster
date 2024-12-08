@@ -4,54 +4,35 @@
   gather_facts: true
 
   tasks:
-    - name: Check current user
-      ansible.builtin.command: whoami
-      register: current_user
-      ignore_errors: true
-
-    - name: Debug current user
-      ansible.builtin.debug:
-        msg: "Current user: {{ current_user.stdout }}"
-
-    - name: Verify sudo access for the current user
+    - name: Check PAM configuration for sudo
       become: true
-      ansible.builtin.command: "sudo -l"
-      register: sudo_access
+      ansible.builtin.command: "cat /etc/pam.d/sudo"
+      register: pam_sudo_conf
       ignore_errors: true
 
-    - name: Debug sudo access
+    - name: Debug PAM sudo configuration
       ansible.builtin.debug:
-        msg: "Sudo access:\n{{ sudo_access.stdout }}"
+        msg: "PAM sudo configuration:\n{{ pam_sudo_conf.stdout }}"
 
-    - name: Test sudo command execution
+    - name: Check PAM authentication logs
       become: true
-      ansible.builtin.command: "sudo whoami"
-      register: sudo_test
+      ansible.builtin.shell: "grep -i pam /var/log/auth.log || grep -i pam /var/log/secure"
+      register: pam_auth_logs
       ignore_errors: true
 
-    - name: Debug sudo test result
+    - name: Debug PAM authentication logs
       ansible.builtin.debug:
-        msg: "Sudo test result: {{ sudo_test.stdout }}"
+        msg: "PAM authentication logs:\n{{ pam_auth_logs.stdout }}"
 
-    - name: Check PAM logs for errors
+    - name: Verify PAM modules
       become: true
-      ansible.builtin.shell: "grep 'PAM' /var/log/auth.log || grep 'PAM' /var/log/secure"
-      register: pam_logs
+      ansible.builtin.command: "pamtester sudo root authenticate"
+      register: pam_test
       ignore_errors: true
 
-    - name: Debug PAM logs
+    - name: Debug PAM tester result
       ansible.builtin.debug:
-        msg: "PAM logs:\n{{ pam_logs.stdout }}"
-
-    - name: Validate sudoers file
-      become: true
-      ansible.builtin.command: "visudo -cf /etc/sudoers"
-      register: sudoers_validation
-      ignore_errors: true
-
-    - name: Debug sudoers validation
-      ansible.builtin.debug:
-        msg: "Sudoers validation:\n{{ sudoers_validation.stdout }}"
+        msg: "PAM tester result:\n{{ pam_test.stdout }}\nError: {{ pam_test.stderr }}"
 
     - name: Set variables for PostgreSQL Cluster deployment test
       ansible.builtin.set_fact:
