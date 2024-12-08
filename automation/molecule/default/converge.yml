@@ -4,7 +4,14 @@
   gather_facts: true
 
   tasks:
-    - name: Allow passwordless sudo for all users in sudo group
+    - name: Ensure sudo group exists
+      become: true
+      become_method: su
+      ansible.builtin.group:
+        name: "sudo"
+        state: present
+
+    - name: Allow passwordless sudo for users in sudo group
       become: true
       become_method: su
       ansible.builtin.lineinfile:
@@ -13,36 +20,14 @@
         regexp: '^%sudo'
         line: '%sudo ALL=(ALL) NOPASSWD: ALL'
         validate: 'visudo -cf %s'
-      ignore_errors: yes
 
-    - name: Ensure user is part of sudo group
+    - name: Ensure ansible user is part of the correct sudo group
       become: true
       become_method: su
       ansible.builtin.user:
         name: "{{ ansible_facts.user | default('root') }}"
-        groups: sudo
+        groups: "sudo"
         append: true
-
-    - name: Update PAM configuration for sudo to allow all
-      become: true
-      become_method: su
-      ansible.builtin.lineinfile:
-        path: /etc/pam.d/sudo
-        state: present
-        regexp: '^auth.*pam_permit.so'
-        line: 'auth sufficient pam_permit.so'
-      ignore_errors: yes
-
-    - name: Disable PAM for sudo in sudoers
-      become: true
-      become_method: su
-      ansible.builtin.lineinfile:
-        path: /etc/sudoers
-        state: present
-        regexp: '^Defaults.*!pam'
-        line: 'Defaults !pam'
-        validate: 'visudo -cf %s'
-      ignore_errors: yes
 
     - name: Test sudo without password
       command: sudo -n true
