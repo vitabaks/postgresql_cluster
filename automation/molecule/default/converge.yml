@@ -4,10 +4,54 @@
   gather_facts: true
 
   tasks:
-    - name: Ensure sudo is installed
-      ansible.builtin.package:
-        name: sudo
-        state: present
+    - name: Check current user
+      ansible.builtin.command: whoami
+      register: current_user
+      ignore_errors: true
+
+    - name: Debug current user
+      ansible.builtin.debug:
+        msg: "Current user: {{ current_user.stdout }}"
+
+    - name: Verify sudo access for the current user
+      become: true
+      ansible.builtin.command: "sudo -l"
+      register: sudo_access
+      ignore_errors: true
+
+    - name: Debug sudo access
+      ansible.builtin.debug:
+        msg: "Sudo access:\n{{ sudo_access.stdout }}"
+
+    - name: Test sudo command execution
+      become: true
+      ansible.builtin.command: "sudo whoami"
+      register: sudo_test
+      ignore_errors: true
+
+    - name: Debug sudo test result
+      ansible.builtin.debug:
+        msg: "Sudo test result: {{ sudo_test.stdout }}"
+
+    - name: Check PAM logs for errors
+      become: true
+      ansible.builtin.shell: "grep 'PAM' /var/log/auth.log || grep 'PAM' /var/log/secure"
+      register: pam_logs
+      ignore_errors: true
+
+    - name: Debug PAM logs
+      ansible.builtin.debug:
+        msg: "PAM logs:\n{{ pam_logs.stdout }}"
+
+    - name: Validate sudoers file
+      become: true
+      ansible.builtin.command: "visudo -cf /etc/sudoers"
+      register: sudoers_validation
+      ignore_errors: true
+
+    - name: Debug sudoers validation
+      ansible.builtin.debug:
+        msg: "Sudoers validation:\n{{ sudoers_validation.stdout }}"
 
     - name: Set variables for PostgreSQL Cluster deployment test
       ansible.builtin.set_fact:
