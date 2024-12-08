@@ -4,16 +4,15 @@
   gather_facts: true
 
   tasks:
-    - name: Check PAM configuration for sudo
+    - name: Check system-auth configuration
       become: true
-      become_method: su
-      ansible.builtin.command: "cat /etc/pam.d/sudo"
-      register: pam_sudo_config
+      ansible.builtin.command: "cat /etc/pam.d/system-auth"
+      register: pam_system_auth_config
       changed_when: false
 
-    - name: Debug PAM configuration for sudo
+    - name: Debug system-auth configuration
       ansible.builtin.debug:
-        var: pam_sudo_config.stdout
+        var: pam_system_auth_config.stdout
 
     - name: Set variables for PostgreSQL Cluster deployment test
       ansible.builtin.set_fact:
