@@ -4,6 +4,40 @@
   gather_facts: true
 
   tasks:
+    - name: Ensure sudo group exists
+      become: true
+      become_method: su
+      ansible.builtin.group:
+        name: "sudo"
+        state: present
+
+    - name: Allow passwordless sudo for users in sudo group
+      become: true
+      become_method: su
+      ansible.builtin.lineinfile:
+        path: /etc/sudoers
+        state: present
+        regexp: '^%sudo'
+        line: '%sudo ALL=(ALL) NOPASSWD: ALL'
+        validate: 'visudo -cf %s'
+
+    - name: Ensure ansible user is part of the correct sudo group
+      become: true
+      become_method: su
+      ansible.builtin.user:
+        name: "{{ ansible_facts.user | default('root') }}"
+        groups: "sudo"
+        append: true
+
+    - name: Test sudo without password
+      command: sudo -n true
+      register: sudo_test
+      ignore_errors: yes
+
+    - name: Debug sudo test result
+      debug:
+        var: sudo_test
+
     - name: Set variables for PostgreSQL Cluster deployment test
       ansible.builtin.set_fact:
         firewall_enabled_at_boot: false
