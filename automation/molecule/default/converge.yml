@@ -19,7 +19,7 @@
       become: true
       become_method: su
       ansible.builtin.user:
-        name: "{{ ansible_user }}"
+        name: "{{ ansible_facts.user | default('root') }}"
         groups: sudo
         append: true
 
