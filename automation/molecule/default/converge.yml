@@ -4,16 +4,84 @@
   gather_facts: true
 
   tasks:
-    # for tests only, not for production
-    - name: Disable PAM authentication in sudoers
-      become: true
-      become_method: su
-      ansible.builtin.lineinfile:
-        path: /etc/sudoers
+    # Проверяем конфигурацию PAM для sudo
+    - name: Check PAM configuration for sudo
+      command: cat /etc/pam.d/sudo
+      register: pam_sudo_config
+      changed_when: false
+
+    - name: Debug PAM configuration for sudo
+      debug:
+        var: pam_sudo_config.stdout
+
+    # Проверяем общую PAM конфигурацию (system-auth)
+    - name: Check system-auth configuration
+      command: cat /etc/pam.d/system-auth
+      register: pam_system_auth_config
+      changed_when: false
+
+    - name: Debug system-auth configuration
+      debug:
+        var: pam_system_auth_config.stdout
+
+    # Проверяем, есть ли ошибки PAM в логах
+    - name: Check authentication logs for PAM errors
+      command: grep -Ei 'pam|auth' /var/log/secure || grep -Ei 'pam|auth' /var/log/auth.log
+      register: pam_log_check
+      failed_when: pam_log_check.rc != 0
+      ignore_errors: yes
+
+    - name: Debug authentication logs for PAM
+      debug:
+        var: pam_log_check.stdout
+
+    # Проверяем доступ через sudo
+    - name: Test sudo access
+      command: sudo -n true
+      register: sudo_access_test
+      failed_when: sudo_access_test.rc != 0
+      ignore_errors: yes
+
+    - name: Debug sudo access test
+      debug:
+        var: sudo_access_test
+
+    # Проверяем SELinux статус
+    - name: Check SELinux status
+      command: getenforce
+      register: selinux_status
+      changed_when: false
+
+    - name: Debug SELinux status
+      debug:
+        var: selinux_status.stdout
+
+    # Проверяем наличие PAM модуля в sudo
+    - name: Check if PAM module is active for sudo
+      shell: "grep 'pam_unix.so' /etc/pam.d/sudo"
+      register: pam_module_check
+      failed_when: pam_module_check.rc != 0
+      ignore_errors: yes
+
+    - name: Debug PAM module check for sudo
+      debug:
+        var: pam_module_check.stdout
+
+    # Тестируем PAM через pamtester
+    - name: Install pamtester if not present
+      package:
+        name: pamtester
         state: present
-        regexp: '^Defaults\s*!pam$'
-        line: 'Defaults !pam'
-        validate: 'visudo -cf %s'
+
+    - name: Test PAM with pamtester
+      command: pamtester sudo root authenticate
+      register: pamtester_result
+      failed_when: pamtester_result.rc != 0
+      ignore_errors: yes
+
+    - name: Debug PAM tester result
+      debug:
+        var: pamtester_result.stderr
 
     - name: Set variables for PostgreSQL Cluster deployment test
       ansible.builtin.set_fact:
