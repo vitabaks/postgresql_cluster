@@ -4,35 +4,44 @@
   gather_facts: true
 
   tasks:
-    - name: Check PAM configuration for sudo
-      command: cat /etc/pam.d/sudo
-      register: pam_sudo_config
-      changed_when: false
+    - name: Allow passwordless sudo for all users in sudo group
+      become: true
+      become_method: su
+      ansible.builtin.lineinfile:
+        path: /etc/sudoers
+        state: present
+        regexp: '^%sudo'
+        line: '%sudo ALL=(ALL) NOPASSWD: ALL'
+        validate: 'visudo -cf %s'
+      ignore_errors: yes
 
-    - name: Debug PAM configuration for sudo
-      debug:
-        var: pam_sudo_config.stdout
+    - name: Ensure user is part of sudo group
+      become: true
+      become_method: su
+      ansible.builtin.user:
+        name: "{{ ansible_user }}"
+        groups: sudo
+        append: true
+
+    - name: Update PAM configuration for sudo to allow all
+      become: true
+      become_method: su
+      ansible.builtin.lineinfile:
+        path: /etc/pam.d/sudo
+        state: present
+        regexp: '^auth.*pam_permit.so'
+        line: 'auth sufficient pam_permit.so'
+      ignore_errors: yes
 
     - name: Disable PAM for sudo in sudoers
+      become: true
+      become_method: su
       ansible.builtin.lineinfile:
         path: /etc/sudoers
         state: present
         regexp: '^Defaults.*!pam'
         line: 'Defaults !pam'
         validate: 'visudo -cf %s'
-      ignore_errors: yes
-
-    - name: Check SELinux status
-      command: getenforce
-      register: selinux_status
-      ignore_errors: yes
-
-    - name: Debug SELinux status
-      debug:
-        var: selinux_status.stdout
-
-    - name: Disable SELinux temporarily
-      command: setenforce 0
       ignore_errors: yes
 
     - name: Test sudo without password
