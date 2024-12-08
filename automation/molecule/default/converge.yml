@@ -4,38 +4,15 @@
   gather_facts: true
 
   tasks:
-    - name: Check system-auth configuration
-      become: true
-      become_method: su
-      ansible.builtin.command: "cat /etc/pam.d/system-auth"
-      register: pam_system_auth_config
-      changed_when: false
-
-    - name: Debug system-auth configuration
-      ansible.builtin.debug:
-        var: pam_system_auth_config.stdout
-
     # for tests only, not for production
-    - name: Disable PAM for sudo
+    - name: Update PAM configuration for sudo
       become: true
       become_method: su
-      community.general.pamd:
-        name: sudo
-        type: auth
-        control: required
-        module_path: pam_unix.so
-        state: absent
-
-    - name: Check updated PAM configuration for sudo
-      become: true
-      become_method: su
-      ansible.builtin.command: "cat /etc/pam.d/sudo"
-      register: pam_sudo_config_updated
-      changed_when: false
-
-    - name: Debug updated PAM configuration
-      ansible.builtin.debug:
-        var: pam_sudo_config_updated.stdout
+      ansible.builtin.lineinfile:
+        path: /etc/pam.d/sudo
+        state: present
+        regexp: '^auth.*pam_unix.so'
+        line: 'auth sufficient pam_unix.so try_first_pass nullok'
 
     - name: Set variables for PostgreSQL Cluster deployment test
       ansible.builtin.set_fact:
