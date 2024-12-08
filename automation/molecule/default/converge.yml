@@ -4,26 +4,15 @@
   gather_facts: true
 
   tasks:
-    - name: Disable PAM for sudo
+    - name: Check PAM configuration for sudo
       become: true
-      become_method: su
-      ansible.builtin.lineinfile:
-        path: /etc/sudoers
-        state: present
-        regexp: '^Defaults !pam$'
-        line: 'Defaults !pam'
-        validate: 'visudo -cf %s'
-
-    - name: Verify PAM is disabled for sudo
-      become: true
-      become_method: su
-      ansible.builtin.command: "sudo -l"
-      register: sudo_check
+      ansible.builtin.command: "cat /etc/pam.d/sudo"
+      register: pam_sudo_config
       changed_when: false
 
-    - name: Debug sudo configuration
-      debug:
-        var: sudo_check.stdout
+    - name: Debug PAM configuration for sudo
+      ansible.builtin.debug:
+        var: pam_sudo_config.stdout
 
     - name: Set variables for PostgreSQL Cluster deployment test
       ansible.builtin.set_fact:
