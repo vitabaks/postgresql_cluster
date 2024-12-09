@@ -32,11 +32,19 @@
         append: true
       when: ansible_os_family == "RedHat"
 
-    - name: Ensure PAM module pam_unix is present
+    - name: Ensure authselect is installed
       become: true
       become_method: su
-      ansible.builtin.command: "authselect apply-changes"
-      ignore_errors: yes
+      ansible.builtin.package:
+        name: authselect
+        state: present
+      when: ansible_os_family == "RedHat"
+
+    - name: Apply authselect changes if available
+      become: true
+      become_method: su
+      ansible.builtin.command: authselect apply-changes
+      ignore_errors: true
       when: ansible_os_family == "RedHat"
 
     - name: Check and fix PAM configuration for sudo
@@ -52,7 +60,7 @@
     - name: Test sudo without password
       ansible.builtin.command: sudo -n true
       register: sudo_test
-      ignore_errors: yes
+      ignore_errors: true
       when: ansible_os_family == "RedHat"
 
     - name: Debug sudo test result
@@ -60,11 +68,17 @@
         var: sudo_test
       when: ansible_os_family == "RedHat"
 
-    - name: Ensure SELinux is permissive (temporary workaround)
+    - name: Check if SELinux is installed
       become: true
-      become_method: su
+      ansible.builtin.command: which setenforce
+      register: selinux_check
+      ignore_errors: true
+      when: ansible_os_family == "RedHat"
+
+    - name: Ensure SELinux is permissive (if installed)
+      become: true
       ansible.builtin.command: setenforce 0
-      ignore_errors: yes
+      ignore_errors: true
       when: ansible_os_family == "RedHat"
 
     - name: Set variables for PostgreSQL Cluster deployment test
