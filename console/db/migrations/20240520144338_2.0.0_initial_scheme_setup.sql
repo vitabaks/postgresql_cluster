@@ -292,6 +292,7 @@ INSERT INTO public.cloud_instances (cloud_provider, instance_group, instance_nam
     ('digitalocean', 'Medium Size', 'g-32vcpu-128gb', 32, 128, 1.500, 1008.000, '$', '2024-05-15'),
     ('digitalocean', 'Medium Size', 'm-32vcpu-256gb', 32, 256, 2.000, 1344.000, '$', '2024-05-15'),
     ('digitalocean', 'Medium Size', 'g-48vcpu-192gb', 48, 192, 2.699, 1814.000, '$', '2024-05-15'),
+    ('hetzner', 'Small Size', 'CX22', 2, 4, 0.0052, 3.29, '€', '2024-12-09'),
     ('hetzner', 'Small Size', 'CPX11', 2, 2, 0.007, 5.180, '€', '2024-07-21'),
     ('hetzner', 'Small Size', 'CPX21', 3, 4, 0.010, 8.980, '€', '2024-07-21'),
     ('hetzner', 'Small Size', 'CCX13', 2, 8, 0.024, 14.860, '€', '2024-05-15'),
