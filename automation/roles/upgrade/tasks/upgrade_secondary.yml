@@ -49,8 +49,8 @@
   become_user: postgres
   when:
     - inventory_hostname in groups['primary']
-    - pg_old_datadir|dirname == pg_upper_datadir + '/' + pg_old_version
-    - pg_new_datadir|dirname == pg_upper_datadir + '/' + pg_new_version
+    - pg_old_datadir|dirname == pg_upper_datadir + '/' + (pg_old_version | string)
+    - pg_new_datadir|dirname == pg_upper_datadir + '/' + (pg_new_version | string)
 
 # If the source and target directories are non-versioned directories
 # (example: /pgdata/main -> /pgdata/main<pg_new_version>)
@@ -81,8 +81,8 @@
   become_user: postgres
   when:
     - inventory_hostname in groups['primary']
-    - pg_old_datadir|dirname != pg_upper_datadir + '/' + pg_old_version
-    - pg_new_datadir|dirname != pg_upper_datadir + '/' + pg_new_version
+    - pg_old_datadir|dirname != pg_upper_datadir + '/' + (pg_old_version | string)
+    - pg_new_datadir|dirname != pg_upper_datadir + '/' + (pg_new_version | string)
 
 # Tablespaces (if exists)
 - block:

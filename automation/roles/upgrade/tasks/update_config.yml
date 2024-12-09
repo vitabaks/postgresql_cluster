@@ -7,7 +7,6 @@
     dest: "{{ patroni_config_file }}.bkp"
     remote_src: true
 
-# https://github.com/vitabaks/postgresql_cluster/issues/666
 - name: Remove patroni.dynamic.json file
   ansible.builtin.file:
     path: "{{ pg_old_datadir }}/patroni.dynamic.json"
@@ -25,26 +24,6 @@
     - { regexp: 'config_dir: {{ pg_old_confdir }}', replace: 'config_dir: {{ pg_new_confdir }}' }
   loop_control:
     label: '{{ item.replace }}'
-
-# To support upgrades in the Patroni Standby Cluster.
-- block:  # standby_cluster
-    - name: "Edit patroni.yml | check if the 'standby_cluster' parameter is specified"
-      ansible.builtin.command: grep standby_cluster {{ patroni_config_file }}
-      register: standby_cluster_output
-      changed_when: false
-      failed_when: false
-
-    # The standby_cluster parameter will be removed from the bootstrap.dcs section (if exists)
-    # along with all the text between 'standby_cluster' and the next 'initdb' parameter
-    - name: "Edit patroni.yml | remove parameters: standby_cluster (if exists)"
-      ansible.builtin.replace:
-        path: "{{ patroni_config_file }}"
-        regexp: '^\s*standby_cluster:[^\n]*\n(.|\n)*?initdb:'
-        replace: '  initdb:'
-      when: standby_cluster_output.stdout | length > 0
-  when:
-    - patroni_standby_cluster.host is defined
-    - patroni_standby_cluster.host | length > 0
 
 # Prepare the parameters for PostgreSQL (removed or renamed parameters).
 
@@ -214,7 +193,72 @@
   when:
     - pg_old_version|int <= 15 and pg_new_version|int >= 16
 
-# TODO: Prepare the parameters for PostgreSQL 17 and etc.
+- block:  # db_user_namespace (removed in the PG 17)
+    # check if the db_user_namespace parameter is specified in the patroni.yml
+    - name: "Edit patroni.yml | check if the 'db_user_namespace' parameter is specified"
+      ansible.builtin.command: grep db_user_namespace {{ patroni_config_file }}
+      register: db_user_namespace_output
+      changed_when: false
+      failed_when: false
+
+    # if defined, remove the db_user_namespace parameter from the patroni.yml
+    - name: "Edit patroni.yml | remove parameter: 'db_user_namespace'"
+      ansible.builtin.lineinfile:
+        path: "{{ patroni_config_file }}"
+        regexp: '^(\s*)db_user_namespace:.*'
+        state: absent
+      when: db_user_namespace_output.stdout | length > 0
+  when:
+    - pg_old_version|int <= 16 and pg_new_version|int >= 17
+
+- block:  # old_snapshot_threshold (removed in the PG 17)
+    # check if the old_snapshot_threshold parameter is specified in the patroni.yml
+    - name: "Edit patroni.yml | check if the 'old_snapshot_threshold' parameter is specified"
+      ansible.builtin.command: grep old_snapshot_threshold {{ patroni_config_file }}
+      register: old_snapshot_threshold_output
+      changed_when: false
+      failed_when: false
+
+    # if defined, remove the old_snapshot_threshold parameter from the patroni.yml
+    - name: "Edit patroni.yml | remove parameter: 'old_snapshot_threshold'"
+      ansible.builtin.lineinfile:
+        path: "{{ patroni_config_file }}"
+        regexp: '^(\s*)old_snapshot_threshold:.*'
+        state: absent
+      when: old_snapshot_threshold_output.stdout | length > 0
+  when:
+    - pg_old_version|int <= 16 and pg_new_version|int >= 17
+
+- block:  # trace_recovery_messages (removed in the PG 17)
+    # check if the trace_recovery_messages parameter is specified in the patroni.yml
+    - name: "Edit patroni.yml | check if the 'trace_recovery_messages' parameter is specified"
+      ansible.builtin.command: grep trace_recovery_messages {{ patroni_config_file }}
+      register: trace_recovery_messages_output
+      changed_when: false
+      failed_when: false
+
+    # if defined, remove the trace_recovery_messages parameter from the patroni.yml
+    - name: "Edit patroni.yml | remove parameter: 'trace_recovery_messages'"
+      ansible.builtin.lineinfile:
+        path: "{{ patroni_config_file }}"
+        regexp: '^(\s*)trace_recovery_messages:.*'
+        state: absent
+      when: trace_recovery_messages_output.stdout | length > 0
+  when:
+    - pg_old_version|int <= 16 and pg_new_version|int >= 17
+
+# TODO: Prepare the parameters for PostgreSQL 18 and etc.
+
+# To support upgrades in the Patroni Standby Cluster.
+- name: "Edit patroni.yml | remove parameter: standby_cluster (if exists)"
+  ansible.builtin.replace:
+    path: "{{ patroni_config_file }}"
+    regexp: '^\s*standby_cluster:[^\n]*\n(.|\n)*?initdb:'
+    replace: '  initdb:'
+
+- name: "Remove 'standby_cluster' parameter from DCS (if exists)"
+  ansible.builtin.command: patronictl -c {{ patroni_config_file }} edit-config -s standby_cluster=null --force
+  when: inventory_hostname in groups['primary']
 
 # Copy the pg_hba.conf file to a new PostgreSQL to save pg_hba rules.
 - name: "Copy pg_hba.conf to {{ pg_new_confdir }}"

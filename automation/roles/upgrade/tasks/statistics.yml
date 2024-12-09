@@ -39,7 +39,7 @@
       poll: 0
       register: pg_terminator_analyze
       ignore_errors: true  # ignore errors if the task runs for over an 'vacuumdb_analyze_timeout'.
-      when: pg_new_version is version('9.6', '>=')
+      when: pg_new_version | string is version('9.6', '>=')
 
     # Monitor long-running transactions and terminate them (for more than 'vacuumdb_analyze_terminate_treshold')
     - name: "pg_terminator: Monitor and terminate the long-running transactions (more than {{ max_tx_sec }} seconds) during collecting statistics"
@@ -68,7 +68,7 @@
       ignore_errors: true  # ignore errors if the task runs for over an 'vacuumdb_analyze_timeout'.
       vars:
         max_tx_sec: "{{ vacuumdb_analyze_terminate_treshold }}"
-      when: pg_new_version is version('10', '>=') and vacuumdb_analyze_terminate_treshold | int > 0
+      when: pg_new_version | string is version('10', '>=') and vacuumdb_analyze_terminate_treshold | int > 0
 
     # ANALYZE
     - name: "Run vacuumdb to analyze the PostgreSQL databases"

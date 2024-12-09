@@ -507,7 +507,7 @@
         - name: Prepare PostgreSQL | start PostgreSQL on Master
           become: true
           become_user: postgres
-          ansible.builtin.command: "{{ postgresql_bin_dir }}/pg_ctl start -D {{ postgresql_data_dir }} -w -t 1800"
+          ansible.builtin.command: "{{ postgresql_bin_dir }}/pg_ctl start -D {{ postgresql_data_dir }} -w -t {{ pg_ctl_timeout | default(3600) }}"
           when: pg_ctl_status_result.rc == 3
 
         - name: Prepare PostgreSQL | check PostgreSQL is accepting connections
@@ -584,7 +584,7 @@
     - name: Prepare PostgreSQL | stop PostgreSQL (will be managed by patroni)
       become: true
       become_user: postgres
-      ansible.builtin.command: "{{ postgresql_bin_dir }}/pg_ctl stop -D {{ postgresql_data_dir }} -m fast -w -t 1800"
+      ansible.builtin.command: "{{ postgresql_bin_dir }}/pg_ctl stop -D {{ postgresql_data_dir }} -m fast -w -t {{ pg_ctl_timeout | default(3600) }}"
       when: checkpoint_result.rc is defined and checkpoint_result.rc == 0
 
     - name: Prepare PostgreSQL | check PostgreSQL is stopped
@@ -598,7 +598,7 @@
   tags: patroni, patroni_start_master
 
 - block:  # PITR (custom bootstrap)
-  # Prepare (install pexpect, ruamel.yaml)
+    # Prepare (install pexpect, ruamel.yaml)
     - name: Prepare | Make sure the ansible required python library is exist
       ansible.builtin.pip:
         name: "{{ item }}"
@@ -612,7 +612,8 @@
       environment:
         PATH: "{{ ansible_env.PATH }}:/usr/local/bin:/usr/bin"
         PIP_BREAK_SYSTEM_PACKAGES: "1"
-  # Run PITR
+
+    # Run PITR
     - name: Stop patroni service on the Replica servers (if running)
       ansible.builtin.systemd:
         name: patroni
@@ -624,6 +625,21 @@
         name: patroni
         state: stopped
       when: is_master | bool
+
+    - name: Check that PostgreSQL is stopped
+      become: true
+      become_user: postgres
+      ansible.builtin.command: "{{ postgresql_bin_dir }}/pg_ctl status -D {{ postgresql_data_dir }}"
+      register: pg_ctl_status_result
+      changed_when: false
+      failed_when: false
+
+    - name: Stop PostgreSQL
+      become: true
+      become_user: postgres
+      ansible.builtin.command: >-
+        {{ postgresql_bin_dir }}/pg_ctl stop -D {{ postgresql_data_dir }} -m fast -w -t {{ pg_ctl_timeout | default(3600) }}
+      when: pg_ctl_status_result.rc is defined and (pg_ctl_status_result.rc != 3 and pg_ctl_status_result.rc != 4)
 
     - name: Remove patroni cluster "{{ patroni_cluster_name }}" from DCS (if exist)
       become: true
@@ -648,7 +664,7 @@
           ansible.builtin.command: >
             {{ pgbackrest_patroni_cluster_restore_command }}
             {{ '--target-action=promote' if pgbackrest_patroni_cluster_restore_command is search('--type=') else '' }}
-          async: 86400  # timeout 24 hours
+          async: "{{ cluster_restore_timeout | default(86400) }}"  # timeout 24 hours
           poll: 0
           register: pgbackrest_restore_master
           when: is_master | bool
@@ -657,8 +673,8 @@
         - name: Run "{{ pgbackrest_patroni_cluster_restore_command }}" on Replica
           ansible.builtin.command: >
             {{ pgbackrest_patroni_cluster_restore_command }}
-            {{ '--target-action=shutdown' if pgbackrest_patroni_cluster_restore_command is search('--type=') else '' }}
-          async: 86400  # timeout 24 hours
+            {{ '--target-action=pause' if pgbackrest_patroni_cluster_restore_command is search('--type=') else '' }}
+          async: "{{ cluster_restore_timeout | default(86400) }}"  # timeout 24 hours
           poll: 0
           register: pgbackrest_restore_replica
           when: not is_master | bool and 'pgbackrest' in patroni_create_replica_methods
@@ -673,7 +689,7 @@
             label: "{{ item.changed }}"
           register: pgbackrest_restore_jobs_result
           until: pgbackrest_restore_jobs_result.finished
-          retries: 2880  # timeout 24 hours
+          retries: "{{ (cluster_restore_timeout | default(86400)) | int // 30 }}"  # timeout 24 hours
           delay: 30
           when: item.ansible_job_id is defined
 
@@ -685,20 +701,52 @@
           when: not keep_patroni_dynamic_json|bool
 
         - name: Start PostgreSQL for Recovery
-          ansible.builtin.command: "{{ postgresql_bin_dir }}/pg_ctl start -D {{ postgresql_data_dir }} -o '-c hot_standby=off' -w -t 1800"
+          ansible.builtin.command: >-
+            {{ postgresql_bin_dir }}/pg_ctl start -D {{ postgresql_data_dir }} -w -t {{ pg_ctl_timeout | default(3600) }}
+            -o '--config-file={{ postgresql_conf_dir }}/postgresql.conf'
+            -o '-c hot_standby=off'
+            {% if postgresql_version | int >= 12 %}
+            -o '-c restore_command="pgbackrest --stanza={{ pgbackrest_stanza }} archive-get %f %p"'
+            {% endif %}
+            -o '-c archive_command=/bin/true'
+            -l /tmp/pg_recovery_{{ ansible_date_time.date }}.log
+          async: "{{ pg_ctl_timeout | default(3600) }}"  # run the command asynchronously
+          poll: 0
+          register: pg_ctl_start_result
           when: is_master | bool or (not is_master | bool and 'pgbackrest' in patroni_create_replica_methods)
 
-        - name: Waiting for PostgreSQL Recovery to complete (WAL apply)
+        - name: Wait for the PostgreSQL start command to complete
+          ansible.builtin.async_status:
+            jid: "{{ pg_ctl_start_result.ansible_job_id }}"
+          register: pg_ctl_start_job_result
+          until: pg_ctl_start_job_result.finished
+          retries: "{{ (pg_ctl_timeout | default(3600) | int) // 10 }}"
+          delay: 10
+          when: is_master | bool or (not is_master | bool and 'pgbackrest' in patroni_create_replica_methods)
+
+        - name: Wait for PostgreSQL recovery to complete (WAL apply)
           ansible.builtin.command: >-
-            {{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -tAXc
-            "select pg_is_in_recovery()"
+            {{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres
+            -tAXc "select pg_is_in_recovery()"
           register: pg_is_in_recovery
-          until: pg_is_in_recovery.stdout != "t"
-          retries: 1200  # timeout 10 hours
+          until: pg_is_in_recovery.stdout == "f"
+          retries: "{{ (cluster_restore_timeout | default(86400)) | int // 30 }}"  # timeout 24 hours
           delay: 30
           changed_when: false
           failed_when: false
-          when: is_master | bool or (not is_master | bool and 'pgbackrest' in patroni_create_replica_methods)
+          when: is_master | bool
+
+        - name: Check PostgreSQL recovery log
+          ansible.builtin.command: "grep -A2 'recovery stopping' /tmp/pg_recovery_{{ ansible_date_time.date }}.log"
+          register: pg_recovery_result
+          changed_when: false
+          failed_when: false
+          when: is_master | bool
+
+        - name: PostgreSQL recovery details
+          ansible.builtin.debug:
+            msg: '{{ pg_recovery_result.stdout_lines }}'
+          when: pg_recovery_result.stdout_lines is defined
 
         - name: Check that PostgreSQL is stopped
           ansible.builtin.command: "{{ postgresql_bin_dir }}/pg_ctl status -D {{ postgresql_data_dir }}"
@@ -707,7 +755,8 @@
           failed_when: false
 
         - name: Stop PostgreSQL
-          ansible.builtin.command: "{{ postgresql_bin_dir }}/pg_ctl stop -D {{ postgresql_data_dir }} -m fast -w -t 1800"
+          ansible.builtin.command: >-
+            {{ postgresql_bin_dir }}/pg_ctl stop -D {{ postgresql_data_dir }} -m fast -w -t {{ pg_ctl_timeout | default(3600) }}
           when: pg_ctl_status_result.rc is defined and (pg_ctl_status_result.rc != 3 and pg_ctl_status_result.rc != 4)
       when: patroni_cluster_bootstrap_method == "pgbackrest"
       become: true
@@ -718,17 +767,20 @@
   tags: patroni, point_in_time_recovery
 
 - block:  # PITR (custom bootstrap) - disable archive_command
-    - name: Check the patroni.dynamic.json exists
+    - name: Check if patroni.dynamic.json exists
       ansible.builtin.stat:
         path: "{{ postgresql_data_dir }}/patroni.dynamic.json"
       register: patroni_dynamic_json
+      when: not keep_patroni_dynamic_json | bool
 
     - name: Remove patroni.dynamic.json file
       ansible.builtin.file:
         path: "{{ postgresql_data_dir }}/patroni.dynamic.json"
         state: absent
-      when: patroni_dynamic_json.stat.exists and
-            not keep_patroni_dynamic_json|bool
+      when:
+        - patroni_dynamic_json is defined
+        - patroni_dynamic_json.stat is defined
+        - patroni_dynamic_json.stat.exists
 
     - name: Edit patroni.dynamic.json | disable archive_command (if enabled)
       yedit:
@@ -736,18 +788,17 @@
         key: postgresql.parameters.archive_command
         value: "cd ."  # not doing anything yet with WAL-s
         content_type: json
-      when: patroni_dynamic_json.stat.exists and
-            keep_patroni_dynamic_json|bool and disable_archive_command|bool
+      when: disable_archive_command | bool
 
     - name: Edit patroni.yml | disable archive_command (if enabled)
       yedit:
         src: /etc/patroni/patroni.yml
         key: bootstrap.dcs.postgresql.parameters.archive_command
         value: "cd ."  # not doing anything yet with WAL-s
-      when: disable_archive_command|bool
+      when: disable_archive_command | bool
   when: patroni_cluster_bootstrap_method != "initdb" and
-        (pgbackrest_install|bool or wal_g_install|bool) and
-        (existing_pgcluster is not defined or not existing_pgcluster|bool)
+        (pgbackrest_install | bool or wal_g_install | bool) and
+        (existing_pgcluster is not defined or not existing_pgcluster | bool)
   become: true
   become_user: postgres
   tags: patroni, point_in_time_recovery
@@ -791,13 +842,27 @@
         "select pg_is_in_recovery()"
       register: pg_is_in_recovery
       until: pg_is_in_recovery.stdout == "f"
-      retries: 1200  # timeout 10 hours
+      retries: "{{ (cluster_restore_timeout | default(86400)) | int // 30 }}"  # timeout 24 hours
       delay: 30
       changed_when: false
       failed_when: false
       when: patroni_cluster_bootstrap_method == "wal-g"
 
-    - name: Check PostgreSQL is started and accepting connections on Master
+    - name: Wait for the Standby cluster initialization to complete
+      ansible.builtin.uri:
+        url: "http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/standby-leader"
+        status_code: 200
+      register: standby_leader_result
+      until: standby_leader_result.status == 200
+      retries: "{{ (cluster_restore_timeout | default(86400)) | int // 30 }}"  # timeout 24 hours
+      delay: 30
+      environment:
+        no_proxy: "{{ inventory_hostname }}"
+      when:
+        - (patroni_standby_cluster.host is defined and patroni_standby_cluster.host | length > 0)
+        - not ansible_check_mode
+
+    - name: Check PostgreSQL is started and accepting connections
       become: true
       become_user: postgres
       ansible.builtin.command: "{{ postgresql_bin_dir }}/pg_isready -p {{ postgresql_port }}"
@@ -853,8 +918,8 @@
         {{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -tAXc
         "select pg_is_in_recovery()"
       register: pg_is_in_recovery
-      until: pg_is_in_recovery.stdout != "t"
-      retries: 1200  # timeout 10 hours
+      until: pg_is_in_recovery.stdout == "f"
+      retries: "{{ (cluster_restore_timeout | default(86400)) | int // 30 }}"  # timeout 24 hours
       delay: 30
       changed_when: false
       when: is_master | bool
@@ -961,7 +1026,7 @@
         status_code: 200
       register: replica_result
       until: replica_result.status == 200
-      retries: 1200  # timeout 10 hours
+      retries: "{{ (cluster_restore_timeout | default(86400)) | int // 30 }}"  # timeout 24 hours
       delay: 30
       environment:
         no_proxy: "{{ inventory_hostname }}"

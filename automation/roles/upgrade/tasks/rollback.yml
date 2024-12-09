@@ -83,7 +83,7 @@
       - "The old cluster will need to be restored from backup."
   when:
     - inventory_hostname in groups['primary']
-    - pg_control_version.stdout == pg_new_version | replace('.', '')
+    - pg_control_version.stdout == pg_new_version | string | replace('.', '')
 
 # Restore the old Patroni configuration
 - name: '[Rollback] Restore the old patroni.yml configuration file'

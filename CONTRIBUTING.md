@@ -11,18 +11,18 @@ Your contributions are appreciated and will be taken seriously.
 
 ### 1. Create an issue
 
-Report problems or suggest improvements by [creating an issue](https://github.com/vitabaks/postgresql_cluster/issues).
+Report problems or suggest improvements by [creating an issue](https://github.com/vitabaks/autobase/issues).
 
 ### 2. Fork the project
 
-[Fork the repository](https://github.com/vitabaks/postgresql_cluster) to your GitHub account.
+[Fork the repository](https://github.com/vitabaks/autobase) to your GitHub account.
 
 ### 3. Make changes
 
 Clone your fork locally and make the necessary changes:
 
 ```bash
-git clone git@github.com:YOURNAMESPACE/postgresql_cluster.git
+git clone git@github.com:YOURNAMESPACE/autobase.git
 ```
 
 ### 4. Test your changes (Optional)
@@ -32,8 +32,8 @@ git clone git@github.com:YOURNAMESPACE/postgresql_cluster.git
 Use Gitpod for a cloud-based development environment:
 
 1. Sign up for Gitpod: https://gitpod.io
-2. Fork the `postgresql_cluster` repository
-3. Open your fork in Gitpod: `https://gitpod.io/#https://github.com/username/postgresql_cluster`
+2. Fork the `autobase` repository
+3. Open your fork in Gitpod: `https://gitpod.io/#https://github.com/username/autobase`
 4. Create a new branch: `git checkout -b my-feature-branch`
 5. Make your changes and commit: `git add .` and `git commit -m "Description of changes"`
 6. Test with Molecule: `make tests` or `make tests-fast`

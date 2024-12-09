@@ -15,20 +15,20 @@ pg_new_version: ""  # specify the target version of PostgreSQL for the upgrade
 # Adjust these variables if the paths are different from the default value.
 
 # Directory containing binaries for the old PostgreSQL version.
-pg_old_bindir: "{{ postgresql_bin_dir | regex_replace('(/$)', '') | regex_replace(postgresql_version, pg_old_version) }}"
+pg_old_bindir: "{{ postgresql_bin_dir | regex_replace('(/$)', '') | replace(postgresql_version | string, pg_old_version | string) }}"
 # Data directory path for the old PostgreSQL version.
-pg_old_datadir: "{{ postgresql_data_dir | regex_replace('(/$)', '') | regex_replace(postgresql_version, pg_old_version) }}"
+pg_old_datadir: "{{ postgresql_data_dir | regex_replace('(/$)', '') | replace(postgresql_version | string, pg_old_version | string) }}"
 # Configuration directory path for the old PostgreSQL version.
-pg_old_confdir: "{{ postgresql_conf_dir | regex_replace('(/$)', '') | regex_replace(postgresql_version, pg_old_version) }}"
+pg_old_confdir: "{{ postgresql_conf_dir | regex_replace('(/$)', '') | replace(postgresql_version | string, pg_old_version | string) }}"
 
 # Directory containing binaries for the new PostgreSQL version.
-pg_new_bindir: "{{ postgresql_bin_dir | regex_replace('(/$)', '') | regex_replace(postgresql_version, pg_new_version) }}"
+pg_new_bindir: "{{ postgresql_bin_dir | regex_replace('(/$)', '') | replace(postgresql_version | string, pg_new_version | string) }}"
 # Data directory path for the new PostgreSQL version.
-pg_new_datadir: "{{ postgresql_data_dir | regex_replace('(/$)', '') | regex_replace(postgresql_version, pg_new_version) }}"
+pg_new_datadir: "{{ postgresql_data_dir | regex_replace('(/$)', '') | replace(postgresql_version | string, pg_new_version | string) }}"
 # Configuration directory path for the new PostgreSQL version.
-pg_new_confdir: "{{ postgresql_conf_dir | regex_replace('(/$)', '') | regex_replace(postgresql_version, pg_new_version) }}"
+pg_new_confdir: "{{ postgresql_conf_dir | regex_replace('(/$)', '') | replace(postgresql_version | string, pg_new_version | string) }}"
 # Custom WAL directory for the new PostgreSQL version (symlink will be created) [optional].
-pg_new_wal_dir: "{{ postgresql_wal_dir | regex_replace('(/$)', '') | regex_replace(postgresql_version, pg_new_version) }}"
+pg_new_wal_dir: "{{ postgresql_wal_dir | regex_replace('(/$)', '') | replace(postgresql_version | string, pg_new_version | string) }}"
 
 # pg_upper_datadir: Specifies the top-level directory containing both old and new PostgreSQL data directories.
 # The variable is derived from pg_new_datadir by removing any trailing slash and getting its grandparent directory.
@@ -38,7 +38,7 @@ pg_upper_datadir: "{{ pg_new_datadir | regex_replace('/$', '') | dirname | dirna
 
 # List of package names for the new PostgreSQL version to be installed.
 # automatically detects the list of packages based on the 'postgresql_packages' variable
-pg_new_packages: "{{ postgresql_packages | regex_replace(postgresql_version, pg_new_version) }}"
+pg_new_packages: "{{ postgresql_packages | replace(postgresql_version | string, pg_new_version | string) }}"
 
 # Alternatively, you can explicitly specify the list of new packages to install.
 # This gives you more control and should be used if the automatic update does not meet your needs.

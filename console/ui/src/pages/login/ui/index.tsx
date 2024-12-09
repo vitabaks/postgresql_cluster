@@ -8,7 +8,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { LoginFormValues } from '@pages/login/model/types.ts';
 import { LOGIN_FORM_FIELD_NAMES } from '@pages/login/model/constants.ts';
 import { version } from '../../../../package.json';
-import Logo from '@shared/assets/PGCLogo.svg?react';
+import Logo from '@shared/assets/AutobaseLogo.svg?react';
 
 const Login: FC = () => {
   const { t } = useTranslation('shared');
@@ -33,8 +33,8 @@ const Login: FC = () => {
             width="300px"
             height="max-content"
             padding="16px">
-            <Logo />
-            <Typography variant="h6">PostgreSQL Cluster Console</Typography>
+            <Logo style={{ width: '50px', height: '50px' }} />
+            <Typography fontWeight="400" variant="h6">Autobase for PostgreSQL®</Typography>
             <Controller
               control={control}
               name={LOGIN_FORM_FIELD_NAMES.TOKEN}

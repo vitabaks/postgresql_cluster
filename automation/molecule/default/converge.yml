@@ -16,7 +16,7 @@
         dcs_type: "{{ ['etcd', 'consul'] | random }}" # Set 'dcs_type' to either 'etcd' or 'consul' randomly
         consul_node_role: server # if dcs_type: "consul"
         consul_bootstrap_expect: true # if dcs_type: "consul"
-        postgresql_version: "16" # to test custom WAL dir
+        postgresql_version: 17 # to test custom WAL dir
         pgbouncer_processes: 2 # Test multiple pgbouncer processes (so_reuseport)
         patroni_tags: "datacenter=dc1,key1=value1"
         balancer_tags: "datacenter=dc1"
@@ -60,7 +60,19 @@
         enable_pg_stat_kcache: true
         enable_pg_wait_sampling: true
         enable_pg_partman: true
-        enable_citus: "{{ 'false' if ansible_distribution_version == '24.04' else 'true' }}"  # TODO Ubuntu 24.04
+        # enable_citus: true  # TODO Postgres 17
+        enable_paradedb: "{{ 'false' if ansible_distribution_release == 'bullseye' else 'true' }}"  # pg_search and pg_analytics (no packages for debian 11)
+        enable_pgvectorscale: "{{ 'true' if ansible_distribution_release in ['bookworm', 'jammy', 'noble'] else 'false' }}" # only deb packages are available
+        pgvectorscale_version: "0.5.0"  # TODO (v0.5.1 does not contain packages)
+        # create extension
+        postgresql_schemas:
+          - { schema: "paradedb", db: "postgres", owner: "postgres" }  # pg_search must be installed in the paradedb schema.
+        postgresql_extensions:
+          - { ext: "vector", db: "postgres" }
+          - { ext: "vectorscale", db: "postgres" }
+          - { ext: "pg_search", db: "postgres", schema: "paradedb" }
+          - { ext: "pg_analytics", db: "postgres" }
+        #  - { ext: "", db: "" }
 
     - name: Set variables for PostgreSQL Cluster update test
       ansible.builtin.set_fact:
