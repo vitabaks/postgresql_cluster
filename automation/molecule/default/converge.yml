@@ -8,8 +8,9 @@
       become: true
       become_method: su
       ansible.builtin.group:
-        name: "sudo"
+        name: sudo
         state: present
+      when: ansible_os_family == "RedHat"
 
     - name: Allow passwordless sudo for users in sudo group
       become: true
@@ -20,23 +21,51 @@
         regexp: '^%sudo'
         line: '%sudo ALL=(ALL) NOPASSWD: ALL'
         validate: 'visudo -cf %s'
+      when: ansible_os_family == "RedHat"
 
-    - name: Ensure ansible user is part of the correct sudo group
+    - name: Ensure ansible user is part of sudo group
       become: true
       become_method: su
       ansible.builtin.user:
         name: "{{ ansible_facts.user | default('root') }}"
-        groups: "sudo"
+        groups: sudo
         append: true
+      when: ansible_os_family == "RedHat"
+
+    - name: Ensure PAM module pam_unix is present
+      become: true
+      become_method: su
+      ansible.builtin.command: "authselect apply-changes"
+      ignore_errors: yes
+      when: ansible_os_family == "RedHat"
+
+    - name: Check and fix PAM configuration for sudo
+      become: true
+      become_method: su
+      ansible.builtin.lineinfile:
+        path: /etc/pam.d/sudo
+        state: present
+        regexp: '^auth.*pam_unix.so'
+        line: 'auth sufficient pam_unix.so'
+      when: ansible_os_family == "RedHat"
 
     - name: Test sudo without password
-      command: sudo -n true
+      ansible.builtin.command: sudo -n true
       register: sudo_test
       ignore_errors: yes
+      when: ansible_os_family == "RedHat"
 
     - name: Debug sudo test result
-      debug:
+      ansible.builtin.debug:
         var: sudo_test
+      when: ansible_os_family == "RedHat"
+
+    - name: Ensure SELinux is permissive (temporary workaround)
+      become: true
+      become_method: su
+      ansible.builtin.command: setenforce 0
+      ignore_errors: yes
+      when: ansible_os_family == "RedHat"
 
     - name: Set variables for PostgreSQL Cluster deployment test
       ansible.builtin.set_fact:
