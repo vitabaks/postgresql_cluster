@@ -351,7 +351,7 @@ INSERT INTO public.cloud_volumes (cloud_provider, volume_type, volume_descriptio
     ('azure', 'Premium_LRS', 'Premium SSD (Max throughput: 900 MiB/s, Max IOPS: 20,000)', 10, 32000, 0.132, '$', false, '2024-05-15'),
     ('azure', 'UltraSSD_LRS', 'Ultra SSD (Max throughput: 10,000 MiB/s, Max IOPS: 400,000)', 10, 64000, 0.120, '$', false, '2024-05-15'),
     ('digitalocean', 'ssd', 'SSD Block Storage (Max throughput: 300 MiB/s, Max IOPS: 7,500)', 10, 16000, 0.100, '$', true, '2024-05-15'),
-    ('hetzner', 'ssd', 'SSD Block Storage (Max throughput: N/A MiB/s, Max IOPS: N/A)', 10, 10000, 0.052, '€', true, '2024-05-15');
+    ('hetzner', 'ssd', 'SSD Block Storage (Max throughput: N/A MiB/s, Max IOPS: N/A)', 10, 10000, 0.05, '$', true, '2024-12-10');
 
 ALTER TABLE ONLY public.cloud_volumes
     ADD CONSTRAINT cloud_volumes_pkey PRIMARY KEY (cloud_provider, volume_type);
