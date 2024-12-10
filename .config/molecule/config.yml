@@ -18,6 +18,10 @@ provisioner:
       group_vars: ../../group_vars/
   playbooks:
     prepare: prepare.yml
+  connection_options:
+    ansible_ssh_common_args: '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
+    ansible_private_key_file: "~/.ssh/molecule_rsa"
+    ansible_user: "root"
 
 scenario:
   create_sequence:
