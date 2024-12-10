@@ -4,6 +4,14 @@
   gather_facts: true
 
   tasks:
+    - name: Update apt cache
+      become: true
+      become_method: su
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+      when: ansible_os_family == "Debian"
+
     - name: Ensure SSH client package is installed
       become: true
       become_method: su
