@@ -292,14 +292,14 @@ INSERT INTO public.cloud_instances (cloud_provider, instance_group, instance_nam
     ('digitalocean', 'Medium Size', 'g-32vcpu-128gb', 32, 128, 1.500, 1008.000, '$', '2024-05-15'),
     ('digitalocean', 'Medium Size', 'm-32vcpu-256gb', 32, 256, 2.000, 1344.000, '$', '2024-05-15'),
     ('digitalocean', 'Medium Size', 'g-48vcpu-192gb', 48, 192, 2.699, 1814.000, '$', '2024-05-15'),
-    ('hetzner', 'Small Size', 'CPX11', 2, 2, 0.0072, 4.49, '$', '2024-12-10'),
-    ('hetzner', 'Small Size', 'CPX21', 3, 4, 0.0128, 7.99, '$', '2024-12-10'),
-    ('hetzner', 'Small Size', 'CCX13', 2, 8, 0.0216, 13.49, '$', '2024-12-10'),
-    ('hetzner', 'Small Size', 'CCX23', 4, 16, 0.0425, 26.49, '$', '2024-12-10'),
-    ('hetzner', 'Medium Size', 'CCX33', 8, 32, 0.0857, 53.49, '$', '2024-12-10'),
-    ('hetzner', 'Medium Size', 'CCX43', 16, 64, 0.1715, 106.99, '$', '2024-12-10'),
-    ('hetzner', 'Medium Size', 'CCX53', 32, 128, 0.3421, 213.49, '$', '2024-12-10'),
-    ('hetzner', 'Medium Size', 'CCX63', 48, 192, 0.5128, 319.99, '$', '2024-12-10');
+    ('hetzner', 'Small Size', 'CPX11', 2, 2, 0.007, 5.180, '€', '2024-07-21'),
+    ('hetzner', 'Small Size', 'CPX21', 3, 4, 0.010, 8.980, '€', '2024-07-21'),
+    ('hetzner', 'Small Size', 'CCX13', 2, 8, 0.024, 14.860, '€', '2024-05-15'),
+    ('hetzner', 'Small Size', 'CCX23', 4, 16, 0.047, 29.140, '€', '2024-05-15'),
+    ('hetzner', 'Medium Size', 'CCX33', 8, 32, 0.093, 57.700, '€', '2024-05-15'),
+    ('hetzner', 'Medium Size', 'CCX43', 16, 64, 0.184, 114.820, '€', '2024-05-15'),
+    ('hetzner', 'Medium Size', 'CCX53', 32, 128, 0.367, 229.060, '€', '2024-05-15'),
+    ('hetzner', 'Medium Size', 'CCX63', 48, 192, 0.550, 343.300, '€', '2024-05-15');
 
 ALTER TABLE ONLY public.cloud_instances
     ADD CONSTRAINT cloud_instances_pkey PRIMARY KEY (cloud_provider, instance_group, instance_name);
@@ -351,7 +351,7 @@ INSERT INTO public.cloud_volumes (cloud_provider, volume_type, volume_descriptio
     ('azure', 'Premium_LRS', 'Premium SSD (Max throughput: 900 MiB/s, Max IOPS: 20,000)', 10, 32000, 0.132, '$', false, '2024-05-15'),
     ('azure', 'UltraSSD_LRS', 'Ultra SSD (Max throughput: 10,000 MiB/s, Max IOPS: 400,000)', 10, 64000, 0.120, '$', false, '2024-05-15'),
     ('digitalocean', 'ssd', 'SSD Block Storage (Max throughput: 300 MiB/s, Max IOPS: 7,500)', 10, 16000, 0.100, '$', true, '2024-05-15'),
-    ('hetzner', 'ssd', 'SSD Block Storage (Max throughput: N/A MiB/s, Max IOPS: N/A)', 10, 10000, 0.05, '$', true, '2024-12-10');
+    ('hetzner', 'ssd', 'SSD Block Storage (Max throughput: N/A MiB/s, Max IOPS: N/A)', 10, 10000, 0.052, '€', true, '2024-05-15');
 
 ALTER TABLE ONLY public.cloud_volumes
     ADD CONSTRAINT cloud_volumes_pkey PRIMARY KEY (cloud_provider, volume_type);
