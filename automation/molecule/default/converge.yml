@@ -83,6 +83,9 @@
         ansible_ssh_common_args: "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
         ansible_private_key_file: /tmp/molecule_rsa
 
+    - name: Reset SSH connection to apply new credentials
+      ansible.builtin.meta: reset_connection
+
 - name: Converge
   hosts: all
   gather_facts: true
