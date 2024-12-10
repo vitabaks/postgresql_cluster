@@ -1,20 +1,18 @@
 ---
-- name: Converge
-  hosts: all
+- name: Prepare control node
+  hosts: localhost
   gather_facts: true
 
   tasks:
-    - name: Update apt cache
+    - name: Update apt cache on control node
       become: true
-      become_method: su
       ansible.builtin.apt:
         update_cache: true
         cache_valid_time: 3600
       when: ansible_os_family == "Debian"
 
-    - name: Ensure SSH client package is installed
+    - name: Ensure SSH client package is installed on control node
       become: true
-      become_method: su
       ansible.builtin.package:
         name: "{{ ssh_client_package }}"
         state: present
@@ -26,8 +24,6 @@
       ansible.builtin.command: whoami
       register: control_user
       changed_when: false
-      delegate_to: localhost
-      run_once: true # noqa run-once
 
     - name: Generate molecule SSH key on control node
       ansible.builtin.user:
@@ -35,8 +31,29 @@
         generate_ssh_key: true
         ssh_key_bits: 2048
         ssh_key_file: /tmp/molecule_rsa
-      delegate_to: localhost
-      run_once: true # noqa run-once
+
+- name: Prepare molecule instances
+  hosts: all
+  gather_facts: true
+
+  tasks:
+    - name: Update apt cache on molecule instances
+      become: true
+      become_method: su
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+      when: ansible_os_family == "Debian"
+
+    - name: Ensure SSH client package is installed on molecule instances
+      become: true
+      become_method: su
+      ansible.builtin.package:
+        name: "{{ ssh_client_package }}"
+        state: present
+      vars:
+        ssh_client_package: "{{ 'openssh-client' if ansible_os_family == 'Debian' else 'openssh-clients' }}"
+      when: ansible_distribution != "MacOSX"
 
     - name: Get system username on molecule instances
       ansible.builtin.command: whoami
@@ -66,6 +83,11 @@
         ansible_ssh_common_args: "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
         ansible_private_key_file: /tmp/molecule_rsa
 
+- name: Converge
+  hosts: all
+  gather_facts: true
+
+  tasks:
     - name: Set variables for Patroni cluster deployment test
       ansible.builtin.set_fact:
         firewall_enabled_at_boot: false
