@@ -20,10 +20,6 @@ WHERE extension_name IN (
     'timescaledb'
 );
 
--- +goose Down
-DELETE FROM public.postgres_versions 
-WHERE major_version = 17;
-
 
 -- Extends 20240520144338_2.0.0_initial_scheme_setup.sql#L217 with more cloud instance types
 -- Heztner price is for the region 'Geremany / Finland', other regions may vary in price.
@@ -52,3 +48,7 @@ UPDATE public.cloud_instances SET price_hourly = 0.5138, price_monthly = 320.59,
 -- cloud_volumes
 -- Update prices and other relevant fields for Hetzner cloud volume
 UPDATE public.cloud_volumes SET price_monthly = 0.05, currency = '$', updated_at = '2024-12-10' WHERE cloud_provider = 'hetzner';
+
+-- +goose Down
+DELETE FROM public.postgres_versions 
+WHERE major_version = 17;
