@@ -14,14 +14,26 @@
         ssh_client_package: "{{ 'openssh-client' if ansible_os_family == 'Debian' else 'openssh-clients' }}"
       when: ansible_distribution != "MacOSX"
 
-    - name: Generate molecule SSH key on control node
-      ansible.builtin.user:
-        name: "{{ ansible_facts.user | default('root') }}"
-        generate_ssh_key: true
-        ssh_key_bits: 2048
-        ssh_key_file: ~/.ssh/molecule_rsa
+    - name: Get system username on control node
+      ansible.builtin.command: whoami
+      register: control_user
+      changed_when: false
       delegate_to: localhost
       run_once: true # noqa run-once
+
+    - name: Generate molecule SSH key on control node
+      ansible.builtin.user:
+        name: "{{ control_user.stdout }}"
+        generate_ssh_key: true
+        ssh_key_bits: 2048
+        ssh_key_file: /tmp/molecule_rsa
+      delegate_to: localhost
+      run_once: true # noqa run-once
+
+    - name: Get system username on molecule instances
+      ansible.builtin.command: whoami
+      register: instance_user
+      changed_when: false
 
     - name: Ensure SSH directory exists on molecule instances
       become: true
@@ -35,17 +47,16 @@
       become: true
       become_method: su
       ansible.builtin.copy:
-        src: ~/.ssh/molecule_rsa.pub
+        src: /tmp/molecule_rsa.pub
         dest: "{{ ansible_env.HOME }}/.ssh/authorized_keys"
-        owner: "{{ ansible_facts.user | default('root') }}"
-        group: "{{ ansible_facts.user | default('root') }}"
+        owner: "{{ instance_user.stdout }}"
+        group: "{{ instance_user.stdout }}"
         mode: '0600'
 
     - name: Switch to SSH key-based authentication
       ansible.builtin.set_fact:
         ansible_ssh_common_args: "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
-        ansible_private_key_file: "~/.ssh/molecule_rsa"
-        ansible_user: "{{ ansible_facts.user | default('root') }}"
+        ansible_private_key_file: /tmp/molecule_rsa
 
     - name: Set variables for PostgreSQL Cluster deployment test
       ansible.builtin.set_fact:
