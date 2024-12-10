@@ -4,6 +4,48 @@
   gather_facts: true
 
   tasks:
+    - name: Ensure SSH client package is installed
+      become: true
+      become_method: su
+      ansible.builtin.package:
+        name: "{{ ssh_client_package }}"
+        state: present
+      vars:
+        ssh_client_package: "{{ 'openssh-client' if ansible_os_family == 'Debian' else 'openssh-clients' }}"
+      when: ansible_distribution != "MacOSX"
+
+    - name: Get system username
+      ansible.builtin.command: whoami
+      register: system_user
+      changed_when: false
+      delegate_to: localhost
+      run_once: true
+
+    - name: Generate molecule SSH key on control node
+      ansible.builtin.user:
+        name: "{{ system_user.stdout }}"
+        generate_ssh_key: true
+        ssh_key_bits: 2048
+        ssh_key_file: ~/.ssh/molecule_rsa
+      delegate_to: localhost
+      run_once: true
+
+    - name: Copy public SSH key to molecule instances
+      become: true
+      become_method: su
+      ansible.builtin.copy:
+        src: ~/.ssh/molecule_rsa.pub
+        dest: /root/.ssh/authorized_keys
+        owner: root
+        group: root
+        mode: '0600'
+
+    - name: Switch to SSH key-based authentication
+      ansible.builtin.set_fact:
+        ansible_ssh_common_args: "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+        ansible_private_key_file: "~/.ssh/molecule_rsa"
+        ansible_user: "root"
+
     - name: Set variables for PostgreSQL Cluster deployment test
       ansible.builtin.set_fact:
         firewall_enabled_at_boot: false
