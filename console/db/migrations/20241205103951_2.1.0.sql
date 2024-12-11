@@ -20,7 +20,7 @@ WHERE extension_name IN (
     'timescaledb'
 );
 
--- Adds shared_cpu BOOLEAN field to cloud_instances for Hetzner which has both Shared and Dedicated vCPU
+-- Adds shared_cpu BOOLEAN field to cloud_instances
 -- ref: https://github.com/vitabaks/autobase/issues/784
 ALTER TABLE ONLY public.cloud_instances
 ADD COLUMN 'shared_cpu' BOOLEAN DEFAULT FALSE;
