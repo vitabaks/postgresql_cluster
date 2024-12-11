@@ -25,6 +25,26 @@ WHERE extension_name IN (
 ALTER TABLE ONLY public.cloud_instances
 ADD COLUMN 'shared_cpu' BOOLEAN DEFAULT FALSE;
 
+-- Update AWS shared vCPU instances
+UPDATE public.cloud_instances
+SET shared_cpu = true
+WHERE cloud_provider = 'aws' AND instance_name IN ('t3.small', 't3.medium');
+
+-- Update GCP shared vCPU instances
+UPDATE public.cloud_instances
+SET shared_cpu = true
+WHERE cloud_provider = 'gcp' AND instance_name IN ('e2-small', 'e2-medium');
+
+-- Update Azure shared vCPU instances
+UPDATE public.cloud_instances
+SET shared_cpu = true
+WHERE cloud_provider = 'azure' AND instance_name IN ('Standard_B1ms', 'Standard_B2s');
+
+-- Update DigitalOcean shared vCPU instances
+UPDATE public.cloud_instances
+SET shared_cpu = true
+WHERE cloud_provider = 'digitalocean' AND instance_name IN ('s-2vcpu-2gb', 's-2vcpu-4gb');
+
 -- Extends 20240520144338_2.0.0_initial_scheme_setup.sql#L217 with more cloud instance types
 -- Heztner price is for the region 'Geremany / Finland', other regions may vary in price.
 INSERT INTO public.cloud_instances (cloud_provider, instance_group, instance_name, cpu, ram, price_hourly, price_monthly, currency, updated_at, shared_cpu) VALUES
