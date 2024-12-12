@@ -38,7 +38,7 @@ dcs-endpoints:
 {% endif %}
 {% if vip_manager_dcs_type | default(dcs_type) == 'consul' %}
 dcs-endpoints:
-{% for host in groups['consul_cluster'] %}
+{% for host in groups['consul_instances'] %}
   - http://{{ hostvars[host]['inventory_hostname'] }}:8500
 {% endfor %}
 {% if consul_token | default("") | length > 0 %}
@@ -48,21 +48,21 @@ consul-token: "{{ consul_token | default('') }}"
 
 {% if vip_manager_dcs_type | default(dcs_type) == 'etcd' %}
 {% if patroni_etcd_username | default("") | length > 0 %}
-etcd-user: {{ patroni_etcd_username }}
+etcd-user: {{ patroni_etcd_username | default("") }}
 {% endif %}
 {% if patroni_etcd_password | default("") | length > 0 %}
-etcd-password: {{ patroni_etcd_password }}
+etcd-password: {{ patroni_etcd_password | default("") }}
 {% endif %}
 # when etcd-ca-file is specified, TLS connections to the etcd endpoints will be used.
 {% if patroni_etcd_ca_file | default("") | length > 0 %}
-etcd-ca-file: {{ patroni_etcd_ca_file }}
+etcd-ca-file: {{ patroni_etcd_ca_file | default("") }}
 {% endif %}
 # when etcd-cert-file and etcd-key-file are specified, we will authenticate at the etcd endpoints using this certificate and key.
 {% if patroni_etcd_cert_file | default("") | length > 0 %}
-etcd-cert-file: {{ patroni_etcd_cert_file }}
+etcd-cert-file: {{ patroni_etcd_cert_file | default("") }}
 {% endif %}
 {% if patroni_etcd_key_file | default("") | length > 0 %}
-etcd-key-file: {{ patroni_etcd_key_file }}
+etcd-key-file: {{ patroni_etcd_key_file | default("") }}
 {% endif %}
 {% endif %}
 
