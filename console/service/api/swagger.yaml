@@ -1058,6 +1058,9 @@ definitions:
       cpu:
         type: integer
         example: 8
+      shared_cpu:
+        type: boolean
+        example: false
       ram:
         type: integer
         example: 256

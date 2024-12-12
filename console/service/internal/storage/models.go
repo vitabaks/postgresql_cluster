@@ -29,6 +29,7 @@ type CloudInstance struct {
 	PriceMonthly  float64
 	Currency      string
 	UpdatedAt     time.Time
+	SharedCpu     bool
 }
 
 type CloudImage struct {
