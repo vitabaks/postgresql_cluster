@@ -85,7 +85,7 @@ vip_manager_interval: "1000"  # time (in milliseconds) after which vip-manager w
 vip_manager_iface: "{{ vip_interface }}"  # interface to which the virtual ip will be added
 vip_manager_ip: "{{ cluster_vip }}"  # the virtual ip address to manage
 vip_manager_mask: "24"  # netmask for the virtual ip
-
+vip_manager_dcs_type: "{{ dcs_type }}"  # etcd, consul or patroni
 
 # DCS (Distributed Consensus Store)
 dcs_exists: false  # or 'true' if you don't want to deploy a new etcd cluster
