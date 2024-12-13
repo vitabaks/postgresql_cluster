@@ -22,8 +22,8 @@ hosting-type: basic # possible values: basic, or hetzner.
 
 dcs-type: {{ vip_manager_dcs_type | default(dcs_type) }} # etcd, consul or patroni
 
-# a list that contains all DCS endpoints to which vip-manager could talk.
 {% if vip_manager_dcs_type | default(dcs_type) == 'etcd' %}
+# a list that contains all DCS endpoints to which vip-manager could talk.
 {% if not dcs_exists | bool %}
 dcs-endpoints:
 {% for host in groups['etcd_cluster'] %}
@@ -37,10 +37,21 @@ dcs-endpoints:
 {% endif %}
 {% endif %}
 {% if vip_manager_dcs_type | default(dcs_type) == 'consul' %}
+# A list that contains all DCS endpoints to which vip-manager could talk.
 dcs-endpoints:
-{% for host in groups['consul_instances'] %}
+{% if not dcs_exists | bool %}
+  {% if consul_client_address == '127.0.0.1' %}
+  - http://127.0.0.1:8500
+  {% else %}
+  {% for host in groups['consul_instances'] %}
   - http://{{ hostvars[host]['inventory_hostname'] }}:8500
-{% endfor %}
+  {% endfor %}
+  {% endif %}
+{% else %}
+  {% for consul_host in consul_join %}
+  - http://{{ consul_host }}:8500
+  {% endfor %}
+{% endif %}
 {% if consul_token | default("") | length > 0 %}
 consul-token: "{{ consul_token | default('') }}"
 {% endif %}
@@ -53,12 +64,12 @@ etcd-user: {{ patroni_etcd_username | default("") }}
 {% if patroni_etcd_password | default("") | length > 0 %}
 etcd-password: {{ patroni_etcd_password | default("") }}
 {% endif %}
-# when etcd-ca-file is specified, TLS connections to the etcd endpoints will be used.
 {% if patroni_etcd_ca_file | default("") | length > 0 %}
+# when etcd-ca-file is specified, TLS connections to the etcd endpoints will be used.
 etcd-ca-file: {{ patroni_etcd_ca_file | default("") }}
 {% endif %}
-# when etcd-cert-file and etcd-key-file are specified, we will authenticate at the etcd endpoints using this certificate and key.
 {% if patroni_etcd_cert_file | default("") | length > 0 %}
+# when etcd-cert-file and etcd-key-file are specified, we will authenticate at the etcd endpoints using this certificate and key.
 etcd-cert-file: {{ patroni_etcd_cert_file | default("") }}
 {% endif %}
 {% if patroni_etcd_key_file | default("") | length > 0 %}

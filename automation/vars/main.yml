@@ -124,6 +124,7 @@ consul_enable_local_script_checks: true  # Enable them when they are defined in 
 consul_ui: false  # Enable the consul UI?
 consul_syslog_enable: true  # Enable logging to syslog
 consul_iface: "{{ ansible_default_ipv4.interface }}"  # specify the interface name with a Private IP (ex. "enp7s0")
+consul_client_address: '127.0.0.1'  # Client address. Affects DNS, HTTP, HTTPS, and gRPC client interfaces.
 # TLS
 # You can enable TLS encryption by dropping a CA certificate, server certificate, and server key in roles/consul/files/
 consul_tls_enable: false
@@ -135,6 +136,8 @@ consul_recursors: []  # List of upstream DNS servers
 consul_dnsmasq_enable: true  # Enable DNS forwarding with Dnsmasq
 consul_dnsmasq_cache: 0  # dnsmasq cache-size (0 - disable caching)
 consul_dnsmasq_servers: "{{ nameservers }}" # Upstream DNS servers used by dnsmasq
+
+# if dcs_type: "consul" and dcs_exists: true
 consul_join: []  # List of LAN servers of an existing consul cluster, to join.
 # - "10.128.64.140"
 # - "10.128.64.142"
