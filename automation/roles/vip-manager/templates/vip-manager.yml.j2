@@ -3,10 +3,15 @@
 # time (in milliseconds) after which vip-manager wakes up and checks if it needs to register or release ip addresses.
 interval: {{ vip_manager_interval }}
 
+{% if vip_manager_dcs_type | default(dcs_type) == 'patroni' %}
+trigger-key: "/leader"
+trigger-value: 200
+{% else %}
 # the etcd or consul key which vip-manager will regularly poll.
 trigger-key: "/{{ patroni_etcd_namespace | default('service') }}/{{ patroni_cluster_name }}/leader"
 # if the value of the above key matches the trigger-value (often the hostname of this host), vip-manager will try to add the virtual ip address to the interface specified in Iface
 trigger-value: "{{ ansible_hostname }}"
+{% endif %}
 
 ip: {{ vip_manager_ip }} # the virtual ip address to manage
 netmask: {{ vip_manager_mask }} # netmask for the virtual ip
@@ -15,46 +20,66 @@ interface: {{ vip_manager_iface }} # interface to which the virtual ip will be a
 # how the virtual ip should be managed. we currently support "ip addr add/remove" through shell commands or the Hetzner api
 hosting-type: basic # possible values: basic, or hetzner.
 
-dcs-type: {{ dcs_type }} # etcd or consul
+dcs-type: {{ vip_manager_dcs_type | default(dcs_type) }} # etcd, consul or patroni
+
+{% if vip_manager_dcs_type | default(dcs_type) == 'etcd' %}
 # a list that contains all DCS endpoints to which vip-manager could talk.
-{% if not dcs_exists|bool and dcs_type == 'etcd' %}
+{% if not dcs_exists | bool %}
 dcs-endpoints:
 {% for host in groups['etcd_cluster'] %}
   - http://{{ hostvars[host]['inventory_hostname'] }}:2379
 {% endfor %}
-{% endif %}
-{% if dcs_exists|bool and dcs_type == 'etcd' %}
+{% else %}
 dcs-endpoints:
 {% for etcd_hosts in patroni_etcd_hosts %}
   - {{ patroni_etcd_protocol | default('http', true) }}://{{ etcd_hosts.host }}:{{ etcd_hosts.port }}
 {% endfor %}
+{% endif %}
+{% endif %}
+{% if vip_manager_dcs_type | default(dcs_type) == 'consul' %}
+# A list that contains all DCS endpoints to which vip-manager could talk.
+dcs-endpoints:
+{% if not dcs_exists | bool %}
+  {% if consul_client_address == '127.0.0.1' %}
+  - http://127.0.0.1:8500
+  {% else %}
+  {% for host in groups['consul_instances'] %}
+  - http://{{ hostvars[host]['inventory_hostname'] }}:8500
+  {% endfor %}
+  {% endif %}
+{% else %}
+  {% for consul_host in consul_join %}
+  - http://{{ consul_host }}:8500
+  {% endfor %}
+{% endif %}
+{% if consul_token | default("") | length > 0 %}
+consul-token: "{{ consul_token | default('') }}"
+{% endif %}
+{% endif %}
 
+{% if vip_manager_dcs_type | default(dcs_type) == 'etcd' %}
 {% if patroni_etcd_username | default("") | length > 0 %}
 etcd-user: {{ patroni_etcd_username | default("") }}
 {% endif %}
 {% if patroni_etcd_password | default("") | length > 0 %}
-etcd-password: {{ patroni_etcd_password }}
+etcd-password: {{ patroni_etcd_password | default("") }}
 {% endif %}
-{% endif %}
-
-  # consul will always only use the first entry from this list.
-  # For consul, you'll obviously need to change the port to 8500.
-
-#etcd-user: "patroni"
-#etcd-password: "Julian's secret password"
-
+{% if patroni_etcd_ca_file | default("") | length > 0 %}
 # when etcd-ca-file is specified, TLS connections to the etcd endpoints will be used.
-#etcd-ca-file: "/path/to/etcd/trusted/ca/file"
+etcd-ca-file: {{ patroni_etcd_ca_file | default("") }}
+{% endif %}
+{% if patroni_etcd_cert_file | default("") | length > 0 %}
 # when etcd-cert-file and etcd-key-file are specified, we will authenticate at the etcd endpoints using this certificate and key.
-#etcd-cert-file: "/path/to/etcd/client/cert/file"
-#etcd-key-file: "/path/to/etcd/client/key/file"
-
-# don't worry about parameter with a prefix that doesn't match the endpoint_type. You can write anything there, I won't even look at it.
-#consul-token: "Julian's secret token"
+etcd-cert-file: {{ patroni_etcd_cert_file | default("") }}
+{% endif %}
+{% if patroni_etcd_key_file | default("") | length > 0 %}
+etcd-key-file: {{ patroni_etcd_key_file | default("") }}
+{% endif %}
+{% endif %}
 
 # how often things should be retried and how long to wait between retries. (currently only affects arpClient)
 retry-num: 2
-retry-after: 250  #in milliseconds
+retry-after: 250  # in milliseconds
 
 # verbose logs (currently only supported for hetzner)
 verbose: false

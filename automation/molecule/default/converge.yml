@@ -13,7 +13,7 @@
         sysctl_set: false # Added to prevent test failures in CI.
         nameservers: ["8.8.8.8", "9.9.9.9"]
         timezone: "Etc/UTC"
-        with_haproxy_load_balancing: true
+        with_haproxy_load_balancing: "{{ [true, false] | random }}"
         dcs_type: "{{ ['etcd', 'consul'] | random }}" # Set 'dcs_type' to either 'etcd' or 'consul' randomly
         consul_node_role: server # if dcs_type: "consul"
         consul_bootstrap_expect: true # if dcs_type: "consul"
@@ -33,6 +33,14 @@
         dest: "../../vars/dcs_type.yml"
       delegate_to: localhost
       run_once: true # noqa run-once
+
+    - name: Set variables for vip-manager test
+      ansible.builtin.set_fact:
+        cluster_vip: "10.172.0.200"
+        vip_manager_dcs_type: "{{ [dcs_type, 'patroni'] | random }}" # Randomly choose between dcs_type value or 'patroni'
+      delegate_to: localhost
+      run_once: true # noqa run-once
+      when: not with_haproxy_load_balancing | bool
 
     # Consul package for OracleLinux missing in HashiCorp repository
     # Only the installation of a binary file is supported

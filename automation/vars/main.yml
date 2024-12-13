@@ -79,13 +79,13 @@ keepalived_virtual_router_id: "{{ cluster_vip.split('.')[3] | int }}" # The last
 # virtual_router_id - must be unique in the network (available values are 0..255).
 
 # vip-manager (if 'cluster_vip' is specified and 'with_haproxy_load_balancing' is 'false')
-vip_manager_version: "2.6.0"  # version to install
+vip_manager_version: "3.0.0"  # version to install
 vip_manager_conf: "/etc/patroni/vip-manager.yml"
 vip_manager_interval: "1000"  # time (in milliseconds) after which vip-manager wakes up and checks if it needs to register or release ip addresses.
 vip_manager_iface: "{{ vip_interface }}"  # interface to which the virtual ip will be added
 vip_manager_ip: "{{ cluster_vip }}"  # the virtual ip address to manage
 vip_manager_mask: "24"  # netmask for the virtual ip
-
+vip_manager_dcs_type: "{{ dcs_type }}"  # etcd, consul or patroni
 
 # DCS (Distributed Consensus Store)
 dcs_exists: false  # or 'true' if you don't want to deploy a new etcd cluster
@@ -124,6 +124,7 @@ consul_enable_local_script_checks: true  # Enable them when they are defined in 
 consul_ui: false  # Enable the consul UI?
 consul_syslog_enable: true  # Enable logging to syslog
 consul_iface: "{{ ansible_default_ipv4.interface }}"  # specify the interface name with a Private IP (ex. "enp7s0")
+consul_client_address: '127.0.0.1'  # Client address. Affects DNS, HTTP, HTTPS, and gRPC client interfaces.
 # TLS
 # You can enable TLS encryption by dropping a CA certificate, server certificate, and server key in roles/consul/files/
 consul_tls_enable: false
@@ -135,6 +136,8 @@ consul_recursors: []  # List of upstream DNS servers
 consul_dnsmasq_enable: true  # Enable DNS forwarding with Dnsmasq
 consul_dnsmasq_cache: 0  # dnsmasq cache-size (0 - disable caching)
 consul_dnsmasq_servers: "{{ nameservers }}" # Upstream DNS servers used by dnsmasq
+
+# if dcs_type: "consul" and dcs_exists: true
 consul_join: []  # List of LAN servers of an existing consul cluster, to join.
 # - "10.128.64.140"
 # - "10.128.64.142"
