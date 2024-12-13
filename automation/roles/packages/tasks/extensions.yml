@@ -258,6 +258,7 @@
         dest: "/tmp/{{ pgvectorscale_archive }}"
         timeout: 60
         validate_certs: false
+      check_mode: false
 
     - name: Extract pgvectorscale package
       ansible.builtin.unarchive:
