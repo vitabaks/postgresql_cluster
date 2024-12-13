@@ -10,9 +10,9 @@
   retries: 3
 
 - name: Flush iptables the first time playbook runs.
-  ansible.builtin.command: >
-    iptables -F
-    creates=/etc/firewall.bash
+  ansible.builtin.command:
+    cmd: iptables -F
+    creates: /etc/firewall.bash
 
 - name: Copy firewall script into place.
   ansible.builtin.template:
