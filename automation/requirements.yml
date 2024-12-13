@@ -9,4 +9,4 @@ collections:
   - name: community.digitalocean
     version: "==1.27.0"
   - name: hetzner.hcloud
-    version: "==4.1.0"
+    version: "==4.2.2"
