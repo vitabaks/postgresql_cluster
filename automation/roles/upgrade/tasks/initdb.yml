@@ -49,19 +49,21 @@
 
 - name: Get the current encodig and data_checksums settings
   ansible.builtin.command: >-
-    {{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -tAXc
-    "show {{ item }}"
+    {{ pg_old_bindir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -tAXc "
+    select row_to_json(pg_settings)
+    from (
+      select
+        (select datcollate from pg_database where datname = current_database()) as lc_collate,
+        (select datctype from pg_database where datname = current_database()) as lc_ctype,
+        current_setting('lc_messages') as lc_messages,
+        current_setting('lc_monetary') as lc_monetary,
+        current_setting('lc_numeric') as lc_numeric,
+        current_setting('lc_time') as lc_time,
+        current_setting('server_encoding') as server_encoding,
+        current_setting('data_checksums') as data_checksums
+    ) pg_settings"
   changed_when: false
   register: pg_settings
-  loop:
-    - server_encoding
-    - lc_collate
-    - lc_ctype
-    - lc_messages
-    - lc_monetary
-    - lc_numeric
-    - lc_time
-    - data_checksums
   when:
     - inventory_hostname in groups['primary']
 
@@ -72,15 +74,15 @@
     /usr/bin/pg_createcluster {{ pg_new_version }} {{ postgresql_cluster_name }}
     --user={{ hostvars[groups['primary'][0]].pg_install_user.stdout }}
     --datadir={{ pg_new_datadir }}
-    --encoding={{ hostvars[groups['primary'][0]].pg_settings.results[0].stdout }}
-    --lc-collate={{ hostvars[groups['primary'][0]].pg_settings.results[1].stdout }}
-    --lc-ctype={{ hostvars[groups['primary'][0]].pg_settings.results[2].stdout }}
-    --lc-messages={{ hostvars[groups['primary'][0]].pg_settings.results[3].stdout }}
-    --lc-monetary={{ hostvars[groups['primary'][0]].pg_settings.results[4].stdout }}
-    --lc-numeric={{ hostvars[groups['primary'][0]].pg_settings.results[5].stdout }}
-    --lc-time={{ hostvars[groups['primary'][0]].pg_settings.results[6].stdout }}
+    --encoding={{ (hostvars[groups['primary'][0]].pg_settings.stdout | from_json).server_encoding }}
+    --lc-collate={{ (hostvars[groups['primary'][0]].pg_settings.stdout | from_json).lc_collate }}
+    --lc-ctype={{ (hostvars[groups['primary'][0]].pg_settings.stdout | from_json).lc_ctype }}
+    --lc-messages={{ (hostvars[groups['primary'][0]].pg_settings.stdout | from_json).lc_messages }}
+    --lc-monetary={{ (hostvars[groups['primary'][0]].pg_settings.stdout | from_json).lc_monetary }}
+    --lc-numeric={{ (hostvars[groups['primary'][0]].pg_settings.stdout | from_json).lc_numeric }}
+    --lc-time={{ (hostvars[groups['primary'][0]].pg_settings.stdout | from_json).lc_time }}
     --start-conf=manual
-    {% if hostvars[groups['primary'][0]].pg_settings.results[7].stdout == 'on' %}
+    {% if (hostvars[groups['primary'][0]].pg_settings.stdout | from_json).data_checksums == 'on' %}
     -- --data-checksums
     {% endif %}
   when:
@@ -93,14 +95,14 @@
     {{ pg_new_bindir }}/initdb
     --username={{ pg_install_user.stdout }}
     --pgdata={{ pg_new_datadir }}
-    --encoding={{ pg_settings.results[0].stdout }}
-    --lc-collate={{ pg_settings.results[1].stdout }}
-    --lc-ctype={{ pg_settings.results[2].stdout }}
-    --lc-messages={{ pg_settings.results[3].stdout }}
-    --lc-monetary={{ pg_settings.results[4].stdout }}
-    --lc-numeric={{ pg_settings.results[5].stdout }}
-    --lc-time={{ pg_settings.results[6].stdout }}
-    {% if pg_settings.results[7].stdout == 'on' %}
+    --encoding={{ (pg_settings.stdout | from_json).server_encoding }}
+    --lc-collate={{ (pg_settings.stdout | from_json).lc_collate }}
+    --lc-ctype={{ (pg_settings.stdout | from_json).lc_ctype }}
+    --lc-messages={{ (pg_settings.stdout | from_json).lc_messages }}
+    --lc-monetary={{ (pg_settings.stdout | from_json).lc_monetary }}
+    --lc-numeric={{ (pg_settings.stdout | from_json).lc_numeric }}
+    --lc-time={{ (pg_settings.stdout | from_json).lc_time }}
+    {% if (pg_settings.stdout | from_json).data_checksums == 'on' %}
     --data-checksums
     {% endif %}
   when:

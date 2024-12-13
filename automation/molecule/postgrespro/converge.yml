@@ -6,6 +6,7 @@
   tasks:
     - name: Set variables for molecule
       ansible.builtin.set_fact:
+        ansible_become_method: su # Override become_method
         firewall_enable_ipv6: false # Added to prevent test failures in CI.
         swap_file_create: false # Added to prevent test failures in CI.
         sysctl_set: false # Added to prevent test failures in CI.

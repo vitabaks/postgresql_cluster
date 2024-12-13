@@ -1,8 +1,8 @@
-# PostgreSQL Cluster Console API service
+# Autobase Console API service
 
-Server-side component for PostgreSQL Cluster Console. This REST service implements the API for UI integration.
+Server-side component for autobase console. This REST service implements the API for UI integration.
 
-The project is written in `Go` and uses [Swagger](https://github.com/go-swagger/go-swagger) for server-side code generation. The server receives requests from the web to create and manage clusters. Under the hood, the server uses Docker to run `postgresql_cluster` image with Ansible playbooks for cluster deployment logic.
+The project is written in `Go` and uses [Swagger](https://github.com/go-swagger/go-swagger) for server-side code generation. The server receives requests from the web to create and manage clusters. Under the hood, the server uses Docker to run `autobase/automation` image with Ansible playbooks for cluster deployment logic.
 
 ## Build
 Swagger specification is used for creating the server REST API. First, you need to install the Swagger tool to build the auto-generated Go files.
@@ -57,7 +57,7 @@ PG_CONSOLE_DB_MIGRATIONDIR            String              /etc/db/migrations    
 PG_CONSOLE_ENCRYPTIONKEY              String              super_secret                                     Encryption key for secret storage
 PG_CONSOLE_DOCKER_HOST                String              unix:///var/run/docker.sock                      Docker host
 PG_CONSOLE_DOCKER_LOGDIR              String              /tmp/ansible                                     Directory inside docker container for ansible json log
-PG_CONSOLE_DOCKER_IMAGE               String              vitabaks/postgresql_cluster:2.0.0                Docker image for postgresql_cluster
+PG_CONSOLE_DOCKER_IMAGE               String              autobase/automation:2.0.0                        Docker image for autobase automation
 PG_CONSOLE_LOGWATCHER_RUNEVERY        Duration            1m                                               LogWatcher run interval
 PG_CONSOLE_LOGWATCHER_ANALYZEPAST     Duration            48h                                              LogWatcher gets operations to analyze which created_at > now() - AnalyzePast
 PG_CONSOLE_CLUSTERWATCHER_RUNEVERY    Duration            1m                                               ClusterWatcher run interval

@@ -151,7 +151,7 @@ haproxy_compile_requirements:
 # ================================================================================================= #
 # Offline installation (if installation_method: "file")
 #
-# You can also download the necessary packages into postgresql_cluster/files/ directory.
+# You can also download the necessary packages into /autobase/automation/files/ directory.
 # Packages from this directory will be used for installation.
 
 # if installation_method: "file" and patroni_installation_method: "deb"

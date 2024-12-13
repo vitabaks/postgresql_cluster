@@ -30,22 +30,22 @@ export const sidebarLowData = (t: TFunction) => [
   {
     icon: GithubIcon,
     label: t('github', { ns: 'shared' }),
-    path: 'https://github.com/vitabaks/postgresql_cluster',
+    path: 'https://github.com/vitabaks/autobase',
   },
   {
     icon: DocumentationIcon,
     label: t('documentation', { ns: 'shared' }),
-    path: 'https://postgresql-cluster.org',
+    path: 'https://autobase.tech/docs',
   },
   {
     icon: SupportIcon,
     label: t('support', { ns: 'shared' }),
-    path: 'https://github.com/vitabaks/postgresql_cluster/issues',
+    path: 'https://autobase.tech/docs/support',
   },
   {
     icon: SponsorIcon,
     label: t('sponsor', { ns: 'shared' }),
-    path: 'https://github.com/vitabaks/postgresql_cluster?tab=readme-ov-file#sponsor-this-project',
+    path: 'https://autobase.tech/docs/sponsor',
   },
 ];
 

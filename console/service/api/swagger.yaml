@@ -1,8 +1,8 @@
 ---
 swagger: '2.0'
 info:
-  title: PG Console
-  description: API for PostgreSQL Cluster Console
+  title: autobase console
+  description: API for autobase console
   version: 2.0.0
 host: localhost:8080
 schemes:
@@ -1058,6 +1058,9 @@ definitions:
       cpu:
         type: integer
         example: 8
+      shared_cpu:
+        type: boolean
+        example: false
       ram:
         type: integer
         example: 256
