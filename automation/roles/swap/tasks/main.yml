@@ -37,9 +37,9 @@
 # if the swap does not exist
 - block:
     - name: Create swap file
-      ansible.builtin.command: >
-        dd if=/dev/zero of={{ swap_file_path }} bs=1M count={{ swap_file_size_mb }}
-        creates='{{ swap_file_path }}'
+      ansible.builtin.command:
+        cmd: dd if=/dev/zero of={{ swap_file_path }} bs=1M count={{ swap_file_size_mb }}
+        creates: "{{ swap_file_path }}"
 
     - name: Set permissions on swap file
       ansible.builtin.file:

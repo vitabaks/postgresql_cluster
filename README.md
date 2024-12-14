@@ -121,7 +121,7 @@ _Table of results of daily automated testing of cluster deployment:_
 | AlmaLinux 9 | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/vitabaks/autobase/schedule_pg_almalinux9.yml?branch=master)](https://github.com/vitabaks/autobase/actions/workflows/schedule_pg_almalinux9.yml) |
 
 ###### Ansible version 
-Minimum supported Ansible version: 8.0.0 (ansible-core 2.15.0)
+Minimum supported Ansible version: 9.0.0 (ansible-core 2.16.0)
 
 ## Requirements
 
