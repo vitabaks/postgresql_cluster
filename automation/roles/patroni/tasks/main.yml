@@ -418,7 +418,7 @@
   when: postgresql_wal_dir is defined and postgresql_wal_dir | length > 0
   tags: patroni, custom_wal_dir
 
-- block:  # wheh postgresql NOT exists or PITR
+- block:  # when postgresql NOT exists or PITR
     - name: Prepare PostgreSQL | make sure PostgreSQL data directory "{{ postgresql_data_dir }}" exists
       ansible.builtin.file:
         path: "{{ postgresql_data_dir }}"
@@ -426,6 +426,22 @@
         group: postgres
         state: directory
         mode: "0700"
+
+    # Generating TLS Certificates
+    - name: Generating TLS Certificates to {{ postgresql_home_dir }}/{{ postgresql_version }}
+      become: true
+      become_user: postgres
+      shell:
+        cmd: openssl req -nodes -new -x509 -days 3650 -keyout server.key -out server.crt -subj '/C=AL/L=City/O=Org/CN=PostgreSQL'
+        chdir: "{{ postgresql_home_dir }}/{{ postgresql_version }}/"
+    
+    - name: Changing permissions for {{ postgresql_home_dir }}/{{ postgresql_version }}/server.key
+      file:
+        path: "{{ postgresql_home_dir }}/{{ postgresql_version }}/server.key"
+        state: file
+        owner: postgres
+        group: postgres
+        mode: "0400"
 
     # for Debian based distros only
     # patroni bootstrap failure is possible if the PostgreSQL config files are missing

@@ -42,6 +42,11 @@ client_tls_cert_file = {{ pgbouncer_client_tls_cert_file }}
 client_tls_ca_file = {{ pgbouncer_client_tls_ca_file }}
 client_tls_protocols = {{ pgbouncer_client_tls_protocols }}
 client_tls_ciphers = {{ pgbouncer_client_tls_ciphers }}
+server_tls_sslmode = {{ pgbouncer_server_tls_sslmode }}
+server_tls_protocols = {{ pgbouncer_server_tls_protocols }}
+server_tls_ciphers = {{ pgbouncer_server_tls_ciphers }}
+server_tls_cert_file = {{ pgbouncer_server_tls_cert_file }}
+server_tls_key_file = {{ pgbouncer_server_tls_key_file }}
 {% endif %}
 log_connections = 0
 log_disconnections = 0

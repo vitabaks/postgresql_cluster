@@ -235,6 +235,10 @@ postgresql_parameters:
   - { option: "max_connections", value: "1000" }
   - { option: "superuser_reserved_connections", value: "5" }
   - { option: "password_encryption", value: "{{ postgresql_password_encryption_algorithm }}" }
+  - { option: "ssl", value: "on"}
+  - { option: "ssl_cert_file", value: "{{ postgresql_home_dir }}/{{ postgresql_version }}/server.crt"}
+  - { option: "ssl_key_file", value: "{{ postgresql_home_dir }}/{{ postgresql_version }}/server.key"}
+  - { option: "ssl_min_protocol_version", value: "TLSv1.2"}
   - { option: "max_locks_per_transaction", value: "512" }
   - { option: "max_prepared_transactions", value: "0" }
   - { option: "huge_pages", value: "try" }  # "vm.nr_hugepages" is auto-configured for shared_buffers >= 8GB (if huge_pages_auto_conf is true)
@@ -305,8 +309,8 @@ postgresql_parameters:
   - { option: "wal_receiver_status_interval", value: "10s" }
   - { option: "idle_in_transaction_session_timeout", value: "10min" }  # reduce this timeout if possible
   - { option: "jit", value: "off" }
-  - { option: "max_worker_processes", value: "24" }
-  - { option: "max_parallel_workers", value: "8" }
+  - { option: "max_worker_processes", value: "{{ ansible_processor_nproc | int }}" }
+  - { option: "max_parallel_workers", value: "{{ ansible_processor_nproc | int }}" }
   - { option: "max_parallel_workers_per_gather", value: "2" }
   - { option: "max_parallel_maintenance_workers", value: "2" }
   - { option: "tcp_keepalives_count", value: "10" }
@@ -366,12 +370,17 @@ pgbouncer_auth_user: true # or 'false' if you want to manage the list of users f
 pgbouncer_auth_username: pgbouncer # user who can query the database via the user_search function
 pgbouncer_auth_password: "" # If not defined, a password will be generated automatically during deployment
 pgbouncer_auth_dbname: "postgres"
-pgbouncer_client_tls_sslmode: "disable"
-pgbouncer_client_tls_key_file: ""
-pgbouncer_client_tls_cert_file: ""
+pgbouncer_client_tls_sslmode: "require"
+pgbouncer_client_tls_key_file: "{{ pgbouncer_conf_dir }}/server.key"
+pgbouncer_client_tls_cert_file: "{{ pgbouncer_conf_dir }}/server.crt"
 pgbouncer_client_tls_ca_file: ""
 pgbouncer_client_tls_protocols: "secure" # allowed values: tlsv1.0, tlsv1.1, tlsv1.2, tlsv1.3, all, secure (tlsv1.2,tlsv1.3)
-pgbouncer_client_tls_ciphers: "default" # allowed values: default, secure, fast, normal, all (not recommended)
+pgbouncer_client_tls_ciphers: "secure" # allowed values: default, secure, fast, normal, all (not recommended)
+pgbouncer_server_tls_sslmode: "require"
+pgbouncer_server_tls_protocols: "secure"
+pgbouncer_server_tls_ciphers: "secure"
+pgbouncer_server_tls_cert_file: "{{ pgbouncer_conf_dir }}/server.crt"
+pgbouncer_server_tls_key_file: "{{ pgbouncer_conf_dir }}/server.key"
 
 pgbouncer_pools:
   - { name: "postgres", dbname: "postgres", pool_parameters: "" }
