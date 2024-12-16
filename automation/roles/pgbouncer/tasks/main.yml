@@ -128,17 +128,17 @@
 - name: Generating TLS Certificates to {{ pgbouncer_conf_dir }}
   become: true
   become_user: postgres
-  shell:
+  ansible.builtin.command:
     cmd: openssl req -nodes -new -x509 -days 3650 -keyout server.key -out server.crt -subj '/C=AL/L=City/O=Org/CN=PostgreSQL'
     chdir: "{{ pgbouncer_conf_dir }}/"
 
 - name: Changing permissions for {{ pgbouncer_conf_dir }}/server.key
-  file:
+  ansible.builtin.file:
     path: "{{ pgbouncer_conf_dir }}/server.key"
     state: file
     owner: postgres
     group: postgres
-    mode: 0400
+    mode: "0400"
 
 - name: Configure pgbouncer.ini
   ansible.builtin.template:
