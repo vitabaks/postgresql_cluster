@@ -55,10 +55,8 @@ INSERT INTO public.cloud_instances (cloud_provider, instance_group, instance_nam
     ('hetzner', 'Small Size', 'CPX31', 4, 8, 0.025 , 15.59, '$', '2024-12-10', true),
     ('hetzner', 'Medium Size', 'CPX41', 8, 16, 0.0464 , 28.09, '$', '2024-12-10', true),
     ('hetzner', 'Medium Size', 'CPX51', 16, 32, 0.0979 , 61.09, '$', '2024-12-10', true);
-    
 
 -- Update all existing Hetzner instances to use USD instead of EUR for easy comparison to other IaaS Providers. 
--- cloud_instances
 -- Update prices and other relevant fields for Hetzner cloud instances indludes an IPv4 address
 UPDATE public.cloud_instances SET price_hourly = 0.0082, price_monthly = 5.09, currency = '$', updated_at = '2024-12-10', shared_cpu = true WHERE cloud_provider = 'hetzner' AND instance_name = 'CPX11';
 UPDATE public.cloud_instances SET price_hourly = 0.0138, price_monthly = 8.59, currency = '$', updated_at = '2024-12-10', shared_cpu = true WHERE cloud_provider = 'hetzner' AND instance_name = 'CPX21';
@@ -74,5 +72,4 @@ UPDATE public.cloud_instances SET price_hourly = 0.5138, price_monthly = 320.59,
 UPDATE public.cloud_volumes SET price_monthly = 0.05, currency = '$', updated_at = '2024-12-10' WHERE cloud_provider = 'hetzner';
 
 -- +goose Down
-DELETE FROM public.postgres_versions 
-WHERE major_version = 17;
+DELETE FROM public.postgres_versions WHERE major_version = 17;

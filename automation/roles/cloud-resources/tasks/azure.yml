@@ -3,6 +3,30 @@
 - name: Install Python dependencies
   block:
     - name: Ensure that 'python3-pip' package is present on controlling host
+      ansible.builtin.command: which pip3
+      register: pip3_check
+      failed_when: false
+      changed_when: false
+
+    - name: Clean dnf cache
+      ansible.builtin.command: dnf clean all
+      when:
+        - pip3_check.rc != 0
+        - ansible_os_family == "RedHat"
+
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+      register: apt_status
+      until: apt_status is success
+      delay: 5
+      retries: 3
+      when:
+        - pip3_check.rc != 0
+        - ansible_os_family == "Debian"
+
+    - name: Install 'python3-pip' package on controlling host
       ansible.builtin.package:
         name: python3-pip
         state: present
@@ -10,7 +34,9 @@
       until: package_status is success
       delay: 10
       retries: 3
-      when: ansible_distribution != "MacOSX"
+      when:
+        - pip3_check.rc != 0
+        - ansible_distribution != "MacOSX"
 
     - name: Ensure that Azure collection is installed on controlling host
       ansible.builtin.command: ansible-galaxy collection list azure.azcollection
