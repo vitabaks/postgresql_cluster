@@ -427,27 +427,6 @@
         state: directory
         mode: "0700"
 
-    # Generating TLS Certificates
-    - block:
-        - name: Generate a private key for TLS
-          become: true
-          become_user: postgres
-          community.crypto.openssl_privatekey:
-            path: "{{ postgresql_conf_dir }}/server.key"
-            size: '4096'
-            mode: '0400'
-
-        - name: Generate a self-signed certificate for Postgres
-          community.crypto.x509_certificate:
-            path: "{{ postgresql_conf_dir }}/server.crt"
-            privatekey_path: "{{ postgresql_conf_dir }}/server.key"
-            owner: postgres
-            group: postgres
-            mode: '0644'
-            provider: selfsigned
-            entrust_not_after: "+1000d"
-      when: (postgresql_parameters | selectattr('option', 'equalto', 'ssl') | map(attribute='value') | first | default('off')) == 'on'
-
     # for Debian based distros only
     # patroni bootstrap failure is possible if the PostgreSQL config files are missing
     - name: Prepare PostgreSQL | make sure PostgreSQL config directory exists
@@ -617,6 +596,27 @@
       changed_when: false
   when: postgresql_exists | bool and patroni_cluster_bootstrap_method == "initdb"
   tags: patroni, patroni_start_master
+
+# Generating TLS Certificates
+- block:
+    - name: Prepare PostgreSQL | Generate a private key for TLS
+      become: true
+      become_user: postgres
+      community.crypto.openssl_privatekey:
+        path: "{{ postgresql_conf_dir }}/server.key"
+        size: '4096'
+        mode: '0400'
+
+    - name: Prepare PostgreSQL | Generate a self-signed certificate for Postgres
+      community.crypto.x509_certificate:
+        path: "{{ postgresql_conf_dir }}/server.crt"
+        privatekey_path: "{{ postgresql_conf_dir }}/server.key"
+        owner: postgres
+        group: postgres
+        mode: '0644'
+        provider: selfsigned
+        entrust_not_after: "+1000d"
+  when: (postgresql_parameters | selectattr('option', 'equalto', 'ssl') | map(attribute='value') | first | default('off')) == 'on'
 
 - block:  # PITR (custom bootstrap)
     # Prepare (install pexpect, ruamel.yaml)
