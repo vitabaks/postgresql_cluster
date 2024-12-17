@@ -432,14 +432,14 @@
       become: true
       become_user: postgres
       community.crypto.openssl_privatekey:
-        path: "{{ postgresql_home_dir }}/{{ postgresql_version }}/server.key"
+        path: "{{ postgresql_conf_dir }}/server.key"
         size: '4096'
         mode: '0400'
 
     - name: Generate a self-signed certificate for Postgres
       community.crypto.x509_certificate:
-        path: "{{ postgresql_home_dir }}/{{ postgresql_version }}/server.crt"
-        privatekey_path: "{{ postgresql_home_dir }}/{{ postgresql_version }}/server.key"
+        path: "{{ postgresql_conf_dir }}/server.crt"
+        privatekey_path: "{{ postgresql_conf_dir }}/server.key"
         owner: postgres
         group: postgres
         mode: '0644'
