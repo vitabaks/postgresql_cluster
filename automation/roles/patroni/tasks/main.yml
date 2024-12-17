@@ -816,27 +816,6 @@
         (existing_pgcluster is not defined or not existing_pgcluster|bool)
   tags: patroni
 
-# Generating TLS Certificates
-- block:
-    - name: Generate a private key for TLS (if not exist)
-      become: true
-      become_user: postgres
-      community.crypto.openssl_privatekey:
-        path: "{{ postgresql_conf_dir }}/server.key"
-        size: '4096'
-        mode: '0400'
-
-    - name: Generate a self-signed certificate for Postgres (if not exist)
-      community.crypto.x509_certificate:
-        path: "{{ postgresql_conf_dir }}/server.crt"
-        privatekey_path: "{{ postgresql_conf_dir }}/server.key"
-        owner: postgres
-        group: postgres
-        mode: '0644'
-        provider: selfsigned
-        entrust_not_after: "+1000d"
-  when: (postgresql_parameters | selectattr('option', 'equalto', 'ssl') | map(attribute='value') | first | default('off')) == 'on'
-
 - block:  # start patroni on master
     - name: Start patroni service on the Master server
       ansible.builtin.systemd:
