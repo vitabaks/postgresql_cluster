@@ -381,6 +381,7 @@ pgbouncer_server_tls_protocols: "secure"
 pgbouncer_server_tls_ciphers: "secure"
 pgbouncer_server_tls_cert_file: "{{ pgbouncer_conf_dir }}/server.crt"
 pgbouncer_server_tls_key_file: "{{ pgbouncer_conf_dir }}/server.key"
+pgbouncer_server_tls_ca_file: ""
 
 pgbouncer_pools:
   - { name: "postgres", dbname: "postgres", pool_parameters: "" }
