@@ -1,0 +1,22 @@
+---
+- name: Generate private TLS key for {{ tls_title }}
+  community.crypto.openssl_privatekey:
+    path: "{{ tls_privatekey_path }}"
+    size: "4096"
+
+- name: Set the owner of the private TLS key {{ tls_privatekey_path }} to {{ tls_owner }}
+  ansible.builtin.file:
+    path: "{{ tls_privatekey_path }}"
+    owner: "{{ tls_owner }}"
+    group: "{{ tls_owner }}"
+    mode: "0400"
+
+- name: Generate self-signed TLS certificate for {{ tls_title }}
+  community.crypto.x509_certificate:
+    path: "{{ tls_cert_path }}"
+    privatekey_path: "{{ tls_privatekey_path }}"
+    owner: "{{ tls_owner }}"
+    group: "{{ tls_owner }}"
+    mode: "0644"
+    provider: selfsigned
+    entrust_not_after: "+1000d"
