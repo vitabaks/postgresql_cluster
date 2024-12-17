@@ -125,23 +125,25 @@
   tags: pgbouncer_logrotate, pgbouncer
 
 # Generating TLS Certificates
-- name: Generate a private key for TLS
-  become: true
-  become_user: postgres
-  community.crypto.openssl_privatekey:
-    path: "{{ pgbouncer_conf_dir }}/server.key"
-    size: '4096'
-    mode: '0400'
+- block:
+    - name: Generate a private key for TLS
+      become: true
+      become_user: postgres
+      community.crypto.openssl_privatekey:
+        path: "{{ pgbouncer_conf_dir }}/server.key"
+        size: '4096'
+        mode: '0400'
 
-- name: Generate a self-signed certificate for PGBouncer
-  community.crypto.x509_certificate:
-    path: "{{ pgbouncer_conf_dir }}/server.crt"
-    privatekey_path: "{{ pgbouncer_conf_dir }}/server.key"
-    owner: postgres
-    group: postgres
-    mode: '0644'
-    provider: selfsigned
-    entrust_not_after: "+1000d"
+    - name: Generate a self-signed certificate for PGBouncer
+      community.crypto.x509_certificate:
+        path: "{{ pgbouncer_conf_dir }}/server.crt"
+        privatekey_path: "{{ pgbouncer_conf_dir }}/server.key"
+        owner: postgres
+        group: postgres
+        mode: '0644'
+        provider: selfsigned
+        entrust_not_after: "+1000d"
+  when: pgbouncer_server_tls_sslmode | default('disable') != 'disable'
 
 - name: Configure pgbouncer.ini
   ansible.builtin.template:
