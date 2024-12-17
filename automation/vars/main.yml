@@ -236,8 +236,8 @@ postgresql_parameters:
   - { option: "superuser_reserved_connections", value: "5" }
   - { option: "password_encryption", value: "{{ postgresql_password_encryption_algorithm }}" }
   - { option: "ssl", value: "on"}
-  - { option: "ssl_cert_file", value: "{{ postgresql_home_dir }}/{{ postgresql_version }}/server.crt"}
-  - { option: "ssl_key_file", value: "{{ postgresql_home_dir }}/{{ postgresql_version }}/server.key"}
+  - { option: "ssl_cert_file", value: "{{ postgresql_conf_dir }}/server.crt"}
+  - { option: "ssl_key_file", value: "{{ postgresql_conf_dir }}/server.key"}
   - { option: "ssl_min_protocol_version", value: "TLSv1.2"}
   - { option: "max_locks_per_transaction", value: "512" }
   - { option: "max_prepared_transactions", value: "0" }
