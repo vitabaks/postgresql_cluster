@@ -111,7 +111,7 @@
         tasks_from: copy_certificate
       vars:
         tls_job: fetch
-      when: tls_cert_generate|bool
+      when: tls_cert_generate | bool
 
   roles:
     - role: ansible-role-firewall
@@ -242,7 +242,7 @@
         tasks_from: copy_certificate
       vars:
         tls_job: copy
-      when: tls_cert_generate|bool
+      when: tls_cert_generate | bool
 
   roles:
     - role: wal-g
