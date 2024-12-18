@@ -27,4 +27,4 @@
     group: "{{ tls_owner | default('postgres') }}"
     mode: "{{ tls_cert_mode | default('0644') }}"
     provider: "{{ tls_cert_provider | default('selfsigned') }}"
-    entrust_not_after: "{{ tls_cert_entrust_not_after | default('+3650d') }}"
+    entrust_not_after: "+{{ tls_cert_valid_days | default(3650) }}d"

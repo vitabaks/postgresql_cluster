@@ -176,6 +176,7 @@ consul_services:
 
 # TLS certificate (for PostgreSQL & PGBouncer)
 tls_cert_generate: true
+tls_cert_valid_days: 3650
 tls_cert_path: "{{ postgresql_home_dir }}/tls/server.crt"
 tls_privatekey_path: "{{ postgresql_home_dir }}/tls/server.key"
 tls_owner: "postgres"
