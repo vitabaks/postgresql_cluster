@@ -174,6 +174,11 @@ consul_services:
 #      - { http: "http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/async?lag={{ patroni_maximum_lag_on_replica }}", interval: "2s" }
 #      - { args: ["systemctl", "status", "pgbouncer"], interval: "5s" }
 
+# TLS certificate (for PostgreSQL & PGBouncer)
+tls_cert_generate: true
+tls_cert_path: "{{ postgresql_home_dir }}/tls/server.crt"
+tls_privatekey_path: "{{ postgresql_home_dir }}/tls/server.key"
+tls_owner: "postgres"
 
 # PostgreSQL variables
 postgresql_version: 17
@@ -236,8 +241,8 @@ postgresql_parameters:
   - { option: "superuser_reserved_connections", value: "5" }
   - { option: "password_encryption", value: "{{ postgresql_password_encryption_algorithm }}" }
   - { option: "ssl", value: "on"}
-  - { option: "ssl_cert_file", value: "{{ pgbouncer_conf_dir }}/server.crt"}
-  - { option: "ssl_key_file", value: "{{ pgbouncer_conf_dir }}/server.key"}
+  - { option: "ssl_cert_file", value: "{{ tls_cert_path }}"}
+  - { option: "ssl_key_file", value: "{{ tls_privatekey_path }}"}
   - { option: "ssl_min_protocol_version", value: "TLSv1.2"}
   - { option: "max_locks_per_transaction", value: "512" }
   - { option: "max_prepared_transactions", value: "0" }
@@ -371,16 +376,16 @@ pgbouncer_auth_username: pgbouncer # user who can query the database via the use
 pgbouncer_auth_password: "" # If not defined, a password will be generated automatically during deployment
 pgbouncer_auth_dbname: "postgres"
 pgbouncer_client_tls_sslmode: "require"
-pgbouncer_client_tls_key_file: "{{ pgbouncer_conf_dir }}/server.key"
-pgbouncer_client_tls_cert_file: "{{ pgbouncer_conf_dir }}/server.crt"
+pgbouncer_client_tls_key_file: "{{ tls_privatekey_path }}"
+pgbouncer_client_tls_cert_file: "{{ tls_cert_path }}"
 pgbouncer_client_tls_ca_file: ""
 pgbouncer_client_tls_protocols: "secure" # allowed values: tlsv1.0, tlsv1.1, tlsv1.2, tlsv1.3, all, secure (tlsv1.2,tlsv1.3)
 pgbouncer_client_tls_ciphers: "secure" # allowed values: default, secure, fast, normal, all (not recommended)
 pgbouncer_server_tls_sslmode: "require"
 pgbouncer_server_tls_protocols: "secure"
 pgbouncer_server_tls_ciphers: "secure"
-pgbouncer_server_tls_cert_file: "{{ pgbouncer_conf_dir }}/server.crt"
-pgbouncer_server_tls_key_file: "{{ pgbouncer_conf_dir }}/server.key"
+pgbouncer_server_tls_cert_file: "{{ tls_cert_path }}"
+pgbouncer_server_tls_key_file: "{{ tls_privatekey_path }}"
 pgbouncer_server_tls_ca_file: ""
 
 pgbouncer_pools:

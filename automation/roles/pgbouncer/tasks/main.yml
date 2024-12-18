@@ -124,17 +124,6 @@
     label: "{{ 'pgbouncer' if idx == 0 else 'pgbouncer-%d' % (idx + 1) }}"
   tags: pgbouncer_logrotate, pgbouncer
 
-- name: Generate TLS certificate...
-  ansible.builtin.import_role:
-    name: tls_certificate
-    tasks_from: main
-  vars:
-    tls_title: "PostgreSQL & PGBouncer"
-    tls_privatekey_path: "{{ pgbouncer_conf_dir }}/server.key"
-    tls_cert_path: "{{ pgbouncer_conf_dir }}/server.crt"
-    tls_owner: "postgres"
-  when: (pgbouncer_server_tls_sslmode | default('disable') != 'disable') or ((postgresql_parameters | selectattr('option', 'equalto', 'ssl') | map(attribute='value') | first | default('off')) == 'on')
-
 - name: Configure pgbouncer.ini
   ansible.builtin.template:
     src: templates/pgbouncer.ini.j2
