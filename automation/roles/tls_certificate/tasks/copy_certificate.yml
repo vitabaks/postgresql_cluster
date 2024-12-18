@@ -1,0 +1,47 @@
+---
+- name: Fetch TLS certificate and key
+  run_once: true
+  ansible.builtin.fetch:
+    src: "{{ item }}"
+    dest: "/tmp/tls/"
+    flat: yes
+  loop:
+    - "{{ tls_privatekey_path | default('/etc/tls/server.key') }}"
+    - "{{ tls_cert_path | default('/etc/tls/server.crt') }}"
+  when:
+    - tls_job is defined
+    - tls_job == 'fetch'
+
+- block:
+  - name: Ensure TLS directories exist
+    ansible.builtin.file:
+      path: "{{ item }}"
+      state: directory
+      owner: "{{ tls_owner | default('postgres') }}"
+      group: "{{ tls_owner | default('postgres') }}"
+      mode: "0750"
+    loop:
+      - "{{ tls_privatekey_path | default('/etc/tls/server.key') | dirname }}"
+      - "{{ tls_cert_path | default('/etc/tls/server.crt') | dirname }}"
+
+  - name: Copy TLS certificate and key to the new node
+    ansible.builtin.copy:
+      src: "/tmp/tls/{{ item | basename }}"
+      dest: "{{ item }}"
+    loop:
+      - "{{ tls_privatekey_path | default('/etc/tls/server.key') }}"
+      - "{{ tls_cert_path | default('/etc/tls/server.crt') }}"
+
+  - name: Set proper permissions for TLS files
+    ansible.builtin.file:
+      path: "{{ item.path }}"
+      owner: "{{ tls_owner | default('postgres') }}"
+      group: "{{ tls_owner | default('postgres') }}"
+      mode: "{{ item.mode }}"
+      state: file
+    loop:
+      - { path: "{{ tls_privatekey_path | default('/etc/tls/server.key') }}", mode: "0400" }
+      - { path: "{{ tls_cert_path | default('/etc/tls/server.crt') }}", mode: "0644" }
+  when:
+    - tls_job is defined
+    - tls_job == 'copy'
