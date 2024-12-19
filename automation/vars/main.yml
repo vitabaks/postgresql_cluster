@@ -174,7 +174,7 @@ consul_services:
 #      - { http: "http://{{ inventory_hostname }}:{{ patroni_restapi_port }}/async?lag={{ patroni_maximum_lag_on_replica }}", interval: "2s" }
 #      - { args: ["systemctl", "status", "pgbouncer"], interval: "5s" }
 
-# TLS certificate (for PostgreSQL & PGBouncer)
+# TLS certificate (for PostgreSQL & PgBouncer)
 tls_cert_generate: true
 tls_cert_valid_days: 3650
 tls_cert_path: "{{ postgresql_home_dir }}/tls/server.crt"
