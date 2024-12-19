@@ -1,14 +1,14 @@
 ---
 - name: "Ensure TLS directories exist"
   ansible.builtin.file:
-    path: "{{ item }}"
+    path: "{{ item | dirname }}"
     state: directory
     owner: "{{ tls_owner | default('postgres') }}"
     group: "{{ tls_owner | default('postgres') }}"
     mode: "0750"
   loop:
-    - "{{ tls_privatekey_path | default('/etc/tls/server.key') | dirname }}"
-    - "{{ tls_cert_path | default('/etc/tls/server.crt') | dirname }}"
+    - "{{ tls_privatekey_path | default('/etc/tls/server.key') }}"
+    - "{{ tls_cert_path | default('/etc/tls/server.crt') }}"
 
 - name: "Generate private TLS key {{ tls_privatekey_path | default('/etc/tls/server.key') }}"
   community.crypto.openssl_privatekey:
