@@ -235,6 +235,9 @@
     - role: pg_probackup
       when: pg_probackup_install|bool
 
+    - role: tls_certificate/copy
+      when: tls_cert_generate|bool
+
     - role: pgbouncer
       when: pgbouncer_install|bool
 

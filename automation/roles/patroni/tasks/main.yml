@@ -418,7 +418,7 @@
   when: postgresql_wal_dir is defined and postgresql_wal_dir | length > 0
   tags: patroni, custom_wal_dir
 
-- block:  # wheh postgresql NOT exists or PITR
+- block:  # when postgresql NOT exists or PITR
     - name: Prepare PostgreSQL | make sure PostgreSQL data directory "{{ postgresql_data_dir }}" exists
       ansible.builtin.file:
         path: "{{ postgresql_data_dir }}"

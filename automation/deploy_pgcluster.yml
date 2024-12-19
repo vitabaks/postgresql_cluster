@@ -356,6 +356,9 @@
 
     - role: cron
 
+    - role: tls_certificate
+      when: tls_cert_generate|bool
+
     - role: pgbouncer
       when: pgbouncer_install|bool
 
