@@ -315,8 +315,8 @@ postgresql_parameters:
   - { option: "wal_receiver_status_interval", value: "10s" }
   - { option: "idle_in_transaction_session_timeout", value: "10min" }  # reduce this timeout if possible
   - { option: "jit", value: "off" }
-  - { option: "max_worker_processes", value: "24" }
-  - { option: "max_parallel_workers", value: "8" }
+  - { option: "max_worker_processes", value: "{{ [ansible_processor_vcpus | int, 16] | max }}" }
+  - { option: "max_parallel_workers", value: "{{ [(ansible_processor_vcpus | int // 2), 8] | max }}" }
   - { option: "max_parallel_workers_per_gather", value: "2" }
   - { option: "max_parallel_maintenance_workers", value: "2" }
   - { option: "tcp_keepalives_count", value: "10" }
