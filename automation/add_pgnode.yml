@@ -105,14 +105,6 @@
         - firewall_enabled_at_boot | bool
       tags: firewall
 
-    - name: Fetch TLS certificate
-      ansible.builtin.include_role:
-        name: tls_certificate
-        tasks_from: copy_certificate
-      vars:
-        tls_job: fetch
-      when: tls_cert_generate | bool
-
   roles:
     - role: ansible-role-firewall
       environment: "{{ proxy_env | default({}) }}"
@@ -236,20 +228,15 @@
       ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
       tags: always
 
-    - name: Copy TLS certificate
-      ansible.builtin.include_role:
-        name: tls_certificate
-        tasks_from: copy_certificate
-      vars:
-        tls_job: copy
-      when: tls_cert_generate | bool
-
   roles:
     - role: wal-g
       when: wal_g_install|bool
 
     - role: pg_probackup
       when: pg_probackup_install|bool
+
+    - role: tls_certificate/copy
+      when: tls_cert_generate|bool
 
     - role: pgbouncer
       when: pgbouncer_install|bool

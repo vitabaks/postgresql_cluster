@@ -1,5 +1,5 @@
 ---
-- name: "Ensure TLS directories exist"
+- name: Ensure TLS directories exist
   ansible.builtin.file:
     path: "{{ item | dirname }}"
     state: directory
