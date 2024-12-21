@@ -43,11 +43,4 @@
         - { index: 0, path: "{{ tls_privatekey_path | default('/etc/tls/server.key') }}", mode: "0400" }
         - { index: 1, path: "{{ tls_cert_path | default('/etc/tls/server.crt') }}", mode: "0644" }
         - { index: 2, path: "{{ tls_ca_cert_path | default('/etc/tls/ca.crt') }}", mode: "0644" }
-
-    - name: Delete TLS certificate and key from the ansible controller
-      ansible.builtin.file:
-        path: "files/tls/"
-        state: absent
-      delegate_to: localhost
-      run_once: true
   when: copy_for == 'pg'
