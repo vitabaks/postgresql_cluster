@@ -19,7 +19,7 @@
 - name: "Gather host-specific network information"
   ansible.builtin.set_fact:
     san_entry: >-
-      DNS:{{ ansible_hostname }},DNS:{{ ansible_fqdn }},IP:{{ ansible_default_ipv4.address }}
+      DNS:{{ ansible_hostname }},DNS:{{ ansible_fqdn }},{% for p in ansible_facts.all_ipv4_addresses %}IP:{{ p }}{% if not loop.last %},{% endif %}{% endfor %}
 
 - block:
     - name: "Aggregate all subjectAltName entries"
