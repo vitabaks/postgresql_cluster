@@ -121,6 +121,7 @@
             for a single-zone cluster, or use a dedicated DCS cluster (dcs_exists: true)."
       when:
         - not dcs_quorum_ok | bool
+        - not (cluster_scaling | default(false) | bool)
         - zones_existing | length == 0
 
     - name: "Zones | WARNING: the DCS cluster does not survive the loss of any zone"
@@ -131,7 +132,7 @@
           Distribute the servers evenly across at least 3 zones, or use a dedicated DCS cluster (dcs_exists: true).
       when:
         - not dcs_quorum_ok | bool
-        - zones_existing | length > 0
+        - cluster_scaling | default(false) | bool or zones_existing | length > 0
   vars:
     dcs_members: >-
       {{ ((server_zone_placement | selectattr('name', 'in', zones_existing) | list)
