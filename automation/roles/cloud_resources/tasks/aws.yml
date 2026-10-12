@@ -593,7 +593,7 @@
                 TargetGroupName: "{{ patroni_cluster_name }}-tg-{{ item }}"
         cross_zone_load_balancing: "{{ true if item == 'primary' else aws_nlb_replica_cross_zone | bool }}"
         scheme: "{{ 'internet-facing' if database_public_access | bool else 'internal' }}"
-        wait: true
+        wait: false
         state: present
         tags: "{{ cloud_provider_tags | combine({'Cluster': patroni_cluster_name}) }}"
         purge_tags: false
@@ -628,6 +628,10 @@
       loop: "{{ aws_elb_network_lb.results | default([]) | selectattr('load_balancer', 'defined') | map(attribute='item') | list }}"
       loop_control:
         label: "{{ patroni_cluster_name }}-{{ item }}"
+      register: aws_nlb_attributes_result
+      until: aws_nlb_attributes_result is success
+      retries: 3
+      delay: 10
       when: cloud_load_balancer | bool
 
   when: state == 'present'
