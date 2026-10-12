@@ -129,7 +129,7 @@
             | selectattr('instances', 'defined') | map(attribute='instances') | flatten
           }}
 
-    - name: "AWS: Validate that existing servers are in VPC '{{ vpc_id }}'"
+    - name: "AWS: Validate that existing servers are in VPC '{{ vpc_id | default('') }}'"
       ansible.builtin.assert:
         that: existing_vpcs | difference([vpc_id]) | length == 0
         fail_msg: >-
