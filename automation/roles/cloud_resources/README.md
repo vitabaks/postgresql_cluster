@@ -210,7 +210,7 @@ Existing servers are never moved. To move a single-zone cluster, replace the rep
 3. Add it again (`add_node.yml` with the same `server_count`). It is created in a new zone, and the zone is added to the NLBs.
 4. Repeat for the other replicas. To move the primary, switch over to a replica first.
 
-#### Custom resource tags
+## Custom resource tags
 
 ```yaml
 cloud_provider_tags:
