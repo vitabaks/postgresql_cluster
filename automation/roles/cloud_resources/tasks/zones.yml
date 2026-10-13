@@ -7,9 +7,9 @@
 # Output:
 #   server_zone_placement - list of { 'name': server name, 'zone': zone } in server index order
 #
-# Existing servers are never moved. New servers are placed in the zone from 'server_placement',
-# otherwise in the zone with the fewest servers (ties are resolved by the zone order).
-# Unless 'server_zones' is specified, the zones of existing servers are used first.
+# 'server_zones' (or 'zones_available') is the list of preferred zones in priority order; the zones of existing servers
+# come first, and 'server_zones_count' zones are used. Existing servers are never moved. New servers are placed in the zone
+# from 'server_placement' (it takes precedence), otherwise in the selected zone with the fewest servers (ties by zone order).
 
 - name: "Zones | Set variable: zone_server_names"
   ansible.builtin.set_fact:
@@ -49,22 +49,20 @@
 # Zones of existing servers are selected first, so that an existing cluster keeps using them.
 - name: "Zones | Set variable: zones_selected"
   ansible.builtin.set_fact:
-    zones_selected: "{{ server_zones if server_zones | length > 0 else (zones_ordered | list)[:zones_limit] }}"
+    zones_selected: "{{ zones_ordered | batch(server_zones_count | int) | first }}" # the first 'server_zones_count' zones
   vars:
-    zones_limit: "{{ server_zones_count | int }}"
+    zones_preferred: "{{ server_zones if server_zones | length > 0 else zones_available }}"
     zones_in_use: "{{ zones_existing.values() | list }}"
-    zones_ordered: "{{ (zones_available | select('in', zones_in_use) | list) + (zones_available | reject('in', zones_in_use) | list) }}"
+    zones_ordered: "{{ (zones_preferred | select('in', zones_in_use) | list) + (zones_preferred | reject('in', zones_in_use) | list) }}"
 
 - name: "Zones | WARNING: fewer zones available than requested"
   ansible.builtin.debug:
     msg: >-
       'server_zones_count' is {{ server_zones_count }}, but only {{ zones_selected | length }} zone(s) are available:
       {{ zones_selected | join(', ') }}. Servers will be distributed across the available zones.
-      To use more zones, specify them (for AWS, 'aws_subnet_ids' with one subnet per Availability Zone),
+      To use more zones, specify them ('server_zones', or for AWS 'aws_subnet_ids' with one subnet per Availability Zone),
       or set 'server_zones_count: 1' to hide this warning.
-  when:
-    - server_zones | length == 0
-    - zones_selected | length < server_zones_count | int
+  when: zones_selected | length < server_zones_count | int
 
 - name: "Zones | Set variable: server_zone_placement"
   ansible.builtin.set_fact:
@@ -116,9 +114,8 @@
         msg:
           - "The {{ dcs_type }} cluster would lose quorum if the zone with the most servers fails."
           - "DCS servers: {{ dcs_members | items2dict(key_name='name', value_name='zone') }}."
-          - "Use at least 3 zones ({{ 'server_zones' if server_zones | length > 0 else 'server_zones_count' }}), change server_count,
-            {{ 'specify a single zone in server_zones' if server_zones | length > 0 else 'use server_zones_count: 1' }}
-            for a single-zone cluster, or use a dedicated DCS cluster (dcs_exists: true)."
+          - "Use at least 3 zones (server_zones_count, and at least 3 zones in server_zones or aws_subnet_ids), change server_count,
+            use 'server_zones_count: 1' for a single-zone cluster, or use a dedicated DCS cluster (dcs_exists: true)."
       when:
         - not dcs_quorum_ok | bool
         - not (cluster_scaling | default(false) | bool)

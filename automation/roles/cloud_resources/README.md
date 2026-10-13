@@ -39,7 +39,7 @@ Provision the PostgreSQL cluster infrastructure in public clouds (AWS, GCP, Azur
 | server_spot | bool | false | Spot/preemptible where supported. Applicable for AWS, GCP, Azure |
 | server_public_ip | bool | true | Assign public IPs to servers |
 | server_zones_count | int | 3 | Number of zones to distribute servers across. Set to `1` to place all servers in a single zone. Currently applicable for AWS |
-| server_zones | list | [] | Zones to use, in priority order (e.g. `['us-east-1a', 'us-east-1b', 'us-east-1c']`). If empty, zones are selected automatically. Currently applicable for AWS |
+| server_zones | list | [] | Preferred zones, in priority order (e.g. `['us-east-1a', 'us-east-1b', 'us-east-1c']`); the first `server_zones_count` zones are used. If empty, zones are selected automatically. Currently applicable for AWS |
 | server_placement | dict | {} | Place specific servers in specific zones, e.g. `{"postgres-cluster-pgnode01": "us-east-1a"}`. Existing servers are never moved. Currently applicable for AWS |
 | volume_type | string | "" | Data disk type. Set to `local` to use the system disk and skip creating an external data disk. Defaults: 'gp3' for AWS, 'pd-ssd' for GCP, 'StandardSSD_LRS' for Azure |
 | volume_size | int | 100 | Data disk size (GB). Set to `0` to use the system disk; this is equivalent to `volume_type: local` |
@@ -151,7 +151,8 @@ Zones and subnets (AWS):
 - Only `server_network` is specified: the Availability Zone of this subnet (single zone).
 - Neither is specified: the default subnets of the default VPC, in the alphabetical order of the zones.
 
-The first `server_zones_count` zones are used, unless `server_zones` lists them explicitly.
+`server_zones` (if specified) and `aws_subnet_ids` are lists of preferred zones: the first `server_zones_count` of them are used.
+`server_placement` takes precedence: a server listed there is created in its zone even if the zone is not among the selected ones.
 The zones of existing servers come first, so an existing cluster keeps using its zones (for example, a single-zone cluster with `server_zones_count: 1` stays in its zone).
 If fewer zones are available than `server_zones_count`, a warning is shown and the available zones are used.
 
