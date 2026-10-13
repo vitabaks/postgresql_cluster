@@ -507,7 +507,10 @@
     # Network Load Balancer (NLB)
     # Add the zones of new servers to existing NLBs online (the DNS name and existing IP addresses are kept).
     # TODO: remove when community.aws.elb_network_lb supports modifying subnets of an existing NLB.
-    - name: "AWS: Add Availability Zones to existing NLB"
+    # This task runs before elb_network_lb, because elb_network_lb fails if the subnets of an existing NLB differ
+    # ("Modifying subnets ... is not supported"). It returns the subnets to pass to elb_network_lb:
+    # the subnets of the existing NLB after the change, or all requested subnets for a new NLB (nothing is done then).
+    - name: "AWS: Add Availability Zones to existing NLB (if any)"
       vitabaks.autobase.aws_nlb_subnets:
         name: "{{ patroni_cluster_name }}-{{ item }}"
         region: "{{ server_location }}"
