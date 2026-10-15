@@ -269,7 +269,8 @@
         state: present
         labels: >-
           {{
-            cloud_provider_tags | combine({'cluster': patroni_cluster_name})
+            dict(cloud_provider_tags.keys() | map('lower') | zip(cloud_provider_tags.values() | map('lower')))
+            | combine({'cluster': patroni_cluster_name | lower})
             if (gcp_compute_instance_info.results[idx].resources | default([]) | length == 0)
             else omit
           }}
