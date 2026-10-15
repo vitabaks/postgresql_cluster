@@ -27,7 +27,7 @@ Provision the PostgreSQL cluster infrastructure in public clouds (AWS, GCP, Azur
 |---------|------|---------|-------------|
 | cloud_provider | string | "" | Specifies the Cloud provider for server creation. Available options: 'aws', 'gcp', 'azure', 'digitalocean', 'hetzner' |
 | cloud_backup_provider | string | cloud_provider | Specifies the Cloud provider for backup storage independently of the server provider. |
-| cloud_provider_tags | dict | managed-by: autobase | Custom tags requested when supported cloud resources are provisioned. Existing compute resources are not retagged on later runs. Keys and values must be strings. |
+| cloud_provider_tags | dict | Managed: autobase | Custom tags requested when supported cloud resources are provisioned. Existing compute resources are not retagged on later runs. Keys and values must be strings. |
 | cloud_backup_provider_tags | dict | cloud_provider_tags | Tags for backup storage resources. An explicit dictionary replaces the inherited tags. |
 | state | string | present | present to create, absent to delete |
 | server_count | int | 3 | Number of servers in the cluster |
@@ -230,14 +230,14 @@ Existing servers are never moved. To move a single-zone cluster, replace the rep
 
 ```yaml
 cloud_provider_tags:
-  managed-by: autobase
-  environment: production
-  team: platform
+  Managed: autobase
+  Environment: production
+  Team: platform
 cloud_backup_provider_tags: # Optional; inherits cloud_provider_tags when omitted
-  managed-by: autobase
-  environment: production
-  team: platform
-  purpose: backup
+  Managed: autobase
+  Environment: production
+  Team: platform
+  Purpose: backup
 ```
 
 Autobase passes custom tags through provider modules while provisioning resources.
@@ -247,7 +247,8 @@ Standalone resources managed by create-or-update tasks, such as networks, firewa
 Attached resources that the provider module cannot tag as part of their parent resource's creation remain untagged.
 AWS Spot instances are an exception: the Spot request creates the EC2 instance, so the instance can only be named and tagged afterward with the modules currently used by this role.
 
-Autobase's `Name` (EC2 instances) and `Cluster`/`cluster` values take precedence over conflicting custom values.
+Autobase's `Name` (EC2 instances) and `Cluster` (`cluster` for GCP) values take precedence over conflicting custom values.
+For GCP, Autobase converts label keys and values to lowercase before applying them to VM instances and backup buckets.
 GCP requires label keys and values to use lowercase letters, numbers, underscores or hyphens. Keys must start with a lowercase letter.
 The DigitalOcean cluster tag and GCP network tags remain unchanged because firewalls and load balancers use them to select servers.
 Use strings for all keys and values (quote numeric values), and follow the selected provider's naming and count limits.

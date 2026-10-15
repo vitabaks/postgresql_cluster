@@ -27,7 +27,7 @@
         name: "{{ ssh_key_name }}"
         public_key: "{{ ssh_key_content }}"
         state: present
-        labels: "{{ cloud_provider_tags | combine({'cluster': patroni_cluster_name}) }}"
+        labels: "{{ cloud_provider_tags | combine({'Cluster': patroni_cluster_name}) }}"
       when:
         - ssh_key_name | length > 0
         - ssh_key_content | length > 0
@@ -159,7 +159,7 @@
             name: "{{ hcloud_network_name | default('postgres-cluster-network-' + target_network_zone) }}"
             ip_range: "{{ hcloud_network_ip_range | default('10.0.0.0/16') }}"
             state: present
-            labels: "{{ cloud_provider_tags | combine({'cluster': patroni_cluster_name}) }}"
+            labels: "{{ cloud_provider_tags | combine({'Cluster': patroni_cluster_name}) }}"
 
         - name: "Hetzner Cloud: Create a subnetwork in postgres cluster network"
           hetzner.hcloud.subnetwork:
@@ -183,7 +183,7 @@
         state: "present"
         name: "{{ patroni_cluster_name }}-public-firewall"
         rules: "{{ rules }}"
-        labels: "{{ cloud_provider_tags | combine({'cluster': patroni_cluster_name}) }}"
+        labels: "{{ cloud_provider_tags | combine({'Cluster': patroni_cluster_name}) }}"
       vars:
         rules: >-
           {{
@@ -264,7 +264,7 @@
         state: "present"
         name: "{{ patroni_cluster_name }}-firewall"
         rules: "{{ rules }}"
-        labels: "{{ cloud_provider_tags | combine({'cluster': patroni_cluster_name}) }}"
+        labels: "{{ cloud_provider_tags | combine({'Cluster': patroni_cluster_name}) }}"
       vars:
         rules: >-
           {{
@@ -433,7 +433,7 @@
         firewalls: "{{ firewalls_list }}"
         labels: >-
           {{
-            cloud_provider_tags | combine({'cluster': patroni_cluster_name})
+            cloud_provider_tags | combine({'Cluster': patroni_cluster_name})
             if (server_info.results[idx].hcloud_server_info | default([]) | length == 0)
             else omit
           }}
@@ -469,7 +469,7 @@
         state: present
         size: "{{ volume_size | int }}"
         server: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
-        labels: "{{ cloud_provider_tags | combine({'cluster': patroni_cluster_name}) }}"
+        labels: "{{ cloud_provider_tags | combine({'Cluster': patroni_cluster_name}) }}"
       loop: "{{ range(0, server_count | int) | list }}"
       loop_control:
         index_var: idx
@@ -486,7 +486,7 @@
         algorithm: round_robin
         delete_protection: true
         state: present
-        labels: "{{ cloud_provider_tags | combine({'cluster': patroni_cluster_name}) }}"
+        labels: "{{ cloud_provider_tags | combine({'Cluster': patroni_cluster_name}) }}"
       loop:
         - "primary"
         - "replica"
@@ -599,12 +599,12 @@
         (item == 'sync' and cloud_load_balancer_replica_sync | bool and server_count | int > 1 and synchronous_mode | bool) or
         (item == 'async' and cloud_load_balancer_replica_async | bool and server_count | int > 1 and synchronous_mode | bool))
 
-    - name: "Hetzner Cloud: Add servers to Load Balancer (use label_selector 'cluster={{ patroni_cluster_name | default('postgres-cluster') }}')"
+    - name: "Hetzner Cloud: Add servers to Load Balancer (use label_selector 'Cluster={{ patroni_cluster_name | default('postgres-cluster') }}')"
       hetzner.hcloud.load_balancer_target:
         api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
         load_balancer: "{{ patroni_cluster_name }}-{{ item }}"
         type: label_selector
-        label_selector: "cluster={{ patroni_cluster_name }}"
+        label_selector: "Cluster={{ patroni_cluster_name }}"
         use_private_ip: true
       loop:
         - "primary"

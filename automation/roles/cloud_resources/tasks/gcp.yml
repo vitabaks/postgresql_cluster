@@ -377,7 +377,8 @@
         labels: >-
           {{
             existing_vm.labels | default({}) if item.name in zones_existing
-            else cloud_provider_tags | combine({'cluster': patroni_cluster_name})
+            else dict(cloud_provider_tags.keys() | map('lower') | zip(cloud_provider_tags.values() | map('lower')))
+            | combine({'cluster': patroni_cluster_name | lower})
           }}
       loop: "{{ server_zone_placement }}"
       loop_control:
