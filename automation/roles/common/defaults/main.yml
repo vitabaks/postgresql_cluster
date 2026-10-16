@@ -313,7 +313,7 @@ postgresql_users:
   - { name: "{{ pgbouncer_auth_username }}", password: "{{ pgbouncer_auth_password }}", flags: "LOGIN", role: "" }
 #  - { name: "monitoring_auth_username", password: "monitoring_user_password", flags: "LOGIN", role: "pg_monitor" } # monitoring Service Account
 #  - { name: "mydb-user", password: "mydb-user-pass", flags: "NOSUPERUSER", conn_limit: "10" }
-#  - { name: "app-user", password: "", secret: "/backend/production/app-db" } # exported to this secret (full name, without secrets_prefix)
+#  - { name: "app-user", password: "app-user-pass", secret: "/backend/production/app-db" } # exported to this secret (full name, without secrets_prefix)
 #  - { name: "{{ pgbackrest_db_user }}", password: "", flags: "LOGIN", role: "pg_checkpoint,pg_read_all_settings,pg_read_all_stats" } # pgBackRest backup user (least privilege)
 
 # Generate missing passwords: "disabled" never, "on_create" only for new users, or "always" on every run.
