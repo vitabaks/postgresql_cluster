@@ -88,15 +88,16 @@ Secret values and module results are protected with `no_log`, and diff output is
 
 ## Secret names and paths
 
-The final secret name is `<secrets_prefix>/<relative name>`. With the default prefix and `patroni_cluster_name: postgres-cluster-01`, the names are:
+The final secret name is `<secrets_prefix>/<relative name>`. The only exception is a PostgreSQL user with its [own secret](#postgresql-users-with-their-own-secret), whose name is used as is. With the default prefix and `patroni_cluster_name: postgres-cluster-01`, the names are:
 
 | Source | Relative name | Full secret name |
 |---|---|---|
 | A PostgreSQL user named `app_user` with `secrets_export_postgresql_users: true` | `postgresql/users/app_user` | `autobase/postgres-cluster-01/postgresql/users/app_user` |
+| A PostgreSQL user with `secret: /backend/production/app-db` | — (full name, without the prefix) | `/backend/production/app-db` |
 | Connection info with `secrets_export_connection_info: true` | `postgresql/connection` | `autobase/postgres-cluster-01/postgresql/connection` |
 | A `secrets_values` entry with `name: integrations/api-token` | `integrations/api-token` | `autobase/postgres-cluster-01/integrations/api-token` |
 
-- Each exported PostgreSQL user has a separate secret (in [value-only mode](#postgresql-users-and-connection-info-in-value-only-mode), all users share one secret). By default, it contains JSON with `username` and `password`; set `secrets_postgresql_users_format: string` to store only the password as a string.
+- Each exported PostgreSQL user has a separate secret (in [value-only mode](#postgresql-users-and-connection-info-in-value-only-mode), all users without their [own secret](#postgresql-users-with-their-own-secret) share one secret). By default, it contains JSON with `username` and `password`; set `secrets_postgresql_users_format: string` to store only the password as a string.
 - Password generation is disabled by default. With `postgresql_users_password_generation: on_create`, a new user with an empty, missing, or null password receives a generated 32-character password unless the user has `NOLOGIN`. When PostgreSQL user export is enabled, that password is stored in the configured secrets provider. Existing users with an empty password are left unchanged and their secrets are not overwritten. The `always` mode intentionally rotates and exports passwords on every run.
 - Connection info is stored as one JSON secret containing the available endpoints, ports, and connection strings.
 
@@ -128,6 +129,28 @@ A leading slash in a relative name is ignored; only `secrets_prefix` decides whe
 | `"/"` | `backend/production/autobase-db` or `/backend/production/autobase-db` | `/backend/production/autobase-db` |
 
 Changing the prefix or a secret name creates a secret under the new name; it does not delete the old secret. Delete old secrets explicitly with `state: absent` using their original prefix and relative name.
+
+### PostgreSQL users with their own secret
+
+Set `secret` on a `postgresql_users` entry to store that user in the named secret instead of `secrets_postgresql_users_path`. Unlike other names, `secret` is the full secret name: `secrets_prefix` is not added, the username is not appended, and a leading slash is kept. Other secrets still use `secrets_prefix`:
+
+```yaml
+secrets_export_postgresql_users: true
+
+postgresql_users:
+  - { name: "app_user", password: "", secret: "/backend/production/app-db" }
+  - { name: "report_user", password: "", secret: "{{ secrets_prefix }}/reports/report-db" }
+  - { name: "batch_user", password: "" }
+# app_user:    /backend/production/app-db
+# report_user: autobase/postgres-cluster-01/reports/report-db
+# batch_user:  autobase/postgres-cluster-01/postgresql/users/batch_user
+```
+
+AWS treats `/backend/production/app-db` and `backend/production/app-db` as different secrets.
+
+- The secret content follows `secrets_postgresql_users_format` in both modes, including [value-only mode](#value-only-mode): the user is not added to the shared users secret, and the value of its own secret is replaced entirely.
+- A secret is written only when the user's password is known in this run. Changing `secret` of an existing user with an empty password does not export the user to the new secret; set the password explicitly or rotate it once with `postgresql_users_password_generation: always`. The old secret is not deleted.
+- Users with `state: absent` and their own secret are not removed from any secret.
 
 ## Secret content examples
 
@@ -216,7 +239,7 @@ Where `GetSecretValue` is not permitted, set `secrets_aws_value_compare: false`.
 
 ### PostgreSQL users and connection info in value-only mode
 
-All exported users are stored in one secret named by `secrets_postgresql_users_path`, without the username appended, under the `users` key. `secrets_postgresql_users_format` is ignored.
+All exported users, except users with their [own secret](#postgresql-users-with-their-own-secret), are stored in one secret named by `secrets_postgresql_users_path`, without the username appended, under the `users` key. `secrets_postgresql_users_format` is ignored for them.
 
 The new data is merged into the current value of the secret instead of replacing it:
 
