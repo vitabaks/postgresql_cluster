@@ -815,6 +815,7 @@
         src: /etc/patroni/patroni.yml
         key: bootstrap.dcs.postgresql.parameters.archive_command
         value: "cd ." # not doing anything yet with WAL-s
+      no_log: true # yedit returns the whole patroni.yml, including passwords.
       when: disable_archive_command | bool
   when: patroni_cluster_bootstrap_method != "initdb" and
     (pgbackrest_install | bool or wal_g_install | bool) and
@@ -982,6 +983,7 @@
         - { name: "{{ patroni_replication_username }}", password: "{{ patroni_replication_password }}", flags: "LOGIN,REPLICATION" }
       loop_control:
         label: "{{ item.name }}"
+      no_log: true # Loop items contain passwords.
       when:
         - inventory_hostname == groups['master'][0]
         - (patroni_superuser_username and patroni_superuser_password) is defined
@@ -1002,6 +1004,7 @@
       loop: "{{ postgresql_users }}"
       loop_control:
         label: "{{ item.name }}"
+      no_log: true # Loop items contain passwords.
       ignore_errors: true
       when:
         - inventory_hostname == groups['master'][0]
@@ -1020,6 +1023,7 @@
           - key: postgresql.authentication.superuser.password
             value: "{{ patroni_superuser_password }}"
         state: present
+      no_log: true # Edits and the returned document contain passwords.
       when: hostvars[groups['master'][0]]['postgresql_user_result'] is changed
   when:
     - patroni_cluster_bootstrap_method != "initdb"
