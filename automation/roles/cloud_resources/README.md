@@ -267,6 +267,7 @@ Load balancer updates preserve existing backend pool settings and members; scali
 
 Existing IP addresses and frontend zone settings are preserved. The role warns about zonal frontends/public IPs and internal frontends without explicit zone redundancy.
 Migrate these frontends separately before relying on them during a zone failure; public IP zone settings cannot be changed in place.
+Changing `database_public_access` for an existing load balancer also requires a separate frontend migration.
 A Standard public IP without explicit zones may already be zone redundant and does not trigger this warning.
 
 #### Moving an existing cluster to multiple zones

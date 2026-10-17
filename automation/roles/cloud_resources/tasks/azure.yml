@@ -389,6 +389,23 @@
       loop_control:
         label: "{{ item.azure_lb_role }}"
 
+    - name: "Azure: Validate existing Load Balancer frontend access mode"
+      ansible.builtin.assert:
+        that:
+          - >-
+            existing_frontend | length == 0 or
+            ((existing_frontend.properties.publicIPAddress.id | default('') | length > 0) == (database_public_access | bool))
+        fail_msg: >-
+          Load Balancer '{{ patroni_cluster_name }}-{{ azure_lb_role }}' has a frontend that does not match 'database_public_access'.
+          Migrate the frontend separately before changing its public/private access mode.
+        quiet: true
+      loop: "{{ azure_lb_roles }}"
+      loop_control:
+        loop_var: azure_lb_role
+      vars:
+        existing_frontend: "{{ azure_existing_lbs[azure_lb_role].properties.frontendIPConfigurations | default([])
+          | selectattr('name', 'equalto', patroni_cluster_name ~ '-' ~ azure_lb_role ~ '-frontend') | first | default({}) }}"
+
     - name: "Azure: WARNING: an existing Load Balancer frontend needs zone redundancy"
       ansible.builtin.debug:
         msg: >-
@@ -524,7 +541,8 @@
           probe_protocol: "{{ patroni_restapi_protocol | capitalize }}"
           tags: "{{ cloud_provider_tags | combine({'Cluster': patroni_cluster_name}) }}"
 
-    - name: "Azure: Read allocated Load Balancer frontend addresses"
+    # Generic resource PUT polling only handles HTTP 202; Network PUT can return 201.
+    - name: "Azure: Wait for Load Balancers and read frontend addresses"
       azure.azcollection.azure_rm_resource_info:
         url: "{{ azure_lb_ids[azure_lb_role] }}"
         api_version: "2024-05-01"
@@ -532,6 +550,16 @@
       loop_control:
         loop_var: azure_lb_role
       register: azure_lb_current
+      until: >-
+        azure_lb_current is failed or
+        (azure_lb_current.status_code | default(0) == 200 and azure_lb_current.response | default([]) | length > 0
+        and azure_lb_current.response[0].properties.provisioningState | default('') == 'Succeeded')
+      failed_when: >-
+        azure_lb_current is failed or
+        (azure_lb_current.status_code | default(0) == 200 and azure_lb_current.response | default([]) | length > 0
+        and azure_lb_current.response[0].properties.provisioningState | default('') in ['Failed', 'Canceled'])
+      retries: 120
+      delay: 5
 
     - name: "Azure: Record Load Balancer connection addresses"
       ansible.builtin.set_fact:

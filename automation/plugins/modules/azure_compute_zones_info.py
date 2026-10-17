@@ -105,7 +105,6 @@ class AzureComputeZonesInfo(AzureRMModuleBase):
     def exec_module(self, location, vm_size, **kwargs):
         location = normalize_location(location)
         try:
-            # Iterating the SDK pagers follows all nextLink pages.
             locations = self.subscription_client.subscriptions.list_locations(self.subscription_id)
             region = next((item for item in locations if normalize_location(item.name) == location), None)
             if region is None:
@@ -115,6 +114,7 @@ class AzureComputeZonesInfo(AzureRMModuleBase):
                 ComputeManagementClient, base_url=self._cloud_environment.endpoints.resource_manager,
                 api_version="2021-07-01",
             )
+            # Iterating the Resource SKUs pager follows all nextLink pages.
             skus = client.resource_skus.list(filter="location eq '{0}'".format(location))
             sku = next((item.as_dict() for item in skus
                         if item.resource_type == "virtualMachines" and item.name.lower() == vm_size.lower()
