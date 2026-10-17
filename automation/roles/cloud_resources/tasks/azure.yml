@@ -460,27 +460,12 @@
         api_version: "2024-05-01"
         method: PUT
         idempotency: true
-        polling_timeout: 600
-        polling_interval: 5
         body: "{{ lb_body_json | from_json }}"
       loop: "{{ azure_lb_roles }}"
       loop_control:
         loop_var: azure_lb_role
       vars:
         lb_body_json: >-
-          {%- macro upsert_named(items, desired) -%}
-          {%-   set ns = namespace(items=[], found=false) -%}
-          {%-   for item in items -%}
-          {%-     if item.name == desired.name and not ns.found -%}
-          {%-       set properties = item.properties | default({}) | combine(desired.properties | default({})) -%}
-          {%-       set ns.items = ns.items + [item | combine(desired) | combine({'properties': properties})] -%}
-          {%-       set ns.found = true -%}
-          {%-     else -%}
-          {%-       set ns.items = ns.items + [item] -%}
-          {%-     endif -%}
-          {%-   endfor -%}
-          {{ (ns.items if ns.found else ns.items + [desired]) | to_json }}
-          {%- endmacro -%}
           {%- set existing = azure_existing_lbs[azure_lb_role] -%}
           {%- set properties = existing.properties | default({}) -%}
           {%- set name = patroni_cluster_name ~ '-' ~ azure_lb_role -%}
@@ -521,16 +506,15 @@
             'location': lb_config.location, 'sku': {'name': 'Standard', 'tier': 'Regional'},
             'tags': existing.tags | default({}) | combine(lb_config.tags),
             'properties': properties | combine({
-              'frontendIPConfigurations': upsert_named(frontends, frontend) | from_json,
+              'frontendIPConfigurations': frontends | community.general.lists_mergeby([frontend], 'name', recursive=true),
               'backendAddressPools': pools,
-              'probes': upsert_named(properties.probes | default([], true), probe) | from_json,
-              'loadBalancingRules': upsert_named(properties.loadBalancingRules | default([], true), rule) | from_json
+              'probes': properties.probes | default([], true) | community.general.lists_mergeby([probe], 'name', recursive=true),
+              'loadBalancingRules': properties.loadBalancingRules | default([], true) | community.general.lists_mergeby([rule], 'name', recursive=true)
             })
           } | to_json }}
         lb_config:
           id: "{{ azure_lb_ids[azure_lb_role] }}"
           location: "{{ azure_region }}"
-          role: "{{ azure_lb_role }}"
           subnet_id: "{{ azure_subnet_id }}"
           public_ip_id: >-
             {{ (azure_lb_public_ips.results | selectattr('azure_lb_role', 'equalto', azure_lb_role)
@@ -541,7 +525,7 @@
           probe_protocol: "{{ patroni_restapi_protocol | capitalize }}"
           tags: "{{ cloud_provider_tags | combine({'Cluster': patroni_cluster_name}) }}"
 
-    # Generic resource PUT polling only handles HTTP 202; Network PUT can return 201.
+    # Network PUT can return before provisioning finishes; wait before updating backend pools.
     - name: "Azure: Wait for Load Balancers and read frontend addresses"
       azure.azcollection.azure_rm_resource_info:
         url: "{{ azure_lb_ids[azure_lb_role] }}"
@@ -596,19 +580,15 @@
         loop_var: azure_lb_role
       vars:
         backend_addresses_json: >-
-          {%- set ns = namespace(addresses={}) -%}
-          {%- for address in existing_pool.load_balancer_backend_addresses | default([], true) -%}
-          {%-   set ns.addresses = ns.addresses | combine({address.name: address}) -%}
-          {%- endfor -%}
+          {%- set ns = namespace(addresses=[]) -%}
           {%- for vm in server_result.results | map(attribute='ansible_facts.azure_vm') -%}
           {%-   set ip = vm.network_profile.network_interfaces[0].properties.ip_configurations[0].private_ip_address -%}
-          {%-   set name = 'address-' ~ ip -%}
-          {%-   set address = ns.addresses[name] | default({}) | combine({
-                  'name': name, 'ip_address': ip, 'virtual_network': network_info.virtualnetworks[0].id
-                }) -%}
-          {%-   set ns.addresses = ns.addresses | combine({name: address}) -%}
+          {%-   set ns.addresses = ns.addresses + [{
+                  'name': 'address-' ~ ip, 'ip_address': ip, 'virtual_network': network_info.virtualnetworks[0].id
+                }] -%}
           {%- endfor -%}
-          {{ ns.addresses.values() | sort(attribute='name') | to_json }}
+          {{ existing_pool.load_balancer_backend_addresses | default([], true)
+            | community.general.lists_mergeby(ns.addresses, 'name') | unique(attribute='name') | sort(attribute='name') | to_json }}
         existing_pool: >-
           {{ (azure_backend_pool_info.results | selectattr('azure_lb_role', 'equalto', azure_lb_role)
             | map(attribute='backend_address_pools') | first | first) | default({}) }}
