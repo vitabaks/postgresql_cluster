@@ -40,6 +40,63 @@
       or explicitly set the project ID in the gcp_project variable.
   when: gcp_project | default('') | length < 1
 
+- name: "Set variable: gcp_region, gcp_requested_zone, gcp_server_names"
+  ansible.builtin.set_fact:
+    gcp_region: "{{ server_location | regex_replace('-[a-z]$', '') }}"
+    gcp_requested_zone: "{{ server_location if server_location is match('.*-[a-z]$') else '' }}"
+    gcp_server_names: "{{ query('ansible.builtin.sequence', 'start=1 count=' ~ server_count ~ ' format=' ~ server_name | lower ~ '%02d') }}"
+
+- name: "GCP: Gather information about regional zones"
+  vitabaks.autobase.gcp_compute_zones_info:
+    auth_kind: serviceaccount
+    service_account_contents: "{{ gcp_service_account_contents }}"
+    project: "{{ gcp_project }}"
+    region: "{{ gcp_region }}"
+    machine_type: "{{ server_type if state == 'present' else omit }}"
+  register: gcp_zone_info
+
+- name: "GCP: Validate region and explicit zone"
+  ansible.builtin.assert:
+    that:
+      - gcp_zone_info.resources | length > 0
+      - gcp_requested_zone | length == 0 or gcp_requested_zone in (gcp_zone_info.resources | map(attribute='name') | list)
+    fail_msg: "No zones found for region '{{ gcp_region }}', or zone '{{ gcp_requested_zone }}' does not belong to it."
+    quiet: true
+
+- name: "GCP: Gather information about VM instances in all regional zones"
+  google.cloud.gcp_compute_instance_info:
+    auth_kind: serviceaccount
+    service_account_contents: "{{ gcp_service_account_contents }}"
+    project: "{{ gcp_project }}"
+    zone: "{{ item }}"
+    filters:
+      - "name eq {{ server_name | lower | regex_escape }}[0-9]+"
+  loop: "{{ gcp_zone_info.resources | map(attribute='name') | list }}"
+  register: gcp_compute_instance_info
+
+- name: "Set variable: gcp_existing_instances"
+  ansible.builtin.set_fact:
+    gcp_existing_instances: >-
+      {{ discovered_instances | selectattr('name', 'in', gcp_server_names) | list
+         if state == 'present' else discovered_instances }}
+  vars:
+    discovered_instances: "{{ gcp_compute_instance_info.results | map(attribute='resources') | flatten }}"
+
+- name: "GCP: Validate unique server names across zones"
+  ansible.builtin.assert:
+    that: gcp_existing_instances | map(attribute='name') | unique | list | length == gcp_existing_instances | length
+    fail_msg: "Multiple VM instances have the same cluster server name in different zones. Resolve the duplicate names before continuing."
+    quiet: true
+
+- name: "GCP: Validate existing VM cluster membership"
+  ansible.builtin.assert:
+    that: patroni_cluster_name in (item.tags['items'] | default([]))
+    fail_msg: "VM '{{ item.name }}' in '{{ item.zone | basename }}' does not have the cluster tag '{{ patroni_cluster_name }}'."
+    quiet: true
+  loop: "{{ gcp_existing_instances }}"
+  loop_control:
+    label: "{{ item.name }}"
+
 # Create (if state is present)
 - block:
     # if ssh_key_content is not defined, get the user public key from the system (if exists)
@@ -55,9 +112,28 @@
       ansible.builtin.set_fact:
         gcp_network_name: "{{ server_network if server_network is defined and server_network | length > 0 else 'default' }}"
 
-    - name: "Set variable: gcp_region"
+    - name: "Set variable: zones_available, zones_existing, gcp_zones_count"
       ansible.builtin.set_fact:
-        gcp_region: "{{ server_location[:-2] if server_location[-2:] | regex_search('-[a-z]$') else server_location }}"
+        zones_available: "{{ [gcp_requested_zone] | intersect(running_zones) if gcp_requested_zone | length > 0 else running_zones }}"
+        zones_existing: >-
+          {{ dict(gcp_existing_instances | map(attribute='name') | zip(gcp_existing_instances | map(attribute='zone') | map('basename'))) }}
+        gcp_zones_count: "{{ server_zones_count }}"
+        gcp_running_zones: "{{ running_zones }}"
+      vars:
+        running_zones: >-
+          {{ gcp_zone_info.resources | selectattr('status', 'equalto', 'UP')
+             | selectattr('supports_machine_type', 'equalto', true) | map(attribute='name') | list }}
+
+    - name: "Distribute servers across zones"
+      ansible.builtin.import_tasks: zones.yml
+      vars:
+        server_zones_count: "{{ 1 if gcp_requested_zone | length > 0 else gcp_zones_count }}"
+
+    - name: "GCP: Validate that the requested VM type is available in all server zones"
+      ansible.builtin.assert:
+        that: server_zone_placement | map(attribute='zone') | difference(gcp_running_zones) | length == 0
+        fail_msg: "Some server zones are unavailable or do not support '{{ server_type }}'. Available zones: {{ gcp_running_zones }}."
+        quiet: true
 
     - name: "GCP: Gather information about network"
       google.cloud.gcp_compute_network_info:
@@ -67,6 +143,12 @@
         filters:
           - name = "{{ gcp_network_name }}"
       register: gcp_network_info
+
+    - name: "GCP: Validate network"
+      ansible.builtin.assert:
+        that: gcp_network_info.resources | length == 1
+        fail_msg: "Network '{{ gcp_network_name }}' was not found in project '{{ gcp_project }}'."
+        quiet: true
 
     - name: "GCP: Gather information about regional subnetworks"
       google.cloud.gcp_compute_subnetwork_info:
@@ -80,6 +162,44 @@
       loop_control:
         label: "{{ item | split('/subnetworks/') | last }}"
       register: gcp_subnetwork_info
+
+    - name: "Set variable: gcp_regional_subnetworks, gcp_existing_subnetworks"
+      ansible.builtin.set_fact:
+        gcp_regional_subnetworks: "{{ subnetworks | rejectattr('purpose', 'defined') | list + subnetworks | selectattr('purpose', 'defined')
+          | selectattr('purpose', 'equalto', 'PRIVATE') | list }}"
+        gcp_existing_subnetworks: "{{ gcp_existing_instances | map(attribute='networkInterfaces') | map('first')
+          | map(attribute='subnetwork') | map('basename') | unique | list }}"
+      vars:
+        subnetworks: "{{ gcp_subnetwork_info.results | map(attribute='resources') | flatten }}"
+
+    - name: "GCP: Validate existing VM networking"
+      ansible.builtin.assert:
+        that:
+          - gcp_existing_subnetworks | length <= 1
+          - existing_networks | difference([requested_network]) | length == 0
+        fail_msg: "Existing VMs must belong to network '{{ gcp_network_name }}' and share one regional subnetwork."
+        quiet: true
+      vars:
+        existing_networks: "{{ gcp_existing_instances | map(attribute='networkInterfaces') | map('first')
+          | map(attribute='network') | map('regex_replace', '^.*/projects/', 'projects/') | unique | list }}"
+        requested_network: "{{ gcp_network_info.resources[0].selfLink | regex_replace('^.*/projects/', 'projects/') }}"
+
+    - name: "GCP: Select regional subnetwork"
+      ansible.builtin.set_fact:
+        gcp_selected_subnetworks: "{{ gcp_regional_subnetworks | selectattr('name', 'equalto', requested_subnetwork) | list
+          if requested_subnetwork | length > 0 else gcp_regional_subnetworks }}"
+      vars:
+        requested_subnetwork: "{{ gcp_subnetwork | default('', true) or (gcp_existing_subnetworks | first | default('')) }}"
+
+    - name: "GCP: Validate regional subnetwork selection"
+      ansible.builtin.assert:
+        that:
+          - gcp_selected_subnetworks | length == 1
+          - gcp_existing_subnetworks | difference(gcp_selected_subnetworks | map(attribute='name') | list) | length == 0
+        fail_msg: >-
+          Specify 'gcp_subnetwork' as the name of one private subnetwork in network '{{ gcp_network_name }}', region '{{ gcp_region }}'.
+          Existing VMs must already use this subnetwork. Available subnetworks: {{ gcp_regional_subnetworks | map(attribute='name') | list }}.
+        quiet: true
 
     - name: "GCP: Extract regional ip_ranges for network '{{ gcp_network_name | default('default') }}'"
       ansible.builtin.set_fact:
@@ -106,7 +226,7 @@
         target_tags:
           - "{{ patroni_cluster_name }}" # Only VMs with this tag will be affected
         network:
-          selfLink: "global/networks/{{ gcp_network_name }}"
+          selfLink: "{{ gcp_network_info.resources[0].selfLink }}"
         state: present
       when:
         - ssh_public_access | bool
@@ -128,7 +248,7 @@
         target_tags:
           - "{{ patroni_cluster_name }}" # Only VMs with this tag will be affected
         network:
-          selfLink: "global/networks/{{ gcp_network_name }}"
+          selfLink: "{{ gcp_network_info.resources[0].selfLink }}"
         state: present
       when:
         - netdata_install | bool
@@ -149,7 +269,7 @@
         target_tags:
           - "{{ patroni_cluster_name }}" # Only VMs with this tag will be affected
         network:
-          selfLink: "global/networks/{{ gcp_network_name }}"
+          selfLink: "{{ gcp_network_info.resources[0].selfLink }}"
         state: present
       vars:
         allowed_ports: >-
@@ -179,7 +299,7 @@
         target_tags:
           - "{{ patroni_cluster_name }}" # Only VMs with this tag will be affected
         network:
-          selfLink: "global/networks/{{ gcp_network_name }}"
+          selfLink: "{{ gcp_network_info.resources[0].selfLink }}"
         state: present
       vars:
         allowed_ports: >-
@@ -225,78 +345,77 @@
         target_tags:
           - "{{ patroni_cluster_name }}" # Only VMs with this tag will be affected
         network:
-          selfLink: "global/networks/{{ gcp_network_name }}"
+          selfLink: "{{ gcp_network_info.resources[0].selfLink }}"
         state: present
       when: cloud_load_balancer | bool
 
     # Server and volume
-    - name: "GCP: Gather information about VM instances"
-      google.cloud.gcp_compute_instance_info:
-        auth_kind: "serviceaccount"
-        service_account_contents: "{{ gcp_service_account_contents }}"
-        project: "{{ gcp_project | default('') }}"
-        zone: "{{ server_location + '-b' if not server_location is match('.*-[a-z]$') else server_location }}" # add "-b" if the zone is not defined
-        filters:
-          - "name = {{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
-      loop: "{{ range(0, server_count | int) | list }}"
-      loop_control:
-        index_var: idx
-        label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
-      register: gcp_compute_instance_info
-
     - name: "GCP: Create or modify VM instance"
       google.cloud.gcp_compute_instance:
         auth_kind: "serviceaccount"
         service_account_contents: "{{ gcp_service_account_contents }}"
         project: "{{ gcp_project | default('') }}"
-        zone: "{{ server_location + '-b' if not server_location is match('.*-[a-z]$') else server_location }}" # add "-b" if the zone is not defined
-        name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
+        zone: "{{ item.zone }}"
+        name: "{{ item.name }}"
         machine_type: "{{ server_type }}"
-        disks: "{{ [system_disk] + ([] if use_local_disk | bool else [data_disk]) }}"
+        disks: "{{ existing_disks_json | from_json if item.name in zones_existing else [system_disk] + ([] if use_local_disk | bool else [data_disk]) }}"
         network_interfaces:
           - network:
-              selfLink: "global/networks/{{ gcp_network_name }}"
+              selfLink: "{{ gcp_network_info.resources[0].selfLink }}"
+            subnetwork:
+              selfLink: "{{ gcp_selected_subnetworks[0].selfLink }}"
             access_configs: "{{ [{'name': 'External NAT', 'type': 'ONE_TO_ONE_NAT'}] if server_public_ip | bool else omit }}"
-        metadata:
-          ssh-keys: "root:{{ ssh_key_content }}"
+        metadata: "{{ {'ssh-keys': 'root:' ~ ssh_key_content} if item.name not in zones_existing else omit }}"
         scheduling:
           on_host_maintenance: "{{ 'TERMINATE' if (server_spot | bool or server_type is search('metal')) else 'MIGRATE' }}"
           preemptible: "{{ server_spot | default(gcp_compute_instance_preemptible | default(false)) | bool }}"
         tags:
-          items:
-            - "{{ patroni_cluster_name }}"
+          items: "{{ existing_vm.tags['items'] if item.name in zones_existing else [patroni_cluster_name] }}"
         status: "{{ gcp_instance_status | default('RUNNING') }}"
         state: present
         labels: >-
           {{
-            dict(cloud_provider_tags.keys() | map('lower') | zip(cloud_provider_tags.values() | map('lower')))
+            existing_vm.labels | default({}) if item.name in zones_existing
+            else dict(cloud_provider_tags.keys() | map('lower') | zip(cloud_provider_tags.values() | map('lower')))
             | combine({'cluster': patroni_cluster_name | lower})
-            if (gcp_compute_instance_info.results[idx].resources | default([]) | length == 0)
-            else omit
           }}
-      loop: "{{ range(0, server_count | int) | list }}"
+      loop: "{{ server_zone_placement }}"
       loop_control:
-        index_var: idx
-        label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
+        label: "{{ item.name }} ({{ item.zone }})"
       register: server_result
       until: server_result is success
       delay: 10
       retries: 3
       vars:
+        existing_vm: "{{ gcp_existing_instances | selectattr('name', 'equalto', item.name) | first | default({}) }}"
+        # Preserve disk attachments on existing VMs; initialize_params is only for new VMs.
+        existing_disks_json: >-
+          [
+            {% for disk in existing_vm.disks | default([]) %}
+              {
+                "boot": {{ disk.boot | default(false) | to_json }},
+                "auto_delete": {{ disk.autoDelete | default(false) | to_json }},
+                "mode": {{ disk.mode | default('READ_WRITE') | to_json }},
+                "device_name": {{ disk.deviceName | to_json }},
+                "type": {{ disk.type | default('PERSISTENT') | to_json }}
+                {% if disk.source is defined %}, "source": { "selfLink": {{ disk.source | to_json }} }{% endif %}
+              }{% if not loop.last %},{% endif %}
+            {% endfor %}
+          ]
         system_disk:
-          device_name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-system"
+          device_name: "{{ item.name }}-system"
           auto_delete: true
           boot: true
           initialize_params:
-            disk_name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-system"
+            disk_name: "{{ item.name }}-system"
             source_image: "{{ server_image }}"
             disk_size_gb: "{{ system_volume_size | default('80') }}"
             disk_type: "{{ system_volume_type | default('pd-ssd', true) }}"
         data_disk:
-          device_name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-storage"
+          device_name: "{{ item.name }}-storage"
           auto_delete: true
           initialize_params:
-            disk_name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-storage"
+            disk_name: "{{ item.name }}-storage"
             disk_size_gb: "{{ volume_size | int }}"
             disk_type: "{{ volume_type | default('pd-ssd', true) }}"
 
@@ -306,22 +425,19 @@
         auth_kind: "serviceaccount"
         service_account_contents: "{{ gcp_service_account_contents }}"
         project: "{{ gcp_project | default('') }}"
-        zone: "{{ server_location + '-b' if not server_location is match('.*-[a-z]$') else server_location }}"
-        name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-storage"
+        zone: "{{ item.zone }}"
+        name: "{{ item.name }}-storage"
         size_gb: "{{ volume_size | int }}"
-        type: "{{ volume_type | default('pd-ssd', true) }}"
         state: present
-      loop: "{{ range(0, server_count | int) | list }}"
+      loop: "{{ server_zone_placement }}"
       loop_control:
-        index_var: idx
-        label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}-storage"
+        label: "{{ item.name }}-storage ({{ item.zone }})"
       when: not use_local_disk | bool
 
     # Load Balancer
     # This block creates Global External classic proxy Network Load Balancer.
-    # Global objects are required because the gcp_compute_target_tcp_proxy module can only be global, as it requires the use of a global forwarding rule.
-    # Using global objects instead of regional ones allows us to utilize a TCP proxy for correct traffic load balancing.
-    # Note: Regional internal load balancers are passthrough and do not work correctly with the health checks we use through the Patroni REST API.
+    # Global external classic proxy Network Load Balancer. The google.cloud.gcp_compute_target_tcp_proxy module supports only global resources.
+    # Internal proxy load balancer support is tracked in: https://github.com/autobase-tech/autobase/issues/753 (TODO)
     - block:
         - name: "GCP: [Load Balancer] Create instance group"
           google.cloud.gcp_compute_instance_group:
@@ -330,30 +446,40 @@
             project: "{{ gcp_project | default('') }}"
             name: "{{ patroni_cluster_name }}"
             description: "{{ patroni_cluster_name }} instance group"
-            region: "{{ region }}"
-            zone: "{{ zone }}"
+            region: "{{ gcp_region }}"
+            zone: "{{ item }}"
             named_ports:
               - name: postgres
                 port: "{{ postgresql_port | default('5432') }}"
               - name: pgbouncer
                 port: "{{ pgbouncer_listen_port | default('6432') }}"
             network:
-              selfLink: "global/networks/{{ gcp_network_name }}"
-            instances: "{{ instances_selflink | from_json }}"
+              selfLink: "{{ gcp_network_info.resources[0].selfLink }}"
+            instances: >-
+              {{
+                server_result.results
+                | selectattr('zone', 'search', '/zones/' ~ item ~ '$')
+                | map(attribute='selfLink')
+                | map('community.general.dict_kv', 'selfLink')
+                | list
+              }}
             state: present
-          vars:
-            region: "{{ server_location[:-2] if server_location[-2:] | regex_search('-[a-z]$') else server_location }}"
-            zone: "{{ server_location + '-b' if not server_location is match('.*-[a-z]$') else server_location }}" # add "-b" if the zone is not defined
-            # The module only works if selfLink is set manually, issue: https://github.com/ansible-collections/google.cloud/issues/614
-            instances_selflink: >- # TODO: use "{{ server_result.results | map(attribute='selfLink') | map('community.general.dict_kv', 'selfLink') | list }}"
-              [
-                {% for i in range(1, (server_count | int) + 1) %}
-                  { "selfLink": "zones/{{ zone }}/instances/{{ server_name }}{{ '%02d' % i }}" }{% if not loop.last %},{% endif %}
-                {% endfor %}
-              ]
+          loop: "{{ server_zone_placement | map(attribute='zone') | unique | sort }}"
           register: instance_group
-          # Ignore error if resource already exists on re-run
-          failed_when: instance_group is failed and 'memberAlreadyExists' not in (instance_group.msg | default(''))
+
+        - name: "GCP: [Load Balancer] Build zonal backends"
+          ansible.builtin.set_fact:
+            gcp_lb_backends: >-
+              {{
+                instance_group.results
+                | map(attribute='selfLink')
+                | map('community.general.dict_kv', 'group')
+                | map('combine', {
+                    'balancing_mode': 'CONNECTION',
+                    'max_connections_per_instance': gcp_lb_max_connections | default(10000) | int
+                  })
+                | list
+              }}
 
         - name: "GCP: [Load Balancer] Create health check"
           google.cloud.gcp_compute_health_check:
@@ -395,18 +521,12 @@
             protocol: "TCP"
             port_name: "{{ 'pgbouncer' if pgbouncer_install | bool else 'postgres' }}"
             load_balancing_scheme: "EXTERNAL"
-            backends:
-              - group: "zones/{{ zone }}/instanceGroups/{{ patroni_cluster_name }}"
-                balancing_mode: "CONNECTION"
-                max_connections_per_instance: "{{ gcp_lb_max_connections | default(10000) }}"
-            health_checks:
-              - "/global/healthChecks/{{ patroni_cluster_name }}-{{ item }}-hc"
+            backends: "{{ gcp_lb_backends }}"
+            health_checks: "{{ health_check.results | selectattr('item', 'equalto', item) | map(attribute='selfLink') | list }}"
             timeout_sec: "{{ gcp_compute_backend_service_timeout_sec | default(5) }}"
             log_config:
               enable: "{{ gcp_compute_backend_service_log_enable | default(false) }}"
             state: present
-          vars:
-            zone: "{{ server_location + '-b' if not server_location is match('.*-[a-z]$') else server_location }}" # add "-b" if the zone is not defined
           loop:
             - "primary"
             - "replica"
@@ -415,8 +535,9 @@
           loop_control:
             label: "{{ patroni_cluster_name }}-{{ item }}"
           register: backend_service
-          # Ignore error if resource already exists on re-run
-          failed_when: backend_service is failed and 'resource.fingerprint' not in (backend_service.msg | default(''))
+          until: backend_service is success
+          delay: 2
+          retries: 3
           when: item == 'primary' or
             (item == 'replica' and cloud_load_balancer_replica | bool and server_count | int > 1) or
             (item == 'sync' and cloud_load_balancer_replica_sync | bool and server_count | int > 1 and synchronous_mode | bool) or
@@ -430,7 +551,7 @@
             name: "{{ patroni_cluster_name }}-{{ item }}-proxy"
             description: "{{ patroni_cluster_name }} {{ item }} TCP Proxy"
             service:
-              selfLink: "/global/backendServices/{{ patroni_cluster_name }}-{{ item }}"
+              selfLink: "{{ backend_service.results | selectattr('item', 'equalto', item) | map(attribute='selfLink') | first }}"
             proxy_header: "NONE"
             state: present
           loop:
@@ -479,8 +600,8 @@
             load_balancing_scheme: "EXTERNAL"
             ip_address: "{{ (load_balancer_ip.results | selectattr('item', 'equalto', item) | map(attribute='address') | first) }}"
             ip_protocol: "TCP"
-            port_range: "{{ pgbouncer_listen_port | default('6432') if pgbouncer_install | bool else postgresql_port | default('5432') }}"
-            target: "/global/targetTcpProxies/{{ patroni_cluster_name }}-{{ item }}-proxy"
+            port_range: "{{ target_port }}-{{ target_port }}"
+            target: "{{ target_tcp_proxy.results | selectattr('item', 'equalto', item) | map(attribute='selfLink') | first }}"
             state: present
           loop:
             - "primary"
@@ -490,6 +611,8 @@
           loop_control:
             label: "{{ patroni_cluster_name }}-{{ item }}-fr"
           register: gcp_load_balancer
+          vars:
+            target_port: "{{ pgbouncer_listen_port | default('6432') if pgbouncer_install | bool else postgresql_port | default('5432') }}"
           when: item == 'primary' or
             (item == 'replica' and cloud_load_balancer_replica | bool and server_count | int > 1) or
             (item == 'sync' and cloud_load_balancer_replica_sync | bool and server_count | int > 1 and synchronous_mode | bool) or
@@ -506,6 +629,7 @@
       name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) | default('N/A', true) }}"
       image: "{{ item.disks[0].licenses[0] | basename | default('N/A', true) }}"
       type: "{{ item.machineType | basename | default('N/A', true) }}"
+      zone: "{{ item.zone | basename | default('N/A', true) }}"
       volume_size: "{{ volume_size | default('N/A', true) }} GB"
       public_ip: "{{ item.networkInterfaces[0].accessConfigs[0].natIP | default('N/A', true) }}"
       private_ip: "{{ item.networkInterfaces[0].networkIP | default('N/A', true) }}"
@@ -543,15 +667,14 @@
             [{
               'public_ip': item.networkInterfaces[0].accessConfigs[0].natIP | default(''),
               'private_ip': item.networkInterfaces[0].networkIP | default(''),
+              'zone': item.zone | basename,
               'new_node': (cluster_scaling | default(false) | bool and item.id not in existing_instance_ids)
             }]
           }}
       vars:
         existing_instance_ids: >-
           {{
-            gcp_compute_instance_info.results | default([])
-            | map(attribute='resources') | map('default', []) | list | flatten
-            | selectattr('id','defined') | map(attribute='id') | list
+            gcp_existing_instances | map(attribute='id') | list
           }}
       loop: "{{ server_result.results | selectattr('networkInterfaces', 'defined') | list }}"
       loop_control:
@@ -567,19 +690,20 @@
     - generate_inventory | default(true) | bool
 
 # Delete (if state is absent)
+# The forwarding rule and TCP proxy modules require target/service even when deleting.
+# Creation results are unavailable here, so use the known resource paths for these parameters.
 - block:
     - name: "GCP: Delete VM instance"
       google.cloud.gcp_compute_instance:
         auth_kind: "serviceaccount"
         service_account_contents: "{{ gcp_service_account_contents }}"
         project: "{{ gcp_project | default('') }}"
-        zone: "{{ server_location + '-b' if not server_location is match('.*-[a-z]$') else server_location }}" # add "-b" if the zone is not defined
-        name: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
+        zone: "{{ item.zone | basename }}"
+        name: "{{ item.name }}"
         state: absent
-      loop: "{{ range(0, server_count | int) | list }}"
+      loop: "{{ gcp_existing_instances }}"
       loop_control:
-        index_var: idx
-        label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
+        label: "{{ item.name }} ({{ item.zone | basename }})"
 
     - name: "GCP: [Load Balancer] Delete forwarding rule"
       google.cloud.gcp_compute_global_forwarding_rule:
@@ -682,9 +806,10 @@
         service_account_contents: "{{ gcp_service_account_contents }}"
         project: "{{ gcp_project | default('') }}"
         name: "{{ patroni_cluster_name }}"
-        region: "{{ server_location[:-2] if server_location[-2:] | regex_search('-[a-z]$') else server_location }}"
-        zone: "{{ server_location + '-b' if not server_location is match('.*-[a-z]$') else server_location }}"
+        region: "{{ gcp_region }}"
+        zone: "{{ item }}"
         state: absent
+      loop: "{{ gcp_zone_info.resources | map(attribute='name') | list }}"
 
     - name: "GCP: Delete SSH public firewall rule"
       google.cloud.gcp_compute_firewall:

@@ -1,7 +1,7 @@
 # Ansible Role: cloud_resources
 
 Provision the PostgreSQL cluster infrastructure in public clouds (AWS, GCP, Azure, DigitalOcean, Hetzner). The role can:
-- Create/delete servers (count, size, image, region), distributed across availability zones (AWS)
+- Create/delete servers (count, size, image, region), distributed across availability zones (AWS, GCP)
 - Configure private networking/VPC/VNet and firewalls/Security Groups
 - Optionally create Load Balancers (AWS NLB, GCP TCP Proxy, Azure LB, DO LB, Hetzner LB)
 - Optionally create object storage for backups (S3/GCS/Azure Blob/Spaces/Hetzner Object Storage)
@@ -38,9 +38,9 @@ Provision the PostgreSQL cluster infrastructure in public clouds (AWS, GCP, Azur
 | server_network | string | "" | Existing network/subnet/VPC. If provided, the server will be added to this network (needs to be created beforehand) |
 | server_spot | bool | false | Spot/preemptible where supported. Applicable for AWS, GCP, Azure |
 | server_public_ip | bool | true | Assign public IPs to servers |
-| server_zones_count | int | 3 | Number of zones to distribute servers across. Set to `1` to place all servers in a single zone. Currently applicable for AWS |
-| server_zones | list | [] | Preferred zones, in priority order (e.g. `['us-east-1a', 'us-east-1b', 'us-east-1c']`); the first `server_zones_count` zones are used. If empty, zones are selected automatically. Currently applicable for AWS |
-| server_placement | dict | {} | Place specific servers in specific zones, e.g. `{"postgres-cluster-pgnode01": "us-east-1a"}`. Existing servers are never moved. Currently applicable for AWS |
+| server_zones_count | int | 3 | Number of zones to distribute servers across. Set to `1` to place all servers in a single zone. Applicable for AWS and GCP |
+| server_zones | list | [] | Preferred zones, in priority order (e.g. `['us-east-1a', 'us-east-1b', 'us-east-1c']`); the first `server_zones_count` zones are used. If empty, zones are selected automatically. Applicable for AWS and GCP |
+| server_placement | dict | {} | Place specific servers in specific zones, e.g. `{"postgres-cluster-pgnode01": "us-east-1a"}`. Existing servers are never moved. Applicable for AWS and GCP |
 | volume_type | string | "" | Data disk type. Set to `local` to use the system disk and skip creating an external data disk. Defaults: 'gp3' for AWS, 'pd-ssd' for GCP, 'StandardSSD_LRS' for Azure |
 | volume_size | int | 100 | Data disk size (GB). Set to `0` to use the system disk; this is equivalent to `volume_type: local` |
 | system_volume_type | string | "" | System disk type. Defaults: 'gp3' for AWS, 'pd-ssd' for GCP, 'StandardSSD_LRS' for Azure |
@@ -110,6 +110,7 @@ Provider-specific (optional) variables referenced in tasks
 | AWS | aws_ebs_encrypted | bool | true | Encrypt AWS EBS system and data volumes. |
 | AWS | aws_ebs_kms_key_id | string | "" | Customer-managed AWS KMS key ID or ARN for EBS encryption. If empty, AWS uses the default EBS encryption key. |
 | GCP | gcp_project | string | "" | Falls back to `project_id` from the service account credentials. |
+| GCP | gcp_subnetwork | string | "" | Name of a private subnetwork in `server_network` and the selected region. Defaults to the existing VMs' subnetwork, or the only private subnetwork in the region. Required when multiple private subnetworks exist and there are no existing VMs. |
 | GCP | gcp_compute_instance_preemptible | bool | false | Fallback for `server_spot`. |
 | GCP | gcp_compute_health_check_interval_sec | int | "provider default" | Interval tuning for health checks. |
 | GCP | gcp_compute_health_check_check_timeout_sec | int | "provider default" | Timeout tuning for health checks. |
@@ -140,7 +141,7 @@ Provider-specific (optional) variables referenced in tasks
 ### Availability zones
 
 Servers are distributed across `server_zones_count` zones (3 by default), so that the cluster survives the loss of a zone.
-Currently applicable for AWS.
+Currently applicable for AWS and GCP.
 
 Traffic between zones is charged by the cloud provider (replication, client connections through load balancers in other zones),
 and synchronous replication (`synchronous_mode`) adds the network latency between zones to each commit.
@@ -150,6 +151,11 @@ Zones and subnets (AWS):
 - `aws_subnet_ids` is specified: the Availability Zones of these subnets, in the order of the list.
 - Only `server_network` is specified: the Availability Zone of this subnet (single zone).
 - Neither is specified: the default subnets of the default VPC, in the alphabetical order of the zones.
+
+Zones and subnets (GCP):
+- `server_location` is a region (for example, `europe-west1`): zones with status `UP` that support `server_type` are discovered in alphabetical order.
+- An explicit zone in `server_location` (for example, `europe-west1-b`) keeps single-zone placement for new servers, regardless of `server_zones_count`.
+- `server_network` is the VPC network name (defaults to `default`). All cluster VMs share one private regional subnetwork across zones; use `gcp_subnetwork` to select it explicitly.
 
 `server_zones` (if specified) and `aws_subnet_ids` are lists of preferred zones: the first `server_zones_count` of them are used.
 `server_placement` takes precedence: a server listed there is created in its zone even if the zone is not among the selected ones.
@@ -162,6 +168,7 @@ Placement of each server (`<server_name>01`, `<server_name>02`, ...):
 3. Other new servers are created in the zone with the fewest servers (ties are resolved by the zone order).
 
 ```yaml
+cloud_provider: aws
 server_zones_count: 3
 aws_subnet_ids: # custom VPC, one subnet per Availability Zone
   - subnet-0a1b2c3d4e5f60001 # us-east-1a
@@ -169,6 +176,15 @@ aws_subnet_ids: # custom VPC, one subnet per Availability Zone
   - subnet-0a1b2c3d4e5f60003 # us-east-1c
 server_placement: # (optional)
   postgres-cluster-pgnode01: us-east-1b
+```
+
+```yaml
+cloud_provider: gcp
+server_location: europe-west1
+server_zones: # optional
+  - europe-west1-b
+  - europe-west1-c
+  - europe-west1-d
 ```
 
 #### DCS cluster
