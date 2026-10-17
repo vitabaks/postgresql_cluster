@@ -365,8 +365,7 @@
             subnetwork:
               selfLink: "{{ gcp_selected_subnetworks[0].selfLink }}"
             access_configs: "{{ [{'name': 'External NAT', 'type': 'ONE_TO_ONE_NAT'}] if server_public_ip | bool else omit }}"
-        metadata:
-          ssh-keys: "root:{{ ssh_key_content }}"
+        metadata: "{{ {'ssh-keys': 'root:' ~ ssh_key_content} if item.name not in zones_existing else omit }}"
         scheduling:
           on_host_maintenance: "{{ 'TERMINATE' if (server_spot | bool or server_type is search('metal')) else 'MIGRATE' }}"
           preemptible: "{{ server_spot | default(gcp_compute_instance_preemptible | default(false)) | bool }}"
@@ -429,7 +428,6 @@
         zone: "{{ item.zone }}"
         name: "{{ item.name }}-storage"
         size_gb: "{{ volume_size | int }}"
-        type: "{{ volume_type | default('pd-ssd', true) }}"
         state: present
       loop: "{{ server_zone_placement }}"
       loop_control:
@@ -602,7 +600,7 @@
             load_balancing_scheme: "EXTERNAL"
             ip_address: "{{ (load_balancer_ip.results | selectattr('item', 'equalto', item) | map(attribute='address') | first) }}"
             ip_protocol: "TCP"
-            port_range: "{{ pgbouncer_listen_port | default('6432') if pgbouncer_install | bool else postgresql_port | default('5432') }}"
+            port_range: "{{ target_port }}-{{ target_port }}"
             target: "{{ target_tcp_proxy.results | selectattr('item', 'equalto', item) | map(attribute='selfLink') | first }}"
             state: present
           loop:
@@ -613,6 +611,8 @@
           loop_control:
             label: "{{ patroni_cluster_name }}-{{ item }}-fr"
           register: gcp_load_balancer
+          vars:
+            target_port: "{{ pgbouncer_listen_port | default('6432') if pgbouncer_install | bool else postgresql_port | default('5432') }}"
           when: item == 'primary' or
             (item == 'replica' and cloud_load_balancer_replica | bool and server_count | int > 1) or
             (item == 'sync' and cloud_load_balancer_replica_sync | bool and server_count | int > 1 and synchronous_mode | bool) or
