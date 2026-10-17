@@ -438,9 +438,8 @@
 
     # Load Balancer
     # This block creates Global External classic proxy Network Load Balancer.
-    # Global objects are required because the gcp_compute_target_tcp_proxy module can only be global, as it requires the use of a global forwarding rule.
-    # Using global objects instead of regional ones allows us to utilize a TCP proxy for correct traffic load balancing.
-    # Note: Regional internal load balancers are passthrough and do not work correctly with the health checks we use through the Patroni REST API.
+    # Global external classic proxy Network Load Balancer. The google.cloud.gcp_compute_target_tcp_proxy module supports only global resources.
+    # Internal proxy load balancer support is tracked in: https://github.com/autobase-tech/autobase/issues/753 (TODO)
     - block:
         - name: "GCP: [Load Balancer] Create instance group"
           google.cloud.gcp_compute_instance_group:
