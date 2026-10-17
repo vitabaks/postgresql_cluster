@@ -60,7 +60,7 @@
     msg: >-
       'server_zones_count' is {{ server_zones_count }}, but only {{ zones_selected | length }} zone(s) are available:
       {{ zones_selected | join(', ') }}. Servers will be distributed across the available zones.
-      To use more zones, specify them ('server_zones', or for AWS 'aws_subnet_ids' with one subnet per Availability Zone),
+      To use more zones, specify 'server_zones'{{ ' or aws_subnet_ids (one subnet per Availability Zone)' if cloud_provider == 'aws' else '' }},
       or set 'server_zones_count: 1' to hide this warning.
   when: zones_selected | length < server_zones_count | int
 
@@ -114,7 +114,8 @@
         msg:
           - "The {{ dcs_type }} cluster would lose quorum if the zone with the most servers fails."
           - "DCS servers: {{ dcs_members | items2dict(key_name='name', value_name='zone') }}."
-          - "Use at least 3 zones (server_zones_count, and at least 3 zones in server_zones or aws_subnet_ids), change server_count,
+          - "Use at least 3 zones (server_zones_count, and at least 3 zones in
+            server_zones{{ ' or aws_subnet_ids' if cloud_provider == 'aws' else '' }}), change server_count,
             use 'server_zones_count: 1' for a single-zone cluster, or use a dedicated DCS cluster (dcs_exists: true)."
       when:
         - not dcs_quorum_ok | bool
