@@ -51,6 +51,10 @@ You can deploy PostgreSQL clusters using the Console (UI), command line (Ansible
 > [!TIP]
 > 📩 Contact us at info@autobase.tech, and our team will help you implement Autobase into your infrastructure.
 
+## One-Click Deploy
+
+[![Deploy on RepoCloud](https://d16t0pc4846x52.cloudfront.net/deploylobe.svg)](https://repocloud.io/details/Autobase/)
+
 ## Compatibility
 
 Red Hat and Debian-based distributions.
