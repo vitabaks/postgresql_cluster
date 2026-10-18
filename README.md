@@ -37,8 +37,18 @@ You can deploy PostgreSQL clusters using the Console (UI), command line (Ansible
 
 ### Console (UI)
 
+#### Self-Hosted Installation
+
+Install the Autobase Console in your own environment:
+
 - [Community Edition](./console/README.md) - Free license for individual developers and hobby projects; includes lightweight cluster deployment.
 - [Enterprise Edition](https://autobase.tech/docs#getting-started) - Commercial license for production environments; includes extended cluster management features and support.
+
+#### One-Click Deploy
+
+Quickly launch the Autobase Console using a deployment platform or hosting provider:
+
+[Coolify](https://coolify.io/services) · [Dokploy](https://dokploy.com/templates/autobase) · [RepoCloud](https://repocloud.io/details/Autobase/) · [Hostinger](https://www.hostinger.com/my/applications/autobase) · [GoLetro](https://goletro.com/apps/autobase) · [Dinao](https://dinao.com/en/conteneur/autobase) · [CloudLinux](https://www.cloudlinux.ro/en/aplicatii/autobase)
 
 ### Ansible Collection
 
@@ -50,10 +60,6 @@ You can deploy PostgreSQL clusters using the Console (UI), command line (Ansible
 
 > [!TIP]
 > 📩 Contact us at info@autobase.tech, and our team will help you implement Autobase into your infrastructure.
-
-## One-Click Deploy
-
-[![Deploy on RepoCloud](https://d16t0pc4846x52.cloudfront.net/deploylobe.svg)](https://repocloud.io/details/Autobase/)
 
 ## Compatibility
 
