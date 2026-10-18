@@ -1,4 +1,15 @@
 ---
+- name: "Hetzner Cloud: Validate spread placement group capacity"
+  ansible.builtin.assert:
+    that:
+      - server_count | int <= 10
+    fail_msg: >-
+      Hetzner spread placement groups support at most 10 servers.
+      Reduce server_count or set hetzner_placement_group=false to deploy without guaranteed host separation.
+  when:
+    - state == 'present'
+    - hetzner_placement_group | bool
+
 # SSH key
 - block:
     # Delete the temporary ssh key from the cloud (if exists)
@@ -415,7 +426,27 @@
         index_var: idx
         label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
       register: server_info
-      failed_when: false
+
+    - name: "Hetzner Cloud: Validate existing servers before assigning a placement group"
+      ansible.builtin.assert:
+        that:
+          - item.placement_group | default('', true) == patroni_cluster_name + '-spread' or item.status == 'off'
+        fail_msg: >-
+          Server {{ item.name }} must be powered off before it can join placement group {{ patroni_cluster_name }}-spread.
+          Migrate existing nodes one at a time during maintenance, or set hetzner_placement_group=false to keep their current placement.
+      loop: "{{ server_info.results | map(attribute='hcloud_server_info') | flatten }}"
+      loop_control:
+        label: "{{ item.name }}"
+      when: hetzner_placement_group | bool
+
+    - name: "Hetzner Cloud: Create or modify spread placement group"
+      hetzner.hcloud.placement_group:
+        api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
+        name: "{{ patroni_cluster_name }}-spread"
+        type: spread
+        state: present
+        labels: "{{ cloud_provider_tags | combine({'Cluster': patroni_cluster_name}) }}"
+      when: hetzner_placement_group | bool
 
     - name: "Hetzner Cloud: Create or modify server"
       hetzner.hcloud.server:
@@ -426,6 +457,8 @@
         image: "{{ server_image | lower }}"
         ssh_keys: "{{ ssh_key_names }}"
         location: "{{ server_location }}"
+        placement_group: "{{ (patroni_cluster_name + '-spread') if hetzner_placement_group | bool else omit }}"
+        force: false # Never power off an existing server to change its placement.
         enable_ipv4: "{{ server_public_ip | bool }}"
         enable_ipv6: false
         private_networks:
@@ -718,6 +751,12 @@
       loop_control:
         index_var: idx
         label: "{{ server_name | lower }}{{ '%02d' % (idx + 1) }}"
+
+    - name: "Hetzner Cloud: Delete spread placement group"
+      hetzner.hcloud.placement_group:
+        api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
+        name: "{{ patroni_cluster_name }}-spread"
+        state: absent
 
     - name: "Hetzner Cloud: Delete volume"
       hetzner.hcloud.volume:

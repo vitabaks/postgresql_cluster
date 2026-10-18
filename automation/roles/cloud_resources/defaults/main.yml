@@ -26,6 +26,8 @@ server_placement: {} # (optional) Place specific servers in specific zones, e.g.
 aws_subnet_ids: [] # (optional) AWS subnets for servers in a custom VPC, one per Availability Zone (list or comma-separated string). Required for multi-AZ in a custom VPC; if specified, 'server_network' is ignored.
 gcp_subnetwork: "" # (optional) Name of a private regional subnetwork in 'server_network'. Defaults to the existing VMs' subnetwork, or the only private subnetwork in the region.
 
+hetzner_placement_group: true # Place Hetzner servers in one spread placement group (maximum 10 servers), on different physical hosts.
+
 volume_type: "" # Data disk type. Set to 'local' to use the system disk and skip creating an external data disk.
 volume_size: 100 # Storage size for the data directory (GB). Set to 0 to use the system disk.
 volume_iops: 3000 # Volume IOPS. Applicable for AWS if volume_type is 'io1', 'io2' or 'gp3'.

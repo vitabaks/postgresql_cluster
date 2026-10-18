@@ -3,6 +3,7 @@
 Provision the PostgreSQL cluster infrastructure in public clouds (AWS, GCP, Azure, DigitalOcean, Hetzner). The role can:
 
 - Create/delete servers (count, size, image, region), distributed across availability zones (AWS, GCP, Azure)
+- Place Hetzner servers on different physical hosts using a spread placement group
 - Configure private networking/VPC/VNet and firewalls/Security Groups
 - Optionally create Load Balancers (AWS NLB, GCP TCP Proxy, Azure LB, DO LB, Hetzner LB)
 - Optionally create object storage for backups (S3/GCS/Azure Blob/Spaces/Hetzner Object Storage)
@@ -138,9 +139,36 @@ Set `cloud_backup_provider` when backup storage should be provisioned in a diffe
 | Azure | azure_vm_image_sku | string | "" | Image SKU. |
 | Azure | azure_vm_image_version | string | "" | Image version. |
 | Hetzner | hetzner_load_balancer_type | string | lb21 | Load balancer type. |
+| Hetzner | hetzner_placement_group | bool | true | Place cluster servers in one spread placement group, on different physical hosts. Maximum 10 servers. |
 | Hetzner | hcloud_network_name | string | postgres-cluster-network-<zone> | Network name if creating one. |
 | Hetzner | hcloud_network_ip_range | string | 10.0.0.0/16 | Network CIDR. |
 | Hetzner | hcloud_subnetwork_ip_range | string | 10.0.1.0/24 | Subnet CIDR. |
+
+### Hetzner placement groups
+
+By default, all Hetzner cluster servers are assigned to a `spread` placement group named `<patroni_cluster_name>-spread`.
+The group is reused when scaling the cluster and deleted after the servers when `state: absent`.
+Hetzner guarantees that servers in the group run on different physical hosts; this does not provide availability-zone isolation.
+See the [Hetzner placement group FAQ](https://docs.hetzner.com/cloud/placement-groups/faq/).
+
+A spread group supports at most 10 servers. When `hetzner_placement_group` is enabled, deployment fails if `server_count` exceeds this limit.
+Set `hetzner_placement_group: false` to skip placement group management during provisioning, without guaranteed host separation.
+This setting leaves existing server placement unchanged; cluster deletion still removes the managed group.
+
+For example, to grow a cluster from 10 to 11 servers:
+
+```yaml
+server_count: 11
+hetzner_placement_group: false
+```
+
+The original 10 servers remain in their group, while the new server is created without a placement group.
+Keep the setting disabled on subsequent runs while the cluster exceeds 10 servers.
+
+Existing servers outside the group must be powered off before they can be added.
+The role fails if any such server is running and never forces a shutdown or moves a running node between groups.
+For an existing cluster, migrate nodes individually during maintenance using Hetzner's controls, preserving a healthy primary and DCS quorum,
+then rerun provisioning once all existing nodes belong to the group. Alternatively, disable the feature to retain their current placement.
 
 ### Availability zones
 
