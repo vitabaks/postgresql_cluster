@@ -37,8 +37,19 @@ You can deploy PostgreSQL clusters using the Console (UI), command line (Ansible
 
 ### Console (UI)
 
+#### Self-Hosted Installation
+
+Install the Autobase Console in your own environment:
+
 - [Community Edition](./console/README.md) - Free license for individual developers and hobby projects; includes lightweight cluster deployment.
 - [Enterprise Edition](https://autobase.tech/docs#getting-started) - Commercial license for production environments; includes extended cluster management features and support.
+
+#### One-Click Deploy
+
+Quickly launch the Autobase Console using a deployment platform or hosting provider:
+
+- [Coolify](https://coolify.io/services) · [Dokploy](https://dokploy.com/templates/autobase) · [Hostinger](https://www.hostinger.com/my/applications/autobase) · [OnetSolutions](https://onetsolutions.net/en/one-click-apps) · [RepoCloud](https://repocloud.io/details/Autobase/) · [Kubeara](https://kubeara.dev/services/autobase/) · [MapleDeploy](https://mapledeploy.ca/one-click-services) · [DTR Hosting](https://dtrhosting.com/en/hebergement/application/autobase) · [CloudLinux](https://www.cloudlinux.ro/en/aplicatii/autobase) · [b9design](https://b9design.co.za/templates/autobase)
+- [HeroXHost](https://www.heroxhost.com/applications/autobase) · [OpenZapps](https://openzapps.com/templates/autobase) · [GoLetro](https://goletro.com/apps/autobase) · [Dinao](https://dinao.com/en/conteneur/autobase) · [SiliconKiwi](https://siliconkiwi.nz/app-catalogue/autobase)
 
 ### Ansible Collection
 
