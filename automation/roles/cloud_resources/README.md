@@ -263,7 +263,7 @@ resolve the NLB IP address in their own zone, if it has a healthy target.
 In regions with three availability zones, new Standard public IPs (for VMs and load balancers) and internal load balancer frontends use zone redundancy.
 Frontend placement uses the region's zones independently of VM SKU availability. Internal frontends use `azure_subnet`.
 Each enabled primary/replica/sync/async endpoint uses the corresponding Patroni health probe.
-Load balancer updates preserve existing backend pool settings and members; scaling adds the new servers' addresses.
+Backend pool settings and members are read before load balancer updates and reapplied afterwards; scaling adds the new servers' addresses.
 
 Existing IP addresses and frontend zone settings are preserved. The role warns about zonal frontends/public IPs and internal frontends without explicit zone redundancy.
 Migrate these frontends separately before relying on them during a zone failure; public IP zone settings cannot be changed in place.

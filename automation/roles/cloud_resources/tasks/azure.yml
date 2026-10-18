@@ -357,7 +357,7 @@
         - item.ansible_facts.azure_vm.storage_profile.data_disks[0].managed_disk is defined
 
     # Each endpoint has its own pool and Patroni health probe.
-    - name: "Set variable: azure_lb_roles, azure_load_balancer_endpoints, azure_existing_lbs, azure_lb_ids"
+    - name: "Set variable: azure_lb_roles, azure_load_balancer_endpoints, azure_existing_lbs"
       ansible.builtin.set_fact:
         azure_lb_roles: >-
           {{ (['primary']
@@ -367,15 +367,11 @@
             if cloud_load_balancer | bool else [] }}
         azure_load_balancer_endpoints: {}
         azure_existing_lbs: {}
-        azure_lb_ids: {}
 
     - name: "Azure: Gather information about Load Balancers"
-      azure.azcollection.azure_rm_resource_info:
+      azure.azcollection.azure_rm_loadbalancer_info:
         resource_group: "{{ azure_resource_group_name }}"
-        provider: Network
-        resource_type: loadBalancers
-        resource_name: "{{ patroni_cluster_name }}-{{ azure_lb_role }}"
-        api_version: "2024-05-01"
+        name: "{{ patroni_cluster_name }}-{{ azure_lb_role }}"
       loop: "{{ azure_lb_roles }}"
       loop_control:
         loop_var: azure_lb_role
@@ -383,8 +379,7 @@
 
     - name: "Azure: Record existing Load Balancer configurations"
       ansible.builtin.set_fact:
-        azure_existing_lbs: "{{ azure_existing_lbs | combine({item.azure_lb_role: (item.response | first if item.status_code == 200 else {})}) }}"
-        azure_lb_ids: "{{ azure_lb_ids | combine({item.azure_lb_role: item.url}) }}"
+        azure_existing_lbs: "{{ azure_existing_lbs | combine({item.azure_lb_role: item.loadbalancers | first | default({})}) }}"
       loop: "{{ azure_lb_info.results }}"
       loop_control:
         label: "{{ item.azure_lb_role }}"
@@ -452,113 +447,7 @@
       register: azure_lb_public_ips
       when: database_public_access | bool
 
-    # The parent LB module sends empty pool stubs on updates. Preserve the full ARM pool
-    # configuration here so updating probes, rules or tags never clears live backends.
-    - name: "Azure: Create or modify Load Balancers"
-      azure.azcollection.azure_rm_resource:
-        url: "{{ azure_lb_ids[azure_lb_role] }}"
-        api_version: "2024-05-01"
-        method: PUT
-        idempotency: true
-        body: "{{ lb_body_json | from_json }}"
-      loop: "{{ azure_lb_roles }}"
-      loop_control:
-        loop_var: azure_lb_role
-      vars:
-        lb_body_json: >-
-          {%- set existing = azure_existing_lbs[azure_lb_role] -%}
-          {%- set properties = existing.properties | default({}) -%}
-          {%- set name = patroni_cluster_name ~ '-' ~ azure_lb_role -%}
-          {%- set frontend_name = name ~ '-frontend' -%}
-          {%- set pool_name = name ~ '-backend' -%}
-          {%- set probe_name = name ~ '-health-probe' -%}
-          {%- set frontends = properties.frontendIPConfigurations | default([]) -%}
-          {%- set existing_frontend = frontends | selectattr('name', 'equalto', frontend_name) | first | default({}) -%}
-          {%- set frontend = existing_frontend if existing_frontend else {'name': frontend_name, 'properties': {}} -%}
-          {%- if lb_config.public_ip_id -%}
-          {%-   set frontend_properties = frontend.properties | combine({'publicIPAddress': {'id': lb_config.public_ip_id}}) -%}
-          {%- else -%}
-          {%-   set frontend_properties = frontend.properties | combine({
-                  'subnet': {'id': lb_config.subnet_id},
-                  'privateIPAllocationMethod': frontend.properties.privateIPAllocationMethod | default('Dynamic')
-                }) -%}
-          {%-   if not existing_frontend and lb_config.region_zones | length >= 3 -%}
-          {%-     set frontend = frontend | combine({'zones': lb_config.region_zones}) -%}
-          {%-   endif -%}
-          {%- endif -%}
-          {%- set frontend = frontend | combine({'properties': frontend_properties}) -%}
-          {%- set pools = properties.backendAddressPools | default([]) -%}
-          {%- if pools | selectattr('name', 'equalto', pool_name) | list | length == 0 -%}
-          {%-   set pools = pools + [{'name': pool_name, 'properties': {}}] -%}
-          {%- endif -%}
-          {%- set probe = {'name': probe_name, 'properties': {
-                'protocol': lb_config.probe_protocol, 'port': lb_config.probe_port,
-                'requestPath': '/' ~ azure_lb_role, 'intervalInSeconds': 5, 'numberOfProbes': 2
-              }} -%}
-          {%- set rule = {'name': name ~ '-rule', 'properties': {
-                'frontendIPConfiguration': {'id': lb_config.id ~ '/frontendIPConfigurations/' ~ frontend_name},
-                'backendAddressPool': {'id': lb_config.id ~ '/backendAddressPools/' ~ pool_name},
-                'probe': {'id': lb_config.id ~ '/probes/' ~ probe_name},
-                'protocol': 'Tcp', 'frontendPort': lb_config.port, 'backendPort': lb_config.port,
-                'idleTimeoutInMinutes': 10, 'enableFloatingIP': false, 'disableOutboundSnat': true
-              }} -%}
-          {{ {
-            'location': lb_config.location, 'sku': {'name': 'Standard', 'tier': 'Regional'},
-            'tags': existing.tags | default({}) | combine(lb_config.tags),
-            'properties': properties | combine({
-              'frontendIPConfigurations': frontends | community.general.lists_mergeby([frontend], 'name', recursive=true),
-              'backendAddressPools': pools,
-              'probes': properties.probes | default([], true) | community.general.lists_mergeby([probe], 'name', recursive=true),
-              'loadBalancingRules': properties.loadBalancingRules | default([], true) | community.general.lists_mergeby([rule], 'name', recursive=true)
-            })
-          } | to_json }}
-        lb_config:
-          id: "{{ azure_lb_ids[azure_lb_role] }}"
-          location: "{{ azure_region }}"
-          subnet_id: "{{ azure_subnet_id }}"
-          public_ip_id: >-
-            {{ (azure_lb_public_ips.results | selectattr('azure_lb_role', 'equalto', azure_lb_role)
-              | map(attribute='state.id') | first) if database_public_access | bool else '' }}
-          region_zones: "{{ azure_zone_info.region_zones }}"
-          port: "{{ (pgbouncer_listen_port | default(6432) if pgbouncer_install | bool else postgresql_port | default(5432)) | int }}"
-          probe_port: "{{ patroni_restapi_port | int }}"
-          probe_protocol: "{{ patroni_restapi_protocol | capitalize }}"
-          tags: "{{ cloud_provider_tags | combine({'Cluster': patroni_cluster_name}) }}"
-
-    # Network PUT can return before provisioning finishes; wait before updating backend pools.
-    - name: "Azure: Wait for Load Balancers and read frontend addresses"
-      azure.azcollection.azure_rm_resource_info:
-        url: "{{ azure_lb_ids[azure_lb_role] }}"
-        api_version: "2024-05-01"
-      loop: "{{ azure_lb_roles }}"
-      loop_control:
-        loop_var: azure_lb_role
-      register: azure_lb_current
-      until: >-
-        azure_lb_current is failed or
-        (azure_lb_current.status_code | default(0) == 200 and azure_lb_current.response | default([]) | length > 0
-        and azure_lb_current.response[0].properties.provisioningState | default('') == 'Succeeded')
-      failed_when: >-
-        azure_lb_current is failed or
-        (azure_lb_current.status_code | default(0) == 200 and azure_lb_current.response | default([]) | length > 0
-        and azure_lb_current.response[0].properties.provisioningState | default('') in ['Failed', 'Canceled'])
-      retries: 120
-      delay: 5
-
-    - name: "Azure: Record Load Balancer connection addresses"
-      ansible.builtin.set_fact:
-        azure_load_balancer_endpoints: >-
-          {{ azure_load_balancer_endpoints | combine({item.azure_lb_role: {
-            'public_ip': (azure_lb_public_ips.results | selectattr('azure_lb_role', 'equalto', item.azure_lb_role)
-              | map(attribute='state.ip_address') | first) if database_public_access | bool else '',
-            'private_ip': (item.response[0].properties.frontendIPConfigurations
-              | selectattr('name', 'equalto', patroni_cluster_name ~ '-' ~ item.azure_lb_role ~ '-frontend')
-              | first).properties.privateIPAddress | default('')
-          }}) }}
-      loop: "{{ azure_lb_current.results }}"
-      loop_control:
-        label: "{{ item.azure_lb_role }}"
-
+    # Read pool members before the parent update so they can be reapplied afterwards.
     - name: "Azure: Gather existing backend addresses"
       azure.azcollection.azure_rm_loadbalancerbackendaddresspool_info:
         resource_group: "{{ azure_resource_group_name }}"
@@ -569,11 +458,78 @@
         loop_var: azure_lb_role
       register: azure_backend_pool_info
 
+    - name: "Azure: Create or modify Load Balancers"
+      azure.azcollection.azure_rm_loadbalancer:
+        resource_group: "{{ azure_resource_group_name }}"
+        name: "{{ lb_name }}"
+        location: "{{ azure_region }}"
+        sku: Standard
+        frontend_ip_configurations:
+          - name: "{{ lb_name }}-frontend"
+            public_ip_address: "{{ lb_name ~ '-public-ip' if database_public_access | bool else omit }}"
+            subnet: "{{ azure_subnet_id if not database_public_access | bool else omit }}"
+            private_ip_address: "{{ existing_frontend.properties.privateIPAddress | default(omit) if not database_public_access | bool else omit }}"
+            private_ip_allocation_method: >-
+              {{ existing_frontend.properties.privateIPAllocationMethod | default('Dynamic') if not database_public_access | bool else omit }}
+            zones: >-
+              {{ (existing_frontend.zones | default(omit, true) if existing_frontend else
+                (azure_zone_info.region_zones if azure_zone_info.region_zones | length >= 3 else omit))
+                if not database_public_access | bool else omit }}
+        backend_address_pools:
+          - name: "{{ lb_name }}-backend"
+        probes:
+          - name: "{{ lb_name }}-health-probe"
+            protocol: "{{ patroni_restapi_protocol | capitalize }}"
+            port: "{{ patroni_restapi_port | int }}"
+            request_path: "/{{ azure_lb_role }}"
+            interval: 5
+            fail_count: 2
+        load_balancing_rules:
+          - name: "{{ lb_name }}-rule"
+            frontend_ip_configuration: "{{ lb_name }}-frontend"
+            backend_address_pool: "{{ lb_name }}-backend"
+            probe: "{{ lb_name }}-health-probe"
+            protocol: Tcp
+            frontend_port: "{{ lb_port }}"
+            backend_port: "{{ lb_port }}"
+            idle_timeout: 10
+            enable_floating_ip: false
+            disable_outbound_snat: true
+        tags: "{{ cloud_provider_tags | combine({'Cluster': patroni_cluster_name}) }}"
+        append_tags: true
+      loop: "{{ azure_lb_roles }}"
+      loop_control:
+        loop_var: azure_lb_role
+      register: azure_load_balancers
+      vars:
+        lb_name: "{{ patroni_cluster_name }}-{{ azure_lb_role }}"
+        lb_port: "{{ (pgbouncer_listen_port | default(6432) if pgbouncer_install | bool else postgresql_port | default(5432)) | int }}"
+        existing_frontend: "{{ azure_existing_lbs[azure_lb_role].properties.frontendIPConfigurations | default([])
+          | selectattr('name', 'equalto', lb_name ~ '-frontend') | first | default({}) }}"
+
+    - name: "Azure: Record Load Balancer connection addresses"
+      ansible.builtin.set_fact:
+        azure_load_balancer_endpoints: >-
+          {{ azure_load_balancer_endpoints | combine({item.azure_lb_role: {
+            'public_ip': (azure_lb_public_ips.results | selectattr('azure_lb_role', 'equalto', item.azure_lb_role)
+              | map(attribute='state.ip_address') | first) if database_public_access | bool else '',
+            'private_ip': (item.state.frontend_ip_configurations
+              | selectattr('name', 'equalto', patroni_cluster_name ~ '-' ~ item.azure_lb_role ~ '-frontend')
+              | first).private_ip_address | default('', true)
+          }}) }}
+      loop: "{{ azure_load_balancers.results }}"
+      loop_control:
+        label: "{{ item.azure_lb_role }}"
+
     - name: "Azure: Configure Load Balancer backend pools"
       azure.azcollection.azure_rm_loadbalancerbackendaddresspool:
         resource_group: "{{ azure_resource_group_name }}"
         load_balancer_name: "{{ patroni_cluster_name }}-{{ azure_lb_role }}"
         name: "{{ patroni_cluster_name }}-{{ azure_lb_role }}-backend"
+        virtual_network: "{{ existing_pool.virtual_network | default(omit, true) }}"
+        sync_mode: "{{ existing_pool.sync_mode | default(omit, true) }}"
+        drain_period_in_seconds: "{{ existing_pool.drain_period_in_seconds | default(omit) }}"
+        tunnel_interfaces: "{{ existing_pool.tunnel_interfaces | default(omit, true) }}"
         load_balancer_backend_addresses: "{{ backend_addresses_json | from_json }}"
       loop: "{{ azure_lb_roles }}"
       loop_control:
