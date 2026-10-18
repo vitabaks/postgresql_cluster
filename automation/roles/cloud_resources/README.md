@@ -146,7 +146,7 @@ Set `cloud_backup_provider` when backup storage should be provisioned in a diffe
 
 ### Hetzner placement groups
 
-By default, all Hetzner cluster servers are assigned to a `spread` placement group named `<patroni_cluster_name>-spread`.
+By default, all Hetzner cluster servers are assigned to a `spread` placement group named `<patroni_cluster_name>-<server_location>`.
 The group is reused when scaling the cluster and deleted after the servers when `state: absent`.
 Hetzner guarantees that servers in the group run on different physical hosts; this does not provide availability-zone isolation.
 See the [Hetzner placement group FAQ](https://docs.hetzner.com/cloud/placement-groups/faq/).

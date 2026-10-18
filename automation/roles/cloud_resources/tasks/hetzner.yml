@@ -430,9 +430,9 @@
     - name: "Hetzner Cloud: Validate existing servers before assigning a placement group"
       ansible.builtin.assert:
         that:
-          - item.placement_group | default('', true) == patroni_cluster_name + '-spread' or item.status == 'off'
+          - item.placement_group | default('', true) == patroni_cluster_name + '-' + server_location or item.status == 'off'
         fail_msg: >-
-          Server {{ item.name }} must be powered off before it can join placement group {{ patroni_cluster_name }}-spread.
+          Server {{ item.name }} must be powered off before it can join placement group {{ patroni_cluster_name }}-{{ server_location }}.
           Migrate existing nodes one at a time during maintenance, or set hetzner_placement_group=false to keep their current placement.
       loop: "{{ server_info.results | map(attribute='hcloud_server_info') | flatten }}"
       loop_control:
@@ -442,7 +442,7 @@
     - name: "Hetzner Cloud: Create or modify spread placement group"
       hetzner.hcloud.placement_group:
         api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
-        name: "{{ patroni_cluster_name }}-spread"
+        name: "{{ patroni_cluster_name }}-{{ server_location }}"
         type: spread
         state: present
         labels: "{{ cloud_provider_tags | combine({'Cluster': patroni_cluster_name}) }}"
@@ -457,7 +457,7 @@
         image: "{{ server_image | lower }}"
         ssh_keys: "{{ ssh_key_names }}"
         location: "{{ server_location }}"
-        placement_group: "{{ (patroni_cluster_name + '-spread') if hetzner_placement_group | bool else omit }}"
+        placement_group: "{{ (patroni_cluster_name + '-' + server_location) if hetzner_placement_group | bool else omit }}"
         force: false # Never power off an existing server to change its placement.
         enable_ipv4: "{{ server_public_ip | bool }}"
         enable_ipv6: false
@@ -755,7 +755,7 @@
     - name: "Hetzner Cloud: Delete spread placement group"
       hetzner.hcloud.placement_group:
         api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_API_TOKEN') }}"
-        name: "{{ patroni_cluster_name }}-spread"
+        name: "{{ patroni_cluster_name }}-{{ server_location }}"
         state: absent
 
     - name: "Hetzner Cloud: Delete volume"
