@@ -588,7 +588,8 @@
                 }] -%}
           {%- endfor -%}
           {{ existing_pool.load_balancer_backend_addresses | default([], true)
-            | community.general.lists_mergeby(ns.addresses, 'name') | unique(attribute='name') | sort(attribute='name') | to_json }}
+            | community.general.lists_mergeby(ns.addresses, 'name') | unique(attribute='name') | sort(attribute='name')
+            | map('dict2items') | map('rejectattr', 'value', 'none') | map('list') | map('items2dict') | to_json }}
         existing_pool: >-
           {{ (azure_backend_pool_info.results | selectattr('azure_lb_role', 'equalto', azure_lb_role)
             | map(attribute='backend_address_pools') | first | first) | default({}) }}
