@@ -112,12 +112,11 @@
       ansible.builtin.set_fact:
         gcp_network_name: "{{ server_network if server_network is defined and server_network | length > 0 else 'default' }}"
 
-    - name: "Set variable: zones_available, zones_existing, gcp_zones_count"
+    - name: "Set variable: zones_available, zones_existing, gcp_running_zones"
       ansible.builtin.set_fact:
         zones_available: "{{ [gcp_requested_zone] | intersect(running_zones) if gcp_requested_zone | length > 0 else running_zones }}"
         zones_existing: >-
           {{ dict(gcp_existing_instances | map(attribute='name') | zip(gcp_existing_instances | map(attribute='zone') | map('basename'))) }}
-        gcp_zones_count: "{{ server_zones_count }}"
         gcp_running_zones: "{{ running_zones }}"
       vars:
         running_zones: >-
@@ -126,8 +125,6 @@
 
     - name: "Distribute servers across zones"
       ansible.builtin.import_tasks: zones.yml
-      vars:
-        server_zones_count: "{{ 1 if gcp_requested_zone | length > 0 else gcp_zones_count }}"
 
     - name: "GCP: Validate that the requested VM type is available in all server zones"
       ansible.builtin.assert:
