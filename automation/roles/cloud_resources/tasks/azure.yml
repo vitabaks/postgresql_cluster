@@ -71,9 +71,12 @@
             that:
               - server_zones is sequence and server_zones is not string and server_zones | length == 0
               - server_placement is mapping and server_placement | length == 0
-              - server_zones_count | int > 0
+              - server_zones_count | int == 1
               - zones_existing.values() | reject('equalto', '') | list | length == 0
-            fail_msg: "VM SKU '{{ server_type }}' does not support availability zones in '{{ azure_region }}'."
+            fail_msg: >-
+              VM SKU '{{ server_type }}' does not support availability zones in '{{ azure_region }}'.
+              To allow regional placement, explicitly set 'server_zones_count: 1' and leave 'server_zones'
+              and 'server_placement' empty. Existing VMs must also use regional placement.
             quiet: true
 
         - name: "Azure: WARNING: availability zones are not supported for this VM SKU"

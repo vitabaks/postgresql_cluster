@@ -44,7 +44,7 @@ The zone placement variables apply to AWS, GCP and Azure; see [Availability zone
 | server_network | string | "" | Existing network/subnet/VPC. If provided, the server will be added to this network (needs to be created beforehand) |
 | server_spot | bool | false | Spot/preemptible where supported. Applicable for AWS, GCP, Azure |
 | server_public_ip | bool | true | Assign public IPs to servers |
-| server_zones_count | int | 3 | Number of preferred zones to use. Set to `1` for single-zone placement. |
+| server_zones_count | int | 3 | Required number of zones to select. Set to `1` for single-zone placement. |
 | server_zones | list | [] | Preferred zones in priority order. If empty, zones are selected automatically. |
 | server_placement | dict | {} | Explicit zone overrides for new servers, keyed by server name. |
 | volume_type | string | "" | Data disk type. Set to `local` to use the system disk and skip creating an external data disk. Defaults: 'gp3' for AWS, 'pd-ssd' for GCP, 'StandardSSD_LRS' for Azure |
@@ -144,7 +144,7 @@ Set `cloud_backup_provider` when backup storage should be provisioned in a diffe
 
 ### Availability zones
 
-AWS, GCP and Azure support placement across availability zones. The role uses up to `server_zones_count` zones (3 by default).
+AWS, GCP and Azure support placement across availability zones. The role selects `server_zones_count` zones (3 by default).
 Surviving a zone failure also requires a healthy database replica and a DCS quorum; see [DCS cluster](#dcs-cluster).
 
 Cross-zone replication adds network latency, including to commits when `synchronous_mode` is enabled.
@@ -154,7 +154,8 @@ Consider your provider's inter-zone traffic costs when choosing a placement. Set
 
 The role selects zones from `server_zones`, or from the provider's discovery results when this list is empty.
 Within that list, zones already used by existing servers take priority; the first `server_zones_count` zones are selected.
-If fewer zones are available than requested, the role warns and uses those available.
+Deployment fails if fewer zones are available than requested, including when `server_zones` limits the selection.
+Single-zone placement must be explicitly enabled with `server_zones_count: 1`.
 
 Each server (`<server_name>01`, `<server_name>02`, ...) is placed as follows:
 
@@ -170,13 +171,13 @@ To change an existing server's placement, follow [Moving an existing cluster to 
 **AWS**
 
 - With `aws_subnet_ids`, zones are taken from those subnets in the supplied order, with one subnet per zone in the same VPC.
-- With only `server_network`, its subnet determines a single zone.
+- With only `server_network`, its subnet determines a single zone; set `server_zones_count: 1`.
 - With neither, the default VPC's default subnets are used in alphabetical zone order.
 
 **GCP**
 
 - With a region in `server_location` (for example, `europe-west1`), zones with status `UP` that support `server_type` are discovered in alphabetical order.
-- An explicit zone (for example, `europe-west1-b`) restricts new servers to that zone regardless of `server_zones_count`.
+- An explicit zone (for example, `europe-west1-b`) restricts new servers to that zone and requires `server_zones_count: 1`.
 - `server_network` is the VPC network name (defaults to `default`). All VMs share one private regional subnetwork; use `gcp_subnetwork` to select it explicitly.
 
 **Azure**
@@ -184,7 +185,8 @@ To change an existing server's placement, follow [Moving an existing cluster to 
 - `server_location` is a region (for example, `westeurope`). Logical zone IDs are `"1"`, `"2"`, `"3"` within the subscription; numeric YAML values are also accepted.
 - Zones are discovered for `server_type`, excluding subscription restrictions. Discovery does not reserve allocation or Spot capacity.
 - All VMs share one regional VNet and `azure_subnet`. Existing VMs must also use this subnet.
-- If the VM SKU has no zonal support, the role uses regional placement with a warning, provided `server_zones` and `server_placement` are empty. Subscription restrictions cause an error instead.
+- If the VM SKU has no zonal support, regional placement requires `server_zones_count: 1` and empty `server_zones` and `server_placement`.
+  The role warns that regional placement does not protect against a zone failure. Subscription restrictions cause an error.
 
 #### Examples
 

@@ -49,7 +49,7 @@
 
 - name: "Zones | Normalize zone preferences"
   ansible.builtin.set_fact:
-    zone_preferences: "{{ server_zones | map('string') | list }}"
+    zone_preferences: "{{ server_zones | map('string') | unique | list }}"
     zone_overrides: "{{ dict(server_placement.keys() | zip(server_placement.values() | map('string'))) }}"
 
 # Zones of existing servers are selected first, so that an existing cluster keeps using them.
@@ -61,14 +61,15 @@
     zones_in_use: "{{ zones_existing.values() | list }}"
     zones_ordered: "{{ (zones_preferred | select('in', zones_in_use) | list) + (zones_preferred | reject('in', zones_in_use) | list) }}"
 
-- name: "Zones | WARNING: fewer zones available than requested"
-  ansible.builtin.debug:
-    msg: >-
-      'server_zones_count' is {{ server_zones_count }}, but only {{ zones_selected | length }} zone(s) are available:
-      {{ zones_selected | join(', ') }}. Servers will be distributed across the available zones.
-      To use more zones, specify 'server_zones'{{ ' or aws_subnet_ids (one subnet per Availability Zone)' if cloud_provider == 'aws' else '' }},
-      or set 'server_zones_count: 1' to hide this warning.
-  when: zones_selected | length < server_zones_count | int
+- name: "Zones | Validate the requested number of zones"
+  ansible.builtin.assert:
+    that: zones_selected | unique | length == server_zones_count | int
+    fail_msg: >-
+      'server_zones_count' requires {{ server_zones_count }} distinct availability zones, but only
+      {{ zones_selected | unique | length }} are available: {{ zones_selected | unique | join(', ') }}.
+      Select enough zones{{ ' using aws_subnet_ids (one subnet per Availability Zone)' if cloud_provider == 'aws' else '' }},
+      or explicitly set 'server_zones_count: 1' for single-zone placement.
+    quiet: true
 
 - name: "Zones | Set variable: server_zone_placement"
   ansible.builtin.set_fact:
