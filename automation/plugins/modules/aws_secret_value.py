@@ -54,7 +54,14 @@ options:
       - Apply I(json_secret) to the current JSON object as a JSON Merge Patch (RFC 7396)
         instead of replacing it. Nested objects are merged, and keys set to C(null) are removed.
       - Keys that are not in I(json_secret) are preserved.
-      - Requires I(json_secret) and I(compare=true). Fails if the current value is not a JSON object.
+      - Requires I(json_secret) and I(compare=true). Fails if the current value is not a JSON object,
+        unless I(replace_non_object=true).
+    default: false
+    type: bool
+  replace_non_object:
+    description:
+      - With I(merge=true), replace a current value that is not a JSON object (for example, a placeholder string)
+        with I(json_secret) instead of failing, and return a warning.
     default: false
     type: bool
   replace_keys:
@@ -173,6 +180,7 @@ def main():
             overwrite=dict(type="bool", default=True),
             compare=dict(type="bool", default=True),
             merge=dict(type="bool", default=False),
+            replace_non_object=dict(type="bool", default=False),
             replace_keys=dict(type="list", elements="str", default=[], no_log=False),
         ),
         mutually_exclusive=[["secret", "json_secret"]],
@@ -211,12 +219,17 @@ def main():
     if merge:
         current_data = {}
         if current is not None:
+            current_string = current.get("SecretString")
+            # An empty string is treated as an empty object; a binary value is not a JSON object.
             try:
-                current_data = json.loads(current.get("SecretString") or "")
+                current_data = json.loads(current_string or "{}") if current_string is not None else None
             except ValueError:
                 current_data = None
             if not isinstance(current_data, dict):
-                module.fail_json(msg="Secret '{0}' does not contain a JSON object, so the new value cannot be merged into it.".format(name))
+                if not module.params["replace_non_object"]:
+                    module.fail_json(msg="Secret '{0}' does not contain a JSON object, so the new value cannot be merged into it.".format(name))
+                module.warn("Secret '{0}' does not contain a JSON object, so its value is replaced.".format(name))
+                current_data = {}
         patch = json.loads(desired)
         if isinstance(patch, dict):
             for key in module.params["replace_keys"]:
