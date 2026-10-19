@@ -1,0 +1,58 @@
+---
+# Locale provider of a new cluster (initdb options in Patroni bootstrap.initdb).
+# Fail here on combinations that initdb rejects, instead of failing during the Patroni bootstrap.
+
+- name: Locale provider | Checking postgresql_locale_provider value
+  ansible.builtin.fail:
+    msg:
+      - "Unsupported postgresql_locale_provider: '{{ postgresql_locale_provider }}'."
+      - "Supported values: '' (initdb default), 'libc', 'icu', 'builtin'."
+  when: postgresql_locale_provider | default('') not in ['', 'libc', 'icu', 'builtin']
+
+- name: Locale provider | Checking PostgreSQL version
+  ansible.builtin.fail:
+    msg:
+      - "The current PostgreSQL version ({{ postgresql_version }}) does not support postgresql_locale_provider: '{{ postgresql_locale_provider }}'."
+      - "PostgreSQL version must be {{ locale_provider_minimal_pg_version }} or higher."
+  vars:
+    locale_provider_minimal_pg_version: "{{ 17 if postgresql_locale_provider == 'builtin' else 15 }}"
+  when:
+    - postgresql_locale_provider | default('') in ['libc', 'icu', 'builtin']
+    - postgresql_version | int < locale_provider_minimal_pg_version | int
+
+# initdb 15 requires an ICU locale; 16+ would take it from postgresql_locale. It is required here on every version, so the ICU locale is an explicit choice.
+- name: Locale provider | Checking postgresql_icu_locale
+  ansible.builtin.fail:
+    msg:
+      - "postgresql_icu_locale must be set when postgresql_locale_provider is 'icu' (e.g. 'und' or 'en-US'), current: '{{ postgresql_icu_locale }}'."
+      - "Quote the value in YAML: an unquoted no is read as a boolean."
+  when:
+    - postgresql_locale_provider | default('') == 'icu'
+    - postgresql_icu_locale | default('') is not string or postgresql_icu_locale | default('') | length == 0
+
+# Encodings without an ICU name in PostgreSQL (pg_enc2icu_tbl in src/common/encnames.c), with their aliases
+- name: Locale provider | Checking postgresql_encoding for the ICU provider
+  ansible.builtin.fail:
+    msg: "postgresql_encoding '{{ postgresql_encoding }}' is not supported with the ICU locale provider."
+  when:
+    - postgresql_locale_provider | default('') == 'icu'
+    - postgresql_encoding | lower | regex_replace('[^a-z0-9]', '') in ['sqlascii', 'muleinternal', 'eucjis2004', 'latin10', 'iso885916', 'win874', 'windows874']
+
+- name: Locale provider | Checking postgresql_builtin_locale
+  ansible.builtin.fail:
+    msg:
+      - "Unsupported postgresql_builtin_locale: '{{ postgresql_builtin_locale }}' (PostgreSQL {{ postgresql_version }})."
+      - "Supported values: {{ builtin_locales | join(', ') }}."
+  vars:
+    builtin_locales: "{{ ['C', 'C.UTF-8'] + (['PG_UNICODE_FAST'] if postgresql_version | int >= 18 else []) }}"
+  when:
+    - postgresql_locale_provider | default('') == 'builtin'
+    - postgresql_builtin_locale | default('') not in builtin_locales
+
+- name: Locale provider | Checking postgresql_encoding for the builtin provider
+  ansible.builtin.fail:
+    msg: "postgresql_builtin_locale '{{ postgresql_builtin_locale }}' requires postgresql_encoding 'UTF8' (current: '{{ postgresql_encoding }}')."
+  when:
+    - postgresql_locale_provider | default('') == 'builtin'
+    - postgresql_builtin_locale | default('') in ['C.UTF-8', 'PG_UNICODE_FAST']
+    - postgresql_encoding | lower | regex_replace('[^a-z0-9]', '') not in ['utf8', 'unicode']

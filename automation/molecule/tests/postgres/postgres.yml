@@ -17,3 +17,22 @@
     login_port: "{{ postgresql_port }}"
     login_user: "{{ patroni_superuser_username }}"
     login_db: template1
+
+# The default scenario deploys with postgresql_locale_provider: "builtin" and postgresql_builtin_locale: "C.UTF-8" (see default/converge.yml)
+- name: Get the locale provider of the template databases
+  community.postgresql.postgresql_query:
+    query: "SELECT datname, datlocprovider, datlocale FROM pg_database WHERE datname IN ('template0', 'template1') ORDER BY datname"
+    login_unix_socket: "{{ postgresql_unix_socket_dir }}"
+    login_port: "{{ postgresql_port }}"
+    login_user: "{{ patroni_superuser_username }}"
+    login_db: template1
+  register: pg_locale_provider
+
+- name: Check that initdb used the builtin locale provider
+  ansible.builtin.assert:
+    that:
+      - pg_locale_provider.query_result | length == 2
+      - pg_locale_provider.query_result | map(attribute='datlocprovider') | unique | list == ['b']
+      - pg_locale_provider.query_result | map(attribute='datlocale') | unique | list == ['C.UTF-8']
+    fail_msg: "Expected locale provider 'b' (builtin) and locale 'C.UTF-8', got {{ pg_locale_provider.query_result }}"
+    success_msg: "template0 and template1 use the builtin locale provider (C.UTF-8)"

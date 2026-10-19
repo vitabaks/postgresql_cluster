@@ -1,0 +1,30 @@
+---
+# 🚀 Render the real patroni.yml.j2 for one case (initdb_locale_case) and compare bootstrap.initdb with the expected list
+# Included from ../variables/initdb_locale.yml
+
+- name: Molecule.tests.roles.patroni.initdb_locale.render | Render patroni.yml ({{ initdb_locale_case.name }})
+  run_once: true
+  delegate_to: localhost
+  ansible.builtin.template:
+    src: "{{ playbook_dir }}/../../roles/patroni/templates/patroni.yml.j2"
+    dest: "./tmp/patroni.initdb_locale.{{ initdb_locale_case.name }}.yml"
+    mode: "0600"
+  vars:
+    etcd_hosts: "{{ groups['etcd_cluster'] | default([]) }}"
+
+- name: Molecule.tests.roles.patroni.initdb_locale.render | Read rendered patroni.yml ({{ initdb_locale_case.name }})
+  run_once: true
+  delegate_to: localhost
+  ansible.builtin.slurp:
+    src: "./tmp/patroni.initdb_locale.{{ initdb_locale_case.name }}.yml"
+  register: initdb_locale_rendered
+
+- name: Molecule.tests.roles.patroni.initdb_locale.render | Validate bootstrap.initdb ({{ initdb_locale_case.name }})
+  run_once: true
+  ansible.builtin.assert:
+    that:
+      - initdb_locale_initdb == initdb_locale_case.expected
+    fail_msg: "Test failed ({{ initdb_locale_case.name }}): bootstrap.initdb is {{ initdb_locale_initdb }}, expected {{ initdb_locale_case.expected }}."
+    success_msg: "Test passed ({{ initdb_locale_case.name }}): bootstrap.initdb is {{ initdb_locale_initdb }}."
+  vars:
+    initdb_locale_initdb: "{{ (initdb_locale_rendered.content | b64decode | from_yaml).bootstrap.initdb }}"

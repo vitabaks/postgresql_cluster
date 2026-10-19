@@ -19,6 +19,12 @@
   ansible.builtin.import_tasks: system.yml
   when: inventory_hostname in groups['postgres_cluster']
 
+- name: Perform pre-checks for locale provider (initdb)
+  ansible.builtin.import_tasks: locale.yml
+  when:
+    - inventory_hostname in groups['postgres_cluster']
+    - not (postgresql_cluster_maintenance | default(false) | bool) # exclude for config_pgcluster.yml and add_node.yml
+
 - name: Perform pre-checks for pgbouncer
   ansible.builtin.import_tasks: pgbouncer.yml
   when:

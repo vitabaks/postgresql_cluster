@@ -19,6 +19,8 @@
           else (['etcd', 'consul'] | random) }}" # TODO: Consul support for RHEL 10, Debian 13
         consul_node_role: server # if dcs_type: "consul"
         postgresql_version: 18
+        postgresql_locale_provider: "builtin" # Test the builtin locale provider (initdb)
+        postgresql_builtin_locale: "C.UTF-8"
         pgbouncer_processes: 2 # Test multiple pgbouncer processes (so_reuseport)
         patroni_tags: "datacenter=dc1,key1=value1"
         balancer_tags: "datacenter=dc1"
