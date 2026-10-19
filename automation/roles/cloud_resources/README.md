@@ -3,9 +3,8 @@
 Provision the PostgreSQL cluster infrastructure in public clouds (AWS, GCP, Azure, DigitalOcean, Hetzner). The role can:
 
 - Create/delete servers (count, size, image, region), distributed across availability zones (AWS, GCP, Azure)
-- Place Hetzner servers on different physical hosts using a spread placement group
 - Configure private networking/VPC/VNet and firewalls/Security Groups
-- Optionally create Load Balancers (AWS NLB, GCP TCP Proxy, Azure LB, DO LB, Hetzner LB)
+- Optionally create Load Balancers (AWS NLB, GCP TCP Proxy, Azure LB, DigitalOcean LB, Hetzner LB)
 - Optionally create object storage for backups (S3/GCS/Azure Blob/Spaces/Hetzner Object Storage)
 - Generate in-memory inventory (postgres_cluster, master/replica, etcd_cluster/consul_instances).
 
@@ -45,9 +44,9 @@ The zone placement variables apply to AWS, GCP and Azure; see [Availability zone
 | server_network | string | "" | Existing network/subnet/VPC. If provided, the server will be added to this network (needs to be created beforehand) |
 | server_spot | bool | false | Spot/preemptible where supported. Applicable for AWS, GCP, Azure |
 | server_public_ip | bool | true | Assign public IPs to servers |
-| server_zones_count | int | 3 | Required number of zones to select. Set to `1` for single-zone placement. |
-| server_zones | list | [] | Preferred zones in priority order. If empty, zones are selected automatically. |
-| server_placement | dict | {} | Explicit zone overrides for new servers, keyed by server name. |
+| server_zones_count | int | 3 | Required number of zones to select. Set to `1` for single-zone placement. AWS, GCP and Azure only. |
+| server_zones | list | [] | Preferred zones in priority order. If empty, zones are selected automatically. AWS, GCP and Azure only. |
+| server_placement | dict | {} | Explicit zone overrides for new servers, keyed by server name. AWS, GCP and Azure only. |
 | volume_type | string | "" | Data disk type. Set to `local` to use the system disk and skip creating an external data disk. Defaults: 'gp3' for AWS, 'pd-ssd' for GCP, 'StandardSSD_LRS' for Azure |
 | volume_size | int | 100 | Data disk size (GB). Set to `0` to use the system disk; this is equivalent to `volume_type: local` |
 | system_volume_type | string | "" | System disk type. Defaults: 'gp3' for AWS, 'pd-ssd' for GCP, 'StandardSSD_LRS' for Azure |
@@ -144,36 +143,14 @@ Set `cloud_backup_provider` when backup storage should be provisioned in a diffe
 | Hetzner | hcloud_network_ip_range | string | 10.0.0.0/16 | Network CIDR. |
 | Hetzner | hcloud_subnetwork_ip_range | string | 10.0.1.0/24 | Subnet CIDR. |
 
-### Hetzner placement groups
-
-By default, all Hetzner cluster servers are assigned to a `spread` placement group named `<patroni_cluster_name>-<server_location>`.
-The group is reused when scaling the cluster and deleted after the servers when `state: absent`.
-Hetzner guarantees that servers in the group run on different physical hosts; this does not provide availability-zone isolation.
-See the [Hetzner placement group FAQ](https://docs.hetzner.com/cloud/placement-groups/faq/).
-
-A spread group supports at most 10 servers. When `hetzner_placement_group` is enabled, deployment fails if `server_count` exceeds this limit.
-Set `hetzner_placement_group: false` to skip placement group management during provisioning, without guaranteed host separation.
-This setting leaves existing server placement unchanged; cluster deletion still removes the managed group.
-
-For example, to grow a cluster from 10 to 11 servers:
-
-```yaml
-server_count: 11
-hetzner_placement_group: false
-```
-
-The original 10 servers remain in their group, while the new server is created without a placement group.
-Keep the setting disabled on subsequent runs while the cluster exceeds 10 servers.
-
-Existing servers outside the group must be powered off before they can be added.
-The role fails if any such server is running and never forces a shutdown or moves a running node between groups.
-For an existing cluster, migrate nodes individually during maintenance using Hetzner's controls, preserving a healthy primary and DCS quorum,
-then rerun provisioning once all existing nodes belong to the group. Alternatively, disable the feature to retain their current placement.
-
 ### Availability zones
 
 AWS, GCP and Azure support placement across availability zones. The role selects `server_zones_count` zones (3 by default).
 Surviving a zone failure also requires a healthy database replica and a DCS quorum; see [DCS cluster](#dcs-cluster).
+
+DigitalOcean is not included in the role's multi-AZ placement because its managed load balancers cannot provide a PostgreSQL TCP endpoint across datacenters. [Regional load balancers](https://docs.digitalocean.com/products/networking/load-balancers/details/features/) serve a single datacenter, while [global load balancers](https://docs.digitalocean.com/products/networking/load-balancers/how-to/manage-global-load-balancers/#forwarding-rules) support only HTTP(S) forwarding; TCP is supported for health checks only.
+
+Hetzner Cloud does not expose availability zones within its [locations](https://docs.hetzner.com/cloud/general/locations/) and is not included in multi-AZ placement. [Spread placement groups](#hetzner-placement-groups) separate servers across physical hosts but do not provide availability-zone isolation.
 
 Cross-zone replication adds network latency, including to commits when `synchronous_mode` is enabled.
 Consider your provider's inter-zone traffic costs when choosing a placement. Set `server_zones_count: 1` for a single-zone cluster.
@@ -313,6 +290,32 @@ Replace replicas one at a time:
 1. Remove a replica using `remove_node.yml`, delete its cloud VM and wait for deletion to finish (`terminated` for EC2).
 2. Add it again using `add_node.yml` with the same desired `server_count`. The role applies the new placement and updates the load balancers.
 3. Repeat for the remaining replicas. Switch over to a replica before replacing the primary.
+
+### Hetzner placement groups
+
+By default, all Hetzner cluster servers are assigned to a `spread` placement group named `<patroni_cluster_name>-<server_location>`.
+The group is reused when scaling the cluster and deleted after the servers when `state: absent`.
+Hetzner guarantees that servers in the group run on different physical hosts; this does not provide availability-zone isolation.
+See the [Hetzner placement group FAQ](https://docs.hetzner.com/cloud/placement-groups/faq/).
+
+A spread group supports at most 10 servers. When `hetzner_placement_group` is enabled, deployment fails if `server_count` exceeds this limit.
+Set `hetzner_placement_group: false` to skip placement group management during provisioning, without guaranteed host separation.
+This setting leaves existing server placement unchanged; cluster deletion still removes the managed group.
+
+For example, to grow a cluster from 10 to 11 servers:
+
+```yaml
+server_count: 11
+hetzner_placement_group: false
+```
+
+The original 10 servers remain in their group, while the new server is created without a placement group.
+Keep the setting disabled on subsequent runs while the cluster exceeds 10 servers.
+
+Existing servers outside the group must be powered off before they can be added.
+The role fails if any such server is running and never forces a shutdown or moves a running node between groups.
+For an existing cluster, migrate nodes individually during maintenance using Hetzner's controls, preserving a healthy primary and DCS quorum,
+then rerun provisioning once all existing nodes belong to the group. Alternatively, disable the feature to retain their current placement.
 
 ## Custom resource tags
 
