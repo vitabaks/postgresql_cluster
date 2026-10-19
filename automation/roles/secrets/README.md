@@ -40,7 +40,7 @@ Stores Autobase values in an external secrets provider. The role is disabled whe
 
 Secrets are created or updated by default. They are deleted only when `state: absent` is set explicitly. Removing an item from configuration does not delete it.
 
-Secret names must be unique across `secrets_values`, exported PostgreSQL users, and the automatically exported `postgresql/connection` value. Duplicate names are not rejected. They are processed in order, so the last value wins; different values for the same name also cause repeated updates on every run. The only exception is a shared secret for users and connection info in [value-only mode](#postgresql-users-and-connection-info-in-value-only-mode). The own `secret` of a PostgreSQL user is checked: the run fails if it matches another user's secret or any other secret written in the run.
+Secret names must be unique across `secrets_values`, exported PostgreSQL users, and the automatically exported `postgresql/connection` value. Duplicate names are not rejected. They are processed in order, so the last value wins; different values for the same name also cause repeated updates on every run. The exceptions are a shared secret for users and connection info, and `secrets_values` entries with `merge: true`, which add their keys to the same secret in [value-only mode](#postgresql-users-and-connection-info-in-value-only-mode). The own `secret` of a PostgreSQL user is checked: the run fails if it matches another user's secret or any other secret written in the run.
 
 The automatically exported `postgresql/connection` secret contains only connection endpoints. Export is skipped when connection information is unavailable or contains `N/A`, preserving any existing secret. Store credentials separately through `secrets_values`, for example as `postgresql/superuser`, when required.
 
@@ -227,6 +227,8 @@ In this mode Autobase:
 
 The mode can also be set for a single `secrets_values` entry with `value_only: true` or `value_only: false`, which overrides `secrets_aws_value_only`. Automatically exported PostgreSQL users and connection info follow `secrets_aws_value_only`.
 
+In value-only mode, a `secrets_values` entry with a dictionary value can set `merge: true` to merge its keys into the current value of the secret instead of replacing it. Keys set to `null` are removed. Merging requires `secrets_aws_value_compare: true` and `secrets_aws_secret_type: string`; other combinations are rejected by pre-checks. The current value must be empty or a JSON object. Set `replace_non_object: true` on the entry to replace any other value, for example a placeholder string set by Terraform, with a warning. Entries are written before the automatically exported secrets.
+
 Required permissions in this mode:
 
 | Permissions | When required |
@@ -249,13 +251,15 @@ The new data is merged into the current value of the secret instead of replacing
 - Users with `state: absent` are removed from `users`, unless they have their own `secret`.
 - Other keys of the secret, for example those added by Terraform, are kept.
 
-Merging requires reading the current value, so `secrets_aws_value_compare: false` is rejected when users are exported to the shared secret: when any `postgresql_users` entry has no own `secret`, or when the users path equals the connection info path and connection info is exported. Users with their own secret are written without merging and work with `secrets_aws_value_compare: false`. The current value must be empty or a JSON object.
+Merging requires reading the current value, so `secrets_aws_value_compare: false` is rejected when users are exported to the shared secret: when any `postgresql_users` entry has no own `secret`, or when the users path equals the connection info path and connection info is exported. Users with their own secret are written without merging and work with `secrets_aws_value_compare: false`. If the current value is not a JSON object, for example a placeholder string set by Terraform, it is replaced and the run shows a warning.
 
 Create the users secret before adding users. Secrets are written after the users are created in PostgreSQL, so if the secret is missing, the run fails and a password generated in that run is lost; the user then needs a new password.
 
 Merging reads and writes the whole secret. If two Autobase runs update the same secret at the same time, one of them may overwrite the changes of the other.
 
-Connection info is stored under the `connection` key. When it changes, the whole `connection` object is replaced, so keys removed from the cluster configuration are also removed from the secret.
+Connection info is stored under the `connection` key and merged into the current value of its secret. When it changes, the whole `connection` object is replaced, so keys removed from the cluster configuration are also removed from the secret. Other keys of the secret are kept, so the connection info secret can also hold other data about the database, for example keys added by Terraform or by a `secrets_values` entry with `merge: true`. If the current value is not a JSON object, for example a placeholder string set by Terraform, it is replaced and the run shows a warning. Merging requires `secrets_aws_value_compare: true` and `secrets_aws_secret_type: string`. Otherwise, a connection info secret that is not shared with users is written without merging: its whole value is replaced, and other keys stored in it are removed.
+
+Keys are never removed from a merged secret automatically. For example, if the users path no longer equals the connection info path, the old `users` key stays in the connection info secret and is no longer updated; remove it manually.
 
 Set the same path for users and connection info to store both in one secret:
 
@@ -282,4 +286,4 @@ secrets_connection_info_path: "/backend/production/autobase-db"
 }
 ```
 
-With separate paths, users are stored under the `users` key of their secret and connection info under the `connection` key of its own secret. The connection info secret is written without merging, so it works with `secrets_aws_value_compare: false`; its whole value is replaced, and any other keys stored in it are removed.
+With separate paths, users are stored under the `users` key of their secret and connection info under the `connection` key of its own secret. Both secrets are merged, so other keys stored in them are kept. With `secrets_aws_value_compare: false`, the connection info secret is replaced entirely instead.
