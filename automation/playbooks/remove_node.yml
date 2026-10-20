@@ -31,6 +31,14 @@
       when: removal_node_facts is not unreachable
       tags: always
 
+    - name: Group available nodes for cluster queries
+      ansible.builtin.group_by:
+        key: removal_query_nodes
+      when:
+        - removal_node_facts is not unreachable
+        - node_to_remove not in [inventory_hostname, ansible_hostname | default(''), consul_node_name | default('')]
+      tags: always
+
     - name: Define bind_address
       ansible.builtin.include_role:
         name: vitabaks.autobase.bind_address
@@ -44,53 +52,59 @@
         - name: Fetch Patroni cluster members before removal
           run_once: true # noqa run-once
           ansible.builtin.command: >-
-            patronictl -c {{ patroni_config_file | default('/etc/patroni/patroni.yml') }} list --format=json
+            patronictl -c {{ hostvars[query_host].patroni_config_file | default('/etc/patroni/patroni.yml') }} list --format=json
           environment:
-            PATH: "{{ ansible_env.PATH | default('/usr/bin:/bin') }}:/usr/bin:/usr/local/bin"
+            PATH: "{{ hostvars[query_host].ansible_env.PATH | default('/usr/bin:/bin') }}:/usr/bin:/usr/local/bin"
           register: patronictl_list_before
           changed_when: false
-          delegate_to: >-
-            {{ groups['postgres_cluster'] | default([]) | intersect(groups['removal_available_nodes'] | default([]))
-               | first | default('localhost') }}
-          when: groups['postgres_cluster'] | default([]) | intersect(groups['removal_available_nodes'] | default([])) | length > 0
+          delegate_to: "{{ query_host }}"
+          vars:
+            query_host: >-
+              {{ groups['postgres_cluster'] | default([]) | intersect(groups['removal_query_nodes'] | default([]))
+                 | first | default('localhost') }}
+          when: groups['postgres_cluster'] | default([]) | intersect(groups['removal_query_nodes'] | default([])) | length > 0
 
         - name: Fetch etcd cluster members before removal
           run_once: true # noqa run-once
           ansible.builtin.command: >-
-            {{ etcd_bin_dir | default('/usr/local/bin') }}/etcdctl member list --write-out=json
-            {% if etcd_tls_enable | default(true) | bool %}
-            --cacert={{ etcd_tls_dir | default('/etc/etcd/tls') }}/{{ etcd_tls_ca_crt | default('ca.crt') }}
-            --cert={{ etcd_tls_dir | default('/etc/etcd/tls') }}/{{ etcd_tls_server_crt | default('server.crt') }}
-            --key={{ etcd_tls_dir | default('/etc/etcd/tls') }}/{{ etcd_tls_server_key | default('server.key') }}
+            {{ hostvars[query_host].etcd_bin_dir | default('/usr/local/bin') }}/etcdctl member list --write-out=json
+            {% if hostvars[query_host].etcd_tls_enable | default(true) | bool %}
+            --cacert={{ hostvars[query_host].etcd_tls_dir | default('/etc/etcd/tls') }}/{{ hostvars[query_host].etcd_tls_ca_crt | default('ca.crt') }}
+            --cert={{ hostvars[query_host].etcd_tls_dir | default('/etc/etcd/tls') }}/{{ hostvars[query_host].etcd_tls_server_crt | default('server.crt') }}
+            --key={{ hostvars[query_host].etcd_tls_dir | default('/etc/etcd/tls') }}/{{ hostvars[query_host].etcd_tls_server_key | default('server.key') }}
             {% endif %}
           environment:
             ETCDCTL_API: "3"
           register: etcd_members_list_before
           changed_when: false
-          delegate_to: >-
-            {{ groups['etcd_cluster'] | default([]) | intersect(groups['removal_available_nodes'] | default([]))
-               | first | default('localhost') }}
+          delegate_to: "{{ query_host }}"
+          vars:
+            query_host: >-
+              {{ groups['etcd_cluster'] | default([]) | intersect(groups['removal_query_nodes'] | default([]))
+                 | first | default('localhost') }}
           when:
-            - dcs_type | default('etcd') == 'etcd'
-            - groups['etcd_cluster'] | default([]) | intersect(groups['removal_available_nodes'] | default([])) | length > 0
+            - groups['etcd_cluster'] | default([]) | intersect(groups['removal_query_nodes'] | default([])) | length > 0
+            - hostvars[query_host].dcs_type | default('etcd') == 'etcd'
 
         - name: Fetch consul cluster members before removal
           run_once: true # noqa run-once
           ansible.builtin.command: >-
             consul operator raft list-peers
-            -http-addr={{ 'https' if consul_tls_enable | default(true) | bool else 'http' }}://127.0.0.1:8500
-            {% if consul_tls_enable | default(true) | bool %}
+            -http-addr={{ 'https' if hostvars[query_host].consul_tls_enable | default(true) | bool else 'http' }}://127.0.0.1:8500
+            {% if hostvars[query_host].consul_tls_enable | default(true) | bool %}
             -ca-file=/etc/consul/tls/ca.crt
             -client-cert=/etc/consul/tls/server.crt -client-key=/etc/consul/tls/server.key
             {% endif %}
           register: consul_members_list_before
           changed_when: false
-          delegate_to: >-
-            {{ groups['consul_instances'] | default([]) | intersect(groups['removal_available_nodes'] | default([]))
-               | first | default('localhost') }}
+          delegate_to: "{{ query_host }}"
+          vars:
+            query_host: >-
+              {{ groups['consul_instances'] | default([]) | intersect(groups['removal_query_nodes'] | default([]))
+                 | first | default('localhost') }}
           when:
-            - dcs_type | default('etcd') == 'consul'
-            - groups['consul_instances'] | default([]) | intersect(groups['removal_available_nodes'] | default([])) | length > 0
+            - groups['consul_instances'] | default([]) | intersect(groups['removal_query_nodes'] | default([])) | length > 0
+            - hostvars[query_host].dcs_type | default('etcd') == 'consul'
 
         # Match inventory addresses to member names without facts from the offline node.
         - name: Match node_to_remove to inventory and cluster aliases
@@ -99,10 +113,11 @@
               {%- set result = [] -%}
               {%- for host in groups['all'] -%}
               {%- set addresses = [host, hostvars[host].ansible_host | default(''),
-                    hostvars[host].bind_address | default(''), hostvars[host].etcd_bind_address | default('')] -%}
+                    hostvars[host].bind_address | default(''), hostvars[host].etcd_bind_address | default(''),
+                    hostvars[host].patroni_bind_address | default(''), hostvars[host].postgresql_connect_addr | default('')] -%}
               {%- set aliases = [host, hostvars[host].ansible_hostname | default(host)] -%}
               {%- for member in patroni_members -%}
-              {%- if member.Host | regex_replace(':[0-9]+$', '') in addresses -%}
+              {%- if member.Host in addresses or member.Host | regex_replace(':[0-9]+$', '') in addresses -%}
               {%- set _ = aliases.append(member.Member) -%}
               {%- endif -%}
               {%- endfor -%}
@@ -189,6 +204,18 @@
 
   pre_tasks:
     - block:
+        - name: Refresh Patroni cluster members before the primary check
+          run_once: true # noqa run-once
+          ansible.builtin.command: >-
+            patronictl -c {{ hostvars[query_host].patroni_config_file | default('/etc/patroni/patroni.yml') }} list --format=json
+          register: patronictl_list_before
+          changed_when: false
+          environment:
+            PATH: "{{ hostvars[query_host].ansible_env.PATH | default('/usr/bin:/bin') }}:/usr/bin:/usr/local/bin"
+          delegate_to: "{{ query_host }}"
+          vars:
+            query_host: "{{ groups['removal_postgres_survivors'] | default([]) | first | default('localhost') }}"
+
         - name: Show Patroni cluster members before removal
           run_once: true # noqa run-once
           ansible.builtin.debug:
@@ -212,7 +239,11 @@
               - "{{ target_node }}"
               - "{{ hostvars[target_node].ansible_host | default('') }}"
               - "{{ hostvars[target_node].bind_address | default('') }}"
-      when: groups['removal_postgres_survivors'] | default([]) | length > 0
+              - "{{ hostvars[target_node].patroni_bind_address | default('') }}"
+              - "{{ hostvars[target_node].postgresql_connect_addr | default('') }}"
+      when:
+        - target_node in (groups['postgres_cluster'] | default([]))
+        - groups['removal_postgres_survivors'] | default([]) | length > 0
       tags: always
 
   tasks:
