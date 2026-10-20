@@ -20,8 +20,8 @@
         consul_node_role: server # if dcs_type: "consul"
         postgresql_version: 18
         postgresql_locale_provider: "{{ ['', 'libc', 'icu', 'builtin'] | random }}"
-        postgresql_icu_locale: "und"
-        postgresql_builtin_locale: "C.UTF-8"
+        postgresql_icu_locale: "{{ ['und', 'en-US'] | random }}"
+        postgresql_builtin_locale: "{{ ['C', 'C.UTF-8', 'PG_UNICODE_FAST'] | random }}"
         pgbouncer_processes: 2 # Test multiple pgbouncer processes (so_reuseport)
         patroni_tags: "datacenter=dc1,key1=value1"
         balancer_tags: "datacenter=dc1"
