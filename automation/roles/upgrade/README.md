@@ -323,10 +323,9 @@ Note: For more information, see the `upgrade` role [variables](../upgrade/defaul
       - Perform pg_dropcluster (for Debian based)
       - Clear the new PostgreSQL data directory
   - Get the current install user (rolname with oid = 10)
-  - Get the current encoding and data_checksums settings
+  - Get the current encoding, locale, and data_checksums settings
   - Initialize new PostgreSQL data directory
-    - for Debian based: on all database servers to create default config files
-    - for RedHat based: on the primary only
+    - Preserve the source locale and checksums settings
 - **Copy files specified in the `upgrade_copy_files_to_all_server` variable** [optional]
   - Notes: for example, it may be necessary for Postgres Full-Text Search (FTS) files
 - **Schema compatibility check**
