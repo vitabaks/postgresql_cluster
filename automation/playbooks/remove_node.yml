@@ -1,8 +1,13 @@
 ---
+# Unavailable nodes can be removed using the remaining cluster members, provided the DCS still has quorum.
+# When facts for an unavailable node are missing, its name is resolved through DCS or Patroni membership addresses.
+# Use its inventory_hostname if its name is no longer present in cluster membership.
+# Local service and data cleanup is skipped on unavailable nodes.
 - name: vitabaks.autobase.remove_node | Prepare and perform pre-checks
   hosts: postgres_cluster:etcd_cluster:consul_instances
   become: true
-  gather_facts: true
+  gather_facts: false
+  any_errors_fatal: true
 
   pre_tasks:
     - name: Validate that node_to_remove is specified
@@ -13,38 +18,157 @@
           to remove from the cluster.
       when: node_to_remove | default('') | length == 0
 
+    - name: Gather facts from available nodes
+      ansible.builtin.setup:
+      register: removal_node_facts
+      ignore_unreachable: true
+      any_errors_fatal: false
+      tags: always
+
+    - name: Group available nodes for removal tasks
+      ansible.builtin.group_by:
+        key: removal_available_nodes
+      when: removal_node_facts is not unreachable
+      tags: always
+
     - name: Define bind_address
       ansible.builtin.include_role:
         name: vitabaks.autobase.bind_address
-      when: bind_address is not defined
+      when:
+        - removal_node_facts is not unreachable
+        - bind_address is not defined
       tags: always
 
-    # Normalize supported node aliases for reliable group and hostvars lookups.
-    - name: Resolve node_to_remove to its inventory hostname
-      ansible.builtin.set_fact:
-        target_node: >-
-          {%- set requested_node = node_to_remove | default('') -%}
-          {%- set resolved = namespace(name=requested_node) -%}
-          {%- for host in groups['all'] | default([]) -%}
-          {%- set aliases = [
-            host,
-            hostvars[host].ansible_hostname | default('')
-          ] -%}
-          {%- if requested_node in aliases -%}
-          {%- set resolved.name = host -%}
-          {%- endif -%}
-          {%- endfor -%}
-          {{- resolved.name -}}
+    - name: Resolve node_to_remove
+      block:
+        - name: Fetch Patroni cluster members before removal
+          run_once: true # noqa run-once
+          ansible.builtin.command: >-
+            patronictl -c {{ patroni_config_file | default('/etc/patroni/patroni.yml') }} list --format=json
+          environment:
+            PATH: "{{ ansible_env.PATH | default('/usr/bin:/bin') }}:/usr/bin:/usr/local/bin"
+          register: patronictl_list_before
+          changed_when: false
+          delegate_to: >-
+            {{ groups['postgres_cluster'] | default([]) | intersect(groups['removal_available_nodes'] | default([]))
+               | first | default('localhost') }}
+          when: groups['postgres_cluster'] | default([]) | intersect(groups['removal_available_nodes'] | default([])) | length > 0
+
+        - name: Fetch etcd cluster members before removal
+          run_once: true # noqa run-once
+          ansible.builtin.command: >-
+            {{ etcd_bin_dir | default('/usr/local/bin') }}/etcdctl member list --write-out=json
+            {% if etcd_tls_enable | default(true) | bool %}
+            --cacert={{ etcd_tls_dir | default('/etc/etcd/tls') }}/{{ etcd_tls_ca_crt | default('ca.crt') }}
+            --cert={{ etcd_tls_dir | default('/etc/etcd/tls') }}/{{ etcd_tls_server_crt | default('server.crt') }}
+            --key={{ etcd_tls_dir | default('/etc/etcd/tls') }}/{{ etcd_tls_server_key | default('server.key') }}
+            {% endif %}
+          environment:
+            ETCDCTL_API: "3"
+          register: etcd_members_list_before
+          changed_when: false
+          delegate_to: >-
+            {{ groups['etcd_cluster'] | default([]) | intersect(groups['removal_available_nodes'] | default([]))
+               | first | default('localhost') }}
+          when:
+            - dcs_type | default('etcd') == 'etcd'
+            - groups['etcd_cluster'] | default([]) | intersect(groups['removal_available_nodes'] | default([])) | length > 0
+
+        - name: Fetch consul cluster members before removal
+          run_once: true # noqa run-once
+          ansible.builtin.command: >-
+            consul operator raft list-peers
+            -http-addr={{ 'https' if consul_tls_enable | default(true) | bool else 'http' }}://127.0.0.1:8500
+            {% if consul_tls_enable | default(true) | bool %}
+            -ca-file=/etc/consul/tls/ca.crt
+            -client-cert=/etc/consul/tls/server.crt -client-key=/etc/consul/tls/server.key
+            {% endif %}
+          register: consul_members_list_before
+          changed_when: false
+          delegate_to: >-
+            {{ groups['consul_instances'] | default([]) | intersect(groups['removal_available_nodes'] | default([]))
+               | first | default('localhost') }}
+          when:
+            - dcs_type | default('etcd') == 'consul'
+            - groups['consul_instances'] | default([]) | intersect(groups['removal_available_nodes'] | default([])) | length > 0
+
+        # Match inventory addresses to member names without facts from the offline node.
+        - name: Match node_to_remove to inventory and cluster aliases
+          ansible.builtin.set_fact:
+            removal_candidates: >-
+              {%- set result = [] -%}
+              {%- for host in groups['all'] -%}
+              {%- set addresses = [host, hostvars[host].ansible_host | default(''),
+                    hostvars[host].bind_address | default(''), hostvars[host].etcd_bind_address | default('')] -%}
+              {%- set aliases = [host, hostvars[host].ansible_hostname | default(host)] -%}
+              {%- for member in patroni_members -%}
+              {%- if member.Host | regex_replace(':[0-9]+$', '') in addresses -%}
+              {%- set _ = aliases.append(member.Member) -%}
+              {%- endif -%}
+              {%- endfor -%}
+              {%- for member in etcd_members -%}
+              {%- if member.name and member.peerURLs | map('urlsplit', 'hostname') | intersect(addresses) | length > 0 -%}
+              {%- set _ = aliases.append(member.name) -%}
+              {%- endif -%}
+              {%- endfor -%}
+              {%- for line in consul_members -%}
+              {%- set columns = line.split() -%}
+              {%- if ('http://' ~ columns[2]) | urlsplit('hostname') in addresses -%}
+              {%- set _ = aliases.append(columns[0]) -%}
+              {%- endif -%}
+              {%- endfor -%}
+              {%- if node_to_remove in aliases -%}
+              {%- set _ = result.append({'host': host, 'name': aliases | last}) -%}
+              {%- endif -%}
+              {%- endfor -%}
+              {{- result -}}
+          vars:
+            patroni_members: "{{ patronictl_list_before.stdout | default('[]') | from_json }}"
+            etcd_members: "{{ (etcd_members_list_before.stdout | default('{}') | from_json).get('members', []) }}"
+            consul_members: "{{ (consul_members_list_before.stdout_lines | default([]))[1:] }}"
       tags: always
 
-    - name: Validate that node_to_remove matches an inventory host
+    - name: Validate that node_to_remove matches one inventory host
       run_once: true # noqa run-once
       ansible.builtin.assert:
-        that:
-          - target_node in (groups['all'] | default([]))
+        that: removal_candidates | length == 1
         fail_msg: >-
-          Node '{{ node_to_remove | default('') }}' was not found in the inventory. Specify
-          its inventory_hostname or ansible_hostname.
+          Node '{{ node_to_remove }}' must match exactly one inventory host.
+          Matches: {{ removal_candidates | map(attribute='host') | list }}.
+          Specify its inventory_hostname or cluster member name.
+      tags: always
+
+    - name: Set the resolved inventory hostname and cluster member name
+      ansible.builtin.set_fact:
+        target_node: "{{ removal_candidates[0].host }}"
+        target_node_name: "{{ removal_candidates[0].name }}"
+      tags: always
+
+    - name: Group remaining PostgreSQL nodes
+      ansible.builtin.group_by:
+        key: removal_postgres_survivors
+      when:
+        - inventory_hostname in (groups['postgres_cluster'] | default([]))
+        - inventory_hostname in (groups['removal_available_nodes'] | default([]))
+        - inventory_hostname != target_node
+      tags: always
+
+    - name: Require an available remaining member in each target group
+      run_once: true # noqa run-once
+      ansible.builtin.assert:
+        that: groups[item] | intersect(groups['removal_available_nodes']) | difference([target_node]) | length > 0
+        fail_msg: "Cannot remove '{{ target_node }}' without an available remaining node in '{{ item }}'."
+      loop: [postgres_cluster, etcd_cluster, consul_instances]
+      when: target_node in (groups[item] | default([]))
+      tags: always
+
+    - name: Report skipped local cleanup on an unavailable target
+      run_once: true # noqa run-once
+      ansible.builtin.debug:
+        msg: >-
+          Node '{{ target_node }}' is unavailable. Removing its cluster membership
+          using the remaining nodes; its local services and data cannot be cleaned up.
+      when: target_node not in (groups['removal_available_nodes'] | default([]))
       tags: always
 
     - name: Define passwords
@@ -53,31 +177,22 @@
         tasks_from: passwords
       vars:
         postgresql_cluster_maintenance: true
-      when: inventory_hostname in groups['postgres_cluster'] | default([])
+        source_group: removal_postgres_survivors
+      when: inventory_hostname in (groups['removal_postgres_survivors'] | default([]))
       tags: always
 
 - name: vitabaks.autobase.remove_node | Remove node from PostgreSQL cluster
-  hosts: postgres_cluster
+  hosts: postgres_cluster:&removal_available_nodes
   become: true
   gather_facts: true
+  any_errors_fatal: true
 
   pre_tasks:
     - block:
-        - name: Fetch Patroni cluster members before removal
-          run_once: true # noqa run-once
-          ansible.builtin.command: >-
-            patronictl -c {{ patroni_config_file | default('/etc/patroni/patroni.yml') }} list
-          register: patronictl_list_before
-          changed_when: false
-          environment:
-            PATH: "{{ ansible_env.PATH }}:/usr/bin:/usr/local/bin"
-          when: inventory_hostname != target_node
-
         - name: Show Patroni cluster members before removal
           run_once: true # noqa run-once
           ansible.builtin.debug:
-            msg: "{{ patronictl_list_before.stdout_lines }}"
-          when: inventory_hostname != target_node
+            msg: "{{ patronictl_list_before.stdout | from_json }}"
 
         - name: Fail if trying to remove primary node
           run_once: true # noqa run-once
@@ -85,7 +200,19 @@
             msg: >-
               Cannot remove primary node '{{ target_node }}'. Please perform
               switchover first or specify a replica node.
-          when: patronictl_list_before.stdout is search(target_node + '.*Leader')
+          loop: "{{ patronictl_list_before.stdout | from_json }}"
+          when:
+            - item.Role | lower in ['leader', 'standby leader']
+            - >-
+              item.Member == target_node_name or
+              item.Host in target_addresses or
+              (item.Host | regex_replace(':[0-9]+$', '')) in target_addresses
+          vars:
+            target_addresses:
+              - "{{ target_node }}"
+              - "{{ hostvars[target_node].ansible_host | default('') }}"
+              - "{{ hostvars[target_node].bind_address | default('') }}"
+      when: groups['removal_postgres_survivors'] | default([]) | length > 0
       tags: always
 
   tasks:
@@ -139,8 +266,10 @@
             src: "~postgres/.ssh/id_rsa.pub"
           delegate_to: "{{ target_node }}"
           register: target_node_pubkey
+          ignore_unreachable: true
           when:
             - target_node in (groups['postgres_cluster'] | default([]))
+            - target_node in (groups['removal_available_nodes'] | default([]))
             - postgres_ssh_dir.stat.exists and postgres_ssh_dir.stat.isdir
 
         - name: Remove target node pubkey from authorized_keys
@@ -173,32 +302,16 @@
       tags: postgres, postgresql, ssh_keys
 
 - name: vitabaks.autobase.remove_node | Remove node from etcd cluster
-  hosts: etcd_cluster
+  hosts: etcd_cluster:&removal_available_nodes
   become: true
   gather_facts: false
 
   tasks:
     - block:
-        - name: Fetch etcd cluster members before removal
-          run_once: true # noqa run-once
-          ansible.builtin.command: >-
-            {{ etcd_bin_dir | default('/usr/local/bin') }}/etcdctl member list
-            --write-out=table
-            {% if etcd_tls_enable | default(true) | bool %}
-            --cacert={{ etcd_tls_dir | default('/etc/etcd/tls') }}/{{ etcd_tls_ca_crt | default('ca.crt') }}
-            --cert={{ etcd_tls_dir | default('/etc/etcd/tls') }}/{{ etcd_tls_server_crt | default('server.crt') }}
-            --key={{ etcd_tls_dir | default('/etc/etcd/tls') }}/{{ etcd_tls_server_key | default('server.key') }}
-            {% endif %}
-          environment:
-            ETCDCTL_API: "3"
-          register: etcd_members_list_before
-          changed_when: false
-          delegate_to: "{{ groups['etcd_cluster'] | difference([target_node]) | first }}"
-
         - name: Show etcd cluster members before removal
           run_once: true # noqa run-once
           ansible.builtin.debug:
-            msg: "{{ etcd_members_list_before.stdout_lines }}"
+            msg: "{{ etcd_members_list_before.stdout | from_json }}"
 
         - name: Remove target node from etcd cluster
           ansible.builtin.include_role:
@@ -222,7 +335,7 @@
           until: etcd_members_list_after.rc == 0
           retries: 3
           delay: 5
-          delegate_to: "{{ groups['etcd_cluster'] | difference([target_node]) | first }}"
+          delegate_to: "{{ groups['etcd_cluster'] | intersect(groups['removal_available_nodes']) | difference([target_node]) | first }}"
 
         - name: Show etcd cluster members after removal
           run_once: true # noqa run-once
@@ -232,10 +345,11 @@
       tags: etcd
 
 - name: vitabaks.autobase.remove_node | Remove node from Consul cluster
-  hosts: consul_instances
+  hosts: consul_instances:&removal_available_nodes
   become: true
   gather_facts: true
   vars:
+    consul_removal_delegate: "{{ groups['consul_instances'] | intersect(groups['removal_available_nodes']) | difference([target_node]) | first }}"
     consul_http_addr: "{% if consul_tls_enable | default(true) | bool %}https{% else %}http{% endif %}://127.0.0.1:8500"
     consul_ca_flag: "{% if consul_tls_enable | default(true) | bool %}-ca-file=/etc/consul/tls/ca.crt{% endif %}"
     consul_client_flags: >-
@@ -244,34 +358,19 @@
       {% endif %}
   tasks:
     - block:
-        - name: Fetch consul cluster members before removal
-          run_once: true # noqa run-once
-          ansible.builtin.command: >-
-            consul operator raft list-peers
-            -http-addr={{ consul_http_addr }}
-            {{ consul_ca_flag }}
-          changed_when: false
-          register: consul_members_list_before
-          until: consul_members_list_before.rc == 0
-          retries: 3
-          delay: 5
-          when: inventory_hostname != target_node
-
         - name: Show consul cluster members before removal
           run_once: true # noqa run-once
           ansible.builtin.debug:
             msg: "{{ consul_members_list_before.stdout_lines }}"
-          when: inventory_hostname != target_node
 
         - name: No target node in Consul cluster, skipping removal
           run_once: true # noqa run-once
           ansible.builtin.debug:
             msg: >-
-              Target node '{{ hostvars[target_node].ansible_hostname | default(target_node) }}' not found in Consul cluster members,
+              Target node '{{ target_node_name }}' not found in Consul cluster members,
               skipping removal.
           when:
-            - inventory_hostname != target_node
-            - consul_members_list_before.stdout | default('') is not search(hostvars[target_node].ansible_hostname | default(target_node))
+            - consul_members_list_before.stdout | default('') is not search(target_node_name)
 
         - name: Force-leave target node from consul cluster
           run_once: true # noqa run-once
@@ -279,10 +378,10 @@
             consul force-leave
             -http-addr={{ consul_http_addr }}
             {{ consul_ca_flag }}
-            {{ hostvars[target_node].ansible_hostname | default(target_node) }}
+            {{ target_node_name }}
+          delegate_to: "{{ consul_removal_delegate }}"
           when:
-            - inventory_hostname != target_node
-            - consul_members_list_before.stdout | default('') is search(hostvars[target_node].ansible_hostname | default(target_node))
+            - consul_members_list_before.stdout | default('') is search(target_node_name)
 
         - name: Extract target node Consul Raft ID
           run_once: true # noqa run-once
@@ -293,13 +392,12 @@
             target_line: >-
               {{
                 (consul_members_list_before.stdout_lines
-                  | select('match', '^' ~ (hostvars[target_node].ansible_hostname | default(target_node)) ~ '\s+')
+                  | select('match', '^' ~ (target_node_name) ~ '\s+')
                   | list | first) | default('')
               }}
           when:
-            - inventory_hostname != target_node
             - hostvars[target_node].consul_node_role | default('client') == 'server'
-            - consul_members_list_before.stdout | default('') is search(hostvars[target_node].ansible_hostname | default(target_node))
+            - consul_members_list_before.stdout | default('') is search(target_node_name)
 
         - name: Remove target node from the Raft configuration
           run_once: true # noqa run-once
@@ -309,11 +407,11 @@
             {{ consul_ca_flag }}
             {{ consul_client_flags }}
           register: raft_remove_result
+          delegate_to: "{{ consul_removal_delegate }}"
           until: raft_remove_result.rc == 0
           retries: 3
           delay: 2
           when:
-            - inventory_hostname != target_node
             - hostvars[target_node].consul_node_role | default('client') == 'server'
             - target_raft_id | default('') | length > 0
 
@@ -343,25 +441,24 @@
             {{ consul_ca_flag }}
           changed_when: false
           register: consul_members_list_after
+          delegate_to: "{{ consul_removal_delegate }}"
           until: consul_members_list_after.rc == 0
           retries: 3
           delay: 5
           when:
-            - inventory_hostname != target_node
-            - consul_members_list_before.stdout | default('') is search(hostvars[target_node].ansible_hostname | default(target_node))
+            - consul_members_list_before.stdout | default('') is search(target_node_name)
 
         - name: Show consul cluster members after removal
           run_once: true # noqa run-once
           ansible.builtin.debug:
             msg: "{{ consul_members_list_after.stdout_lines }}"
           when:
-            - inventory_hostname != target_node
             - consul_members_list_after.stdout_lines is defined
       when: dcs_type | default('etcd') == 'consul'
       tags: consul
 
 - name: vitabaks.autobase.remove_node | Finalizing
-  hosts: postgres_cluster
+  hosts: postgres_cluster:&removal_postgres_survivors
   become: true
   gather_facts: true
   tasks:
