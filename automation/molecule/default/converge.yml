@@ -19,7 +19,8 @@
           else (['etcd', 'consul'] | random) }}" # TODO: Consul support for RHEL 10, Debian 13
         consul_node_role: server # if dcs_type: "consul"
         postgresql_version: 18
-        postgresql_locale_provider: "builtin" # Test the builtin locale provider (initdb)
+        postgresql_locale_provider: "{{ ['', 'libc', 'icu', 'builtin'] | random }}"
+        postgresql_icu_locale: "und"
         postgresql_builtin_locale: "C.UTF-8"
         pgbouncer_processes: 2 # Test multiple pgbouncer processes (so_reuseport)
         patroni_tags: "datacenter=dc1,key1=value1"
@@ -42,12 +43,15 @@
       delegate_to: localhost
       run_once: true # noqa run-once
 
-    - name: Write dcs_type.yml file (for Molecule verify)
+    - name: Write test_vars.yml file (for Molecule verify)
       ansible.builtin.copy:
         content: |
           ---
           dcs_type: "{{ dcs_type }}"
-        dest: "../../dcs_type.yml"
+          postgresql_locale_provider: "{{ postgresql_locale_provider }}"
+          postgresql_icu_locale: "{{ postgresql_icu_locale }}"
+          postgresql_builtin_locale: "{{ postgresql_builtin_locale }}"
+        dest: "../../test_vars.yml"
       delegate_to: localhost
       run_once: true # noqa run-once
 

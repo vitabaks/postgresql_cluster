@@ -4,7 +4,7 @@
   gather_facts: false
 
   tasks:
-    - name: Delete dcs_type.yml file
+    - name: Delete test_vars.yml file
       ansible.builtin.file:
-        path: "../../dcs_type.yml"
+        path: "../../test_vars.yml"
         state: absent
