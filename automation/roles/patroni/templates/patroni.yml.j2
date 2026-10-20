@@ -156,6 +156,14 @@ bootstrap:
   initdb:  # List options to be passed on to initdb
     - encoding: {{ postgresql_encoding }}
     - locale: {{ postgresql_locale }}
+  {% if postgresql_locale_provider | default('') | length > 0 %}
+    - locale-provider: {{ postgresql_locale_provider }}
+    {% if postgresql_locale_provider == 'icu' %}
+    - icu-locale: "{{ postgresql_icu_locale }}"
+    {% elif postgresql_locale_provider == 'builtin' %}
+    - builtin-locale: {{ postgresql_builtin_locale }}
+    {% endif %}
+  {% endif %}
   {% if postgresql_data_checksums|bool %}
     - data-checksums
   {% elif postgresql_version | int >= 18 %}

@@ -35,10 +35,10 @@
       ansible.builtin.include_vars:
         file: ../../roles/common/defaults/main.yml
 
-    # Including the dcs_type variable redefined in converge.yml
-    - name: Molecule.default.verify | Include dcs_type Variable
+    # Including the test variables redefined in converge.yml
+    - name: Molecule.default.verify | Include Test Variables
       ansible.builtin.include_vars:
-        file: ../../dcs_type.yml
+        file: ../../test_vars.yml
 
     # 🔄 Including all tests for the Molecule default configuration
     # These tests ensure that all components of the configuration are functioning correctly
