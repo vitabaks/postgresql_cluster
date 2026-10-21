@@ -12,9 +12,9 @@
       ansible.builtin.set_fact:
         etcd_endpoints: >-
           {% for host in (groups['etcd_cluster'] | difference([target_node]) | intersect(ansible_play_hosts)) -%}
-          {{ patroni_etcd_protocol | default('http', true) }}://
-          {{- hostvars[host]['etcd_bind_address'] | default(hostvars[host]['bind_address'], true) }}:2379
-          {%- if not loop.last %},{% endif -%}
+          {{ patroni_etcd_protocol | default('http', true) }}://{{
+            hostvars[host]['etcd_bind_address'] | default(hostvars[host]['bind_address'], true)
+          }}:2379{%- if not loop.last %},{% endif -%}
           {% endfor %}
 
     - name: Get etcd cluster member list
