@@ -48,14 +48,31 @@
     PGPASSWORD: "{{ patroni_superuser_password }}"
   when: inventory_hostname in groups['primary']
 
-- name: Get the current encodig and data_checksums settings
+- name: Get the current encoding, locale, and data_checksums settings
   ansible.builtin.command: >-
     {{ psql_command }} -d postgres -tAXc "
     select row_to_json(pg_settings)
     from (
       select
-        (select datcollate from pg_database where datname = current_database()) as lc_collate,
-        (select datctype from pg_database where datname = current_database()) as lc_ctype,
+        datcollate as lc_collate,
+        datctype as lc_ctype,
+        {% if pg_old_version | int >= 15 %}
+        case datlocprovider when 'c' then 'libc' when 'i' then 'icu' when 'b' then 'builtin' end as locale_provider,
+        {% else %}
+        'libc'::text as locale_provider,
+        {% endif %}
+        {% if pg_old_version | int >= 17 %}
+        datlocale as provider_locale,
+        {% elif pg_old_version | int >= 15 %}
+        daticulocale as provider_locale,
+        {% else %}
+        null::text as provider_locale,
+        {% endif %}
+        {% if pg_old_version | int >= 16 %}
+        daticurules as icu_rules,
+        {% else %}
+        null::text as icu_rules,
+        {% endif %}
         current_setting('lc_messages') as lc_messages,
         current_setting('lc_monetary') as lc_monetary,
         current_setting('lc_numeric') as lc_numeric,
@@ -63,6 +80,8 @@
         current_setting('server_encoding') as server_encoding,
         current_setting('data_checksums') as data_checksums,
         current_setting('wal_level') as wal_level
+      from pg_database
+      where datname = current_database()
     ) pg_settings"
   changed_when: false
   register: pg_settings
@@ -71,6 +90,23 @@
   environment:
     PGPASSWORD: "{{ patroni_superuser_password }}"
   when: inventory_hostname in groups['primary']
+
+- name: Set locale options for initializing the new PostgreSQL cluster
+  ansible.builtin.set_fact:
+    pg_initdb_locale_options: >-
+      {% if pg_new_version | int >= 15 %}
+      --locale-provider={{ pg_source_settings.locale_provider | quote }}
+      {% if pg_source_settings.locale_provider == 'builtin' %}
+      --builtin-locale={{ pg_source_settings.provider_locale | quote }}
+      {% elif pg_source_settings.locale_provider == 'icu' %}
+      --icu-locale={{ pg_source_settings.provider_locale | quote }}
+      {% if pg_new_version | int >= 16 and pg_source_settings.icu_rules | default('', true) | length > 0 %}
+      --icu-rules={{ pg_source_settings.icu_rules | quote }}
+      {% endif %}
+      {% endif %}
+      {% endif %}
+  vars:
+    pg_source_settings: "{{ hostvars[groups['primary'][0]].pg_settings.stdout | from_json }}"
 
 - name: Create temporary password file for install user
   ansible.builtin.copy:
@@ -96,6 +132,7 @@
     --start-conf=manual
     --
     --username={{ hostvars[groups['primary'][0]].pg_install_user.stdout }}
+    {{ pg_initdb_locale_options }}
     {% if pg_new_version | int >= 16 %}
     --set wal_level={{ (hostvars[groups['primary'][0]].pg_settings.stdout | from_json).wal_level }}
     {% endif %}
@@ -124,6 +161,7 @@
     --lc-numeric={{ (pg_settings.stdout | from_json).lc_numeric }}
     --lc-time={{ (pg_settings.stdout | from_json).lc_time }}
     --username={{ pg_install_user.stdout }}
+    {{ pg_initdb_locale_options }}
     {% if pg_new_version | int >= 16 %}
     --set wal_level={{ (hostvars[groups['primary'][0]].pg_settings.stdout | from_json).wal_level }}
     {% endif %}
