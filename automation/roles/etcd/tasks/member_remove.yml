@@ -11,10 +11,10 @@
       run_once: true # noqa run-once
       ansible.builtin.set_fact:
         etcd_endpoints: >-
-          {% for host in (groups['etcd_cluster'] | difference([target_node])) -%}
-          {{ patroni_etcd_protocol | default('http', true) }}://
-          {{- hostvars[host]['etcd_bind_address'] | default(hostvars[host]['bind_address'], true) }}:2379
-          {%- if not loop.last %},{% endif -%}
+          {% for host in (groups['etcd_cluster'] | difference([target_node]) | intersect(ansible_play_hosts)) -%}
+          {{ patroni_etcd_protocol | default('http', true) }}://{{
+            hostvars[host]['etcd_bind_address'] | default(hostvars[host]['bind_address'], true)
+          }}:2379{%- if not loop.last %},{% endif -%}
           {% endfor %}
 
     - name: Get etcd cluster member list
@@ -32,7 +32,7 @@
         ETCDCTL_API: "3"
       register: etcd_members_json
       changed_when: false
-      delegate_to: "{{ groups['etcd_cluster'] | difference([target_node]) | first }}"
+      delegate_to: "{{ groups['etcd_cluster'] | difference([target_node]) | intersect(ansible_play_hosts) | first }}"
 
     - name: Extract target node etcd member ID
       run_once: true # noqa run-once
@@ -52,11 +52,15 @@
         members: "{{ ((etcd_members_json.stdout | default('{}')) | from_json).get('members', []) }}"
         target_name: >-
           {{
-            hostvars.get(target_node, {}).get('ansible_hostname', target_node)
+            hostvars.get(target_node, {}).get('ansible_hostname', target_node_name | default(target_node))
               if target_node in (groups['etcd_cluster'] | default([]))
               else target_node
           }}
-        target_peer_url: "{{ patroni_etcd_protocol | default('http', true) }}://{{ target_node }}:2380"
+        target_peer_url: >-
+          {{ patroni_etcd_protocol | default('http', true) }}://{{
+            hostvars[target_node].etcd_bind_address | default(hostvars[target_node].bind_address,
+            true) | default(hostvars[target_node].ansible_host, true) | default(target_node, true)
+          }}:2380
 
     - name: Remove node from etcd cluster
       run_once: true # noqa run-once
@@ -73,7 +77,7 @@
       vars:
         target_etcd_member_id_hex: "{{ '%x' % (target_etcd_member_id | int) if (target_etcd_member_id | int) > 0 else '' }}"
       when: target_etcd_member_id | default(0) | int > 0
-      delegate_to: "{{ groups['etcd_cluster'] | difference([target_node]) | first }}"
+      delegate_to: "{{ groups['etcd_cluster'] | difference([target_node]) | intersect(ansible_play_hosts) | first }}"
   tags: etcd, etcd_member_remove
 
 - block:
